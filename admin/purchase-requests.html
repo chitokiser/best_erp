@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>결재관리 (구매) - BEST Group</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .badge {
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .bg-yellow {
+            background: #fef08a;
+            color: #854d0e;
+        }
+
+        .bg-orange {
+            background: #fed7aa;
+            color: #c2410c;
+        }
+
+        .bg-green {
+            background: #bbf7d0;
+            color: #166534;
+        }
+
+        .bg-blue {
+            background: #bfdbfe;
+            color: #1e3a8a;
+        }
+
+        .request-card {
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .item-list {
+            font-size: 0.875rem;
+            color: #475569;
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+        }
+    </style>
+</head>
+
+<body style="display: none;">
+    <header class="main-header">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <h1 class="logo">BEST Group</h1>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="dashboard.html">대시보드</a></li>
+                    <li><a href="materials.html">자재관리</a></li>
+                    <li><a href="suppliers.html">공급업체</a></li>
+                    <li><a href="purchase-requests.html" style="color:var(--primary-color)">결재관리(구매)</a></li>
+                    <li><a href="users.html">권한관리</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 1rem;">
+        <h2 style="margin-bottom: 2rem;">구매 결재 상신함</h2>
+
+        <div class="card">
+            <div id="requestsContainer">로딩 중...</div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { getPurchaseRequests, updateRequestStatus } from '../services/purchaseApi.js';
+
+        const container = document.getElementById('requestsContainer');
+
+        const loadRequests = async () => {
+            try {
+                const requests = await getPurchaseRequests();
+
+                if (requests.length === 0) {
+                    container.innerHTML = '<p>현재 대기 중이거나 처리된 결재건이 없습니다.</p>';
+                    return;
+                }
+
+                let html = '';
+                requests.forEach(r => {
+                    let badgeClass = 'bg-yellow';
+                    let statusKor = '팀장 승인 대기';
+
+                    if (r.status === 'PENDING_CEO') { badgeClass = 'bg-orange'; statusKor = 'CEO 승인 대기'; }
+                    if (r.status === 'APPROVED') { badgeClass = 'bg-green'; statusKor = '승인 완료 (구매 대기)'; }
+                    if (r.status === 'PURCHASED') { badgeClass = 'bg-blue'; statusKor = '구매/발주 완료'; }
+
+                    const dateStr = r.createdAt ? new Date(r.createdAt.seconds * 1000).toLocaleString() : '방금 전';
+
+                    // Render items
+                    let itemsHtml = '<ul class="item-list">';
+                    r.items.forEach(itm => {
+                        itemsHtml += `<li>${itm.name} (수량: ${itm.quantity}) - ${(itm.price * itm.quantity).toLocaleString()} VND</li>`;
+                    });
+                    itemsHtml += '</ul>';
+
+                    html += `
+                        <div class="request-card">
+                            <div style="display:flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                                <div>
+                                    <span class="badge ${badgeClass}">${statusKor}</span>
+                                    <h3 style="margin: 0.5rem 0;">${r.department} - ${r.requesterName}</h3>
+                                    <p style="font-size: 0.875rem; color: #64748b;">상신일: ${dateStr}</p>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 1.25rem; font-weight: bold; color: var(--primary-color);">
+                                        총 ${r.totalAmount ? r.totalAmount.toLocaleString() : '0'} VND
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="background: #f8fafc; padding: 1rem; border-radius: 8px;">
+                                <strong>요청 사유:</strong>
+                                <p style="font-size: 0.875rem; margin-top: 0.25rem; margin-bottom: 1rem;">${r.notes || '없음'}</p>
+                                <strong>요청 자재 품목:</strong>
+                                ${itemsHtml}
+                            </div>
+                            
+                            <div style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: flex-end;">
+                                ${r.status === 'PENDING_TEAM_LEAD' ? `<button class="btn-primary" onclick="window.handleApprove('${r.id}', 'PENDING_CEO')">팀장 승인</button>` : ''}
+                                ${r.status === 'PENDING_CEO' ? `<button class="btn-primary" style="background:#059669;" onclick="window.handleApprove('${r.id}', 'APPROVED')">CEO 최종 승인</button>` : ''}
+                                ${r.status === 'APPROVED' ? `<button class="btn-primary" style="background:#2563eb;" onclick="window.handleApprove('${r.id}', 'PURCHASED')">발주 처리</button>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = '<p style="color:red;">결재 목록을 불러오는 중 오류가 발생했습니다.</p>';
+            }
+        };
+
+        window.handleApprove = async (id, nextStatus) => {
+            if (!confirm('이 결재건을 승인/진행 하시겠습니까?')) return;
+            try {
+                await updateRequestStatus(id, nextStatus, 'Admin User');
+                loadRequests(); // refresh
+            } catch (e) {
+                alert('처리 중 오류가 발생했습니다: ' + e.message);
+            }
+        };
+
+        loadRequests();
+    </script>
+
+    <!-- Global Auth Guard -->
+    <script type="module">
+        import { checkAdminAuth } from '../assets/js/auth.js';
+        
+        checkAdminAuth(
+            (user) => { 
+                document.body.style.display = 'block';
+                
+                // Add logout button / User email to header dynamically if header exists
+                const nav = document.querySelector('.main-nav ul');
+                if(nav && !document.getElementById('navUserEmail')) {
+                    const li = document.createElement('li');
+                    li.id = 'navUserEmail';
+                    li.innerHTML = `<span style="margin-left: 1rem; font-size:0.875rem; color:var(--text-secondary);">${user.email}</span>
+                                    <button onclick="window.logoutAndRedirect()" style="margin-left:0.5rem; background:none; border:none; cursor:pointer; color:var(--primary-color); font-weight:bold;">[로그아웃]</button>`;
+                    nav.appendChild(li);
+                }
+            },
+            () => {
+                const current = window.location.pathname + window.location.search;
+                window.location.href = '../login.html?redirect=' + encodeURIComponent(current);
+            }
+        );
+
+        import { logoutAdmin } from '../assets/js/auth.js';
+        window.logoutAndRedirect = () => {
+            logoutAdmin();
+            window.location.href = '../login.html';
+        };
+    </script>
+</body>
+
+</html>

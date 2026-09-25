@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가격 비교 - BEST MATERIAL</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            text-align: left;
+        }
+
+        .comparison-table th {
+            background-color: var(--bg-color);
+            font-weight: 600;
+        }
+
+        .highlight-row {
+            background-color: #eff6ff;
+            font-weight: bold;
+        }
+
+        .savings-box {
+            background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+            color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            text-align: center;
+        }
+
+        .savings-box h3 {
+            font-size: 1.25rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #bfdbfe;
+        }
+
+        .savings-box .amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .savings-box .rate {
+            font-size: 1.25rem;
+            color: #bfdbfe;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+
+<body style="display: none;">
+    <header class="main-header">
+        <div class="container">
+            <h1 class="logo" style="margin-bottom: 0.5rem;"><a href="index.html">BEST MATERIAL DATA</a></h1>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="materials.html">자재 DB</a></li>
+                    <li><a href="price-comparison.html" style="color:var(--primary-color)">가격 비교</a></li>
+                    <li><a href="suppliers.html">공급업체</a></li>
+                    <li><a href="request-form.html" id="navCartLink">구매요청 <span id="cartCount" style="background:var(--primary-color);color:#fff;border-radius:10px;padding:2px 6px;font-size:0.75rem;">0</span></a></li>
+                    <li><a href="estimates.html">견적 생성기</a></li>
+                    <li><a href="categories.html">카테고리</a></li>
+                    <li><a href="admin/dashboard.html">관리자</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 1rem;">
+
+        <div class="card" style="margin-bottom: 2rem;">
+            <h2>자재 가격 비교</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">자재를 선택하여 공공가격, 시장가격 및 공급업체별 단가를 비교하세요.</p>
+
+            <div style="display: flex; gap: 1rem;">
+                <select id="selMaterial" class="search-input" style="flex:1;">
+                    <option value="">자재를 불러오는 중...</option>
+                </select>
+                <button type="button" id="btnCompare" class="btn-primary" style="padding: 0 2rem;">비교 결과 보기</button>
+            </div>
+        </div>
+
+        <div id="resultSection" style="display: none;">
+            <h2 id="materialTitle" style="font-size: 1.75rem; margin-bottom: 1rem;">자재명</h2>
+
+            <div class="card" style="overflow-x: auto;">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50%;">구분 / 출처</th>
+                            <th style="width: 50%; text-align: right;">단가 (VND)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="comparisonBody">
+                        <!-- rows inserted via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="savings-box" id="savingsBox">
+                <h3>시장가격 대비 예상 절감액</h3>
+                <div class="amount" id="savingsAmount">0 VND</div>
+                <div class="rate" id="savingsRate">0% 절감 가능</div>
+            </div>
+        </div>
+
+    </main>
+
+    <script type="module" src="assets/js/firebase-config.js"></script>
+    <script type="module">
+        import { getAllMaterials, getExternalPrices, getSupplierPrices } from './services/materialApi.js';
+
+        const selMaterial = document.getElementById('selMaterial');
+        const btnCompare = document.getElementById('btnCompare');
+        const resultSection = document.getElementById('resultSection');
+        const materialTitle = document.getElementById('materialTitle');
+        const comparisonBody = document.getElementById('comparisonBody');
+        const savingsAmount = document.getElementById('savingsAmount');
+        const savingsRate = document.getElementById('savingsRate');
+
+        let materialsMap = {};
+
+        const init = async () => {
+            try {
+                const materials = await getAllMaterials();
+                selMaterial.innerHTML = '<option value="">비교할 자재를 선택하세요 ▼</option>';
+                materials.forEach(m => {
+                    materialsMap[m.id] = m;
+                    const opt = document.createElement('option');
+                    opt.value = m.id;
+                    opt.textContent = `${m.name} ${m.specification ? '(' + m.specification + ')' : ''}`;
+                    selMaterial.appendChild(opt);
+                });
+            } catch (err) {
+                console.error(err);
+                selMaterial.innerHTML = '<option value="">자재 목록 로딩 실패</option>';
+            }
+        };
+
+        btnCompare.addEventListener('click', async () => {
+            const mId = selMaterial.value;
+            if (!mId) return alert('자재를 선택해주세요.');
+
+            const material = materialsMap[mId];
+            materialTitle.textContent = `${material.name} 가격 비교`;
+
+            resultSection.style.display = 'block';
+            comparisonBody.innerHTML = '<tr><td colspan="2" style="text-align:center;">비교 데이터 분석 중...</td></tr>';
+
+            try {
+                // Fetch external mock & supplier mock
+                const extPrices = await getExternalPrices(mId);
+                const suppPrices = await getSupplierPrices(mId);
+
+                let html = '';
+                let marketPrice = 0;
+
+                // 1. 공공/시장 가격
+                extPrices.forEach(p => {
+                    if (p.type === "MARKET") marketPrice = p.price;
+                    html += `
+                        <tr>
+                            <td>${p.source}</td>
+                            <td style="text-align: right;">${p.price.toLocaleString()}</td>
+                        </tr>
+                    `;
+                });
+
+                // 2. 공급업체 가격
+                suppPrices.forEach(p => {
+                    html += `
+                        <tr>
+                            <td>[업체견적] ${p.supplierName}</td>
+                            <td style="text-align: right; color: var(--text-secondary);">${p.price.toLocaleString()}</td>
+                        </tr>
+                    `;
+                });
+
+                // 3. BEST 매입가격
+                const ourPrice = material.ourPurchasePrice || 0;
+                html += `
+                    <tr class="highlight-row">
+                        <td style="color: var(--primary-color);">BEST 확보 매입가격</td>
+                        <td style="text-align: right; color: var(--primary-color); font-size: 1.25rem;">${ourPrice.toLocaleString()}</td>
+                    </tr>
+                `;
+
+                comparisonBody.innerHTML = html;
+
+                // 절감률 표시 (시장가격 기준)
+                if (marketPrice > 0 && ourPrice > 0 && marketPrice > ourPrice) {
+                    const diff = marketPrice - ourPrice;
+                    const rate = ((diff / marketPrice) * 100).toFixed(1);
+
+                    savingsAmount.textContent = `${diff.toLocaleString()} VND`;
+                    savingsRate.textContent = `시장가 대비 ${rate}% 절감`;
+                } else {
+                    savingsAmount.textContent = `분석 불가`;
+                    savingsRate.textContent = `시장가격 정보가 부족하거나 BEST 가격이 설정되지 않았습니다.`;
+                }
+
+            } catch (e) {
+                console.error(e);
+                comparisonBody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:red;">에러 발생</td></tr>`;
+            }
+        });
+
+        init();
+    </script>
+
+    <!-- Global Auth Guard -->
+    <script type="module">
+        import { checkAdminAuth } from './assets/js/auth.js';
+        
+        checkAdminAuth(
+            (user) => { 
+                document.body.style.display = 'block';
+                
+                // Add logout button / User email to header dynamically if header exists
+                const nav = document.querySelector('.main-nav ul');
+                if(nav && !document.getElementById('navUserEmail')) {
+                    const li = document.createElement('li');
+                    li.id = 'navUserEmail';
+                    li.innerHTML = `<span style="margin-left: 1rem; font-size:0.875rem; color:var(--text-secondary);">${user.email}</span>
+                                    <button onclick="window.logoutAndRedirect()" style="margin-left:0.5rem; background:none; border:none; cursor:pointer; color:var(--primary-color); font-weight:bold;">[로그아웃]</button>`;
+                    nav.appendChild(li);
+                }
+            },
+            () => {
+                const current = window.location.pathname + window.location.search;
+                window.location.href = 'login.html?redirect=' + encodeURIComponent(current);
+            }
+        );
+
+        import { logoutAdmin } from './assets/js/auth.js';
+        window.logoutAndRedirect = () => {
+            logoutAdmin();
+            window.location.href = 'login.html';
+        };
+    </script>
+</body>
+
+</html>

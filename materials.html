@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>자재 검색 - BEST MATERIAL</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .list-view {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: box-shadow 0.2s;
+        }
+
+        .list-item:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .list-item-img {
+            width: 100px;
+            height: 100px;
+            border-radius: 4px;
+            margin-right: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .list-item-content {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .list-item-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .list-item-price {
+            text-align: right;
+            margin-left: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .list-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .list-item-img {
+                width: 100%;
+                height: 150px;
+                margin-bottom: 1rem;
+                margin-right: 0;
+            }
+
+            .list-item-content {
+                flex-direction: column;
+                align-items: flex-start;
+                width: 100%;
+            }
+
+            .list-item-price {
+                margin-top: 1rem;
+                text-align: left;
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+
+<body style="display: none;">
+    <header class="main-header">
+        <div class="container">
+            <h1 class="logo" style="margin-bottom: 0.5rem;"><a href="index.html">BESTwinner</a></h1>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="materials.html" style="color:var(--primary-color)">자재 DB</a></li>
+                    <li><a href="price-comparison.html">가격 비교</a></li>
+                    <li><a href="suppliers.html">협력업체</a></li>
+                    <li><a href="request-form.html" id="navCartLink">구매요청 <span id="cartCount"
+                                style="background:var(--primary-color);color:#fff;border-radius:10px;padding:2px 6px;font-size:0.75rem;">0</span></a>
+                    </li>
+                    <li><a href="categories.html">카테고리</a></li>
+                    <li><a href="projects.html">프로젝트</a></li>
+                    <li><a href="estimates.html">견적</a></li>
+                    <li><a href="admin/dashboard.html">관리자</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 1rem;">
+
+        <!-- Search Filters -->
+        <div class="card" style="margin-bottom: 2rem;">
+            <h2>자재 검색</h2>
+            <form id="searchForm" style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem;">
+                <div style="flex: 1; min-width: 200px;">
+                    <input type="text" id="q" class="search-input" style="width: 100%;" placeholder="자재명 / 코드 / 브랜드 검색">
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                    <select id="category" class="search-input" style="width: 100%;">
+                        <option value="">카테고리 전체 ▼</option>
+                        <option value="인테리어">인테리어</option>
+                        <option value="엘리베이터">엘리베이터</option>
+                        <option value="소방">소방</option>
+                        <option value="스마트주차장">스마트주차장</option>
+                        <option value="IT">IT (네트워크/하드웨어)</option>
+                        <option value="기타">기타</option>
+                    </select>
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                    <select id="application" class="search-input" style="width: 100%;">
+                        <option value="">용도 전체 ▼</option>
+                        <option value="벽">벽</option>
+                        <option value="바닥">바닥</option>
+                        <option value="천장">천장</option>
+                        <option value="내장">내장</option>
+                        <option value="마감">마감</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary" style="padding: 0.75rem 2rem;">검색</button>
+            </form>
+        </div>
+
+        <!-- Material List -->
+        <h3 style="margin-bottom: 1rem;" id="resultCount">검색 결과 (0건)</h3>
+
+        <div id="materialList" class="list-view">
+            <!-- Items injected by JS -->
+        </div>
+
+    </main>
+
+    <script type="module" src="assets/js/firebase-config.js"></script>
+    <script type="module">
+        import { getAllMaterials } from './services/materialApi.js';
+
+        const materialList = document.getElementById('materialList');
+        const resultCount = document.getElementById('resultCount');
+        const searchForm = document.getElementById('searchForm');
+        let allMaterials = [];
+
+        const renderMaterials = (materials) => {
+            materialList.innerHTML = '';
+            resultCount.textContent = `검색 결과 (${materials.length}건)`;
+
+            materials.forEach(m => {
+                const imgUrl = (m.images && m.images.length > 0) ? m.images[0] : 'https://placehold.co/100x100/e2e8f0/475569?text=No+Image';
+
+                const item = document.createElement('div');
+                item.className = 'list-item';
+                item.onclick = () => location.href = `material-detail.html?id=${m.id}`;
+
+                item.innerHTML = `
+                    <div class="list-item-img" style="background: url('${imgUrl}') center/cover no-repeat;"></div>
+                    <div class="list-item-content">
+                        <div class="list-item-info">
+                            <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">${m.categoryId || '-'}</span>
+                            <h3 style="margin: 0.25rem 0; font-size: 1.25rem;">${m.name}</h3>
+                            <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0;">${m.specification || '-'}</p>
+                        </div>
+                        <div class="list-item-price">
+                            <div style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">공급업체 BEST</div>
+                            <div style="font-weight: 600; font-size: 1.125rem; color: var(--primary-color);">매입 ${m.ourPurchasePrice ? m.ourPurchasePrice.toLocaleString() : '0'}</div>
+                        </div>
+                    </div>
+                `;
+                materialList.appendChild(item);
+            });
+        };
+
+        const loadData = async () => {
+            materialList.innerHTML = '<p>로딩 중...</p>';
+            try {
+                allMaterials = await getAllMaterials();
+
+                // URL Query string check for categories
+                const params = new URLSearchParams(window.location.search);
+                const queryCat = params.get('category');
+
+                if (queryCat) {
+                    document.getElementById('category').value = queryCat;
+                    const filtered = allMaterials.filter(m => m.categoryId === queryCat);
+                    renderMaterials(filtered);
+                } else {
+                    renderMaterials(allMaterials);
+                }
+            } catch (error) {
+                console.error(error);
+                materialList.innerHTML = '<p style="color:red;">데이터를 불러오는 중 오류가 발생했습니다.</p>';
+            }
+        };
+
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const q = document.getElementById('q').value.toLowerCase();
+            const cat = document.getElementById('category').value;
+            const app = document.getElementById('application').value;
+
+            const filtered = allMaterials.filter(m => {
+                const matchQ = !q || m.name.toLowerCase().includes(q) || (m.brand && m.brand.toLowerCase().includes(q)) || (m.materialCode && m.materialCode.toLowerCase().includes(q));
+                const matchCat = !cat || m.categoryId === cat;
+                const matchApp = !app || (m.applications && m.applications.includes(app));
+                return matchQ && matchCat && matchApp;
+            });
+
+            renderMaterials(filtered);
+        });
+
+        loadData();
+    </script>
+
+    <!-- Global Auth Guard -->
+    <script type="module">
+        import { checkAdminAuth } from './assets/js/auth.js';
+
+        checkAdminAuth(
+            (user) => {
+                document.body.style.display = 'block';
+
+                // Add logout button / User email to header dynamically if header exists
+                const nav = document.querySelector('.main-nav ul');
+                if (nav && !document.getElementById('navUserEmail')) {
+                    const li = document.createElement('li');
+                    li.id = 'navUserEmail';
+                    li.innerHTML = `<span style="margin-left: 1rem; font-size:0.875rem; color:var(--text-secondary);">${user.email}</span>
+                                    <button onclick="window.logoutAndRedirect()" style="margin-left:0.5rem; background:none; border:none; cursor:pointer; color:var(--primary-color); font-weight:bold;">[로그아웃]</button>`;
+                    nav.appendChild(li);
+                }
+            },
+            () => {
+                const current = window.location.pathname + window.location.search;
+                window.location.href = 'login.html?redirect=' + encodeURIComponent(current);
+            }
+        );
+
+        import { logoutAdmin } from './assets/js/auth.js';
+        window.logoutAndRedirect = () => {
+            logoutAdmin();
+            window.location.href = 'login.html';
+        };
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>구매 요청 및 장바구니 - BEST Group</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body style="display: none;">
+    <header class="main-header">
+        <div class="container">
+            <h1 class="logo" style="margin-bottom: 0.5rem;"><a href="index.html">BEST MATERIAL DATA</a></h1>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="materials.html">자재 DB</a></li>
+                    <li><a href="price-comparison.html">가격 비교</a></li>
+                    <li><a href="suppliers.html">공급업체</a></li>
+                    <li><a href="request-form.html" style="color:var(--primary-color)">구매요청 <span id="cartCount"
+                                style="background:var(--primary-color);color:#fff;border-radius:10px;padding:2px 6px;font-size:0.75rem;">0</span></a>
+                    </li>
+                    <li><a href="estimates.html">견적 생성기</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 1rem;">
+        <h2 style="margin-bottom: 2rem;">구매 결재 요청서 (품의서)</h2>
+
+        <div class="card" style="margin-bottom: 2rem;">
+            <h3>요청 자재 목록</h3>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 1rem; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border-color);">
+                        <th style="padding: 1rem;">자재명</th>
+                        <th style="padding: 1rem;">매입단가 (VND)</th>
+                        <th style="padding: 1rem;">수량</th>
+                        <th style="padding: 1rem;">총액 (VND)</th>
+                        <th style="padding: 1rem;">삭제</th>
+                    </tr>
+                </thead>
+                <tbody id="cartTableBody">
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 1rem;">장바구니가 비어 있습니다. 자재 DB에서 자재를 담아주세요.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="text-align: right; margin-top: 1rem; font-size: 1.25rem;">
+                <strong>총 요청 금액: </strong> <span id="totalAmountText" style="color: var(--primary-color);">0</span> VND
+            </div>
+        </div>
+
+        <div class="card" id="requestFormBox" style="display: none;">
+            <h3>기안 정보 작성</h3>
+            <form id="purchaseForm" style="display:grid; gap: 1rem; margin-top: 1rem;">
+                <div>
+                    <label>기안자 부서 (사업부)</label>
+                    <select id="reqDepartment" class="search-input" style="width: 100%;" required>
+                        <option value="">사업부 선택</option>
+                        <option value="인테리어 사업부">인테리어 사업부</option>
+                        <option value="엘리베이터 사업부">엘리베이터 사업부</option>
+                        <option value="소방 업부">소방 사업부</option>
+                        <option value="스마트주차장 사업부">스마트주차장 사업부</option>
+                        <option value="기타 부서">기타 부서</option>
+                    </select>
+                </div>
+                <div>
+                    <label>기안자 성명</label>
+                    <input type="text" id="reqName" class="search-input" style="width: 100%;" required>
+                </div>
+                <div>
+                    <label>요청 사유 및 비고</label>
+                    <textarea id="reqNotes" class="search-input" style="width: 100%; height: 80px;"
+                        placeholder="프로젝트명 및 구매 사유를 적어주세요"></textarea>
+                </div>
+                <button type="submit" class="btn-primary"
+                    style="padding: 1rem; font-size: 1.1rem; border-radius: 8px;">팀장 승인 요청하기</button>
+                <div id="statusMsg" style="text-align:center; font-weight:bold; margin-top:0.5rem;"></div>
+            </form>
+        </div>
+    </main>
+
+    <script type="module">
+        import { createPurchaseRequest } from './services/purchaseApi.js';
+
+        let cart = JSON.parse(localStorage.getItem('best_cart') || '[]');
+
+        const tbody = document.getElementById('cartTableBody');
+        const formBox = document.getElementById('requestFormBox');
+
+        const updateCartUI = () => {
+            document.getElementById('cartCount').textContent = cart.length;
+
+            if (cart.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 1rem;">장바구니가 비어 있습니다. 자재 DB에서 자재를 담아주세요.</td></tr>';
+                document.getElementById('totalAmountText').textContent = '0';
+                formBox.style.display = 'none';
+                return;
+            }
+
+            formBox.style.display = 'block';
+            tbody.innerHTML = '';
+            let total = 0;
+
+            cart.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid var(--border-color)';
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+
+                tr.innerHTML = `
+                    <td style="padding: 1rem; font-weight:500;">${item.name}</td>
+                    <td style="padding: 1rem;">${item.price.toLocaleString()}</td>
+                    <td style="padding: 1rem;">
+                        <input type="number" min="1" value="${item.quantity}" style="width:60px; padding:0.25rem;" 
+                               onchange="window.updateQty(${index}, this.value)">
+                    </td>
+                    <td style="padding: 1rem; color: var(--primary-color); font-weight:bold;">${itemTotal.toLocaleString()}</td>
+                    <td style="padding: 1rem;">
+                        <button class="btn-primary" style="background:#ef4444; padding:0.25rem 0.5rem;" onclick="window.removeItem(${index})">삭제</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('totalAmountText').textContent = total.toLocaleString();
+        };
+
+        window.updateQty = (index, qty) => {
+            cart[index].quantity = parseInt(qty, 10);
+            localStorage.setItem('best_cart', JSON.stringify(cart));
+            updateCartUI();
+        };
+
+        window.removeItem = (index) => {
+            cart.splice(index, 1);
+            localStorage.setItem('best_cart', JSON.stringify(cart));
+            updateCartUI();
+        };
+
+        document.getElementById('purchaseForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const msg = document.getElementById('statusMsg');
+
+            btn.disabled = true;
+            btn.textContent = "요청 처리 중...";
+
+            try {
+                let totalAmount = cart.reduce((acc, curr) => acc + (curr.price * curr.quantity), 0);
+
+                const data = {
+                    department: document.getElementById('reqDepartment').value,
+                    requesterName: document.getElementById('reqName').value,
+                    notes: document.getElementById('reqNotes').value,
+                    items: cart,
+                    totalAmount: totalAmount
+                };
+
+                await createPurchaseRequest(data);
+
+                msg.style.color = "green";
+                msg.textContent = "성공적으로 품의가 상신(팀장 승인 대기) 되었습니다!";
+                localStorage.removeItem('best_cart'); // clear cart
+                cart = [];
+
+                setTimeout(() => {
+                    updateCartUI();
+                    btn.textContent = "팀장 승인 요청하기";
+                    btn.disabled = false;
+                    msg.textContent = "";
+                }, 2000);
+
+            } catch (err) {
+                console.error(err);
+                msg.style.color = "red";
+                msg.textContent = "오류 발생: " + err.message;
+                btn.disabled = false;
+                btn.textContent = "팀장 승인 요청하기";
+            }
+        });
+
+        updateCartUI();
+    </script>
+
+    <!-- Global Auth Guard -->
+    <script type="module">
+        import { checkAdminAuth } from './assets/js/auth.js';
+        
+        checkAdminAuth(
+            (user) => { 
+                document.body.style.display = 'block';
+                
+                // Add logout button / User email to header dynamically if header exists
+                const nav = document.querySelector('.main-nav ul');
+                if(nav && !document.getElementById('navUserEmail')) {
+                    const li = document.createElement('li');
+                    li.id = 'navUserEmail';
+                    li.innerHTML = `<span style="margin-left: 1rem; font-size:0.875rem; color:var(--text-secondary);">${user.email}</span>
+                                    <button onclick="window.logoutAndRedirect()" style="margin-left:0.5rem; background:none; border:none; cursor:pointer; color:var(--primary-color); font-weight:bold;">[로그아웃]</button>`;
+                    nav.appendChild(li);
+                }
+            },
+            () => {
+                const current = window.location.pathname + window.location.search;
+                window.location.href = 'login.html?redirect=' + encodeURIComponent(current);
+            }
+        );
+
+        import { logoutAdmin } from './assets/js/auth.js';
+        window.logoutAndRedirect = () => {
+            logoutAdmin();
+            window.location.href = 'login.html';
+        };
+    </script>
+</body>
+
+</html>

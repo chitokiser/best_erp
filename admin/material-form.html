@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>자재 등록 - BEST MATERIAL</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body style="display: none;">
+    <header class="main-header">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <h1 class="logo">BEST Group</h1>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="dashboard.html">대시보드</a></li>
+                    <li><a href="materials.html" style="color:var(--primary-color)">자재관리</a></li>
+                    <li><a href="suppliers.html">공급업체</a></li>
+                    <li><a href="purchase-requests.html">결재관리(구매)</a></li>
+                    <li><a href="users.html">권한관리</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 1rem;">
+        <h2>신규 자재 등록</h2>
+        <div class="card" style="margin-top: 1.5rem;">
+            <form id="materialForm" style="display: flex; flex-direction: column; gap: 1rem;">
+
+                <!-- 기본 정보 -->
+                <fieldset style="border: 1px solid var(--border-color); padding: 1rem; border-radius: 4px;">
+                    <legend style="font-weight: bold; padding: 0 0.5rem;">기본 정보</legend>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <label>자재코드 *</label>
+                            <input type="text" id="txtMaterialCode" class="search-input" style="width: 100%;" required>
+                        </div>
+                        <div>
+                            <label>자재명 (한국어) *</label>
+                            <input type="text" id="txtName" class="search-input" style="width: 100%;" required>
+                        </div>
+                        <div>
+                            <label>베트남어명</label>
+                            <input type="text" id="txtNameVi" class="search-input" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label>영문명</label>
+                            <input type="text" id="txtNameEn" class="search-input" style="width: 100%;">
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- 분류 정보 -->
+                <fieldset style="border: 1px solid var(--border-color); padding: 1rem; border-radius: 4px;">
+                    <legend style="font-weight: bold; padding: 0 0.5rem;">분류 정보</legend>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <label>카테고리 *</label>
+                            <select id="selCategory" class="search-input" style="width: 100%;" required>
+                                <option value="">선택하세요</option>
+                                <option value="석재">석재</option>
+                                <option value="목재">목재</option>
+                                <option value="조명">조명</option>
+                                <option value="IT">IT (네트워크/하드웨어)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>세부카테고리</label>
+                            <input type="text" id="txtSubCategory" class="search-input" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label>용도 *</label>
+                            <input type="text" id="txtApplications" class="search-input" style="width: 100%;"
+                                placeholder="예: 바닥, 벽체" required>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- 상세 및 가격 정보 -->
+                <fieldset style="border: 1px solid var(--border-color); padding: 1rem; border-radius: 4px;">
+                    <legend style="font-weight: bold; padding: 0 0.5rem;">상세 기준 및 가격</legend>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <label>브랜드</label>
+                            <input type="text" id="txtBrand" class="search-input" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label>모델명</label>
+                            <input type="text" id="txtModel" class="search-input" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label>색상</label>
+                            <input type="text" id="txtColor" class="search-input" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label>규격 *</label>
+                            <input type="text" id="txtSpecification" class="search-input" style="width: 100%;"
+                                placeholder="예: 600x600x20mm" required>
+                        </div>
+                        <div>
+                            <label>단위 *</label>
+                            <input type="text" id="txtUnit" class="search-input" style="width: 100%;" placeholder="예: ㎡"
+                                required>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                        <div>
+                            <label>BEST 매입가격 (VND)</label>
+                            <input type="number" id="numPurchasePrice" class="search-input" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label>BEST 판매가격 (VND)</label>
+                            <input type="number" id="numSellingPrice" class="search-input" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label>VAT 포함 여부</label>
+                            <select id="selVat" class="search-input" style="width: 100%;">
+                                <option value="true">포함 (VAT Included)</option>
+                                <option value="false">별도 (VAT Excluded)</option>
+                            </select>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- 미디어 및 기타 -->
+                <fieldset style="border: 1px solid var(--border-color); padding: 1rem; border-radius: 4px;">
+                    <legend style="font-weight: bold; padding: 0 0.5rem;">설명 및 미디어</legend>
+                    <div style="margin-bottom: 1rem;">
+                        <label>상세 설명</label>
+                        <textarea id="txtDescription" class="search-input"
+                            style="width: 100%; height: 100px; resize: none;"></textarea>
+                    </div>
+                    <div>
+                        <label>이미지 첨부</label>
+                        <input type="file" id="fileImages" accept="image/*" multiple class="search-input"
+                            style="width: 100%; padding: 0.5rem;">
+                        <small style="color: var(--text-secondary);">여러 장의 이미지를 선택할 수 있습니다.</small>
+                    </div>
+                </fieldset>
+
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                    <button type="button" class="btn-primary" style="background-color: var(--text-secondary);"
+                        onclick="location.href='materials.html'">취소</button>
+                    <button type="submit" class="btn-primary" id="btnSubmit">저장하기</button>
+                </div>
+                <p id="statusMsg" style="text-align: right; margin-top: 0.5rem;"></p>
+            </form>
+        </div>
+    </main>
+
+    <script type="module">
+        import { createMaterial, getMaterialById } from '../services/materialApi.js';
+        import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+        import { db } from '../assets/js/firebase-config.js';
+
+        const materialForm = document.getElementById('materialForm');
+        const btnSubmit = document.getElementById('btnSubmit');
+        const statusMsg = document.getElementById('statusMsg');
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const editId = urlParams.get('id');
+
+        if (editId) {
+            document.querySelector('h2').textContent = '자재 정보 수정';
+            // Load existing data
+            getMaterialById(editId).then(m => {
+                if (!m) return;
+                document.getElementById('txtMaterialCode').value = m.materialCode || '';
+                document.getElementById('txtName').value = m.name || '';
+                document.getElementById('txtNameVi').value = m.nameVi || '';
+                document.getElementById('txtNameEn').value = m.nameEn || '';
+                document.getElementById('selCategory').value = m.categoryId || '';
+                document.getElementById('txtSubCategory').value = m.subCategoryId || '';
+                document.getElementById('txtApplications').value = (m.applications || []).join(', ');
+                document.getElementById('txtBrand').value = m.brand || '';
+                document.getElementById('txtModel').value = m.model || '';
+                document.getElementById('txtColor').value = m.color || '';
+                document.getElementById('txtSpecification').value = m.specification || '';
+                document.getElementById('txtUnit').value = m.unit || '';
+                document.getElementById('numPurchasePrice').value = m.ourPurchasePrice || '';
+                document.getElementById('numSellingPrice').value = m.ourSellingPrice || '';
+                document.getElementById('selVat').value = m.vatIncluded ? 'true' : 'false';
+                document.getElementById('txtDescription').value = m.description || '';
+            }).catch(console.error);
+        }
+
+        materialForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            btnSubmit.disabled = true;
+            btnSubmit.textContent = '저장 중...';
+            statusMsg.textContent = '';
+
+            try {
+                const materialData = {
+                    materialCode: document.getElementById('txtMaterialCode').value,
+                    name: document.getElementById('txtName').value,
+                    nameVi: document.getElementById('txtNameVi').value,
+                    nameEn: document.getElementById('txtNameEn').value,
+                    categoryId: document.getElementById('selCategory').value,
+                    subCategoryId: document.getElementById('txtSubCategory').value,
+                    applications: document.getElementById('txtApplications').value.split(',').map(s => s.trim()),
+                    brand: document.getElementById('txtBrand').value,
+                    model: document.getElementById('txtModel').value,
+                    color: document.getElementById('txtColor').value,
+                    specification: document.getElementById('txtSpecification').value,
+                    unit: document.getElementById('txtUnit').value,
+                    ourPurchasePrice: Number(document.getElementById('numPurchasePrice').value) || 0,
+                    ourSellingPrice: Number(document.getElementById('numSellingPrice').value) || 0,
+                    currency: "VND",
+                    vatIncluded: document.getElementById('selVat').value === 'true',
+                    description: document.getElementById('txtDescription').value,
+                };
+
+                const fileImages = document.getElementById('fileImages').files;
+
+                if (editId) {
+                    // Update Mode
+                    // Images update strategy here is skipped for brevity (requires deep storage handling), just updating text
+                    materialData.updatedAt = serverTimestamp();
+                    await updateDoc(doc(db, 'materials', editId), materialData);
+                    statusMsg.style.color = "green";
+                    statusMsg.textContent = "수정되었습니다!";
+                } else {
+                    // Create Mode
+                    await createMaterial({ ...materialData, supplierIds: [] }, fileImages);
+                    statusMsg.style.color = "green";
+                    statusMsg.textContent = "성공적으로 등록되었습니다!";
+                }
+
+                setTimeout(() => {
+                    window.location.href = 'materials.html';
+                }, 1500);
+            } catch (err) {
+                console.error(err);
+                statusMsg.style.color = "red";
+                statusMsg.textContent = "저장에 실패했습니다: " + err.message;
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = '저장하기';
+            }
+        });
+    </script>
+
+    <!-- Global Auth Guard -->
+    <script type="module">
+        import { checkAdminAuth } from '../assets/js/auth.js';
+
+        checkAdminAuth(
+            (user) => {
+                document.body.style.display = 'block';
+
+                // Add logout button / User email to header dynamically if header exists
+                const nav = document.querySelector('.main-nav ul');
+                if (nav && !document.getElementById('navUserEmail')) {
+                    const li = document.createElement('li');
+                    li.id = 'navUserEmail';
+                    li.innerHTML = `<span style="margin-left: 1rem; font-size:0.875rem; color:var(--text-secondary);">${user.email}</span>
+                                    <button onclick="window.logoutAndRedirect()" style="margin-left:0.5rem; background:none; border:none; cursor:pointer; color:var(--primary-color); font-weight:bold;">[로그아웃]</button>`;
+                    nav.appendChild(li);
+                }
+            },
+            () => {
+                const current = window.location.pathname + window.location.search;
+                window.location.href = '../login.html?redirect=' + encodeURIComponent(current);
+            }
+        );
+
+        import { logoutAdmin } from '../assets/js/auth.js';
+        window.logoutAndRedirect = () => {
+            logoutAdmin();
+            window.location.href = '../login.html';
+        };
+    </script>
+</body>
+
+</html>

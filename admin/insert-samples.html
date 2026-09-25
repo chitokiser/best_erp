@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <title>샘플 50개 자동 입력</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+
+<body style="padding: 2rem;">
+    <h1>'기타' 카테고리 샘플 데이터 입력기</h1>
+    <p>사무집기, 마사지샵 용품 등 50개의 샘플 레코드를 생성합니다.</p>
+    <button id="insertBtn" class="btn-primary">데이터 50개 생성 시작하기</button>
+    <div id="log"
+        style="margin-top: 1rem; font-family: monospace; height: 400px; overflow-y: auto; background: #f1f5f9; padding: 1rem;">
+    </div>
+
+    <script type="module">
+        import { createMaterial } from '../services/materialApi.js';
+
+        const btn = document.getElementById('insertBtn');
+        const logBox = document.getElementById('log');
+
+        function log(msg) {
+            logBox.innerHTML += `<div>${msg}</div>`;
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        const items = [
+            "최고급 마사지 베드 (전동식)",
+            "접이식 간이 마사지 침대",
+            "아로마 테라피 에센셜 오일 세트",
+            "대용량 마사지 오일 (5L)",
+            "순면 마사지 샵 타월 (100장 묶음)",
+            "일회용 베드 커버 롤 (200회분)",
+            "온열 스톤 테라피 세트",
+            "고급 사무용 메쉬 의자",
+            "임원용 천연 가죽 의자",
+            "접이식 회의용 테이블 (1800mm)",
+            "이동식 화이트보드 (1200x900)",
+            "스틸 파티션 세트 (4인용)",
+            "원목 안내데스크 (프론트 뷰)",
+            "로비 대기용 3인 소파 (인조가죽)",
+            "A4 복사용지 (더블에이, 5박스)",
+            "대형 복합기 잉크/토너 세트",
+            "클래식 원목 사물함 (12칸)",
+            "전자 다이얼 캐비닛 (철재)",
+            "휴게실용 커피머신 (상업용)",
+            "정수기 교체용 필터 세트",
+            "아로마 디퓨저 워머 (양초형)",
+            "전동 풋스파 마사지기",
+            "일회용 위생 가운 (50벌)",
+            "소형 냉장고 (미니바, 50L)",
+            "업소용 대형 공기청정기 (헤파필터)",
+            "살균 소독기 (UV 램프형)",
+            "사무용 기본 책상 (1400mm)",
+            "팀장용 L자형 코너 데스크",
+            "케이블 정리 멀티탭 박스 (10개)",
+            "방음 스펀지 패널 (20장)",
+            "디지털 도어록 (지문인식형)",
+            "출퇴근 기록기 (안면인식)",
+            "업소용 청소기 (습식/건식 겸용)",
+            "대형 화분 플랜테리어 세트",
+            "매장용 BGM 앰프 및 스피커",
+            "고객용 슬리퍼 세트 (50켤레)",
+            "다목적 서빙 카트 (3단 스테인리스)",
+            "화장실 핸드타월 디스펜서",
+            "휴게실 라운지 체어 (패브릭)",
+            "개인용 보조 수납장 (3단 서랍)",
+            "회의실용 4K 빔프로젝터",
+            "방염 블라인드 (롤스크린)",
+            "매장 입구 환영 매트 (커스텀 로고)",
+            "직원 탈의실 락커룸 세트",
+            "전동식 높이조절 모션데스크",
+            "허리쿠션 및 메모리폼 방석 (10인)",
+            "영업용 POS 단말기 풀세트",
+            "아이나비 CCTV 카메라 (4채널)",
+            "온냉온수기 보온 통풍기 세트",
+            "기타 마사지 샵 인테리어 소품 모음"
+        ];
+
+        const brands = ["퍼시스", "시디즈", "한샘", "IKEA", "BEST OEM", "현대", "LG", "무인양품", "기타"];
+
+        btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            btn.textContent = "생성 중...";
+
+            for (let i = 0; i < items.length; i++) {
+                const itemName = items[i];
+                const rPrice = Math.floor(Math.random() * 50 + 5) * 10000; // 50,000 ~ 550,000
+                const brand = brands[Math.floor(Math.random() * brands.length)];
+
+                const payload = {
+                    name: itemName,
+                    brand: brand,
+                    categoryId: "기타",
+                    specification: "규격 및 상세 미정 (샘플)",
+                    materialCode: "OTH-" + (Math.floor(Math.random() * 90000) + 10000),
+                    unit: "EA",
+                    applications: ["마감", "내장", "기타"],
+                    ourPurchasePrice: rPrice
+                };
+
+                try {
+                    await createMaterial(payload, null);
+                    log(`[${i + 1}/50] 성공: ${itemName} 등록 완료`);
+                } catch (e) {
+                    log(`[${i + 1}/50] 실패: ${itemName} - ${e.message}`);
+                }
+            }
+
+            log("✔️ 50개 샘플 데이터 생성이 완료되었습니다!");
+            btn.textContent = "생성 완료";
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공급업체 - BEST MATERIAL</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .grid-view {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .btn-action {
+            padding: 0.5rem 1rem;
+            margin-right: 0.5rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body style="display: none;">
+    <header class="main-header">
+        <div class="container">
+            <h1 class="logo" style="margin-bottom: 0.5rem;"><a href="index.html">BEST MATERIAL DATA</a></h1>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="materials.html">자재 DB</a></li>
+                    <li><a href="price-comparison.html">가격 비교</a></li>
+                    <li><a href="suppliers.html" style="color:var(--primary-color)">공급업체</a></li>
+                    <li><a href="request-form.html" id="navCartLink">구매요청 <span id="cartCount" style="background:var(--primary-color);color:#fff;border-radius:10px;padding:2px 6px;font-size:0.75rem;">0</span></a></li>
+                    <li><a href="estimates.html">견적 생성기</a></li>
+                    <li><a href="categories.html">카테고리</a></li>
+                    <li><a href="admin/dashboard.html">관리자</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 1rem;">
+        <h2 style="margin-bottom: 1.5rem;">BEST 인증 공급업체</h2>
+        <div id="supplierList" class="grid-view">
+            <!-- Suppliers output -->
+        </div>
+    </main>
+
+    <script type="module" src="assets/js/firebase-config.js"></script>
+    <script type="module">
+        import { getAllSuppliers } from './services/supplierApi.js';
+
+        const supplierList = document.getElementById('supplierList');
+
+        const loadData = async () => {
+            supplierList.innerHTML = '<p>로딩 중...</p>';
+            try {
+                const suppliers = await getAllSuppliers();
+
+                if (suppliers.length === 0) {
+                    supplierList.innerHTML = '<p>등록된 공급업체가 없습니다.</p>';
+                    return;
+                }
+
+                supplierList.innerHTML = '';
+                suppliers.forEach(s => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <h3 style="font-size: 1.25rem; margin-bottom: 0.25rem;">${s.companyName || '이름 없음'}</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.875rem;">
+                          ${s.companyNameVi || ''} <br>
+                          지역: ${s.province || '-'}
+                        </p>
+
+                        <div style="margin-bottom: 1rem; font-size: 0.875rem;">
+                            <strong>담당자:</strong> ${s.contactPerson || '-'} <br>
+                            <strong>주요 품목:</strong> ${(s.categories || []).join(', ') || '-'}
+                        </div>
+
+                        <div style="display: flex; gap: 0.5rem;">
+                            ${s.phone ? `<button class="btn-action" style="background-color: #22c55e; color: white;" onclick="window.open('tel:${s.phone}')">☎ 전화</button>` : ''}
+                            ${s.zalo ? `<button class="btn-action" style="background-color: #0284c7; color: white;" onclick="window.open('https://zalo.me/${s.zalo.replace(/[^0-9]/g, '')}')">Zalo</button>` : ''}
+                            <button class="btn-action" style="background-color: #f1f5f9; color: #333;" onclick="alert('준비 중입니다.')">자재 보기</button>
+                        </div>
+                    `;
+                    supplierList.appendChild(card);
+                });
+            } catch (error) {
+                console.error(error);
+                supplierList.innerHTML = '<p style="color:red;">오류가 발생했습니다.</p>';
+            }
+        };
+
+        loadData();
+    </script>
+
+    <!-- Global Auth Guard -->
+    <script type="module">
+        import { checkAdminAuth } from './assets/js/auth.js';
+        
+        checkAdminAuth(
+            (user) => { 
+                document.body.style.display = 'block';
+                
+                // Add logout button / User email to header dynamically if header exists
+                const nav = document.querySelector('.main-nav ul');
+                if(nav && !document.getElementById('navUserEmail')) {
+                    const li = document.createElement('li');
+                    li.id = 'navUserEmail';
+                    li.innerHTML = `<span style="margin-left: 1rem; font-size:0.875rem; color:var(--text-secondary);">${user.email}</span>
+                                    <button onclick="window.logoutAndRedirect()" style="margin-left:0.5rem; background:none; border:none; cursor:pointer; color:var(--primary-color); font-weight:bold;">[로그아웃]</button>`;
+                    nav.appendChild(li);
+                }
+            },
+            () => {
+                const current = window.location.pathname + window.location.search;
+                window.location.href = 'login.html?redirect=' + encodeURIComponent(current);
+            }
+        );
+
+        import { logoutAdmin } from './assets/js/auth.js';
+        window.logoutAndRedirect = () => {
+            logoutAdmin();
+            window.location.href = 'login.html';
+        };
+    </script>
+</body>
+
+</html>

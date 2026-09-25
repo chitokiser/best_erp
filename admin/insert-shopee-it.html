@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Shopee VN 기반 IT/기타 샘플 데이터 생성</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+
+<body style="padding: 2rem;">
+    <h1>Shopee VN (컴퓨터/사무용품) 가상 연동기</h1>
+    <p>실제 Shopee API는 판매자(파트너) 키가 필요하므로, Shopee 베트남에서 인기리에 판매되는 형태의 IT / 사무용품 실데이터 40종을 가상으로 주입합니다.</p>
+    <button id="insertBtn" class="btn-primary">Shopee VN IT/사무용품 40개 생성</button>
+    <div id="log"
+        style="margin-top: 1rem; font-family: monospace; height: 400px; overflow-y: auto; background: #f1f5f9; padding: 1rem; border-radius: 8px;">
+    </div>
+
+    <script type="module">
+        import { createMaterial } from '../services/materialApi.js';
+
+        const btn = document.getElementById('insertBtn');
+        const logBox = document.getElementById('log');
+
+        function log(msg) {
+            logBox.innerHTML += `<div>${msg}</div>`;
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        // 베트남 Shopee에서 판매되는 실제 인기 IT/사무용품 샘플 리스트
+        const shopeeItems = [
+            { name: "Dell UltraSharp U2723QE 27인치 4K 모니터", brand: "Dell", cat: "IT", price: 14500000 },
+            { name: "Logitech MX Master 3S 무선 마우스", brand: "Logitech", cat: "IT", price: 2450000 },
+            { 기name: "Keychron K8 Pro 기계식 키보드 (적축)", brand: "Keychron", cat: "IT", price: 2300000 },
+            { name: "LG 24MP400-B 24인치 사무용 모니터", brand: "LG", cat: "IT", price: 2650000 },
+            { name: "HP LaserJet Pro M15w 무선 흑백 레이저 프린터", brand: "HP", cat: "IT", price: 2150000 },
+            { name: "Epson EcoTank L3250 무한잉크 복합기", brand: "Epson", cat: "IT", price: 4200000 },
+            { name: "TP-Link Archer AX53 AX3000 기가비트 공유기", brand: "TP-Link", cat: "IT", price: 1150000 },
+            { name: "Asus RT-AX82U 듀얼밴드 WiFi 6 공유기", brand: "ASUS", cat: "IT", price: 3950000 },
+            { name: "Cisco SG95-24 24포트 기가비트 스위치 허브", brand: "Cisco", cat: "IT", price: 2850000 },
+            { name: "Synology DiskStation DS220+ NAS", brand: "Synology", cat: "IT", price: 8900000 },
+            { name: "WD Red Plus 4TB NAS용 HDD", brand: "Western Digital", cat: "IT", price: 2900000 },
+            { name: "SanDisk Ultra Flair USB 3.0 128GB", brand: "SanDisk", cat: "IT", price: 290000 },
+            { name: "APC Back-UPS 650VA UPS (무정전 전원 공급장치)", brand: "APC", cat: "IT", price: 1550000 },
+            { name: "Apple iPad 10세대 64GB WiFi", brand: "Apple", cat: "IT", price: 10900000 },
+            { name: "Samsung Galaxy Tab A8 10.5인치", brand: "Samsung", cat: "IT", price: 6200000 },
+            { name: "Lenovo ThinkPad E14 Gen 4 사무용 노트북", brand: "Lenovo", cat: "IT", price: 16500000 },
+            { name: "Ugreen 하이브리드 USB-C 멀티허브 (7-in-1)", brand: "Ugreen", cat: "IT", price: 650000 },
+            { name: "Baseus 100W GaN 충전기", brand: "Baseus", cat: "IT", price: 850000 },
+            { name: "Dahua 2MP 실내외 방수 돔 CCTV 카메라", brand: "Dahua", cat: "IT", price: 580000 },
+            { name: "Hikvision 4채널 PoE NVR 녹화기", brand: "Hikvision", cat: "IT", price: 1350000 },
+            { name: "Double A (더블에이) A4 복사용지 80g (1박스=5권)", brand: "Double A", cat: "기타", price: 320000 },
+            { name: "PaperOne A4 복사용지 70g (1박스=5권)", brand: "PaperOne", cat: "기타", price: 280000 },
+            { name: "Plus 플러스 수동 문서 세단기", brand: "Plus", cat: "기타", price: 1200000 },
+            { name: "Deli 델리 자동 연필깎이", brand: "Deli", cat: "기타", price: 150000 },
+            { name: "3M 포스트잇 인덱스 세트 (10팩)", brand: "3M", cat: "기타", price: 85000 },
+            { name: "스테들러 형광펜 6색 세트", brand: "Staedtler", cat: "기타", price: 45000 },
+            { name: "코락스 (Korloy) 사무용 칼 세트", brand: "Korloy", cat: "기타", price: 30000 },
+            { name: "펜텔 (Pentel) 에너겔 볼펜 1타스 (12자루)", brand: "Pentel", cat: "기타", price: 220000 },
+            { name: "맥스 (MAX) 대형 스테이플러", brand: "MAX", cat: "기타", price: 380000 },
+            { name: "코니카미놀타 비즈허브 C225i 복사기 임대/렌탈권", brand: "Konica Minolta", cat: "기타", price: 1200000 },
+            { name: "아크릴 데스크 명패 (대표/이사)", brand: "OEM", cat: "기타", price: 250000 },
+            { name: "화이트보드 자석 클립 10개입", brand: "OEM", cat: "기타", price: 45000 },
+            { name: "사무용 미니 공기청정기 (탁상용)", brand: "Xiaomi", cat: "기타", price: 850000 },
+            { name: "샤오미 미지아 스마트 스탠드", brand: "Xiaomi", cat: "기타", price: 450000 },
+            { name: "네스프레소 에센자 미니 캡슐 커피머신", brand: "Nespresso", cat: "기타", price: 2600000 },
+            { name: "네스프레소 프로페셔널 커피 캡슐 50개", brand: "Nespresso", cat: "기타", price: 950000 },
+            { name: "휴게실용 소형 전자레인지 20L", brand: "Sharp", cat: "기타", price: 1150000 },
+            { name: "Lock&Lock 직수형 정수기 필터 교체용", brand: "LocknLock", cat: "기타", price: 300000 },
+            { name: "코멧 사무/휴게실 분리수거함 (3단)", brand: "Comet", cat: "기타", price: 450000 },
+            { name: "사무실용 실내 슬리퍼 (통풍성형) 1켤레", brand: "OEM", cat: "기타", price: 75000 }
+        ];
+
+        btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            btn.textContent = "Shopee 연동 데이터 생성 중...";
+
+            for (let i = 0; i < shopeeItems.length; i++) {
+                const item = shopeeItems[i];
+
+                const payload = {
+                    name: item.name || item.기name, // fallback handling
+                    brand: item.brand,
+                    categoryId: item.cat,
+                    specification: "Shopee VN 연동 가상데이터",
+                    materialCode: "SHP-" + (Math.floor(Math.random() * 90000) + 10000),
+                    unit: "EA",
+                    applications: ["마감", "내장", "기타"],
+                    ourPurchasePrice: item.price
+                };
+
+                try {
+                    await createMaterial(payload, null);
+                    log(`[${i + 1}/40] 성공: ${payload.name} 등록 완료 (Shopee 예상단가: ${item.price.toLocaleString()} VND)`);
+                } catch (e) {
+                    log(`[${i + 1}/40] 실패: ${payload.name} - ${e.message}`);
+                }
+            }
+
+            log("✔️ Shopee VN IT/사무기기 샘플 40종 생성이 완료되었습니다!");
+            btn.textContent = "생성 완료";
+        });
+    </script>
+</body>
+
+</html>

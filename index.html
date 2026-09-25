@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BESTwinner - 프로젝트 관리 플랫폼</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body style="display: none; background: #f8fafc;">
+    <header class="main-header"
+        style="background: white; border-bottom: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h1 class="logo" style="margin: 0; color: var(--primary-color);">BESTwinner</h1>
+                <p class="subtitle" style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">통합 프로젝트 및 자재 관리
+                    플랫폼</p>
+            </div>
+            <nav class="main-nav">
+                <ul style="display: flex; gap: 1.5rem; list-style: none; margin: 0; padding: 0;">
+                    <li><a href="my-workspace.html" style="font-weight: 500; text-decoration: none;">내 워크스페이스</a></li>
+                    <li><a href="admin/dashboard.html" style="font-weight: 500; text-decoration: none;">총괄 대시보드</a></li>
+                    <li><a href="materials.html" style="font-weight: 500; text-decoration: none;">자재 DB</a></li>
+                    <li><a href="admin/suppliers.html" style="font-weight: 500; text-decoration: none;">협력업체 평가</a></li>
+                    <li id="navUserEmail"></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 3rem 1rem;">
+        <!-- Hero Section -->
+        <section
+            style="background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; padding: 3rem 2rem; border-radius: 12px; margin-bottom: 3rem; text-align: center; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
+            <h2 style="font-size: 2.5rem; margin: 0 0 1rem 0; font-weight: 700;">당신의 모든 프로젝트, 한 곳에서 완벽하게.</h2>
+            <p
+                style="font-size: 1.1rem; opacity: 0.9; margin: 0 0 2rem 0; max-width: 600px; margin-left: auto; margin-right: auto;">
+                인테리어, 신축 현장 관리부터 자재 수급 및 우수 협력사 관리까지. BESTwinner 그룹의 업무 프로세스에 최적화된 올인원 관리를 시작하세요.
+            </p>
+            <form action="admin/projects.html" method="GET"
+                style="display: flex; max-width: 600px; margin: 0 auto; gap: 0.5rem;">
+                <input type="text" name="q" placeholder="담당 업무, 프로젝트 명, 혹은 자재명을 검색하세요..."
+                    style="flex: 1; padding: 1rem 1.5rem; font-size: 1rem; border-radius: 50px; border: none; outline: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <button type="submit" class="btn-primary"
+                    style="padding: 1rem 2.5rem; font-size: 1rem; border-radius: 50px; background: #f59e0b; color: white; border: none; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">통합
+                    검색</button>
+            </form>
+        </section>
+
+        <!-- Quick Navigations -->
+        <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--text-primary);">주요 업무 바로가기</h3>
+        <section style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
+            <div class="card" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; background: white;"
+                onclick="location.href='my-workspace.html'"
+                onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 15px -3px rgba(0,0,0,0.1)';"
+                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)';">
+                <div
+                    style="width: 48px; height: 48px; background: #e0e7ff; color: #4338ca; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1rem;">
+                    🧑‍💻</div>
+                <h3 style="margin: 0 0 0.5rem 0; font-size: 1.25rem;">나의 워크스페이스</h3>
+                <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">내 앞으로 배정된 업무 할당량(Task) 및 내가 올린 결재
+                    상신 건들을 추적하고 관리합니다.</p>
+            </div>
+
+            <div class="card" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; background: white;"
+                onclick="location.href='admin/project-detail.html'"
+                onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 15px -3px rgba(0,0,0,0.1)';"
+                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)';">
+                <div
+                    style="width: 48px; height: 48px; background: #dcfce7; color: #15803d; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1rem;">
+                    📈</div>
+                <h3 style="margin: 0 0 0.5rem 0; font-size: 1.25rem;">프로젝트 칸반 뷰</h3>
+                <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">현장 프로젝트별 공정 상황을 드래그 앤 드롭으로 이동하며
+                    칸반 보드 형태로 실시간 관리하세요.</p>
+            </div>
+
+            <div class="card" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; background: white;"
+                onclick="location.href='admin/dashboard.html'"
+                onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 15px -3px rgba(0,0,0,0.1)';"
+                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)';">
+                <div
+                    style="width: 48px; height: 48px; background: #fef3c7; color: #b45309; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1rem;">
+                    🧭</div>
+                <h3 style="margin: 0 0 0.5rem 0; font-size: 1.25rem;">총괄 대시보드 (Executive)</h3>
+                <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">전체 프로젝트의 예산 소진 상황, 진척도 랭킹 등 경영진
+                    시점의 요약된 통찰력을 제공합니다.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer" style="margin-top: 4rem;">
+        <div class="container">
+            <p>&copy; 2026 BESTwinner Group. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script type="module" src="assets/js/firebase-config.js"></script>
+    <script type="module" src="assets/js/main.js"></script>
+
+    <!-- Global Auth Guard -->
+    <script type="module">
+        import { checkAdminAuth, logoutAdmin } from './assets/js/auth.js';
+
+        checkAdminAuth(
+            (user) => {
+                document.body.style.display = 'block';
+                const navEmail = document.getElementById('navUserEmail');
+                if (navEmail) {
+                    navEmail.innerHTML = `<span style="font-size:0.875rem; color:var(--text-secondary);">${user.email}</span>
+                                    <button onclick="window.logoutAndRedirect()" style="margin-left:0.5rem; background:none; border:none; cursor:pointer; color:var(--primary-color); font-weight:bold;">[로그아웃]</button>`;
+                }
+            },
+            () => {
+                window.location.href = 'login.html';
+            }
+        );
+
+        window.logoutAndRedirect = () => {
+            logoutAdmin();
+            window.location.href = 'login.html';
+        };
+    </script>
+</body>
+
+</html>

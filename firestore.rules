@@ -1,0 +1,41 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Role-based helper functions (Can be expanded with Custom Claims later)
+    // For now, allow writes to any logged-in user so development is unblocked
+    function isStaffOrAdmin() {
+      return isAuthenticated(); 
+    }
+
+    // materials collection
+    match /materials/{document=**} {
+      allow read: if true; // anyone can view materials
+      allow write: if isStaffOrAdmin(); // only logged-in users can create/edit
+    }
+
+    // suppliers collection
+    match /suppliers/{document=**} {
+      allow read: if true; 
+      allow write: if isStaffOrAdmin();
+    }
+
+    // price history
+    match /priceHistory/{document=**} {
+      allow read: if true;
+      allow write: if isStaffOrAdmin();
+    }
+    
+    // external prices (handled generally by background cloud function)
+    match /externalPrices/{document=**} {
+      allow read: if true;
+      allow write: if isStaffOrAdmin();
+    }
+  }
+}

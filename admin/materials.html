@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>자재 관리 - BEST MATERIAL</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+
+<body style="display: none;">
+    <header class="main-header">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <h1 class="logo">BEST Group</h1>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="dashboard.html">대시보드</a></li>
+                    <li><a href="materials.html" style="color:var(--primary-color)">자재관리</a></li>
+                    <li><a href="suppliers.html">공급업체</a></li>
+                    <li><a href="purchase-requests.html">결재관리(구매)</a></li>
+                    <li><a href="users.html">권한관리</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h2>자재 목록</h2>
+            <div style="display: flex; gap: 1rem;">
+                <select id="adminCatFilter" class="search-input" style="padding: 0.5rem;">
+                    <option value="">모든 카테고리 ▼</option>
+                    <option value="인테리어">인테리어</option>
+                        <option value="엘리베이터">엘리베이터</option>
+                        <option value="소방">소방</option>
+                        <option value="스마트주차장">스마트주차장</option>
+                        <option value="기타">기타</option>
+                </select>
+                <button class="btn-primary" onclick="location.href='material-form.html'">+ 자재 등록</button>
+            </div>
+        </div>
+
+        <div class="card" style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border-color);">
+                        <th style="padding: 1rem; width: 60px;">사진</th>
+                        <th style="padding: 1rem;">자재코드</th>
+                        <th style="padding: 1rem;">자재명</th>
+                        <th style="padding: 1rem;">규격</th>
+                        <th style="padding: 1rem;">카테고리</th>
+                        <th style="padding: 1rem;">매입가격 (VND)</th>
+                        <th style="padding: 1rem;">공급처</th>
+                        <th style="padding: 1rem;">상태</th>
+                    </tr>
+                </thead>
+                <tbody id="materialsTableBody">
+                    <tr>
+                        <td colspan="7" style="padding: 1rem; text-align: center;">로딩 중...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script type="module">
+        import { getAllMaterials, getSupplierPrices } from '../services/materialApi.js';
+
+        let allAdminMaterials = [];
+        const tbody = document.getElementById('materialsTableBody');
+        const filterEl = document.getElementById('adminCatFilter');
+
+        const renderTable = async (materials) => {
+            if (materials.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="padding: 1rem; text-align: center;">등록된 자재가 없습니다.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            // Fetch suppliers concurrently for performance
+            const supplierPromises = materials.map(m => getSupplierPrices(m.id));
+            const suppliersData = await Promise.all(supplierPromises);
+
+            materials.forEach((m, index) => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid var(--border-color)';
+                tr.style.cursor = 'pointer';
+                tr.onclick = () => location.href = `material-form.html?id=${m.id}`; // Edit page logic placeholder
+
+                const imgUrl = (m.images && m.images.length > 0) ? m.images[0] : 'https://placehold.co//e2e8f0/475569?text=No+Image';
+
+                const supps = suppliersData[index] || [];
+                const suppText = supps.length > 0 ? `${supps[0].supplierName} 외 ${supps.length - 1}곳` : '없음';
+
+                tr.innerHTML = `
+                    <td style="padding: 1rem;"><img src="${imgUrl}" style="width:50px; height:50px; object-fit:cover; border-radius:4px;" alt="thumb"></td>
+                    <td style="padding: 1rem;">${m.materialCode || '-'}</td>
+                    <td style="padding: 1rem; font-weight: 500;">${m.name}</td>
+                    <td style="padding: 1rem;">${m.specification || '-'}</td>
+                    <td style="padding: 1rem;">${m.categoryId || '-'}</td>
+                    <td style="padding: 1rem; color: var(--primary-color)">${m.ourPurchasePrice ? m.ourPurchasePrice.toLocaleString() : '0'}</td>
+                    <td style="padding: 1rem; color: #475569; font-size: 0.875rem;">${suppText}</td>
+                    <td style="padding: 1rem;">
+                        <span style="background: #e2e8f0; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.875rem;">
+                            ${m.status === 'active' ? '활성' : '비활성'}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+
+        const loadMaterials = async () => {
+            try {
+                tbody.innerHTML = `<tr><td colspan="8" style="padding: 1rem; text-align: center;">데이터 호출 중...</td></tr>`;
+                allAdminMaterials = await getAllMaterials();
+                allAdminMaterials.sort((a, b) => (a.materialCode || '').localeCompare(b.materialCode || ''));
+                await renderTable(allAdminMaterials);
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = `<tr><td colspan="8" style="padding: 1rem; text-align: center; color: red;">오류 발생: ${err.message}</td></tr>`;
+            }
+        };
+
+        filterEl.addEventListener('change', async () => {
+            const cat = filterEl.value;
+            if (cat) {
+                await renderTable(allAdminMaterials.filter(m => m.categoryId === cat));
+            } else {
+                await renderTable(allAdminMaterials);
+            }
+        });
+
+        loadMaterials();
+    </script>
+
+    <!-- Global Auth Guard -->
+    <script type="module">
+        import { checkAdminAuth } from '../assets/js/auth.js';
+        
+        checkAdminAuth(
+            (user) => { 
+                document.body.style.display = 'block';
+                
+                // Add logout button / User email to header dynamically if header exists
+                const nav = document.querySelector('.main-nav ul');
+                if(nav && !document.getElementById('navUserEmail')) {
+                    const li = document.createElement('li');
+                    li.id = 'navUserEmail';
+                    li.innerHTML = `<span style="margin-left: 1rem; font-size:0.875rem; color:var(--text-secondary);">${user.email}</span>
+                                    <button onclick="window.logoutAndRedirect()" style="margin-left:0.5rem; background:none; border:none; cursor:pointer; color:var(--primary-color); font-weight:bold;">[로그아웃]</button>`;
+                    nav.appendChild(li);
+                }
+            },
+            () => {
+                const current = window.location.pathname + window.location.search;
+                window.location.href = '../login.html?redirect=' + encodeURIComponent(current);
+            }
+        );
+
+        import { logoutAdmin } from '../assets/js/auth.js';
+        window.logoutAndRedirect = () => {
+            logoutAdmin();
+            window.location.href = '../login.html';
+        };
+    </script>
+</body>
+
+</html>

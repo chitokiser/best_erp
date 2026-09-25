@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>카테고리 - BEST MATERIAL</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .cat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .cat-card {
+            position: relative;
+            height: 200px;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .cat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.2);
+        }
+
+        .cat-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .cat-card:hover img {
+            transform: scale(1.05);
+        }
+
+        .cat-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+            padding: 1.5rem;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            height: 100%;
+        }
+
+        .cat-overlay h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+    </style>
+</head>
+
+<body style="display: none;">
+    <header class="main-header">
+        <div class="container">
+            <h1 class="logo" style="margin-bottom: 0.5rem;"><a href="index.html">BEST MATERIAL DATA</a></h1>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="materials.html">자재 DB</a></li>
+                    <li><a href="price-comparison.html">가격 비교</a></li>
+                    <li><a href="suppliers.html">공급업체</a></li>
+                    <li><a href="request-form.html" id="navCartLink">구매요청 <span id="cartCount"
+                                style="background:var(--primary-color);color:#fff;border-radius:10px;padding:2px 6px;font-size:0.75rem;">0</span></a>
+                    </li>
+                    <li><a href="estimates.html">견적 생성기</a></li>
+                    <li><a href="categories.html" style="color:var(--primary-color)">카테고리</a></li>
+                    <li><a href="admin/dashboard.html">관리자</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 1rem;">
+        <h2 style="margin-bottom: 2rem; font-size: 1.75rem;">주요 자재 카테고리</h2>
+
+        <div class="cat-grid" id="catGrid">
+            <!-- Rendered by JS -->
+        </div>
+    </main>
+
+    <script type="module" src="assets/js/firebase-config.js"></script>
+    <script type="module">
+        import { getAllMaterials } from './services/materialApi.js';
+
+        const cats = [
+            { id: '인테리어', name: '인테리어 (Interior)', img: 'https://images.unsplash.com/photo-1540932239986-30128078f3c5?w=600' },
+            { id: '엘리베이터', name: '엘리베이터 (Elevator)', img: 'https://images.unsplash.com/photo-1517581561081-3316cc810d29?w=600' },
+            { id: '소방', name: '소방 (Fire Fighting)', img: 'https://images.unsplash.com/photo-1453227588063-bb302b62f50b?w=600' },
+            { id: '스마트주차장', name: '스마트주차장 (Smart Parking)', img: 'https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=600' },
+            { id: 'IT', name: 'IT (Network & Hardware)', img: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600' },
+            { id: '기타', name: '기타 (Others)', img: 'https://images.unsplash.com/photo-1516156008625-3a9d6067fab5?w=600' }
+        ];
+
+        const catGrid = document.getElementById('catGrid');
+
+        const init = async () => {
+            try {
+                const materials = await getAllMaterials();
+
+                cats.forEach(c => {
+                    const count = materials.filter(m => m.categoryId === c.id).length;
+
+                    const el = document.createElement('div');
+                    el.className = 'cat-card';
+                    el.onclick = () => {
+                        window.location.href = `materials.html?category=${encodeURIComponent(c.id)}`;
+                    };
+
+                    el.innerHTML = `
+                        <img src="${c.img}" alt="${c.name}">
+                        <div class="cat-overlay">
+                            <h3>${c.id}</h3>
+                            <p style="color: #cbd5e1;">등록 자재: ${count}개</p>
+                        </div>
+                    `;
+                    catGrid.appendChild(el);
+                });
+            } catch (err) {
+                console.error(err);
+                catGrid.innerHTML = '<p style="color:red">카테고리를 불러올 수 없습니다.</p>';
+            }
+        };
+
+        init();
+    </script>
+    </script>
+
+    <!-- Global Auth Guard -->
+    <script type="module">
+        import { checkAdminAuth } from './assets/js/auth.js';
+
+        checkAdminAuth(
+            (user) => {
+                document.body.style.display = 'block';
+
+                // Add logout button / User email to header dynamically if header exists
+                const nav = document.querySelector('.main-nav ul');
+                if (nav && !document.getElementById('navUserEmail')) {
+                    const li = document.createElement('li');
+                    li.id = 'navUserEmail';
+                    li.innerHTML = `<span style="margin-left: 1rem; font-size:0.875rem; color:var(--text-secondary);">${user.email}</span>
+                                    <button onclick="window.logoutAndRedirect()" style="margin-left:0.5rem; background:none; border:none; cursor:pointer; color:var(--primary-color); font-weight:bold;">[로그아웃]</button>`;
+                    nav.appendChild(li);
+                }
+            },
+            () => {
+                const current = window.location.pathname + window.location.search;
+                window.location.href = 'login.html?redirect=' + encodeURIComponent(current);
+            }
+        );
+
+        import { logoutAdmin } from './assets/js/auth.js';
+        window.logoutAndRedirect = () => {
+            logoutAdmin();
+            window.location.href = 'login.html';
+        };
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나의 워크스페이스 - BESTwinner</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .task-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .task-list-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 9999px;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-active {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-done {
+            background: #d1fae5;
+            color: #065f46;
+        }
+    </style>
+</head>
+
+<body style="display: none;">
+    <header class="main-header">
+        <div class="container">
+            <h1 class="logo" style="margin-bottom: 0.5rem;"><a href="index.html">BESTwinner</a></h1>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="my-workspace.html" style="color:var(--primary-color)">내 워크스페이스</a></li>
+                    <li><a href="materials.html">그룹 자재 DB</a></li>
+                    <li><a href="price-comparison.html">단가 비교</a></li>
+                    <li><a href="request-form.html">구매 기안서 작성</a></li>
+                    <li id="navUserArea"></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 1rem;">
+
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+                <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem;">안녕하세요, 박대리 님!</h2>
+                <p style="color: var(--text-secondary); margin: 0;">현재 할당된 업무와 대기 중인 결재 내역을 확인하세요.</p>
+            </div>
+            <div>
+                <button class="btn-primary">+ 오늘의 업무 보고 작성</button>
+            </div>
+        </div>
+
+        <div class="grid-layout">
+            <!-- Left Column -->
+            <div>
+                <!-- My Tasks -->
+                <div class="card" style="margin-bottom: 2rem;">
+                    <h3
+                        style="margin-bottom: 1rem; font-size: 1.25rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
+                        내 작업 할당량 (My Tasks)</h3>
+                    <div>
+                        <div class="task-list-item">
+                            <div>
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">마곡 R&D 센터 신축 인테리어</span>
+                                <h4 style="margin: 0.25rem 0; font-size: 1rem;">1~2층 천장 골조 뼈대 설치 현장 감독</h4>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <span style="font-size: 0.85rem; color: #ef4444; font-weight: 500;">D-2</span>
+                                <span class="status-badge status-active">진행 중</span>
+                            </div>
+                        </div>
+                        <div class="task-list-item">
+                            <div>
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">잠실역 프리미엄 오피스</span>
+                                <h4 style="margin: 0.25rem 0; font-size: 1rem;">회의실 마감재 샘플 발주서 작성 및 상신</h4>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <span style="font-size: 0.85rem; color: var(--text-secondary);">D-5</span>
+                                <span class="status-badge status-pending">할 일 (준비)</span>
+                            </div>
+                        </div>
+                        <div class="task-list-item">
+                            <div>
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">베트남 미딩 B-MOA</span>
+                                <h4 style="margin: 0.25rem 0; font-size: 1rem;">초기 착공 도면 리뷰 미팅</h4>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <span style="font-size: 0.85rem; color: var(--text-secondary);">완료됨</span>
+                                <span class="status-badge status-done">완료</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- My Drafts / Requests -->
+                <div class="card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
+                        <h3 style="margin: 0; font-size: 1.25rem;">내가 올린 구매 결재 현황</h3>
+                        <a href="#" style="font-size: 0.875rem; color: var(--primary-color);">모두 보기 &rarr;</a>
+                    </div>
+                    <div>
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem;">
+                            <thead>
+                                <tr style="color: var(--text-secondary);">
+                                    <th style="padding: 0.5rem 0; font-weight: 500;">요청서명</th>
+                                    <th style="padding: 0.5rem 0; font-weight: 500;">관련 프로젝트</th>
+                                    <th style="padding: 0.5rem 0; font-weight: 500;">결재 상태</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 1rem 0;">A급 인테리어 목재 외 3건 구매의 건</td>
+                                    <td style="padding: 1rem 0; color: var(--text-secondary);">마곡 R&D 센터</td>
+                                    <td style="padding: 1rem 0;"><span style="color: #f59e0b; font-weight: 600;">진행중
+                                            (이과장 결재)</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 1rem 0;">LG 시스템 에어컨 실외기 발주</td>
+                                    <td style="padding: 1rem 0; color: var(--text-secondary);">잠실역 오피스</td>
+                                    <td style="padding: 1rem 0;"><span style="color: #10b981; font-weight: 600;">승인 완료 /
+                                            발주 대기</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div style="display: flex; flex-direction: column; gap: 2rem;">
+                <!-- Feedbacks / Urgent 알림 -->
+                <div class="card" style="background: #fffbfa; border: 1px solid #fee2e2;">
+                    <h3 style="margin-bottom: 1rem; font-size: 1.1rem; color: #b91c1c;">🚨 긴급 피드백 / 알림</h3>
+                    <ul
+                        style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1rem;">
+                        <li style="font-size: 0.9rem;">
+                            <strong style="display: block; color: #991b1b; margin-bottom: 0.2rem;">마곡 R&D 센터 - 골조공사
+                                건</strong>
+                            [반려] 첨부된 설계 도면 평면도 수정 필요. 재확인 후 다시 결재 올려주세요. (이과장)
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Quick Link/Shortcut -->
+                <div class="card" style="background: #fafafa; border: 1px solid #e2e8f0; text-align: center;">
+                    <h4 style="margin: 0 0 1rem 0; color: var(--text-secondary);">자주 진입하는 링크</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                        <button class="btn-primary"
+                            style="background: white; color: var(--text-primary); border: 1px solid #cbd5e1;"
+                            onclick="location.href='materials.html'">자재 검색</button>
+                        <button class="btn-primary"
+                            style="background: white; color: var(--text-primary); border: 1px solid #cbd5e1;"
+                            onclick="location.href='admin/project-detail.html'">소속 프로젝트</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Global Auth Guard -->
+    <script type="module">
+        import { checkAdminAuth, logoutAdmin } from './assets/js/auth.js';
+
+        checkAdminAuth(
+            (user) => {
+                document.body.style.display = 'block';
+                const nav = document.getElementById('navUserArea');
+                nav.innerHTML = `<span style="font-size:0.875rem; color:var(--text-secondary);">${user.email}</span>
+                                <button id="btnHomeLogout" style="margin-left:0.5rem; background:none; border:none; cursor:pointer; color:var(--primary-color); font-weight:bold;">[로그아웃]</button>`;
+
+                document.getElementById('btnHomeLogout').addEventListener('click', () => {
+                    logoutAdmin();
+                    window.location.href = 'login.html';
+                });
+            },
+            () => {
+                window.location.href = 'login.html';
+            }
+        );
+    </script>
+</body>
+
+</html>

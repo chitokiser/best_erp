@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>권한 및 담당자 관리 - BEST Group</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .role-badge {
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .role-super {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .role-admin {
+            background: #dbfafe;
+            color: #075985;
+        }
+
+        .role-staff {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .role-viewer {
+            background: #f1f5f9;
+            color: #475569;
+        }
+    </style>
+</head>
+
+<body style="display: none;">
+    <header class="main-header">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <h1 class="logo">BEST Group</h1>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="dashboard.html">대시보드</a></li>
+                    <li><a href="materials.html">자재관리</a></li>
+                    <li><a href="suppliers.html">공급업체</a></li>
+                    <li><a href="purchase-requests.html">결재관리(구매)</a></li>
+                    <li><a href="users.html" style="color:var(--primary-color)">권한관리</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h2>담당자 및 권한 설정</h2>
+            <button class="btn-primary" onclick="alert('TODO: 새 담당자 이메일 초대 구현')">+ 새 권한 부여</button>
+        </div>
+
+        <div class="card" style="margin-bottom: 2rem;">
+            <h3>활성 담당자 목록</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.875rem;">
+                시스템에 접근 가능한 사용자와 관리 카테고리를 지정할 수 있습니다.
+            </p>
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border-color);">
+                        <th style="padding: 1rem;">담당자 명/이메일</th>
+                        <th style="padding: 1rem;">시스템 권한</th>
+                        <th style="padding: 1rem;">담당 카테고리</th>
+                        <th style="padding: 1rem;">상태</th>
+                        <th style="padding: 1rem;">권한 변경</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    <tr>
+                        <td colspan="5" style="text-align:center; padding: 1rem;">데이터를 불러오는 중...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script type="module" src="../assets/js/firebase-config.js"></script>
+    <script type="module">
+        import { checkAdminAuth } from '../assets/js/auth.js';
+        import { db } from '../assets/js/firebase-config.js';
+        import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
+
+        window.updateUserRole = async (userId, currentRole) => {
+            const newRole = prompt(`새로운 권한을 입력하세요 (SUPER_ADMIN, ADMIN, STAFF, VIEWER)\n현재 권한: ${currentRole}`, currentRole);
+            if (newRole && ['SUPER_ADMIN', 'ADMIN', 'STAFF', 'VIEWER'].includes(newRole.toUpperCase())) {
+                try {
+                    await updateDoc(doc(db, 'users', userId), { role: newRole.toUpperCase(), status: '승인됨' });
+                    alert('권한이 성공적으로 변경되었습니다.');
+                    location.reload();
+                } catch (e) {
+                    alert('권한 유저 정보 수정 중 오류가 발생했습니다: ' + e.message);
+                }
+            } else if (newRole) {
+                alert('유효하지 않은 권한입니다.');
+            }
+        };
+
+        checkAdminAuth(
+            async (user) => {
+                const tbody = document.getElementById('usersTableBody');
+                try {
+                    const querySnapshot = await getDocs(collection(db, "users"));
+
+                    if (querySnapshot.empty) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 1rem;">등록된 담당자가 없습니다.</td></tr>';
+                        return;
+                    }
+
+                    let html = '';
+                    querySnapshot.forEach((docRef) => {
+                        const data = docRef.data();
+                        const id = docRef.id;
+                        const role = data.role || 'VIEWER';
+                        const status = data.status || '대기중';
+                        const category = data.category || '전체 조회';
+
+                        let badgeClass = 'role-viewer';
+                        if (role === 'SUPER_ADMIN') badgeClass = 'role-super';
+                        else if (role === 'ADMIN') badgeClass = 'role-admin';
+                        else if (role === 'STAFF') badgeClass = 'role-staff';
+
+                        html += `
+                            <tr>
+                                <td style="padding: 1rem; font-weight: 500;">${data.name || '이름 없음'} (${data.email || '이메일 없음'})</td>
+                                <td style="padding: 1rem;"><span class="role-badge ${badgeClass}">${role}</span></td>
+                                <td style="padding: 1rem;">${category}</td>
+                                <td style="padding: 1rem; color: ${status === '대기중' ? '#94a3b8' : 'inherit'}">${status}</td>
+                                <td style="padding: 1rem;">
+                                    <button class="btn-primary" style="padding:0.25rem 0.5rem;" onclick="window.updateUserRole('${id}', '${role}')">설정</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    tbody.innerHTML = html;
+                } catch (error) {
+                    console.error("Error fetching users:", error);
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 1rem; color: red;">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>';
+                }
+            },
+            () => {
+                window.location.href = '../admin/dashboard.html';
+            }
+        );
+    </script>
+
+    <!-- Global Auth Guard -->
+    <script type="module">
+        import { checkAdminAuth } from '../assets/js/auth.js';
+
+        checkAdminAuth(
+            (user) => {
+                document.body.style.display = 'block';
+
+                // Add logout button / User email to header dynamically if header exists
+                const nav = document.querySelector('.main-nav ul');
+                if (nav && !document.getElementById('navUserEmail')) {
+                    const li = document.createElement('li');
+                    li.id = 'navUserEmail';
+                    li.innerHTML = `<span style="margin-left: 1rem; font-size:0.875rem; color:var(--text-secondary);">${user.email}</span>
+                                    <button onclick="window.logoutAndRedirect()" style="margin-left:0.5rem; background:none; border:none; cursor:pointer; color:var(--primary-color); font-weight:bold;">[로그아웃]</button>`;
+                    nav.appendChild(li);
+                }
+            },
+            () => {
+                const current = window.location.pathname + window.location.search;
+                window.location.href = '../login.html?redirect=' + encodeURIComponent(current);
+            }
+        );
+
+        import { logoutAdmin } from '../assets/js/auth.js';
+        window.logoutAndRedirect = () => {
+            logoutAdmin();
+            window.location.href = '../login.html';
+        };
+    </script>
+</body>
+
+</html>
