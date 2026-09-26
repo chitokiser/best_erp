@@ -61,10 +61,19 @@
         </div>
 
         <div class="card" style="margin-bottom: 2rem;">
-            <h3>활성 담당자 목록</h3>
-            <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.875rem;">
-                시스템에 접근 가능한 사용자와 관리 카테고리를 지정할 수 있습니다.
-            </p>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                <div>
+                    <h3>활성 담당자 목록</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 0; font-size: 0.875rem;">
+                        시스템에 접근 가능한 사용자와 관리 카테고리를 지정할 수 있습니다.
+                    </p>
+                </div>
+                <div>
+                    <input type="text" id="userSearchInput" placeholder="이메일 또는 이름 검색..."
+                        style="padding: 0.5rem 1rem; border-radius: 4px; border: 1px solid var(--border-color); width: 250px; outline: none; transition: border-color 0.2s;">
+                </div>
+            </div>
+
             <table style="width: 100%; border-collapse: collapse; text-align: left;">
                 <thead>
                     <tr style="border-bottom: 2px solid var(--border-color);">
@@ -77,7 +86,9 @@
                 </thead>
                 <tbody id="usersTableBody">
                     <tr>
-                        <td colspan="5" style="text-align:center; padding: 1rem;">데이터를 불러오는 중...</td>
+                        <td colspan="5" style="text-align:center; padding: 1rem; color: var(--text-secondary);">
+                            데이터를 불러오는 중...
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -98,7 +109,7 @@
                     alert('권한이 성공적으로 변경되었습니다.');
                     location.reload();
                 } catch (e) {
-                    alert('권한 유저 정보 수정 중 오류가 발생했습니다: ' + e.message);
+                    alert('권한 유지 정보 수정 중 오류가 발생했습니다: ' + e.message);
                 }
             } else if (newRole) {
                 alert('유효하지 않은 권한입니다.');
@@ -116,6 +127,7 @@
                 try {
                     await addDoc(collection(db, 'users'), {
                         email: email.trim(),
+                        name: position,
                         position: position || 'N/A',
                         role: role.toUpperCase(),
                         status: '승인됨',
@@ -129,63 +141,75 @@
             }
         };
 
+        let loadedUsers = [];
+
+        function renderUsersTable(users) {
+            const tbody = document.getElementById('usersTableBody');
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1rem; color:var(--text-secondary);">검색 결과가 없습니다.</td></tr>';
+                return;
+            }
+
+            let html = '';
+            users.forEach(data => {
+                const role = data.role || 'VIEWER';
+                const status = data.status || '대기중';
+                const category = data.category || '전체 조회';
+
+                let badgeClass = 'role-viewer';
+                if (role === 'SUPER_ADMIN') badgeClass = 'role-super';
+                else if (role === 'ADMIN') badgeClass = 'role-admin';
+                else if (role === 'STAFF') badgeClass = 'role-staff';
+
+                html += `
+                    <tr>
+                        <td style="padding: 1rem; font-weight: 500;">${data.name || data.position || '이름 없음'} (${data.email || '이메일 없음'})</td>
+                        <td style="padding: 1rem;"><span class="role-badge ${badgeClass}">${role}</span></td>
+                        <td style="padding: 1rem;">${category}</td>
+                        <td style="padding: 1rem; color: ${status === '대기중' ? '#94a3b8' : 'inherit'}">${status}</td>
+                        <td style="padding: 1rem;">
+                            <button class="btn-primary" style="padding:0.25rem 0.5rem;" onclick="window.updateUserRole('${data.id}', '${role}')">설정</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
         checkAdminAuth(
             async (user) => {
-                const tbody = document.getElementById('usersTableBody');
+                // Fetch data
                 try {
-                    const querySnapshot = await getDocs(collection(db, "users"));
+                    document.body.style.display = 'block';
+                    const querySnapshot = await getDocs(collection(db, 'users'));
 
-                    if (querySnapshot.empty) {
-                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 1rem;">등록된 담당자가 없습니다.</td></tr>';
-                        return;
-                    }
-
-                    let html = '';
                     querySnapshot.forEach((docRef) => {
-                        const data = docRef.data();
-                        const id = docRef.id;
-                        const role = data.role || 'VIEWER';
-                        const status = data.status || '대기중';
-                        const category = data.category || '전체 조회';
-
-                        let badgeClass = 'role-viewer';
-                        if (role === 'SUPER_ADMIN') badgeClass = 'role-super';
-                        else if (role === 'ADMIN') badgeClass = 'role-admin';
-                        else if (role === 'STAFF') badgeClass = 'role-staff';
-
-                        html += `
-                            <tr>
-                                <td style="padding: 1rem; font-weight: 500;">${data.name || '이름 없음'} (${data.email || '이메일 없음'})</td>
-                                <td style="padding: 1rem;"><span class="role-badge ${badgeClass}">${role}</span></td>
-                                <td style="padding: 1rem;">${category}</td>
-                                <td style="padding: 1rem; color: ${status === '대기중' ? '#94a3b8' : 'inherit'}">${status}</td>
-                                <td style="padding: 1rem;">
-                                    <button class="btn-primary" style="padding:0.25rem 0.5rem;" onclick="window.updateUserRole('${id}', '${role}')">설정</button>
-                                </td>
-                            </tr>
-                        `;
+                        loadedUsers.push({ id: docRef.id, ...docRef.data() });
                     });
-                    tbody.innerHTML = html;
+
+                    renderUsersTable(loadedUsers);
+
+                    // Add search functionality
+                    document.getElementById('userSearchInput').addEventListener('input', (e) => {
+                        const target = e.target.value.toLowerCase();
+                        if (!target) {
+                            renderUsersTable(loadedUsers);
+                        } else {
+                            const filtered = loadedUsers.filter(u =>
+                                (u.email && u.email.toLowerCase().includes(target)) ||
+                                (u.name && u.name.toLowerCase().includes(target)) ||
+                                (u.position && u.position.toLowerCase().includes(target))
+                            );
+                            renderUsersTable(filtered);
+                        }
+                    });
+
                 } catch (error) {
                     console.error("Error fetching users:", error);
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 1rem; color: red;">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>';
+                    document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 1rem; color: red;">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>';
                 }
-            },
-            () => {
-                window.location.href = '../admin/dashboard.html';
-            }
-        );
-    </script>
 
-    <!-- Global Auth Guard -->
-    <script type="module">
-        import { checkAdminAuth } from '../assets/js/auth.js';
-
-        checkAdminAuth(
-            (user) => {
-                document.body.style.display = 'block';
-
-                // Add logout button / User email to header dynamically if header exists
+                // Add user header
                 const nav = document.querySelector('.main-nav ul');
                 if (nav && !document.getElementById('navUserEmail')) {
                     const li = document.createElement('li');
