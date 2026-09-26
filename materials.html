@@ -195,10 +195,20 @@
                 // URL Query string check for categories
                 const params = new URLSearchParams(window.location.search);
                 const queryCat = params.get('category');
+                const querySearch = params.get('search');
 
                 if (queryCat) {
                     document.getElementById('category').value = queryCat;
                     const filtered = allMaterials.filter(m => m.categoryId === queryCat);
+                    renderMaterials(filtered);
+                } else if (querySearch) {
+                    document.getElementById('searchInput').value = querySearch;
+                    const lq = querySearch.toLowerCase();
+                    const filtered = allMaterials.filter(m =>
+                        (m.name && m.name.toLowerCase().includes(lq)) ||
+                        (m.supplierId && m.supplierId.toLowerCase().includes(lq)) ||
+                        (m.tags && m.tags.some(t => t.toLowerCase().includes(lq)))
+                    );
                     renderMaterials(filtered);
                 } else {
                     renderMaterials(allMaterials);
