@@ -32,11 +32,44 @@ export const logoutAdmin = async () => {
     }
 };
 
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from './firebase-config.js';
+
 export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
         if (user) {
-            // Can add custom claim check or specific UID check here for 'ADMIN'
             if (onAuthSuccess) onAuthSuccess(user);
+
+            // Globally enhance the user badge in the navbar if it exists
+            setTimeout(async () => {
+                const navEmail = document.getElementById('navUserEmail');
+                if (navEmail) {
+                    try {
+                        const q = query(collection(db, 'users'), where('email', '==', user.email));
+                        const snap = await getDocs(q);
+                        let role = 'GUEST';
+                        let position = '방문자';
+
+                        if (!snap.empty) {
+                            const data = snap.docs[0].data();
+                            role = data.role || 'GUEST';
+                            position = data.position || data.name || '직원';
+                        }
+
+                        navEmail.innerHTML = `
+                            <div style="display:flex; flex-direction:column; line-height:1.2; text-align:right; margin-left: 1rem;">
+                                <span style="font-size:0.8rem; font-weight:bold; color:var(--primary-color);">${role}</span>
+                                <span style="font-size:0.75rem; color:var(--text-secondary);">${position} (${user.email})</span>
+                            </div>
+                            <button onclick="window.logoutAndRedirect ? window.logoutAndRedirect() : (window.location.href='../index.html')" style="margin-left:0.5rem; background:none; border:none; cursor:pointer; color:var(--primary-color); font-weight:bold; white-space:nowrap;">[로그아웃]</button>
+                        `;
+                        navEmail.style.display = 'flex';
+                        navEmail.style.alignItems = 'center';
+                    } catch (e) {
+                        console.error('Navbar user fetch error:', e);
+                    }
+                }
+            }, 300); // 300ms delay to ensure the local page script has already appended it
         } else {
             if (onAuthFail) onAuthFail();
         }
