@@ -86,26 +86,29 @@
                 style="margin-bottom: 2rem; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem;">
                 <div class="card" style="border-top: 4px solid var(--primary-color); padding: 1.5rem;">
                     <h3 style="font-size: 1rem; color: var(--text-secondary); margin: 0;">진행중인 프로젝트</h3>
-                    <p style="font-size: 2.5rem; font-weight: bold; color: var(--text-primary); margin: 0.5rem 0;">8</p>
-                    <p style="font-size: 0.875rem; color: #10b981; margin: 0; font-weight: 500;">+2 이번 달 신규</p>
+                    <p style="font-size: 2.5rem; font-weight: bold; color: var(--text-primary); margin: 0.5rem 0;"
+                        id="statProjects">0</p>
+                    <p style="font-size: 0.875rem; color: #10b981; margin: 0; font-weight: 500;"
+                        id="statProjectsCaption">계산 중...</p>
                 </div>
                 <div class="card" style="border-top: 4px solid #f59e0b; padding: 1.5rem;">
                     <h3 style="font-size: 1rem; color: var(--text-secondary); margin: 0;">진행 예산 소진율</h3>
-                    <p style="font-size: 2.5rem; font-weight: bold; color: var(--text-primary); margin: 0.5rem 0;">42%
-                    </p>
+                    <p style="font-size: 2.5rem; font-weight: bold; color: var(--text-primary); margin: 0.5rem 0;"
+                        id="statBudget">0%</p>
                     <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 0; font-weight: 500;">안정적 상태
                     </p>
                 </div>
                 <div class="card" style="border-top: 4px solid #3b82f6; padding: 1.5rem;">
                     <h3 style="font-size: 1rem; color: var(--text-secondary); margin: 0;">누적 자재 데이터</h3>
                     <p style="font-size: 2.5rem; font-weight: bold; color: var(--text-primary); margin: 0.5rem 0;"
-                        id="txtTotalMaterials">1,245</p>
+                        id="txtTotalMaterials">0</p>
                     <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 0; font-weight: 500;">BEST 자재
                         DB</p>
                 </div>
                 <div class="card" style="border-top: 4px solid #ef4444; padding: 1.5rem;">
                     <h3 style="font-size: 1rem; color: var(--text-secondary); margin: 0;">결재 대기</h3>
-                    <p style="font-size: 2.5rem; font-weight: bold; color: var(--text-primary); margin: 0.5rem 0;">5</p>
+                    <p style="font-size: 2.5rem; font-weight: bold; color: var(--text-primary); margin: 0.5rem 0;"
+                        id="statPendingReqs">0</p>
                     <p style="font-size: 0.875rem; color: #ef4444; margin: 0; font-weight: 500;">요청 확인 필요</p>
                 </div>
             </div>
@@ -117,7 +120,7 @@
                     style="padding: 1.5rem; background: white; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
                     <div
                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                        <h3 style="font-size: 1.25rem;">주요 프로젝트 진행 현황</h3>
+                        <h3 style="font-size: 1.25rem;">최근 기안 사항 (결재 대기)</h3>
                         <a href="projects.html"
                             style="font-size: 0.875rem; color: var(--primary-color); text-decoration: none; font-weight: bold;">전체보기
                             &rarr;</a>
@@ -125,83 +128,89 @@
                     <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem;">
                         <thead>
                             <tr style="border-bottom: 2px solid #e2e8f0;">
-                                <th style="padding: 1rem 0.5rem; font-weight: 600; color: var(--text-secondary);">프로젝트 명
+                                <th style="padding: 1rem 0.5rem; font-weight: 600; color: var(--text-secondary);">요청부서
                                 </th>
-                                <th style="padding: 1rem 0.5rem; font-weight: 600; color: var(--text-secondary);">PM
+                                <th style="padding: 1rem 0.5rem; font-weight: 600; color: var(--text-secondary);">기안자
                                 </th>
-                                <th style="padding: 1rem 0.5rem; font-weight: 600; color: var(--text-secondary);">진행 단계
+                                <th style="padding: 1rem 0.5rem; font-weight: 600; color: var(--text-secondary);">금액
                                 </th>
-                                <th style="padding: 1rem 0.5rem; font-weight: 600; color: var(--text-secondary);">진척도
+                                <th style="padding: 1rem 0.5rem; font-weight: 600; color: var(--text-secondary);">상태
                                 </th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr style="border-bottom: 1px solid #f1f5f9;">
-                                <td style="padding: 1rem 0.5rem; font-weight: 500;">마곡 R&D 센터 신축</td>
-                                <td style="padding: 1rem 0.5rem;">이과장</td>
-                                <td style="padding: 1rem 0.5rem;"><span
-                                        style="background: #dbeafe; color: #1e40af; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight:bold;">골조공사</span>
-                                </td>
-                                <td style="padding: 1rem 0.5rem;">
-                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                        <div
-                                            style="flex: 1; background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden;">
-                                            <div style="background: #3b82f6; width: 65%; height: 100%;"></div>
-                                        </div>
-                                        <span style="font-size: 0.875rem; font-weight: 600;">65%</span>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr style="border-bottom: 1px solid #f1f5f9;">
-                                <td style="padding: 1rem 0.5rem; font-weight: 500;">잠실역 프리미엄 오피스 인테리어</td>
-                                <td style="padding: 1rem 0.5rem;">박대리</td>
-                                <td style="padding: 1rem 0.5rem;"><span
-                                        style="background: #fef9c3; color: #854d0e; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight:bold;">마감공사</span>
-                                </td>
-                                <td style="padding: 1rem 0.5rem;">
-                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                        <div
-                                            style="flex: 1; background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden;">
-                                            <div style="background: #eab308; width: 85%; height: 100%;"></div>
-                                        </div>
-                                        <span style="font-size: 0.875rem; font-weight: 600;">85%</span>
-                                    </div>
-                                </td>
-                            </tr>
+                        <tbody id="dashboardPurchaseReqBody">
                             <tr>
-                                <td style="padding: 1rem 0.5rem; font-weight: 500;">베트남 미딩 B-MOA 상업지구</td>
-                                <td style="padding: 1rem 0.5rem;">김대표</td>
-                                <td style="padding: 1rem 0.5rem;"><span
-                                        style="background: #f3f4f6; color: #374151; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight:bold;">착공대기</span>
-                                </td>
-                                <td style="padding: 1rem 0.5rem;">
-                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                        <div
-                                            style="flex: 1; background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden;">
-                                            <div style="background: #6b7280; width: 5%; height: 100%;"></div>
-                                        </div>
-                                        <span style="font-size: 0.875rem; font-weight: 600;">5%</span>
-                                    </div>
-                                </td>
+                                <td colspan="4" style="text-align:center; padding:1rem; color:var(--text-secondary);">
+                                    데이터를 불러오는 중...</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-
-                <!-- 예산 시각화 차트 -->
-                <div class="chart-container"
-                    style="background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); display:flex; flex-direction:column;">
-                    <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">금월 프로젝트 총 예산 집행액</h3>
-                    <div style="flex:1; position:relative;">
-                        <canvas id="budgetChart"></canvas>
+                <td style="padding: 1rem 0.5rem;"><span
+                        style="background: #dbeafe; color: #1e40af; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight:bold;">골조공사</span>
+                </td>
+                <td style="padding: 1rem 0.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <div style="flex: 1; background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden;">
+                            <div style="background: #3b82f6; width: 65%; height: 100%;"></div>
+                        </div>
+                        <span style="font-size: 0.875rem; font-weight: 600;">65%</span>
                     </div>
+                </td>
+                </tr>
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 1rem 0.5rem; font-weight: 500;">잠실역 프리미엄 오피스 인테리어</td>
+                    <td style="padding: 1rem 0.5rem;">박대리</td>
+                    <td style="padding: 1rem 0.5rem;"><span
+                            style="background: #fef9c3; color: #854d0e; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight:bold;">마감공사</span>
+                    </td>
+                    <td style="padding: 1rem 0.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div
+                                style="flex: 1; background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden;">
+                                <div style="background: #eab308; width: 85%; height: 100%;"></div>
+                            </div>
+                            <span style="font-size: 0.875rem; font-weight: 600;">85%</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 1rem 0.5rem; font-weight: 500;">베트남 미딩 B-MOA 상업지구</td>
+                    <td style="padding: 1rem 0.5rem;">김대표</td>
+                    <td style="padding: 1rem 0.5rem;"><span
+                            style="background: #f3f4f6; color: #374151; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight:bold;">착공대기</span>
+                    </td>
+                    <td style="padding: 1rem 0.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div
+                                style="flex: 1; background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden;">
+                                <div style="background: #6b7280; width: 5%; height: 100%;"></div>
+                            </div>
+                            <span style="font-size: 0.875rem; font-weight: 600;">5%</span>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+                </table>
+            </div>
+
+            <!-- 예산 시각화 차트 -->
+            <div class="chart-container"
+                style="background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); display:flex; flex-direction:column;">
+                <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">금월 프로젝트 총 예산 집행액</h3>
+                <div style="flex:1; position:relative;">
+                    <canvas id="budgetChart"></canvas>
                 </div>
             </div>
-        </main>
+    </div>
+    </main>
     </div>
 
     <script type="module">
         import { loginAdmin, loginWithGoogle, logoutAdmin, checkAdminAuth } from '../assets/js/auth.js';
+
+        import { db } from '../assets/js/firebase-config.js';
+        import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 
         const loginSection = document.getElementById('loginSection');
         const dashboardSection = document.getElementById('dashboardSection');
@@ -215,7 +224,8 @@
             (user) => { // success
                 loginSection.style.display = 'none';
                 dashboardSection.style.display = 'block';
-                // Here we can load dashboard metrics
+                // Load metrics dynamically
+                loadDashboardMetrics();
                 renderChart();
             },
             () => { // fail
@@ -223,6 +233,59 @@
                 dashboardSection.style.display = 'none';
             }
         );
+
+        async function loadDashboardMetrics() {
+            try {
+                // 1. Get total materials
+                const matSnap = await getDocs(collection(db, 'materials'));
+                document.getElementById('txtTotalMaterials').textContent = matSnap.size.toLocaleString();
+
+                // 2. Get pending purchase requests
+                const reqsRef = collection(db, 'purchaseRequests');
+                const reqSnap = await getDocs(query(reqsRef, orderBy('createdAt', 'desc')));
+
+                let pendingCount = 0;
+                let tbody = document.getElementById('dashboardPurchaseReqBody');
+                tbody.innerHTML = ''; // clear loading
+
+                let numRenderedRows = 0;
+
+                reqSnap.forEach(doc => {
+                    const data = doc.data();
+                    if (data.status === '대기' || !data.status) pendingCount++;
+
+                    if (numRenderedRows < 5) {
+                        const tr = document.createElement('tr');
+                        const amt = data.totalAmount ? data.totalAmount.toLocaleString() : 0;
+                        const statusCol = (!data.status || data.status === '대기')
+                            ? `<span style="background: #fef3c7; color: #b45309; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight:bold;">대기중</span>`
+                            : `<span style="background: #dbeafe; color: #1e40af; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight:bold;">${data.status}</span>`;
+                        tr.innerHTML = `
+                            <td style="padding: 1rem 0.5rem; border-bottom: 1px solid #f1f5f9;">${data.department || '부서미지정'}</td>
+                            <td style="padding: 1rem 0.5rem; border-bottom: 1px solid #f1f5f9;">${data.requesterName || '익명'}</td>
+                            <td style="padding: 1rem 0.5rem; border-bottom: 1px solid #f1f5f9; font-weight: 500;">${amt} VND</td>
+                            <td style="padding: 1rem 0.5rem; border-bottom: 1px solid #f1f5f9;">${statusCol}</td>
+                        `;
+                        tbody.appendChild(tr);
+                        numRenderedRows++;
+                    }
+                });
+
+                if (numRenderedRows === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:1rem; color:var(--text-secondary);">결재 대기 중인 최근 기안이 없습니다.</td></tr>';
+                }
+
+                document.getElementById('statPendingReqs').textContent = pendingCount;
+
+                // 3. Projects (if any)
+                const projSnap = await getDocs(collection(db, 'projects'));
+                document.getElementById('statProjects').textContent = projSnap.size;
+                document.getElementById('statProjectsCaption').textContent = "전체 프로젝트";
+
+            } catch (e) {
+                console.error("Dashboard metrics load error", e);
+            }
+        }
 
         // Google Login
         btnGoogleLogin.addEventListener('click', async () => {
