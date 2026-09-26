@@ -25,6 +25,7 @@
             display: flex;
             flex-direction: column;
             gap: 1rem;
+            min-height: 400px;
         }
 
         .kanban-column h3 {
@@ -40,9 +41,14 @@
             border: 1px solid #e2e8f0;
             border-radius: 6px;
             padding: 1rem;
+            position: relative;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-            cursor: pointer;
+            cursor: grab;
             transition: box-shadow 0.2s;
+        }
+
+        .kanban-card:active {
+            cursor: grabbing;
         }
 
         .kanban-card:hover {
@@ -58,6 +64,27 @@
             display: inline-block;
             margin-bottom: 0.5rem;
         }
+
+        .card-actions {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .card-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.7rem;
+            color: #9ca3af;
+            padding: 0.2rem;
+        }
+
+        .card-actions button:hover {
+            color: var(--primary-color);
+        }
     </style>
 </head>
 
@@ -72,7 +99,7 @@
                     <li><a href="materials.html">자재관리</a></li>
                     <li><a href="suppliers.html">협력업체</a></li>
                     <li><a href="users.html">권한관리</a></li>
-                    <li><button id="btnLogout" class="btn-primary" style="padding: 0.5rem 1rem;">로그아웃</button></li>
+                    <li id="navUserEmail"></li>
                 </ul>
             </nav>
         </div>
@@ -83,17 +110,21 @@
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
             <div>
                 <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
-                    <span
+                    <span id="projectStatusBadge"
                         style="background: #10b981; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">진행
                         중</span>
-                    <span style="color: var(--text-secondary); font-size: 0.875rem;">PM: 이과장</span>
+                    <span id="projectPmBadge" style="color: var(--text-secondary); font-size: 0.875rem;">PM: 불러오는
+                        중...</span>
                 </div>
-                <h2 style="margin: 0; font-size: 1.8rem;">마곡 R&D 센터 신축 인테리어</h2>
+                <h2 id="projectTitleHeader" style="margin: 0; font-size: 1.8rem;">프로젝트 정보를 불러오는 중입니다...</h2>
             </div>
             <div style="text-align: right;">
-                <p style="margin: 0 0 0.5rem 0; font-size: 0.875rem; color: var(--text-secondary);">전체 진척도 (65%)</p>
+                <p style="margin: 0 0 0.5rem 0; font-size: 0.875rem; color: var(--text-secondary);">전체 진척도 (<span
+                        id="progressText">0</span>%)</p>
                 <div style="width: 250px; background: #e2e8f0; height: 10px; border-radius: 5px; overflow: hidden;">
-                    <div style="background: var(--primary-color); width: 65%; height: 100%;"></div>
+                    <div id="progressBar"
+                        style="background: var(--primary-color); width: 0%; height: 100%; transition: width 0.3s;">
+                    </div>
                 </div>
             </div>
         </div>
@@ -112,148 +143,233 @@
         <!-- Kanban Board Area -->
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <h3 style="margin: 0; font-size: 1.25rem;">업무 현황 (공정 관리)</h3>
-            <button class="btn-primary" style="padding: 0.5rem 1rem;" onclick="addKanbanTask()">+ 새 태스크 추가</button>
+            <button class="btn-primary" style="padding: 0.5rem 1rem;" onclick="window.addKanbanTask()">+ 새 태스크
+                추가</button>
         </div>
 
         <div class="kanban-board">
             <!-- 백로그 / 할 일 -->
-            <div class="kanban-column" id="todoCol" ondragover="allowDrop(event)" ondrop="drop(event, this)">
-                <h3>할 일 (To Do) <span class="task-count">2</span></h3>
-
-                <div class="kanban-card" draggable="true" ondragstart="drag(event)" id="task1">
-                    <span class="task-tag" style="background: #f3f4f6; color: #374151;">준비</span>
-                    <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem;">3층 회의실 마감재 샘플 초안 작성</h4>
-                    <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">마감 기한: 2026.10.05</p>
-                </div>
-
-                <div class="kanban-card" draggable="true" ondragstart="drag(event)" id="task2">
-                    <span class="task-tag" style="background: #f3f4f6; color: #374151;">준비</span>
-                    <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem;">로비 층고 조명 계획서 리뷰</h4>
-                    <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">마감 기한: 2026.10.10</p>
-                </div>
+            <div class="kanban-column" id="todo" ondragover="allowDrop(event)" ondrop="drop(event, this)">
+                <h3>할 일 (To Do) <span class="task-count">0</span></h3>
             </div>
 
             <!-- 진행 중 -->
-            <div class="kanban-column" id="inProgressCol" ondragover="allowDrop(event)" ondrop="drop(event, this)">
-                <h3>진행 중 (In Progress) <span class="task-count">1</span></h3>
-
-                <div class="kanban-card" draggable="true" ondragstart="drag(event)" id="task3">
-                    <span class="task-tag">골조공사</span>
-                    <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem;">1~2층 천장 골조 뼈대 설치</h4>
-                    <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">담당: 박대리 / 금주 완료 예정</p>
-                </div>
+            <div class="kanban-column" id="in_progress" ondragover="allowDrop(event)" ondrop="drop(event, this)">
+                <h3>진행 중 (In Progress) <span class="task-count">0</span></h3>
             </div>
 
             <!-- 협력사 대기 / 승인 대기 -->
-            <div class="kanban-column" id="waitingCol" ondragover="allowDrop(event)" ondrop="drop(event, this)">
-                <h3>협력사 대기 (Waiting) <span class="task-count">1</span></h3>
-
-                <div class="kanban-card" draggable="true" ondragstart="drag(event)" id="task4">
-                    <span class="task-tag" style="background: #fef3c7; color: #92400e;">협력사 요청</span>
-                    <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem;">특수유리 B타입 자재 발주 건</h4>
-                    <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">BEST 유리업체 발주 대기중</p>
-                </div>
+            <div class="kanban-column" id="waiting" ondragover="allowDrop(event)" ondrop="drop(event, this)">
+                <h3>협력사 대기 (Waiting) <span class="task-count">0</span></h3>
             </div>
 
             <!-- 완료 -->
-            <div class="kanban-column" id="doneCol" ondragover="allowDrop(event)" ondrop="drop(event, this)">
-                <h3>완료 (Done) <span class="task-count">1</span></h3>
-
-                <div class="kanban-card" draggable="true" ondragstart="drag(event)" id="task5">
-                    <span class="task-tag" style="background: #d1fae5; color: #065f46;">완료</span>
-                    <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem;">기초 지반 조사 및 설계 확정</h4>
-                    <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">완료일: 2026.09.20</p>
-                </div>
+            <div class="kanban-column" id="done" ondragover="allowDrop(event)" ondrop="drop(event, this)">
+                <h3>완료 (Done) <span class="task-count">0</span></h3>
             </div>
         </div>
-
     </main>
 
-    <!-- Kanban Board Logic -->
-    <script>
-        // HTML5 Drag and Drop Handlers
-        let draggedCard = null;
+    <!-- App Logic -->
+    <script type="module">
+        import { checkAdminAuth, logoutAdmin } from '../assets/js/auth.js';
+        import { db } from '../assets/js/firebase-config.js';
+        import { doc, getDoc, collection, addDoc, getDocs, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 
-        function allowDrop(ev) {
-            ev.preventDefault();
+        window.logoutAndRedirect = () => { logoutAdmin(); };
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const projectId = urlParams.get('id');
+
+        if (!projectId) {
+            alert('잘못된 접근입니다 (프로젝트 ID 없음).');
+            window.location.href = 'projects.html';
         }
 
-        function drag(ev) {
-            draggedCard = ev.target;
-            ev.dataTransfer.setData("text", ev.target.id);
-            ev.target.style.opacity = '0.5';
+        // State
+        let draggedCardId = null;
+
+        // Fetch Project Data
+        async function loadProjectDetails() {
+            try {
+                const docRef = doc(db, 'projects', projectId);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById('projectTitleHeader').textContent = data.title || '무제 프로젝트';
+                    document.getElementById('projectPmBadge').textContent = 'PM: ' + (data.pm || '미배정');
+                    document.getElementById('projectStatusBadge').textContent = data.status || '착공대기';
+                }
+            } catch (e) {
+                console.error("Failed to load project", e);
+            }
         }
 
-        function drop(ev, column) {
-            ev.preventDefault();
-            draggedCard.style.opacity = '1';
+        // Fetch Kanban Tasks
+        async function loadTasks() {
+            try {
+                // Clear columns
+                ['todo', 'in_progress', 'waiting', 'done'].forEach(colId => {
+                    const col = document.getElementById(colId);
+                    // Keep the header h3, wipe out cards
+                    const children = Array.from(col.children);
+                    children.forEach(child => {
+                        if (child.tagName.toLowerCase() !== 'h3') {
+                            col.removeChild(child);
+                        }
+                    });
+                });
 
-            // Allow dropping onto another card inside the column or directly onto the column
-            if (ev.target.classList.contains('kanban-column')) {
-                ev.target.appendChild(draggedCard);
-            } else if (ev.target.closest('.kanban-card')) {
-                const targetCard = ev.target.closest('.kanban-card');
-                const parent = targetCard.parentNode;
-                // Insert after the target card
-                parent.insertBefore(draggedCard, targetCard.nextSibling);
-            } else if (ev.target.closest('.kanban-column')) {
-                ev.target.closest('.kanban-column').appendChild(draggedCard);
+                const taskRef = collection(db, 'projects', projectId, 'tasks');
+                const snap = await getDocs(taskRef);
+                let doneCount = 0;
+                let totalCount = snap.size;
+
+                snap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const status = data.status || 'todo';
+                    if (status === 'done') doneCount++;
+
+                    renderCard(docSnap.id, data, status);
+                });
+
+                // Update Progress Bar
+                const prog = totalCount === 0 ? 0 : Math.round((doneCount / totalCount) * 100);
+                document.getElementById('progressText').textContent = prog;
+                document.getElementById('progressBar').style.width = prog + '%';
+                updateCounts();
+            } catch (e) {
+                console.error("Failed to load tasks", e);
+            }
+        }
+
+        window.addKanbanTask = async () => {
+            const title = prompt("추가할 태스크 제목을 입력하세요:");
+            if (!title) return;
+            const desc = prompt("태스크 설명이나 기한을 입력하세요:");
+
+            try {
+                await addDoc(collection(db, 'projects', projectId, 'tasks'), {
+                    title,
+                    description: desc || '단순 작업',
+                    tag: '신규',
+                    status: 'todo',
+                    createdAt: serverTimestamp()
+                });
+                loadTasks();
+            } catch (e) {
+                alert('추가 실패: ' + e.message);
+            }
+        }
+
+        window.editTask = async (taskId, currentTitle, currentDesc) => {
+            const newTitle = prompt("태스크 제목 변경:", currentTitle);
+            if (!newTitle) return;
+            const newDesc = prompt("태스크 설명 변경:", currentDesc);
+
+            try {
+                await updateDoc(doc(db, 'projects', projectId, 'tasks', taskId), {
+                    title: newTitle,
+                    description: newDesc
+                });
+                loadTasks();
+            } catch (e) {
+                alert("수정 실패: " + e.message);
+            }
+        }
+
+        window.delTask = async (taskId) => {
+            if (confirm("정말로 이 태스크를 삭제하시겠습니까?")) {
+                try {
+                    await deleteDoc(doc(db, 'projects', projectId, 'tasks', taskId));
+                    loadTasks();
+                } catch (e) {
+                    alert("삭제 실패: " + e.message);
+                }
+            }
+        }
+
+        function renderCard(id, data, statusCol) {
+            const col = document.getElementById(statusCol);
+            if (!col) return;
+
+            const card = document.createElement('div');
+            card.className = 'kanban-card';
+            card.draggable = true;
+            card.id = id;
+            card.dataset.title = data.title;
+            card.dataset.desc = data.description;
+
+            // Drag Handlers
+            card.addEventListener('dragstart', (e) => {
+                draggedCardId = id;
+                e.dataTransfer.setData("text", id);
+                card.style.opacity = '0.5';
+            });
+            card.addEventListener('dragend', () => {
+                card.style.opacity = '1';
+                draggedCardId = null;
+            });
+
+            card.innerHTML = `
+                <div class="card-actions">
+                    <button onclick="window.editTask('${id}', '${data.title || ''}', '${data.description || ''}')">✏️</button>
+                    <button onclick="window.delTask('${id}')">🗑️</button>
+                </div>
+                <span class="task-tag">${data.tag || '일반'}</span>
+                <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem; padding-right:2rem;">${data.title || '무제'}</h4>
+                <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">${data.description || ''}</p>
+            `;
+            col.appendChild(card);
+        }
+
+        // Global Drag/Drop API for HTML5 Events
+        window.allowDrop = (ev) => {
+            ev.preventDefault();
+        };
+
+        window.drop = async (ev, columnElement) => {
+            ev.preventDefault();
+            const taskId = draggedCardId;
+            if (!taskId) return;
+
+            const newStatus = columnElement.id;
+
+            // Optimistic UI mapping
+            const targetCol = document.getElementById(newStatus);
+            const card = document.getElementById(taskId);
+            if (card && targetCol) {
+                targetCol.appendChild(card);
+                updateCounts();
             }
 
-            updateCounts();
-        }
-
-        // Reset opacity if drag ends without drop
-        document.addEventListener('dragend', (ev) => {
-            if (draggedCard) {
-                draggedCard.style.opacity = '1';
+            try {
+                await updateDoc(doc(db, 'projects', projectId, 'tasks', taskId), {
+                    status: newStatus
+                });
+                loadTasks(); // refresh to get new progress %
+            } catch (e) {
+                console.error("Status check failed", e);
             }
-        });
+        };
 
-        // Update counts in column headers
         function updateCounts() {
-            document.querySelectorAll('.kanban-column').forEach(col => {
+            ['todo', 'in_progress', 'waiting', 'done'].forEach(colId => {
+                const col = document.getElementById(colId);
                 const count = col.querySelectorAll('.kanban-card').length;
                 const span = col.querySelector('.task-count');
                 if (span) span.textContent = count;
             });
         }
 
-        // 새 태스크 추가 함수
-        window.addKanbanTask = () => {
-            const title = prompt("새로운 태스크명을 입력하세요:");
-            if (title) {
-                const newId = 'task' + new Date().getTime();
-                const cardHtml = `
-                    <div class="kanban-card" draggable="true" ondragstart="drag(event)" id="${newId}">
-                        <span class="task-tag" style="background: #f3f4f6; color: #374151;">신규</span>
-                        <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem;">${title}</h4>
-                        <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">초기 등록</p>
-                    </div>
-                `;
-                document.getElementById('todoCol').insertAdjacentHTML('beforeend', cardHtml);
-                updateCounts();
-            }
-        };
-    </script>
-
-    <!-- Global Auth Guard -->
-    <script type="module">
-        import { checkAdminAuth, logoutAdmin } from '../assets/js/auth.js';
-
         checkAdminAuth(
             (user) => {
                 document.body.style.display = 'block';
+                loadProjectDetails();
+                loadTasks();
             },
-            () => {
-                window.location.href = '../login.html';
-            }
+            () => { window.location.href = '../login.html'; }
         );
-
-        document.getElementById('btnLogout').addEventListener('click', () => {
-            logoutAdmin();
-            window.location.href = '../login.html';
-        });
     </script>
 </body>
 
