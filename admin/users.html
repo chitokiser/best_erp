@@ -57,7 +57,7 @@
     <main class="container" style="padding: 2rem 1rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
             <h2>담당자 및 권한 설정</h2>
-            <button class="btn-primary" onclick="alert('TODO: 새 담당자 이메일 초대 구현')">+ 새 권한 부여</button>
+            <button class="btn-primary" onclick="window.inviteNewUser()">+ 새 권한 부여</button>
         </div>
 
         <div class="card" style="margin-bottom: 2rem;">
@@ -88,7 +88,7 @@
     <script type="module">
         import { checkAdminAuth } from '../assets/js/auth.js';
         import { db } from '../assets/js/firebase-config.js';
-        import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
+        import { collection, getDocs, updateDoc, doc, addDoc } from 'firebase/firestore';
 
         window.updateUserRole = async (userId, currentRole) => {
             const newRole = prompt(`새로운 권한을 입력하세요 (SUPER_ADMIN, ADMIN, STAFF, VIEWER)\n현재 권한: ${currentRole}`, currentRole);
@@ -102,6 +102,30 @@
                 }
             } else if (newRole) {
                 alert('유효하지 않은 권한입니다.');
+            }
+        };
+
+        window.inviteNewUser = async () => {
+            const email = prompt("권한을 부여할 새 담당자의 구글 계정(이메일)을 입력하세요:");
+            if (!email || email.trim() === '') return;
+
+            const position = prompt("직급 또는 역할명을 입력하세요 (예: 이과장, 외주업체 등):", "담당자");
+            const role = prompt("시스템 권한 등급을 입력하세요 (예: ADMIN, STAFF, VIEWER):", "STAFF");
+
+            if (email && role) {
+                try {
+                    await addDoc(collection(db, 'users'), {
+                        email: email.trim(),
+                        position: position || 'N/A',
+                        role: role.toUpperCase(),
+                        status: '승인됨',
+                        createdAt: new Date()
+                    });
+                    alert(`[${email}] 계정이 ${role.toUpperCase()} 권한으로 시스템에 등록되었습니다!`);
+                    location.reload();
+                } catch (e) {
+                    alert('사용자 등록 실패: ' + e.message);
+                }
             }
         };
 
