@@ -1,8 +1,19 @@
 import { auth, db } from './firebase-config.js';
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'firebase/auth';
 import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 
 const googleProvider = new GoogleAuthProvider();
+
+export const registerUser = async (email, password, name) => {
+    try {
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        await addDoc(collection(db, 'users'), {
+            email: email, name: name || email.split('@')[0], position: '시스템 가입자',
+            role: 'VIEWER', status: '대기중', createdAt: serverTimestamp()
+        });
+        return cred.user;
+    } catch (err) { throw err; }
+};
 
 export const loginAdmin = async (email, password) => {
     try {

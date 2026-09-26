@@ -4,40 +4,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>로그인 - BEST Group</title>
+    <title>로그인 - BESTwinner ERP</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
-<body style="background: #f8fafc; display: flex; justify-content: center; align-items: center; height: 100vh;">
+<body
+    style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: var(--background-color);">
 
-    <div class="card"
-        style="width: 100%; max-width: 400px; padding: 2rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
-        <h1 class="logo" style="text-align: center; margin-bottom: 0.5rem; font-size: 2rem;">BEST Group</h1>
-        <p style="text-align: center; color: var(--text-secondary); margin-bottom: 2rem;">인가된 담당자만 접근 가능합니다.</p>
+    <div class="card" style="width: 100%; max-width: 400px; padding: 2.5rem; text-align: center;">
+        <h1 class="logo" style="font-size: 2rem; justify-content: center; margin-bottom: 2rem;">BESTwinner</h1>
 
-        <form id="loginForm">
-            <div style="margin-bottom: 1rem;">
-                <label>이메일</label>
+        <!-- Toggle Tabs for Login / Register -->
+        <div
+            style="display: flex; gap: 1rem; margin-bottom: 1.5rem; font-weight: bold; border-bottom: 2px solid #e2e8f0;">
+            <div id="tabLogin" onclick="setMode('login')"
+                style="flex:1; padding-bottom:0.5rem; color:var(--primary-color); border-bottom:2px solid var(--primary-color); cursor:pointer;">
+                로그인</div>
+            <div id="tabReg" onclick="setMode('register')"
+                style="flex:1; padding-bottom:0.5rem; color:var(--text-secondary); cursor:pointer;">(타사 이메일) 회원가입</div>
+        </div>
+
+        <form id="authForm">
+            <div id="nameBlock" style="display: none; text-align: left; margin-bottom: 1rem;">
+                <label style="font-size: 0.875rem; font-weight: 500; color: var(--text-secondary);">이름 (Name)</label>
+                <input type="text" id="txtName" class="search-input" style="width: 100%; margin-top:0.5rem;">
+            </div>
+
+            <div style="text-align: left; margin-bottom: 1rem;">
+                <label style="font-size: 0.875rem; font-weight: 500; color: var(--text-secondary);">이메일 계정
+                    (Email)</label>
                 <input type="email" id="txtEmail" class="search-input" style="width: 100%; margin-top:0.5rem;" required>
             </div>
-            <div style="margin-bottom: 1.5rem;">
-                <label>비밀번호</label>
+
+            <div style="text-align: left; margin-bottom: 1.5rem;">
+                <label style="font-size: 0.875rem; font-weight: 500; color: var(--text-secondary);">비밀번호
+                    (Password)</label>
                 <input type="password" id="txtPassword" class="search-input" style="width: 100%; margin-top:0.5rem;"
                     required>
             </div>
-            <button type="submit" class="btn-primary"
-                style="width: 100%; padding: 0.75rem; font-size: 1rem;">로그인</button>
 
-            <div style="display: flex; align-items: center; justify-content: center; margin: 1.5rem 0; color: #94a3b8;">
-                <hr style="flex:1; border:none; border-top:1px solid #e2e8f0;">
-                <span style="padding: 0 0.5rem; font-size: 0.875rem;">또는 구글 계정으로</span>
-                <hr style="flex:1; border:none; border-top:1px solid #e2e8f0;">
+            <button type="submit" id="btnSubmit" class="btn-primary"
+                style="width: 100%; padding: 0.75rem; font-size: 1rem; margin-bottom: 1rem;">
+                로그인
+            </button>
+
+            <div style="display: flex; align-items: center; margin: 1.5rem 0;">
+                <hr style="flex: 1; border: none; border-top: 1px solid #e2e8f0;">
+                <span style="padding: 0 1rem; color: var(--text-secondary); font-size: 0.875rem;">또는</span>
+                <hr style="flex: 1; border: none; border-top: 1px solid #e2e8f0;">
             </div>
 
-            <button type="button" id="btnGoogleLogin" class="btn-primary"
-                style="width: 100%; background-color: white; color: #333; border: 1px solid #cbd5e1; padding: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
-                <svg viewBox="0 0 24 24" width="20" height="20">
+            <button type="button" id="btnGoogle" class="btn-primary"
+                style="width: 100%; padding: 0.75rem; font-size: 1rem; background: white; color: #374151; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24">
                     <path
                         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                         fill="#4285F4" />
@@ -46,10 +66,10 @@
                         fill="#34A853" />
                     <path
                         d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                        fill="#FBBC05" />
+                        fill="#EA4335" />
                     <path
                         d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                        fill="#EA4335" />
+                        fill="#FBBC05" />
                 </svg>
                 Google 연동 로그인
             </button>
@@ -59,42 +79,78 @@
 
     <script type="module" src="assets/js/firebase-config.js"></script>
     <script type="module">
-        import { loginAdmin, loginWithGoogle, checkAdminAuth } from './assets/js/auth.js';
+        import { loginAdmin, registerUser, loginWithGoogle, checkAdminAuth } from './assets/js/auth.js';
 
-        // Redirect away if already logged in!
+        let mode = 'login';
+
+        window.setMode = (m) => {
+            mode = m;
+            document.getElementById('nameBlock').style.display = m === 'register' ? 'block' : 'none';
+            document.getElementById('btnSubmit').textContent = m === 'register' ? '회원가입' : '이메일 기반 로그인';
+
+            const btnL = document.getElementById('tabLogin');
+            const btnR = document.getElementById('tabReg');
+
+            if (m === 'login') {
+                btnL.style.color = 'var(--primary-color)'; btnL.style.borderBottom = '2px solid var(--primary-color)';
+                btnR.style.color = 'var(--text-secondary)'; btnR.style.borderBottom = 'none';
+            } else {
+                btnR.style.color = 'var(--primary-color)'; btnR.style.borderBottom = '2px solid var(--primary-color)';
+                btnL.style.color = 'var(--text-secondary)'; btnL.style.borderBottom = 'none';
+            }
+        };
+
         checkAdminAuth(
             (user) => {
-                const urlParams = new URLSearchParams(window.location.search);
-                const redirect = urlParams.get('redirect') || 'index.html';
-                window.location.href = redirect;
+                const params = new URLSearchParams(window.location.search);
+                const redirect = params.get('redirect');
+                if (redirect) {
+                    window.location.href = decodeURIComponent(redirect);
+                } else {
+                    window.location.href = 'admin/dashboard.html';
+                }
             },
-            () => { /* Stay on login page */ }
+            () => { } // Stay on login page
         );
 
-        const loginForm = document.getElementById('loginForm');
-        const btnGoogleLogin = document.getElementById('btnGoogleLogin');
-        const loginError = document.getElementById('loginError');
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errP = document.getElementById('loginError');
+            errP.textContent = '';
 
-        btnGoogleLogin.addEventListener('click', async () => {
+            const email = document.getElementById('txtEmail').value;
+            const pw = document.getElementById('txtPassword').value;
+            const name = document.getElementById('txtName').value;
+
             try {
-                loginError.textContent = 'Google 로그인 진행 중...';
-                await loginWithGoogle();
-                // success hander will redirect
+                if (mode === 'login') {
+                    await loginAdmin(email, pw);
+                } else {
+                    if (!name) { errP.textContent = '이름을 입력하세요.'; return; }
+                    await registerUser(email, pw, name);
+                    alert('가입이 완료되었습니다! 최고 관리자의 시스템 접속 승인을 기다려주세요.');
+                    setMode('login');
+                }
             } catch (err) {
                 console.error(err);
-                loginError.textContent = '로그인에 실패했습니다. (승인된 계정 확인)';
+                if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+                    errP.textContent = '이메일 또는 비밀번호가 일치하지 않습니다.';
+                } else if (err.code === 'auth/email-already-in-use') {
+                    errP.textContent = '이미 가입된 이메일 계정입니다.';
+                } else {
+                    errP.textContent = '오류 발생: ' + err.message;
+                }
             }
         });
 
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('txtEmail').value;
-            const password = document.getElementById('txtPassword').value;
-
+        document.getElementById('btnGoogle').addEventListener('click', async () => {
+            document.getElementById('loginError').textContent = '';
             try {
-                await loginAdmin(email, password);
+                await loginWithGoogle();
+                // CheckAdminAuth observer will auto redirect to dashboard
             } catch (err) {
-                loginError.textContent = '이메일 또는 비밀번호를 다시 확인하세요.';
+                console.error(err);
+                document.getElementById('loginError').textContent = 'Google 로그인 중 오류가 발생했습니다.';
             }
         });
     </script>
