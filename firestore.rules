@@ -37,5 +37,21 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isStaffOrAdmin();
     }
+
+    // users collection
+    match /users/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // projects collection
+    match /projects/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // purchase requests collection
+    match /purchaseRequests/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
   }
 }
+
