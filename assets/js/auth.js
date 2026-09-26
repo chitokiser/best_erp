@@ -1,5 +1,6 @@
-import { auth } from './firebase-config.js';
+import { auth, db } from './firebase-config.js';
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'firebase/auth';
+import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 
 const googleProvider = new GoogleAuthProvider();
 
@@ -32,9 +33,6 @@ export const logoutAdmin = async () => {
     }
 };
 
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from './firebase-config.js';
-
 export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
     onAuthStateChanged(auth, async (user) => {
         if (user) {
@@ -47,10 +45,23 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                     try {
                         const q = query(collection(db, 'users'), where('email', '==', user.email));
                         const snap = await getDocs(q);
+
                         let role = 'GUEST';
                         let position = '방문자';
 
-                        if (!snap.empty) {
+                        if (snap.empty && user.email === 'daguri75@gmail.com') {
+                            // First time auto-provisioning for Super Admin
+                            await addDoc(collection(db, 'users'), {
+                                email: user.email,
+                                name: 'CEO',
+                                position: '최고 관리자',
+                                role: 'SUPER_ADMIN',
+                                status: '승인됨',
+                                createdAt: serverTimestamp()
+                            });
+                            role = 'SUPER_ADMIN';
+                            position = '최고 관리자';
+                        } else if (!snap.empty) {
                             const data = snap.docs[0].data();
                             role = data.role || 'GUEST';
                             position = data.position || data.name || '직원';
@@ -69,7 +80,7 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                         console.error('Navbar user fetch error:', e);
                     }
                 }
-            }, 300); // 300ms delay to ensure the local page script has already appended it
+            }, 300);
         } else {
             if (onAuthFail) onAuthFail();
         }
