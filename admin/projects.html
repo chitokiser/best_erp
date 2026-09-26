@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>프로젝트 관리 - BEST Group ERP</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+
+<body style="background-color: var(--background-color); display: none;">
+    <div id="dashboardSection">
+        <header class="main-header" style="box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div class="container"
+                style="display: flex; justify-content: space-between; align-items: center; padding: 1rem;">
+                <h1 style="color: var(--primary-color); margin: 0;">BEST Group</h1>
+                <nav class="main-nav">
+                    <ul
+                        style="display: flex; gap: 1.5rem; list-style: none; margin: 0; padding: 0; align-items: center;">
+                        <li><a href="dashboard.html">대시보드</a></li>
+                        <li><a href="projects.html" style="color:var(--primary-color); font-weight:bold;">프로젝트</a></li>
+                        <li><a href="../materials.html">자재 DB</a></li>
+                        <li><a href="suppliers.html">협력업체</a></li>
+                        <li><a href="users.html">권한관리</a></li>
+                        <li id="navUserEmail"></li>
+                    </ul>
+                </nav>
+            </div>
+        </header>
+
+        <main class="container" style="padding: 2rem 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h2>프로젝트 (현장) 관리</h2>
+                <button class="btn-primary" onclick="window.createProject()">+ 새 프로젝트 파트너 할당</button>
+            </div>
+
+            <div class="card" style="margin-bottom: 2rem;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border-color);">
+                            <th style="padding: 1rem;">프로젝트 명</th>
+                            <th style="padding: 1rem;">진행 단계</th>
+                            <th style="padding: 1rem;">담당자(PM)</th>
+                            <th style="padding: 1rem;">종료 예정일</th>
+                            <th style="padding: 1rem;">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="projectsTableBody">
+                        <tr>
+                            <td colspan="5" style="text-align:center; padding: 1rem; color: var(--text-secondary);">
+                                데이터를 불러오는 중...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { checkAdminAuth, logoutAdmin } from '../assets/js/auth.js';
+        import { db } from '../assets/js/firebase-config.js';
+        import { collection, getDocs, updateDoc, doc, addDoc } from 'firebase/firestore';
+
+        window.logoutAndRedirect = () => {
+            logoutAdmin();
+        };
+
+        window.createProject = async () => {
+            const title = prompt("새로운 프로젝트(공사 현장) 이름을 입력하세요:");
+            if (!title) return;
+            const pmEmail = prompt("이 프로젝트를 담당할 PM(담당자)의 이메일을 입력하세요 (예: kfu134252@gmail.com):");
+            if (!pmEmail) return;
+
+            try {
+                const docRef = await addDoc(collection(db, 'projects'), {
+                    title: title,
+                    status: '착공대기',
+                    pm: pmEmail,
+                    createdAt: new Date(),
+                    deadline: 'N/A'
+                });
+                alert('프로젝트가 성공적으로 생성 및 할당되었습니다!');
+                window.location.href = `project-detail.html?id=${docRef.id}`;
+            } catch (e) {
+                alert('프로젝트 생성 실패: ' + e.message);
+            }
+        };
+
+        checkAdminAuth(
+            async (user) => {
+                document.body.style.display = 'block';
+                const tbody = document.getElementById('projectsTableBody');
+
+                // Set Header
+                const nav = document.querySelector('.main-nav ul');
+                if (nav && !document.getElementById('navUserEmail')) {
+                    const li = document.createElement('li');
+                    li.id = 'navUserEmail';
+                    li.innerHTML = `<span style="margin-left: 1rem; font-size:0.875rem; color:var(--text-secondary);">${user.email}</span>
+                                    <button onclick="window.logoutAndRedirect()" style="margin-left:0.5rem; background:none; border:none; cursor:pointer; color:var(--primary-color); font-weight:bold;">[로그아웃]</button>`;
+                    nav.appendChild(li);
+                }
+
+                // Load Projects
+                try {
+                    const querySnapshot = await getDocs(collection(db, 'projects'));
+                    if (querySnapshot.empty) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 1rem; color: var(--text-secondary);">생성된 프로젝트가 없습니다.</td></tr>';
+                        return;
+                    }
+
+                    let html = '';
+                    querySnapshot.forEach(docSnap => {
+                        const data = docSnap.data();
+                        const id = docSnap.id;
+                        html += `
+                            <tr>
+                                <td style="padding: 1rem; font-weight: 500;">
+                                    <a href="project-detail.html?id=${id}" style="color:var(--primary-color); text-decoration:none;">${data.title || '무제 프로젝트'}</a>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <span style="background: #e0f2fe; color: #0369a1; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight:bold;">
+                                        ${data.status || '착공대기'}
+                                    </span>
+                                </td>
+                                <td style="padding: 1rem;">${data.pm || '미지정'}</td>
+                                <td style="padding: 1rem; color: var(--text-secondary);">${data.deadline || 'N/A'}</td>
+                                <td style="padding: 1rem;">
+                                    <button class="btn-primary" style="padding:0.25rem 0.5rem;" onclick="location.href='project-detail.html?id=${id}'">칸반 열기</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    tbody.innerHTML = html;
+                } catch (e) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 1rem; color: red;">오류가 발생했습니다.</td></tr>';
+                    console.error(e);
+                }
+            },
+            () => {
+                window.location.href = '../login.html';
+            }
+        );
+    </script>
+</body>
+
+</html>
