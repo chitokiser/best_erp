@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>현장 업무 - AI-ERM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ai-primary: #4F46E5;
+            --ai-secondary: #818CF8;
+            --success: #10B981;
+            --bg-body: #f8fafc;
+            --text-main: #1e293b;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--text-main);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Mobile Container Layout */
+        .mobile-container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+
+        /* Top Header */
+        .mobile-header {
+            padding: 1.25rem 1rem;
+            background: linear-gradient(135deg, #4F46E5, #6366F1);
+            color: white;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .header-title {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .header-subtitle {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            margin-top: 0.25rem;
+        }
+
+        /* Main Content Area */
+        .mobile-content {
+            padding: 1.5rem 1rem;
+            flex: 1;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Task Card */
+        .task-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            position: relative;
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .project-badge {
+            background: #e0e7ff;
+            color: var(--ai-primary);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .task-checklist {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .task-checklist li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .task-checklist li:last-child {
+            border-bottom: none;
+        }
+
+        .check-circle {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid #cbd5e1;
+            display: inline-block;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .check-circle.completed {
+            background: var(--success);
+            border-color: var(--success);
+            position: relative;
+        }
+
+        .check-circle.completed::after {
+            content: '✓';
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        /* Big AI Upload Button */
+        .ai-upload-box {
+            background: #f8fafc;
+            border: 2px dashed #94a3b8;
+            border-radius: 12px;
+            padding: 2rem 1rem;
+            text-align: center;
+            margin-top: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .ai-upload-box:active {
+            background: #e2e8f0;
+        }
+
+        .ai-upload-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .ai-upload-text {
+            font-weight: 600;
+            color: var(--ai-primary);
+            font-size: 1.1rem;
+        }
+
+        .ai-upload-desc {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+
+        /* AI Processing Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+        }
+
+        .ai-process-modal {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            text-align: center;
+            width: 80%;
+            max-width: 320px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .spinner {
+            border: 4px solid rgba(79, 70, 229, 0.2);
+            border-left-color: var(--ai-primary);
+            border-radius: 50%;
+            width: 3rem;
+            height: 3rem;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Hidden File Input */
+        #mobilePhotoInput {
+            display: none;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 1rem 0;
+            border-top: 1px solid #e2e8f0;
+            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.02);
+            z-index: 10;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.75rem;
+            font-weight: 500;
+            gap: 0.25rem;
+        }
+
+        .nav-item.active {
+            color: var(--ai-primary);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="mobile-container">
+        <!-- Header -->
+        <header class="mobile-header">
+            <h1 class="header-title">오늘의 현장 업무</h1>
+            <div class="header-subtitle" id="currentDate">2026.09.27 (목)</div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="mobile-content">
+            <div class="section-title">
+                할당된 프로젝트 <span
+                    style="font-size:0.8rem; background:#fee2e2; color:#b91c1c; padding:0.2rem 0.6rem; border-radius:12px;">마감
+                    임박 1건</span>
+            </div>
+
+            <div class="task-card">
+                <div class="task-header">
+                    <span class="project-badge">P-001 신사동 현장</span>
+                    <span style="font-size:0.8rem; color:#64748b;">진행률 42%</span>
+                </div>
+                <ul class="task-checklist">
+                    <li>
+                        <div class="check-circle completed"></div> 오전 현장 상황 파악
+                    </li>
+                    <li>
+                        <div class="check-circle" onclick="this.classList.toggle('completed')"></div> 자재(철근) 입고 확인
+                    </li>
+                    <li>
+                        <div class="check-circle" onclick="this.classList.toggle('completed')"></div> 사진 및 특이사항 업로드
+                    </li>
+                </ul>
+            </div>
+
+            <!-- AI Photo Input Box -->
+            <div class="section-title" style="margin-top:2rem;">AI 간편 등록</div>
+            <div class="ai-upload-box" id="aiUploadTrigger">
+                <span class="ai-upload-icon">📸</span>
+                <div class="ai-upload-text">현장 사진 촬영 / 업로드</div>
+                <div class="ai-upload-desc">송장이나 현장을 찍으면 AI가 자동으로 기록합니다.</div>
+            </div>
+
+            <!-- System Hidden File Input (supports camera on mobile) -->
+            <input type="file" id="mobilePhotoInput" accept="image/*" capture="environment" />
+
+            <div id="aiResultArea"
+                style="margin-top: 1.5rem; display:none; background: #ECFDF5; padding: 1rem; border: 1px solid #A7F3D0; border-radius: 12px;">
+                <div style="color: #047857; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.95rem;">🤖 AI 데이터 추출
+                    완료</div>
+                <p id="aiResultText" style="font-size: 0.85rem; color: #065F46; line-height: 1.5; margin:0;"></p>
+                <div style="margin-top: 0.75rem; text-align:right;">
+                    <button
+                        style="background:var(--success); color:white; border:none; padding:0.4rem 1rem; border-radius:6px; font-size:0.85rem; cursor:pointer;">데이터
+                        확정 (서버전송)</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item active">
+                <span style="font-size:1.25rem;">📋</span>홈
+            </a>
+            <a href="#" class="nav-item">
+                <span style="font-size:1.25rem;">📦</span>자재현황
+            </a>
+            <a href="index.html" class="nav-item">
+                <span style="font-size:1.25rem;">🏠</span>PC전환
+            </a>
+        </nav>
+    </div>
+
+    <!-- AI Processing Modal -->
+    <div class="overlay" id="processingOverlay">
+        <div class="ai-process-modal">
+            <div class="spinner"></div>
+            <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">AI가 이미지를<br>분석하고 있습니다</h3>
+            <p style="margin: 0; font-size: 0.85rem; color: #64748b;">자재 및 공정 정보를 자동으로 추출합니다..</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { confirmMobileMaterialUpload } from "./assets/js/action-handler.js";
+
+        // Set dynamic date
+        const dateSpan = document.getElementById('currentDate');
+        const now = new Date();
+        const days = ['일', '월', '화', '수', '목', '금', '토'];
+        dateSpan.innerText = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} (${days[now.getDay()]})`;
+
+        const uploadTrigger = document.getElementById('aiUploadTrigger');
+        const fileInput = document.getElementById('mobilePhotoInput');
+        const overlay = document.getElementById('processingOverlay');
+        const resultArea = document.getElementById('aiResultArea');
+        const resultText = document.getElementById('aiResultText');
+
+        uploadTrigger.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                // Simulate Vision AI Processing
+                overlay.style.display = 'flex';
+
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    resultArea.style.display = 'block';
+
+                    // Mock extracted context tailored to our project scenario
+                    resultText.innerHTML = `
+                        <strong>프로젝트:</strong> P-001 신사동 현장<br>
+                        <strong>분류:</strong> 자재 송장 인식<br>
+                        <strong>내용:</strong> 철근 (16mm) 200단 입고 확인<br>
+                        <hr style="border:none; border-top:1px dashed #A7F3D0; margin:0.5rem 0;">
+                        AI가 재고 시스템에 해당 자재를 자동 추가하고, 현재 작업 진행률을 42% -> 44% 로 변경 추천합니다.
+                    `;
+                }, 2000); // 2 seconds AI delay mockup
+            }
+        });
+    
+        const btnConfirm = resultArea.querySelector("button");
+        btnConfirm.addEventListener("click", async () => {
+            btnConfirm.innerText = "전송 중...";
+            const success = await confirmMobileMaterialUpload("P-001 신사동 현장", "철근 (16mm) 200단 입고");
+            if (success) {
+                alert("서버에 동기화되었으며, 담당자 텔레그램 알림이 발송되었습니다!");
+                btnConfirm.innerText = "동기화 완료";
+                btnConfirm.disabled = true; 
+                btnConfirm.style.background = "#94a3b8";
+            } else { alert("오류 발생"); btnConfirm.innerText = "데이터 확정 (서버전송)"; }
+        });
+    </script>
+</body>
+
+</html>

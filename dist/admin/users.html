@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>권한 및 담당자 관리 - BEST Group</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>.role-badge{border-radius:4px;padding:.2rem .5rem;font-size:.75rem;font-weight:700}.role-super{color:#991b1b;background:#fee2e2}.role-admin{color:#075985;background:#dbfafe}.role-staff{color:#92400e;background:#fef3c7}.role-viewer{color:#475569;background:#f1f5f9}</style>
+  <script type="module" crossorigin src="/assets/admin_users-Bd1GF4NR.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/firebase-config-OD9FGzWR.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-Ci8pltMn.js">
+  <link rel="stylesheet" crossorigin href="/assets/firebase-config-2tIJVkuo.css">
+  <link rel="stylesheet" crossorigin href="/assets/admin-x1XGuNl0.css">
+</head>
+
+<body style="display: none;">
+    <header class="main-header">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <h1 class="logo">BEST Group</h1>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="dashboard.html">대시보드</a></li>
+                    <li><a href="materials.html">자재관리</a></li>
+                    <li><a href="suppliers.html">공급업체</a></li>
+                    <li><a href="purchase-requests.html">결재관리(구매)</a></li>
+                    <li><a href="users.html" style="color:var(--primary-color)">권한관리</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h2>담당자 및 권한 설정</h2>
+            <button class="btn-primary" onclick="window.inviteNewUser()">+ 새 권한 부여</button>
+        </div>
+
+        <div class="card" style="margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                <div>
+                    <h3>활성 담당자 목록</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 0; font-size: 0.875rem;">
+                        시스템에 접근 가능한 사용자와 관리 카테고리를 지정할 수 있습니다.
+                    </p>
+                </div>
+                <div>
+                    <input type="text" id="userSearchInput" placeholder="이메일 또는 이름 검색..."
+                        style="padding: 0.5rem 1rem; border-radius: 4px; border: 1px solid var(--border-color); width: 250px; outline: none; transition: border-color 0.2s;">
+                </div>
+            </div>
+
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border-color);">
+                        <th style="padding: 1rem;">담당자 명/이메일</th>
+                        <th style="padding: 1rem;">시스템 권한</th>
+                        <th style="padding: 1rem;">담당 카테고리</th>
+                        <th style="padding: 1rem;">상태</th>
+                        <th style="padding: 1rem;">권한 변경</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    <tr>
+                        <td colspan="5" style="text-align:center; padding: 1rem; color: var(--text-secondary);">
+                            데이터를 불러오는 중...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+</body>
+
+</html>

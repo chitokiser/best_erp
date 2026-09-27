@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>자재 검색 - BEST MATERIAL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>.list-view{flex-direction:column;gap:1rem;display:flex}.list-item{border:1px solid var(--border-color);cursor:pointer;background:#fff;border-radius:8px;align-items:center;padding:1rem;transition:box-shadow .2s;display:flex}.list-item:hover{box-shadow:0 4px 6px -1px #0000001a}.list-item-img{border-radius:4px;flex-shrink:0;width:100px;height:100px;margin-right:1.5rem}.list-item-content{flex:1;justify-content:space-between;align-items:center;display:flex}.list-item-info{flex-direction:column;display:flex}.list-item-price{text-align:right;margin-left:1rem}@media (width<=600px){.list-item{flex-direction:column;align-items:flex-start}.list-item-img{width:100%;height:150px;margin-bottom:1rem;margin-right:0}.list-item-content{flex-direction:column;align-items:flex-start;width:100%}.list-item-price{text-align:left;margin-top:1rem;margin-left:0}}</style>
+  <script type="module" crossorigin src="/assets/materials-pgKCQ2br.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/firebase-config-OD9FGzWR.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-Ci8pltMn.js">
+  <link rel="modulepreload" crossorigin href="/assets/materialApi-BWso9T6r.js">
+  <link rel="stylesheet" crossorigin href="/assets/firebase-config-2tIJVkuo.css">
+</head>
+
+<body style="display: none;">
+    <header class="main-header">
+        <div class="container">
+            <h1 class="logo" style="margin-bottom: 0.5rem;"><a href="index.html">BESTwinner</a></h1>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="materials.html" style="color:var(--primary-color)">자재 DB</a></li>
+                    <li><a href="price-comparison.html">가격 비교</a></li>
+                    <li><a href="suppliers.html">협력업체</a></li>
+                    <li><a href="request-form.html" id="navCartLink">구매요청 <span id="cartCount"
+                                style="background:var(--primary-color);color:#fff;border-radius:10px;padding:2px 6px;font-size:0.75rem;">0</span></a>
+                    </li>
+                    <li><a href="categories.html">카테고리</a></li>
+                    <li><a href="projects.html">프로젝트</a></li>
+                    <li><a href="estimates.html">견적</a></li>
+                    <li><a href="admin/dashboard.html">관리자</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 1rem;">
+
+        <!-- Search Filters -->
+        <div class="card" style="margin-bottom: 2rem;">
+            <h2>자재 검색</h2>
+            <form id="searchForm" style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem;">
+                <div style="flex: 1; min-width: 200px;">
+                    <input type="text" id="q" class="search-input" style="width: 100%;" placeholder="자재명 / 코드 / 브랜드 검색">
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                    <select id="category" class="search-input" style="width: 100%;">
+                        <option value="">카테고리 전체 ▼</option>
+                        <option value="인테리어">인테리어</option>
+                        <option value="엘리베이터">엘리베이터</option>
+                        <option value="소방">소방</option>
+                        <option value="스마트주차장">스마트주차장</option>
+                        <option value="IT">IT (네트워크/하드웨어)</option>
+                        <option value="기타">기타</option>
+                    </select>
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                    <select id="application" class="search-input" style="width: 100%;">
+                        <option value="">용도 전체 ▼</option>
+                        <option value="벽">벽</option>
+                        <option value="바닥">바닥</option>
+                        <option value="천장">천장</option>
+                        <option value="내장">내장</option>
+                        <option value="마감">마감</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary" style="padding: 0.75rem 2rem;">검색</button>
+            </form>
+        </div>
+
+        <!-- Material List -->
+        <h3 style="margin-bottom: 1rem;" id="resultCount">검색 결과 (0건)</h3>
+
+        <div id="materialList" class="list-view">
+            <!-- Items injected by JS -->
+        </div>
+
+    </main>
+
+
+    <!-- Global Auth Guard -->
+</body>
+
+</html>

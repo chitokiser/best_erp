@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>구매 요청 및 장바구니 - BEST Group</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script type="module" crossorigin src="/assets/request-form-cZk4Kt62.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/firebase-config-OD9FGzWR.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-Ci8pltMn.js">
+  <link rel="modulepreload" crossorigin href="/assets/purchaseApi-z0zZrzrW.js">
+  <link rel="stylesheet" crossorigin href="/assets/firebase-config-2tIJVkuo.css">
+</head>
+
+<body style="display: none;">
+    <header class="main-header">
+        <div class="container">
+            <h1 class="logo" style="margin-bottom: 0.5rem;"><a href="index.html">BEST MATERIAL DATA</a></h1>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="materials.html">자재 DB</a></li>
+                    <li><a href="price-comparison.html">가격 비교</a></li>
+                    <li><a href="suppliers.html">공급업체</a></li>
+                    <li><a href="request-form.html" style="color:var(--primary-color)">구매요청 <span id="cartCount"
+                                style="background:var(--primary-color);color:#fff;border-radius:10px;padding:2px 6px;font-size:0.75rem;">0</span></a>
+                    </li>
+                    <li><a href="estimates.html">견적 생성기</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 1rem;">
+        <h2 style="margin-bottom: 2rem;">구매 결재 요청서 (품의서)</h2>
+
+        <div class="card" style="margin-bottom: 2rem;">
+            <h3>요청 자재 목록</h3>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 1rem; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border-color);">
+                        <th style="padding: 1rem;">자재명</th>
+                        <th style="padding: 1rem;">매입단가 (VND)</th>
+                        <th style="padding: 1rem;">수량</th>
+                        <th style="padding: 1rem;">총액 (VND)</th>
+                        <th style="padding: 1rem;">삭제</th>
+                    </tr>
+                </thead>
+                <tbody id="cartTableBody">
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 1rem;">장바구니가 비어 있습니다. 자재 DB에서 자재를 담아주세요.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="text-align: right; margin-top: 1rem; font-size: 1.25rem;">
+                <strong>총 요청 금액: </strong> <span id="totalAmountText" style="color: var(--primary-color);">0</span> VND
+            </div>
+        </div>
+
+        <div class="card" id="requestFormBox" style="display: none;">
+            <h3>기안 정보 작성</h3>
+            <form id="purchaseForm" style="display:grid; gap: 1rem; margin-top: 1rem;">
+                <div>
+                    <label>기안자 부서 (사업부)</label>
+                    <select id="reqDepartment" class="search-input" style="width: 100%;" required>
+                        <option value="">사업부 선택</option>
+                        <option value="인테리어 사업부">인테리어 사업부</option>
+                        <option value="엘리베이터 사업부">엘리베이터 사업부</option>
+                        <option value="소방 업부">소방 사업부</option>
+                        <option value="스마트주차장 사업부">스마트주차장 사업부</option>
+                        <option value="기타 부서">기타 부서</option>
+                    </select>
+                </div>
+                <div>
+                    <label>기안자 성명</label>
+                    <input type="text" id="reqName" class="search-input" style="width: 100%;" required>
+                </div>
+                <div>
+                    <label>요청 사유 및 비고</label>
+                    <textarea id="reqNotes" class="search-input" style="width: 100%; height: 80px;"
+                        placeholder="프로젝트명 및 구매 사유를 적어주세요"></textarea>
+                </div>
+                <button type="submit" class="btn-primary"
+                    style="padding: 1rem; font-size: 1.1rem; border-radius: 8px;">팀장 승인 요청하기</button>
+                <div id="statusMsg" style="text-align:center; font-weight:bold; margin-top:0.5rem;"></div>
+            </form>
+        </div>
+    </main>
+
+
+    <!-- Global Auth Guard -->
+</body>
+
+</html>

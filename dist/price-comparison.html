@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가격 비교 - BEST MATERIAL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>.comparison-table{border-collapse:collapse;width:100%;margin-top:1rem}.comparison-table th,.comparison-table td{border:1px solid var(--border-color);text-align:left;padding:1rem}.comparison-table th{background-color:var(--bg-color);font-weight:600}.highlight-row{background-color:#eff6ff;font-weight:700}.savings-box{color:#fff;text-align:center;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border-radius:8px;margin-top:1.5rem;padding:1.5rem}.savings-box h3{color:#bfdbfe;margin-bottom:.5rem;font-size:1.25rem;font-weight:500}.savings-box .amount{font-size:2.5rem;font-weight:700}.savings-box .rate{color:#bfdbfe;margin-top:.5rem;font-size:1.25rem}</style>
+  <script type="module" crossorigin src="/assets/price-comparison-D3x4l6iH.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/firebase-config-OD9FGzWR.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-Ci8pltMn.js">
+  <link rel="modulepreload" crossorigin href="/assets/materialApi-BWso9T6r.js">
+  <link rel="stylesheet" crossorigin href="/assets/firebase-config-2tIJVkuo.css">
+</head>
+
+<body style="display: none;">
+    <header class="main-header">
+        <div class="container">
+            <h1 class="logo" style="margin-bottom: 0.5rem;"><a href="index.html">BEST MATERIAL DATA</a></h1>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="materials.html">자재 DB</a></li>
+                    <li><a href="price-comparison.html" style="color:var(--primary-color)">가격 비교</a></li>
+                    <li><a href="suppliers.html">공급업체</a></li>
+                    <li><a href="request-form.html" id="navCartLink">구매요청 <span id="cartCount" style="background:var(--primary-color);color:#fff;border-radius:10px;padding:2px 6px;font-size:0.75rem;">0</span></a></li>
+                    <li><a href="estimates.html">견적 생성기</a></li>
+                    <li><a href="categories.html">카테고리</a></li>
+                    <li><a href="admin/dashboard.html">관리자</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 1rem;">
+
+        <div class="card" style="margin-bottom: 2rem;">
+            <h2>자재 가격 비교</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">자재를 선택하여 공공가격, 시장가격 및 공급업체별 단가를 비교하세요.</p>
+
+            <div style="display: flex; gap: 1rem;">
+                <select id="selMaterial" class="search-input" style="flex:1;">
+                    <option value="">자재를 불러오는 중...</option>
+                </select>
+                <button type="button" id="btnCompare" class="btn-primary" style="padding: 0 2rem;">비교 결과 보기</button>
+            </div>
+        </div>
+
+        <div id="resultSection" style="display: none;">
+            <h2 id="materialTitle" style="font-size: 1.75rem; margin-bottom: 1rem;">자재명</h2>
+
+            <div class="card" style="overflow-x: auto;">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50%;">구분 / 출처</th>
+                            <th style="width: 50%; text-align: right;">단가 (VND)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="comparisonBody">
+                        <!-- rows inserted via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="savings-box" id="savingsBox">
+                <h3>시장가격 대비 예상 절감액</h3>
+                <div class="amount" id="savingsAmount">0 VND</div>
+                <div class="rate" id="savingsRate">0% 절감 가능</div>
+            </div>
+        </div>
+
+    </main>
+
+
+    <!-- Global Auth Guard -->
+</body>
+
+</html>

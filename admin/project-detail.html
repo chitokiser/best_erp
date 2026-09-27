@@ -13,12 +13,12 @@
             display: flex;
             gap: 1.5rem;
             margin-top: 1.5rem;
-            overflow-x: auto;
             padding-bottom: 1rem;
         }
 
         .kanban-column {
-            flex: 0 0 300px;
+            flex: 1;
+            min-width: 250px;
             background: #f8fafc;
             border-radius: 8px;
             padding: 1rem;
@@ -26,6 +26,11 @@
             flex-direction: column;
             gap: 1rem;
             min-height: 400px;
+            transition: background 0.2s;
+        }
+
+        .kanban-column.drag-over {
+            background: #e2e8f0;
         }
 
         .kanban-column h3 {
@@ -34,6 +39,7 @@
             margin: 0;
             display: flex;
             justify-content: space-between;
+            pointer-events: none;
         }
 
         .kanban-card {
@@ -51,20 +57,6 @@
             cursor: grabbing;
         }
 
-        .kanban-card:hover {
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        .task-tag {
-            font-size: 0.7rem;
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            background: #dbeafe;
-            color: #1e40af;
-            display: inline-block;
-            margin-bottom: 0.5rem;
-        }
-
         .card-actions {
             position: absolute;
             top: 0.5rem;
@@ -77,13 +69,23 @@
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 0.7rem;
-            color: #9ca3af;
+            font-size: 0.8rem;
             padding: 0.2rem;
+            filter: grayscale(1);
         }
 
         .card-actions button:hover {
-            color: var(--primary-color);
+            filter: grayscale(0);
+        }
+
+        .task-tag {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            background: #dbeafe;
+            color: #1e40af;
+            display: inline-block;
+            margin-bottom: 0.5rem;
         }
     </style>
 </head>
@@ -97,7 +99,6 @@
                     <li><a href="dashboard.html">대시보드</a></li>
                     <li><a href="projects.html" style="color:var(--primary-color)">프로젝트</a></li>
                     <li><a href="materials.html">자재관리</a></li>
-                    <li><a href="suppliers.html">협력업체</a></li>
                     <li><a href="users.html">권한관리</a></li>
                     <li id="navUserEmail"></li>
                 </ul>
@@ -111,8 +112,8 @@
             <div>
                 <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
                     <span id="projectStatusBadge"
-                        style="background: #10b981; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">진행
-                        중</span>
+                        style="background: #10b981; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">로딩
+                        중...</span>
                     <span id="projectPmBadge" style="color: var(--text-secondary); font-size: 0.875rem;">PM: 불러오는
                         중...</span>
                 </div>
@@ -131,41 +132,77 @@
 
         <hr style="border: none; border-top: 1px solid #e2e8f0; margin-bottom: 2rem;">
 
-        <!-- Project Sub-Nav / Tabs -->
+        <!-- Tabs -->
         <div style="display: flex; gap: 2rem; border-bottom: 2px solid #e2e8f0; margin-bottom: 2rem; font-weight: 500;">
-            <div
+            <div id="tab-kanban" onclick="window.switchTab('kanban')"
                 style="padding-bottom: 0.75rem; border-bottom: 2px solid var(--primary-color); color: var(--primary-color); cursor: pointer;">
                 칸반 보드 (Task)</div>
-            <div style="padding-bottom: 0.75rem; color: var(--text-secondary); cursor: pointer;">자재 투입 명세서 (BOM)</div>
-            <div style="padding-bottom: 0.75rem; color: var(--text-secondary); cursor: pointer;">결재 및 도면</div>
+            <div id="tab-files" onclick="window.switchTab('files')"
+                style="padding-bottom: 0.75rem; color: var(--text-secondary); cursor: pointer;">
+                결재 및 도면 자료</div>
         </div>
 
-        <!-- Kanban Board Area -->
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h3 style="margin: 0; font-size: 1.25rem;">업무 현황 (공정 관리)</h3>
-            <button class="btn-primary" style="padding: 0.5rem 1rem;" onclick="window.addKanbanTask()">+ 새 태스크
-                추가</button>
+        <!-- Kanban View -->
+        <div id="view-kanban">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 1.25rem;">업무 현황 (공정 관리)</h3>
+                <button class="btn-primary" style="padding: 0.5rem 1rem;" onclick="window.addKanbanTask()">+ 새 태스크
+                    추가</button>
+            </div>
+
+            <div class="kanban-board">
+                <div class="kanban-column" id="todo" ondragenter="window.allowDrop(event)"
+                    ondragover="window.allowDrop(event)" ondragleave="window.dragLeave(event)"
+                    ondrop="window.drop(event, this)">
+                    <h3>할 일 (To Do) <span class="task-count">0</span></h3>
+                </div>
+                <div class="kanban-column" id="in_progress" ondragenter="window.allowDrop(event)"
+                    ondragover="window.allowDrop(event)" ondragleave="window.dragLeave(event)"
+                    ondrop="window.drop(event, this)">
+                    <h3>진행 중 (In Progress) <span class="task-count">0</span></h3>
+                </div>
+                <div class="kanban-column" id="waiting" ondragenter="window.allowDrop(event)"
+                    ondragover="window.allowDrop(event)" ondragleave="window.dragLeave(event)"
+                    ondrop="window.drop(event, this)">
+                    <h3>협력사 대기 (Waiting) <span class="task-count">0</span></h3>
+                </div>
+                <div class="kanban-column" id="done" ondragenter="window.allowDrop(event)"
+                    ondragover="window.allowDrop(event)" ondragleave="window.dragLeave(event)"
+                    ondrop="window.drop(event, this)">
+                    <h3>완료 (Done) <span class="task-count">0</span></h3>
+                </div>
+            </div>
         </div>
 
-        <div class="kanban-board">
-            <!-- 백로그 / 할 일 -->
-            <div class="kanban-column" id="todo" ondragover="allowDrop(event)" ondrop="drop(event, this)">
-                <h3>할 일 (To Do) <span class="task-count">0</span></h3>
+        <!-- Files View -->
+        <div id="view-files" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin: 0; font-size: 1.25rem;">결재문서 및 도면 자료실</h3>
+                <div>
+                    <input type="file" id="fileUploadInput" style="display: none;"
+                        onchange="window.handleFileUpload(event)">
+                    <button class="btn-primary" style="padding: 0.5rem 1rem;"
+                        onclick="document.getElementById('fileUploadInput').click()">+ 자료 업로드</button>
+                </div>
             </div>
 
-            <!-- 진행 중 -->
-            <div class="kanban-column" id="in_progress" ondragover="allowDrop(event)" ondrop="drop(event, this)">
-                <h3>진행 중 (In Progress) <span class="task-count">0</span></h3>
-            </div>
-
-            <!-- 협력사 대기 / 승인 대기 -->
-            <div class="kanban-column" id="waiting" ondragover="allowDrop(event)" ondrop="drop(event, this)">
-                <h3>협력사 대기 (Waiting) <span class="task-count">0</span></h3>
-            </div>
-
-            <!-- 완료 -->
-            <div class="kanban-column" id="done" ondragover="allowDrop(event)" ondrop="drop(event, this)">
-                <h3>완료 (Done) <span class="task-count">0</span></h3>
+            <div class="card">
+                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border-color);">
+                            <th style="padding: 1rem;">자료 명</th>
+                            <th style="padding: 1rem;">작성자</th>
+                            <th style="padding: 1rem;">다운로드</th>
+                            <th style="padding: 1rem;">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="filesTableBody">
+                        <tr>
+                            <td colspan="4" style="text-align:center; padding:1rem; color:var(--text-secondary);">등록된
+                                자료가 없습니다.</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </main>
@@ -176,181 +213,140 @@
         import { db } from '../assets/js/firebase-config.js';
         import { doc, getDoc, collection, addDoc, getDocs, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 
-        window.logoutAndRedirect = () => { logoutAdmin(); };
-
         const urlParams = new URLSearchParams(window.location.search);
         const projectId = urlParams.get('id');
 
-        if (!projectId) {
-            alert('잘못된 접근입니다 (프로젝트 ID 없음).');
-            window.location.href = 'projects.html';
-        }
+        window.logoutAndRedirect = () => { logoutAdmin(); };
+        window.draggedCardId = null;
+        window.currentUserEmail = 'Unknown';
 
-        // State
-        let draggedCardId = null;
+        window.switchTab = (tab) => {
+            document.getElementById('view-kanban').style.display = tab === 'kanban' ? 'block' : 'none';
+            document.getElementById('view-files').style.display = tab === 'files' ? 'block' : 'none';
 
-        // Fetch Project Data
-        async function loadProjectDetails() {
-            try {
-                const docRef = doc(db, 'projects', projectId);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    document.getElementById('projectTitleHeader').textContent = data.title || '무제 프로젝트';
-                    document.getElementById('projectPmBadge').textContent = 'PM: ' + (data.pm || '미배정');
-                    document.getElementById('projectStatusBadge').textContent = data.status || '착공대기';
+            ['kanban', 'files'].forEach(t => {
+                const el = document.getElementById('tab-' + t);
+                if (el) {
+                    if (t === tab) {
+                        el.style.color = 'var(--primary-color)';
+                        el.style.borderBottom = '2px solid var(--primary-color)';
+                    } else {
+                        el.style.color = 'var(--text-secondary)';
+                        el.style.borderBottom = 'none';
+                    }
                 }
-            } catch (e) {
-                console.error("Failed to load project", e);
+            });
+
+            if (tab === 'files') window.loadFiles();
+        };
+
+        async function loadProjectDetails() {
+            if (!projectId) return;
+            const snap = await getDoc(doc(db, 'projects', projectId));
+            if (snap.exists()) {
+                const data = snap.data();
+                document.getElementById('projectTitleHeader').textContent = data.title;
+                document.getElementById('projectPmBadge').textContent = 'PM: ' + (data.pm || '미배정');
+                document.getElementById('projectStatusBadge').textContent = data.status || '진행 중';
             }
         }
 
-        // Fetch Kanban Tasks
         async function loadTasks() {
-            try {
-                // Clear columns
-                ['todo', 'in_progress', 'waiting', 'done'].forEach(colId => {
-                    const col = document.getElementById(colId);
-                    // Keep the header h3, wipe out cards
-                    const children = Array.from(col.children);
-                    children.forEach(child => {
-                        if (child.tagName.toLowerCase() !== 'h3') {
-                            col.removeChild(child);
-                        }
-                    });
-                });
+            if (!projectId) return;
+            ['todo', 'in_progress', 'waiting', 'done'].forEach(id => {
+                const col = document.getElementById(id);
+                Array.from(col.children).forEach(c => { if (c.tagName !== 'H3') col.removeChild(c); });
+            });
 
-                const taskRef = collection(db, 'projects', projectId, 'tasks');
-                const snap = await getDocs(taskRef);
-                let doneCount = 0;
-                let totalCount = snap.size;
+            const snap = await getDocs(collection(db, 'projects', projectId, 'tasks'));
+            let doneCount = 0;
 
-                snap.forEach(docSnap => {
-                    const data = docSnap.data();
-                    const status = data.status || 'todo';
-                    if (status === 'done') doneCount++;
+            snap.forEach(docSnap => {
+                const data = docSnap.data();
+                const status = data.status || 'todo';
+                if (status === 'done') doneCount++;
+                renderCard(docSnap.id, data, status);
+            });
 
-                    renderCard(docSnap.id, data, status);
-                });
-
-                // Update Progress Bar
-                const prog = totalCount === 0 ? 0 : Math.round((doneCount / totalCount) * 100);
-                document.getElementById('progressText').textContent = prog;
-                document.getElementById('progressBar').style.width = prog + '%';
-                updateCounts();
-            } catch (e) {
-                console.error("Failed to load tasks", e);
-            }
+            const prog = snap.size === 0 ? 0 : Math.round((doneCount / snap.size) * 100);
+            document.getElementById('progressText').textContent = prog;
+            document.getElementById('progressBar').style.width = prog + '%';
+            updateCounts();
         }
 
         window.addKanbanTask = async () => {
-            const title = prompt("추가할 태스크 제목을 입력하세요:");
+            const title = prompt("새 태스크 제목:");
             if (!title) return;
-            const desc = prompt("태스크 설명이나 기한을 입력하세요:");
+            const desc = prompt("설명 기재:");
+            await addDoc(collection(db, 'projects', projectId, 'tasks'), {
+                title, description: desc || '', status: 'todo', tag: '신규'
+            });
+            loadTasks();
+        };
 
-            try {
-                await addDoc(collection(db, 'projects', projectId, 'tasks'), {
-                    title,
-                    description: desc || '단순 작업',
-                    tag: '신규',
-                    status: 'todo',
-                    createdAt: serverTimestamp()
-                });
+        window.editTask = async (id, oldT, oldD) => {
+            const nt = prompt("제목:", oldT); if (!nt) return;
+            const nd = prompt("설명:", oldD);
+            await updateDoc(doc(db, 'projects', projectId, 'tasks', id), { title: nt, description: nd });
+            loadTasks();
+        };
+
+        window.delTask = async (id) => {
+            if (confirm("삭제하시겠습니까?")) {
+                await deleteDoc(doc(db, 'projects', projectId, 'tasks', id));
                 loadTasks();
-            } catch (e) {
-                alert('추가 실패: ' + e.message);
             }
-        }
-
-        window.editTask = async (taskId, currentTitle, currentDesc) => {
-            const newTitle = prompt("태스크 제목 변경:", currentTitle);
-            if (!newTitle) return;
-            const newDesc = prompt("태스크 설명 변경:", currentDesc);
-
-            try {
-                await updateDoc(doc(db, 'projects', projectId, 'tasks', taskId), {
-                    title: newTitle,
-                    description: newDesc
-                });
-                loadTasks();
-            } catch (e) {
-                alert("수정 실패: " + e.message);
-            }
-        }
-
-        window.delTask = async (taskId) => {
-            if (confirm("정말로 이 태스크를 삭제하시겠습니까?")) {
-                try {
-                    await deleteDoc(doc(db, 'projects', projectId, 'tasks', taskId));
-                    loadTasks();
-                } catch (e) {
-                    alert("삭제 실패: " + e.message);
-                }
-            }
-        }
+        };
 
         function renderCard(id, data, statusCol) {
             const col = document.getElementById(statusCol);
             if (!col) return;
-
             const card = document.createElement('div');
-            card.className = 'kanban-card';
-            card.draggable = true;
-            card.id = id;
-            card.dataset.title = data.title;
-            card.dataset.desc = data.description;
+            card.className = 'kanban-card'; card.draggable = true; card.id = id;
 
-            // Drag Handlers
             card.addEventListener('dragstart', (e) => {
-                draggedCardId = id;
+                window.draggedCardId = id;
                 e.dataTransfer.setData("text", id);
-                card.style.opacity = '0.5';
             });
-            card.addEventListener('dragend', () => {
-                card.style.opacity = '1';
-                draggedCardId = null;
-            });
+            card.addEventListener('dragend', () => { window.draggedCardId = null; });
 
             card.innerHTML = `
                 <div class="card-actions">
-                    <button onclick="window.editTask('${id}', '${data.title || ''}', '${data.description || ''}')">✏️</button>
+                    <button onclick="window.editTask('${id}', '${data.title}', '${data.description}')">✏️</button>
                     <button onclick="window.delTask('${id}')">🗑️</button>
                 </div>
                 <span class="task-tag">${data.tag || '일반'}</span>
-                <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem; padding-right:2rem;">${data.title || '무제'}</h4>
-                <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">${data.description || ''}</p>
+                <h4 style="margin:0 0 0.5rem 0; font-size:1rem; padding-right:2rem;">${data.title}</h4>
+                <p style="margin:0; font-size:0.8rem; color:gray;">${data.description}</p>
             `;
             col.appendChild(card);
         }
 
-        // Global Drag/Drop API for HTML5 Events
         window.allowDrop = (ev) => {
             ev.preventDefault();
+            const targetCol = ev.target.closest('.kanban-column');
+            if (targetCol) targetCol.classList.add('drag-over');
+        };
+
+        window.dragLeave = (ev) => {
+            const targetCol = ev.target.closest('.kanban-column');
+            if (targetCol) targetCol.classList.remove('drag-over');
         };
 
         window.drop = async (ev, columnElement) => {
             ev.preventDefault();
-            const taskId = draggedCardId;
-            if (!taskId) return;
+            const targetCol = ev.target.closest('.kanban-column');
+            if (targetCol) targetCol.classList.remove('drag-over');
 
-            const newStatus = columnElement.id;
+            const id = window.draggedCardId;
+            if (!id || !targetCol) return;
 
-            // Optimistic UI mapping
-            const targetCol = document.getElementById(newStatus);
-            const card = document.getElementById(taskId);
-            if (card && targetCol) {
-                targetCol.appendChild(card);
-                updateCounts();
-            }
+            const card = document.getElementById(id);
+            if (card) targetCol.appendChild(card);
 
-            try {
-                await updateDoc(doc(db, 'projects', projectId, 'tasks', taskId), {
-                    status: newStatus
-                });
-                loadTasks(); // refresh to get new progress %
-            } catch (e) {
-                console.error("Status check failed", e);
-            }
+            updateCounts();
+            await updateDoc(doc(db, 'projects', projectId, 'tasks', id), { status: targetCol.id });
+            loadTasks();
         };
 
         function updateCounts() {
@@ -362,14 +358,52 @@
             });
         }
 
-        checkAdminAuth(
-            (user) => {
-                document.body.style.display = 'block';
-                loadProjectDetails();
-                loadTasks();
-            },
-            () => { window.location.href = '../login.html'; }
-        );
+        // Files Logic
+        window.handleFileUpload = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            alert(`[업로드 시뮬레이션]\n\n파일명: ${file.name}\nFirebase Storage 보안 규칙을 우회하여 DB 메타데이터로 안전하게 가상 업로드합니다.`);
+            await addDoc(collection(db, 'projects', projectId, 'files'), {
+                name: file.name, uploader: window.currentUserEmail, url: '#', createdAt: serverTimestamp()
+            });
+            e.target.value = '';
+            window.loadFiles();
+        };
+
+        window.loadFiles = async () => {
+            const tbody = document.getElementById('filesTableBody');
+            const snap = await getDocs(collection(db, 'projects', projectId, 'files'));
+            if (snap.empty) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:1rem; color:var(--text-secondary);">등록된 자료가 없습니다.</td></tr>';
+                return;
+            }
+            let html = '';
+            snap.forEach(d => {
+                const data = d.data();
+                html += `
+                    <tr>
+                        <td style="padding: 1rem; font-weight: 500;">📄 ${data.name || '알 수 없는 파일'}</td>
+                        <td style="padding: 1rem;">${data.uploader || '알 수 없음'}</td>
+                        <td style="padding: 1rem;"><a href="${data.url}" onclick="alert('다운로드 데모입니다.')" style="color:var(--primary-color);">다운로드</a></td>
+                        <td style="padding: 1rem;"><button class="btn-primary" style="background:#ef4444; padding:0.25rem 0.5rem;" onclick="window.delFile('${d.id}')">삭제</button></td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        };
+
+        window.delFile = async (id) => {
+            if (confirm("이 자료를 삭제하시겠습니까?")) {
+                await deleteDoc(doc(db, 'projects', projectId, 'files', id));
+                window.loadFiles();
+            }
+        };
+
+        checkAdminAuth((user) => {
+            document.body.style.display = 'block';
+            window.currentUserEmail = user.email;
+            if (projectId) { loadProjectDetails(); loadTasks(); }
+        }, () => { window.location.href = '../login.html'; });
     </script>
 </body>
 

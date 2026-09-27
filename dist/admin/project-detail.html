@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>프로젝트 상세 - BESTwinner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>.kanban-board{gap:1.5rem;margin-top:1.5rem;padding-bottom:1rem;display:flex}.kanban-column{background:#f8fafc;border-radius:8px;flex-direction:column;flex:1;gap:1rem;min-width:250px;min-height:400px;padding:1rem;transition:background .2s;display:flex}.kanban-column.drag-over{background:#e2e8f0}.kanban-column h3{color:var(--text-secondary);pointer-events:none;justify-content:space-between;margin:0;font-size:1rem;display:flex}.kanban-card{cursor:grab;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:1rem;transition:box-shadow .2s;position:relative;box-shadow:0 1px 2px #0000000d}.kanban-card:active{cursor:grabbing}.card-actions{gap:.25rem;display:flex;position:absolute;top:.5rem;right:.5rem}.card-actions button{cursor:pointer;filter:grayscale();background:0 0;border:none;padding:.2rem;font-size:.8rem}.card-actions button:hover{filter:grayscale(0)}.task-tag{color:#1e40af;background:#dbeafe;border-radius:4px;margin-bottom:.5rem;padding:.2rem .5rem;font-size:.7rem;display:inline-block}</style>
+  <script type="module" crossorigin src="/assets/admin_project-detail-DSPRDX9q.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/firebase-config-OD9FGzWR.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-Ci8pltMn.js">
+  <link rel="stylesheet" crossorigin href="/assets/firebase-config-2tIJVkuo.css">
+  <link rel="stylesheet" crossorigin href="/assets/admin-x1XGuNl0.css">
+</head>
+
+<body style="display: none;">
+    <header class="main-header">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <h1 class="logo">BESTwinner</h1>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="dashboard.html">대시보드</a></li>
+                    <li><a href="projects.html" style="color:var(--primary-color)">프로젝트</a></li>
+                    <li><a href="materials.html">자재관리</a></li>
+                    <li><a href="users.html">권한관리</a></li>
+                    <li id="navUserEmail"></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 1rem;">
+        <!-- Project Header -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                    <span id="projectStatusBadge"
+                        style="background: #10b981; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">로딩
+                        중...</span>
+                    <span id="projectPmBadge" style="color: var(--text-secondary); font-size: 0.875rem;">PM: 불러오는
+                        중...</span>
+                </div>
+                <h2 id="projectTitleHeader" style="margin: 0; font-size: 1.8rem;">프로젝트 정보를 불러오는 중입니다...</h2>
+            </div>
+            <div style="text-align: right;">
+                <p style="margin: 0 0 0.5rem 0; font-size: 0.875rem; color: var(--text-secondary);">전체 진척도 (<span
+                        id="progressText">0</span>%)</p>
+                <div style="width: 250px; background: #e2e8f0; height: 10px; border-radius: 5px; overflow: hidden;">
+                    <div id="progressBar"
+                        style="background: var(--primary-color); width: 0%; height: 100%; transition: width 0.3s;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid #e2e8f0; margin-bottom: 2rem;">
+
+        <!-- Tabs -->
+        <div style="display: flex; gap: 2rem; border-bottom: 2px solid #e2e8f0; margin-bottom: 2rem; font-weight: 500;">
+            <div id="tab-kanban" onclick="window.switchTab('kanban')"
+                style="padding-bottom: 0.75rem; border-bottom: 2px solid var(--primary-color); color: var(--primary-color); cursor: pointer;">
+                칸반 보드 (Task)</div>
+            <div id="tab-files" onclick="window.switchTab('files')"
+                style="padding-bottom: 0.75rem; color: var(--text-secondary); cursor: pointer;">
+                결재 및 도면 자료</div>
+        </div>
+
+        <!-- Kanban View -->
+        <div id="view-kanban">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 1.25rem;">업무 현황 (공정 관리)</h3>
+                <button class="btn-primary" style="padding: 0.5rem 1rem;" onclick="window.addKanbanTask()">+ 새 태스크
+                    추가</button>
+            </div>
+
+            <div class="kanban-board">
+                <div class="kanban-column" id="todo" ondragenter="window.allowDrop(event)"
+                    ondragover="window.allowDrop(event)" ondragleave="window.dragLeave(event)"
+                    ondrop="window.drop(event, this)">
+                    <h3>할 일 (To Do) <span class="task-count">0</span></h3>
+                </div>
+                <div class="kanban-column" id="in_progress" ondragenter="window.allowDrop(event)"
+                    ondragover="window.allowDrop(event)" ondragleave="window.dragLeave(event)"
+                    ondrop="window.drop(event, this)">
+                    <h3>진행 중 (In Progress) <span class="task-count">0</span></h3>
+                </div>
+                <div class="kanban-column" id="waiting" ondragenter="window.allowDrop(event)"
+                    ondragover="window.allowDrop(event)" ondragleave="window.dragLeave(event)"
+                    ondrop="window.drop(event, this)">
+                    <h3>협력사 대기 (Waiting) <span class="task-count">0</span></h3>
+                </div>
+                <div class="kanban-column" id="done" ondragenter="window.allowDrop(event)"
+                    ondragover="window.allowDrop(event)" ondragleave="window.dragLeave(event)"
+                    ondrop="window.drop(event, this)">
+                    <h3>완료 (Done) <span class="task-count">0</span></h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Files View -->
+        <div id="view-files" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin: 0; font-size: 1.25rem;">결재문서 및 도면 자료실</h3>
+                <div>
+                    <input type="file" id="fileUploadInput" style="display: none;"
+                        onchange="window.handleFileUpload(event)">
+                    <button class="btn-primary" style="padding: 0.5rem 1rem;"
+                        onclick="document.getElementById('fileUploadInput').click()">+ 자료 업로드</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border-color);">
+                            <th style="padding: 1rem;">자료 명</th>
+                            <th style="padding: 1rem;">작성자</th>
+                            <th style="padding: 1rem;">다운로드</th>
+                            <th style="padding: 1rem;">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="filesTableBody">
+                        <tr>
+                            <td colspan="4" style="text-align:center; padding:1rem; color:var(--text-secondary);">등록된
+                                자료가 없습니다.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- App Logic -->
+</body>
+
+</html>

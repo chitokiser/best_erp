@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>결재관리 (구매) - BEST Group</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>.badge{border-radius:4px;padding:.2rem .5rem;font-size:.75rem;font-weight:700}.bg-yellow{color:#854d0e;background:#fef08a}.bg-orange{color:#c2410c;background:#fed7aa}.bg-green{color:#166534;background:#bbf7d0}.bg-blue{color:#1e3a8a;background:#bfdbfe}.request-card{border:1px solid var(--border-color);border-radius:8px;margin-bottom:1rem;padding:1.5rem}.item-list{color:#475569;margin:.5rem 0;padding-left:1.5rem;font-size:.875rem}</style>
+  <script type="module" crossorigin src="/assets/admin_purchase-requests-DUFx65zp.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/firebase-config-OD9FGzWR.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-Ci8pltMn.js">
+  <link rel="modulepreload" crossorigin href="/assets/purchaseApi-z0zZrzrW.js">
+  <link rel="stylesheet" crossorigin href="/assets/firebase-config-2tIJVkuo.css">
+</head>
+
+<body style="display: none;">
+    <header class="main-header">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <h1 class="logo">BEST Group</h1>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="dashboard.html">대시보드</a></li>
+                    <li><a href="materials.html">자재관리</a></li>
+                    <li><a href="suppliers.html">공급업체</a></li>
+                    <li><a href="purchase-requests.html" style="color:var(--primary-color)">결재관리(구매)</a></li>
+                    <li><a href="users.html">권한관리</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 1rem;">
+        <h2 style="margin-bottom: 2rem;">구매 결재 상신함</h2>
+
+        <div class="card">
+            <div id="requestsContainer">로딩 중...</div>
+        </div>
+    </main>
+
+
+    <!-- Global Auth Guard -->
+</body>
+
+</html>

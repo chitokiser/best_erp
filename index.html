@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BESTwinner - 프로젝트 관리 플랫폼</title>
+    <title>AI-ERM - 프로젝트 관리 플랫폼</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -14,14 +14,13 @@
         style="background: white; border-bottom: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
         <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-                <h1 class="logo" style="margin: 0; color: var(--primary-color);">BESTwinner</h1>
-                <p class="subtitle" style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">통합 프로젝트 및 자재 관리
-                    플랫폼</p>
+                <h1 class="logo" style="margin: 0; color: var(--primary-color);">AI-ERM</h1>
+                <p class="subtitle" style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">AI 전사 자원관리 및 경영 컨설팅 시스템</p>
             </div>
             <nav class="main-nav">
                 <ul style="display: flex; gap: 1.5rem; list-style: none; margin: 0; padding: 0;">
                     <li><a href="my-workspace.html" style="font-weight: 500; text-decoration: none;">내 워크스페이스</a></li>
-                    <li><a href="admin/dashboard.html" style="font-weight: 500; text-decoration: none;">총괄 대시보드</a></li>
+                    <li><a href="admin/ceo-dashboard.html" style="font-weight: 500; text-decoration: none;">총괄 대시보드</a></li>
                     <li><a href="materials.html" style="font-weight: 500; text-decoration: none;">자재 DB</a></li>
                     <li><a href="admin/suppliers.html" style="font-weight: 500; text-decoration: none;">협력업체 평가</a></li>
                     <li id="navUserEmail"></li>
@@ -34,11 +33,11 @@
         <!-- Hero Section -->
         <section
             style="background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; padding: 3rem 2rem; border-radius: 12px; margin-bottom: 3rem; text-align: center; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
-            <h2 style="font-size: 2.5rem; margin: 0 0 1rem 0; font-weight: 700;">BEST WINNER GROUP 모든 프로젝트, 한 곳에서 완벽하게.
+            <h2 style="font-size: 2.5rem; margin: 0 0 1rem 0; font-weight: 700;">Data In. Intelligence Up. Business Optimized.
             </h2>
             <p
                 style="font-size: 1.1rem; opacity: 0.9; margin: 0 0 2rem 0; max-width: 600px; margin-left: auto; margin-right: auto;">
-                인테리어, 신축 현장 관리부터 자재 수급 및 우수 협력사 관리까지. BESTwinner 그룹의 업무 프로세스에 최적화된 올인원 관리를 시작하세요.
+                인테리어, 신축 현장 관리부터 자재 수급 및 우수 협력사 관리까지. AI-ERM 그룹의 업무 프로세스에 최적화된 올인원 관리를 시작하세요.
             </p>
             <form id="globalSearchForm" style="display: flex; max-width: 600px; margin: 0 auto; gap: 0.5rem;"
                 onsubmit="handleGlobalSearch(event)">
@@ -91,7 +90,7 @@
             </div>
 
             <div class="card" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; background: white;"
-                onclick="location.href='admin/dashboard.html'"
+                onclick="location.href='admin/ceo-dashboard.html'"
                 onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 15px -3px rgba(0,0,0,0.1)';"
                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)';">
                 <div
@@ -106,7 +105,7 @@
 
     <footer class="main-footer" style="margin-top: 4rem;">
         <div class="container">
-            <p>&copy; 2026 BESTwinner Group. All rights reserved.</p>
+            <p>&copy; 2026 AI-ERM Group. All rights reserved.</p>
         </div>
     </footer>
 

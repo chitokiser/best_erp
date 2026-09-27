@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-ERM CEO Dashboard</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --ai-primary: #4F46E5;
+            --ai-secondary: #818CF8;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --success: #10B981;
+            --info: #3B82F6;
+            --bg-dark: #1E293B;
+            --card-dark: #334155;
+            --text-light: #F8FAFC;
+        }
+
+        body {
+            background-color: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #334155;
+        }
+
+        .ceo-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: 250px 1fr 350px;
+            gap: 2rem;
+        }
+
+        /* Top Navigation */
+        .ceo-nav {
+            background: var(--bg-dark);
+            color: var(--text-light);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ceo-nav h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(90deg, #818CF8, #C084FC);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Metric Cards */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .metric-card.ai-focus {
+            background: linear-gradient(135deg, var(--ai-primary), #6366F1);
+            color: white;
+            border: none;
+        }
+
+        .metric-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        .ai-focus .metric-title {
+            color: #E0E7FF;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        /* Main Sections */
+        .section-header {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 2rem;
+        }
+
+        /* AI Notification Area (Right Sidebar) */
+        .ai-sidebar {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            height: fit-content;
+        }
+
+        .alert-item {
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #ccc;
+            background: #f8fafc;
+        }
+
+        .alert-item.danger {
+            border-color: var(--danger);
+            background: #FEF2F2;
+        }
+
+        .alert-item.warning {
+            border-color: var(--warning);
+            background: #FFFBEB;
+        }
+
+        .alert-item.info {
+            border-color: var(--info);
+            background: #EFF6FF;
+        }
+
+        .alert-item.success {
+            border-color: var(--success);
+            background: #ECFDF5;
+        }
+
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .danger .alert-header {
+            color: #B91C1C;
+        }
+
+        .warning .alert-header {
+            color: #B45309;
+        }
+
+        .info .alert-header {
+            color: #1D4ED8;
+        }
+
+        .success .alert-header {
+            color: #047857;
+        }
+
+        .alert-text {
+            font-size: 0.875rem;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        .ai-chat-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--ai-primary);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4);
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-size: 1.5rem;
+        }
+
+        .ai-chat-btn:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="ceo-nav">
+        <h1>AI-ERM</h1>
+        <div style="display:flex; gap: 1rem; align-items: center;">
+            <a href="../index.html" style="color: #cbd5e1; text-decoration:none; font-size: 0.875rem;">메인으로</a>
+            <span style="background: #334155; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.875rem;">
+                CEO Dashbaord
+            </span>
+        </div>
+    </nav>
+
+    <div class="ceo-container">
+        <!-- Sidebar Navigation -->
+        <aside>
+            <div class="panel" style="padding: 1rem;">
+                <ul style="list-style: none; padding: 0; margin: 0; font-weight: 500;">
+                    <li style="margin-bottom: 0.5rem;"><a href="#"
+                            style="color: var(--ai-primary); text-decoration: none; display: block; padding: 0.75rem; background: #e0e7ff; border-radius: 0.5rem;">CEO
+                            Dashboard</a></li>
+                    <li style="margin-bottom: 0.5rem;"><a href="projects.html"
+                            style="color: #64748b; text-decoration: none; display: block; padding: 0.75rem;">프로젝트 분석
+                            (AI)</a></li>
+                    <li style="margin-bottom: 0.5rem;"><a href="users.html"
+                            style="color: #64748b; text-decoration: none; display: block; padding: 0.75rem;">인력 자원
+                            분석</a></li>
+                    <li style="margin-bottom: 0.5rem;"><a href="materials.html"
+                            style="color: #64748b; text-decoration: none; display: block; padding: 0.75rem;">자재 / 원가
+                            분석</a></li>
+                    <li><a href="#" style="color: #64748b; text-decoration: none; display: block; padding: 0.75rem;">경영
+                            컨설팅 리포트</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main>
+            <h2 class="section-header">오늘의 경영 요약</h2>
+
+            <div class="metrics-grid">
+                <div class="metric-card ai-focus">
+                    <div class="metric-title">AI 종합경영지수</div>
+                    <div class="metric-value">87 <span style="font-size: 1rem; font-weight: 400; opacity: 0.8;">/
+                            100</span></div>
+                    <div
+                        style="font-size: 0.75rem; background: rgba(255,255,255,0.2); display: inline-block; padding: 0.25rem 0.5rem; border-radius: 1rem; margin-top: 0.5rem;">
+                        전주 대비 +2.4 ↑</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">진행 프로젝트</div>
+                    <div class="metric-value">24<span style="font-size:1rem;">개</span></div>
+                    <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.5rem;">
+                        <span style="color:var(--success)">정상 17</span> · <span style="color:var(--warning)">주의 5</span>
+                        · <span style="color:var(--danger)">위험 2</span>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">전사 인력 활용률</div>
+                    <div class="metric-value">91<span style="font-size:1rem;">%</span></div>
+                    <div style="font-size: 0.75rem; color: var(--danger); margin-top: 0.5rem;">일부 부서 과부하 예상 (AI)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">예상 총 이익</div>
+                    <div class="metric-value">840M<span style="font-size:1rem;"> VND</span></div>
+                    <div style="font-size: 0.75rem; color: var(--success); margin-top: 0.5rem;">본래 예상 이익 대비 +4.2%</div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="panel" style="display: flex; gap: 2rem;">
+                <div style="flex: 2;">
+                    <h3 class="section-header" style="font-size: 1rem; color: #DC2626; display:flex; align-items:center; gap:0.5rem;"><span class="live-dot" style="display:inline-block;width:10px;height:10px;background:#DC2626;border-radius:50%;animation: pulse 1.5s infinite;"></span>실시간 프로젝트 진척도 (Live Firebase)</h3>
+                    <canvas id="liveProjectChart" height="200"></canvas>
+                </div>
+                <div style="flex: 1;">
+                    <h3 class="section-header" style="font-size: 1rem;">자원 배분 현황</h3>
+                    <canvas id="resourceChart" height="200"></canvas>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3 class="section-header" style="font-size: 1rem;">AI Daily Report <span
+                        style="color:#64748b; font-size:0.75rem; font-weight:400;">2026.09.27</span></h3>
+                <ul style="padding-left: 1rem; color: #475569; font-size: 0.9rem; line-height: 1.8;">
+                    <li><strong>프로젝트:</strong> 전체 24개 중 정상 17 / 주의 5 / 위험 2</li>
+                    <li><strong>인력:</strong> 평균 활용률 91% (다음 주 김OO 과장 과부하 예상)</li>
+                    <li><strong>자재:</strong> 현장 B에서 내일 시공용 철근 부족 예상 품목 확인됨</li>
+                    <li><strong>비용:</strong> 전체 예산 대비하여 비용 발생률이 양호하나 물류비용의 소폭 증가 발견</li>
+                </ul>
+            </div>
+        </main>
+
+        <!-- Right Sidebar (AI Notifications) -->
+        <aside class="ai-sidebar">
+            <h2 class="section-header" style="font-size: 1rem;">AI 경영 알림</h2>
+
+            <div class="alert-item danger">
+                <div class="alert-header"><span>🔴 긴급</span> <span>방금 전</span></div>
+                <div class="alert-text">프로젝트 A 자재 부족 예상. 지금 발주하지 않으면 시공 3일 지연 가능성이 높습니다.</div>
+                <button
+                    style="margin-top:0.5rem; background:#DC2626; color:white; border:none; padding:0.25rem 0.75rem; border-radius:0.25rem; font-size:0.75rem; cursor:pointer;">즉시
+                    발주 생성</button>
+            </div>
+
+            <div class="alert-item warning">
+                <div class="alert-header"><span>🟠 주의</span> <span>1시간 전</span></div>
+                <div class="alert-text">프로젝트 C 담당자(이대리) 업무 투입률 115%. 업무 과부하로 인한 일정 지연 리스크가 있습니다.</div>
+            </div>
+
+            <div class="alert-item info">
+                <div class="alert-header"><span>🟡 예측</span> <span>오늘 오전</span></div>
+                <div class="alert-text">프로젝트 D 설계 단계 2일 지연. 이에 따라 최종 납기 일정 67% 지연 가능성이 예측됩니다.</div>
+            </div>
+
+            <div class="alert-item success">
+                <div class="alert-header"><span>🟢 AI 추천</span> <span>어제</span></div>
+                <div class="alert-text">장비 E를 프로젝트 B에서 F로 이동 배치 시 임대 비용 약 12% 절감 효과를 기대할 수 있습니다.</div>
+                <button
+                    style="margin-top:0.5rem; background:#059669; color:white; border:none; padding:0.25rem 0.75rem; border-radius:0.25rem; font-size:0.75rem; cursor:pointer;">배치
+                    승인</button>
+            </div>
+        </aside>
+    </div>
+
+    <!-- AI Chat Button -->
+    <div class="ai-chat-btn">
+        🤖
+    </div>
+
+    <style>@keyframes pulse { 0% { transform:scale(0.95); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); } 70% { transform:scale(1); box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); } 100% { transform:scale(0.95); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }</style>
+    <script type="module">
+        import { db } from '../assets/js/firebase-config.js';
+        import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+        
+        let liveProjectChart = null;
+        
+        const initLiveDashboard = () => {
+            const ctxLive = document.getElementById('liveProjectChart').getContext('2d');
+            liveProjectChart = new Chart(ctxLive, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '진행률 (%)',
+                        data: [],
+                        backgroundColor: '#4F46E5',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    animation: {
+                        duration: 800,
+                        easing: 'easeOutQuart'
+                    },
+                    scales: {
+                        y: { beginAtZero: true, max: 100 }
+                    }
+                }
+            });
+
+            // Listen to real-time updates from Firebase
+            const q = query(collection(db, 'projects'), orderBy('id'));
+            onSnapshot(q, (snapshot) => {
+                const labels = [];
+                const data = [];
+                
+                snapshot.forEach((doc) => {
+                    const project = doc.data();
+                    labels.push(project.id + ' (' + project.name + ')');
+                    data.push(project.progress || 0);
+                });
+                
+                liveProjectChart.data.labels = labels;
+                liveProjectChart.data.datasets[0].data = data;
+                
+                // Color dynamically based on progress
+                liveProjectChart.data.datasets[0].backgroundColor = data.map(val => 
+                    val < 30 ? '#EF4444' : (val < 70 ? '#F59E0B' : '#10B981')
+                );
+                
+                liveProjectChart.update();
+                console.log("Dashboard Chart synced globally with Firebase!");
+            });
+
+            // Retain Resource chart dummy for aesthetic
+            const ctx2 = document.getElementById('resourceChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['프로젝트 투입', '대기/여유', '휴가/교육'],
+                    datasets: [{ data: [82, 13, 5], backgroundColor: ['#10B981', '#F59E0B', '#94A3B8'] }]
+                },
+                options: { cutout: '70%' }
+            });
+        };
+
+        document.addEventListener('DOMContentLoaded', initLiveDashboard);
+    </script>
+
+    <script type='module' src='../assets/js/ai-chat.js'></script>
+
+    <script type="module">
+        import { executeAiRecommendation } from "../assets/js/action-handler.js";
+        
+        // Find the "배치 승인" success suggestion button
+        const btnApprove = document.querySelector('.alert-item.success button');
+        if (btnApprove) {
+            btnApprove.addEventListener('click', async () => {
+                btnApprove.innerText = '실행 중...';
+                const success = await executeAiRecommendation('e-101', '장비 E를 P-002에서 P-006으로 이동 배치 승인 (비용 절감 목적)');
+                if (success) {
+                    alert('경영 결정 내용 서버 적용 및 실무진 알림 전송 완료!');
+                    btnApprove.innerText = '승인 완료';
+                    btnApprove.style.background = '#94a3b8';
+                    btnApprove.disabled = true;
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

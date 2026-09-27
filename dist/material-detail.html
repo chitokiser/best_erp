@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>자재 상세 - BEST MATERIAL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>.detail-grid{grid-template-columns:1fr 1fr;gap:2rem;display:grid}.price-box{border-radius:8px;justify-content:space-between;align-items:center;margin-bottom:1rem;padding:1rem;display:flex}.price-public{background-color:#f1f5f9;border:1px solid #cbd5e1}.price-market{background-color:#e0f2fe;border:1px solid #bae6fd}.price-best{background-color:#eff6ff;border:1px solid #bfdbfe}.price-sell{background-color:#fef2f2;border:1px solid #fecaca}@media (width<=768px){.detail-grid{grid-template-columns:1fr}}#imgModal{z-index:9999;background-color:#000c;justify-content:center;align-items:center;width:100%;height:100%;display:none;position:fixed;top:0;left:0}#imgModal img{border-radius:8px;max-width:90%;max-height:90%;box-shadow:0 10px 25px #00000080}#imgModal .close-btn{color:#fff;cursor:pointer;font-size:40px;font-weight:700;position:absolute;top:20px;right:30px}</style>
+  <script type="module" crossorigin src="/assets/material-detail-0R-E0k2q.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/firebase-config-OD9FGzWR.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-Ci8pltMn.js">
+  <link rel="modulepreload" crossorigin href="/assets/materialApi-BWso9T6r.js">
+  <link rel="stylesheet" crossorigin href="/assets/firebase-config-2tIJVkuo.css">
+</head>
+
+<body style="display: none;">
+    <header class="main-header">
+        <div class="container">
+            <h1 class="logo" style="margin-bottom: 0.5rem;"><a href="index.html">BEST MATERIAL DATA</a></h1>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="materials.html" style="color:var(--primary-color)">자재 DB</a></li>
+                    <li><a href="price-comparison.html">가격 비교</a></li>
+                    <li><a href="suppliers.html">공급업체</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Modal for Image Zoom -->
+    <div id="imgModal" onclick="this.style.display='none'">
+        <span class="close-btn">&times;</span>
+        <img id="imgModalContent" src="" alt="Zoomed Image">
+    </div>
+
+    <main class="container" style="padding: 2rem 1rem;" id="mainContent">
+        <p>로딩 중...</p>
+    </main>
+
+
+    <!-- Global Auth Guard -->
+</body>
+
+</html>

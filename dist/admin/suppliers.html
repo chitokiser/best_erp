@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>협력업체 평가 및 현황 - BESTwinner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script type="module" crossorigin src="/assets/admin_suppliers-DNnNXdlG.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/firebase-config-OD9FGzWR.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-Ci8pltMn.js">
+  <link rel="modulepreload" crossorigin href="/assets/supplierApi-Bot3q7uh.js">
+  <link rel="stylesheet" crossorigin href="/assets/firebase-config-2tIJVkuo.css">
+  <link rel="stylesheet" crossorigin href="/assets/admin-x1XGuNl0.css">
+</head>
+
+<body style="display: none;">
+    <header class="main-header">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <h1 class="logo">BESTwinner</h1>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="dashboard.html">대시보드</a></li>
+                    <li><a href="projects.html">프로젝트</a></li>
+                    <li><a href="materials.html">자재관리</a></li>
+                    <li><a href="suppliers.html" style="color:var(--primary-color)">협력업체</a></li>
+                    <li><a href="users.html">권한관리</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h2>협력업체 평가 및 현황 (Suppliers & Resources)</h2>
+            <button class="btn-primary" onclick="alert('신규 파트너를 등록하고 초기 평가 그룹을 지정합니다.')">+ 신규 협력사 등록</button>
+        </div>
+
+        <div class="quick-links"
+            style="margin-bottom: 2rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+            <div class="card" style="border-top: 4px solid #10b981; padding: 1.5rem;">
+                <h3 style="font-size: 1rem; color: var(--text-secondary); margin: 0;">우수 파트너스 (A등급)</h3>
+                <p style="font-size: 2rem; font-weight: bold; color: #065f46; margin: 0.5rem 0;">4곳</p>
+            </div>
+            <div class="card" style="border-top: 4px solid #3b82f6; padding: 1.5rem;">
+                <h3 style="font-size: 1rem; color: var(--text-secondary); margin: 0;">전체 리소스 가용 수</h3>
+                <p style="font-size: 2rem; font-weight: bold; color: #1e3a8a; margin: 0.5rem 0;">18건</p>
+            </div>
+            <div class="card" style="border-top: 4px solid #ef4444; padding: 1.5rem;">
+                <h3 style="font-size: 1rem; color: var(--text-secondary); margin: 0;">주의 / 클레임 발생</h3>
+                <p style="font-size: 2rem; font-weight: bold; color: #991b1b; margin: 0.5rem 0;">1건</p>
+            </div>
+        </div>
+
+        <div class="card" style="overflow-x: auto;">
+            <div style="margin-bottom: 1rem; display:flex; gap:1rem; align-items:center;">
+                <input type="text" placeholder="업체명, 취급품목 검색" class="search-input" style="flex:1;">
+                <select class="search-input" style="width:150px;">
+                    <option>등급 전체</option>
+                    <option>우수 (A등급)</option>
+                    <option>보통 (B등급)</option>
+                    <option>주의 (C등급)</option>
+                </select>
+            </div>
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border-color); color:var(--text-secondary);">
+                        <th style="padding: 1rem;">업체명</th>
+                        <th style="padding: 1rem;">종합 평가 (태그)</th>
+                        <th style="padding: 1rem;">누적 발주액 시각화</th>
+                        <th style="padding: 1rem;">취급품목</th>
+                        <th style="padding: 1rem;">연락처</th>
+                        <th style="padding: 1rem;">기록</th>
+                    </tr>
+                </thead>
+                <tbody id="suppliersTableBody">
+                    <tr>
+                        <td colspan="5" style="padding: 1rem; text-align: center;">로딩 중...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+
+    <!-- Global Auth Guard -->
+</body>
+
+</html>

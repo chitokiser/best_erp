@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>카테고리 - BEST MATERIAL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>.cat-grid{grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem;display:grid}.cat-card{cursor:pointer;border-radius:12px;height:200px;transition:transform .3s;position:relative;overflow:hidden}.cat-card:hover{transform:translateY(-5px);box-shadow:0 10px 15px -3px #0003}.cat-card img{object-fit:cover;width:100%;height:100%;transition:transform .3s}.cat-card:hover img{transform:scale(1.05)}.cat-overlay{color:#fff;background:linear-gradient(#0000,#000c);flex-direction:column;justify-content:flex-end;height:100%;padding:1.5rem;display:flex;position:absolute;bottom:0;left:0;right:0}.cat-overlay h3{margin-bottom:.25rem;font-size:1.5rem}</style>
+  <script type="module" crossorigin src="/assets/categories-7sSIyyeN.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/firebase-config-OD9FGzWR.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-Ci8pltMn.js">
+  <link rel="modulepreload" crossorigin href="/assets/materialApi-BWso9T6r.js">
+  <link rel="stylesheet" crossorigin href="/assets/firebase-config-2tIJVkuo.css">
+</head>
+
+<body style="display: none;">
+    <header class="main-header">
+        <div class="container">
+            <h1 class="logo" style="margin-bottom: 0.5rem;"><a href="index.html">BEST MATERIAL DATA</a></h1>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="materials.html">자재 DB</a></li>
+                    <li><a href="price-comparison.html">가격 비교</a></li>
+                    <li><a href="suppliers.html">공급업체</a></li>
+                    <li><a href="request-form.html" id="navCartLink">구매요청 <span id="cartCount"
+                                style="background:var(--primary-color);color:#fff;border-radius:10px;padding:2px 6px;font-size:0.75rem;">0</span></a>
+                    </li>
+                    <li><a href="estimates.html">견적 생성기</a></li>
+                    <li><a href="categories.html" style="color:var(--primary-color)">카테고리</a></li>
+                    <li><a href="admin/dashboard.html">관리자</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 1rem;">
+        <h2 style="margin-bottom: 2rem; font-size: 1.75rem;">주요 자재 카테고리</h2>
+
+        <div class="cat-grid" id="catGrid">
+            <!-- Rendered by JS -->
+        </div>
+    </main>
+
+    </script>
+
+    <!-- Global Auth Guard -->
+</body>
+
+</html>
