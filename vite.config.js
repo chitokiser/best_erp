@@ -20,6 +20,8 @@ export default defineConfig({
         "categories": resolve(__dirname, 'categories.html'),
         "estimates": resolve(__dirname, 'estimates.html'),
         "main": resolve(__dirname, 'index.html'),
+        "mobile-task": resolve(__dirname, 'mobile-task.html'),
+        "admin_ceo-dashboard": resolve(__dirname, 'admin/ceo-dashboard.html'),
         "login": resolve(__dirname, 'login.html'),
         "material-detail": resolve(__dirname, 'material-detail.html'),
         "materials": resolve(__dirname, 'materials.html'),
