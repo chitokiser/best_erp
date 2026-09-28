@@ -1,1 +1,0 @@
-import{g as e,n as t,x as n}from"./firebase-config-OD9FGzWR.js";var r=`suppliers`,i=async()=>{try{let i=await e(n(t,r)),a=[];return i.forEach(e=>{a.push({id:e.id,...e.data()})}),a}catch(e){throw console.error(`Error getting suppliers: `,e),e}};export{i as t};
