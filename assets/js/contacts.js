@@ -278,10 +278,11 @@ loadContacts();
 
 // Handle OCR
 document.addEventListener('DOMContentLoaded', () => {
-    const ocrInput = document.getElementById('ocrInput');
+    const ocrInputs = [document.getElementById('ocrCamera'), document.getElementById('ocrGallery')];
     const ocrLoading = document.getElementById('ocrLoading');
-    if (ocrInput) {
-        ocrInput.addEventListener('change', async (e) => {
+    ocrInputs.forEach(input => {
+      if (input) {
+        input.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
