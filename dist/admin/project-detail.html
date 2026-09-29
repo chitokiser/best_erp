@@ -1,38 +1,53 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>프로젝트 상세 - BESTwinner</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>.kanban-board{gap:1.5rem;margin-top:1.5rem;padding-bottom:1rem;display:flex}.kanban-column{background:#f8fafc;border-radius:8px;flex-direction:column;flex:1;gap:1rem;min-width:250px;min-height:400px;padding:1rem;transition:background .2s;display:flex}.kanban-column.drag-over{background:#e2e8f0}.kanban-column h3{color:var(--text-secondary);pointer-events:none;justify-content:space-between;margin:0;font-size:1rem;display:flex}.kanban-card{cursor:grab;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:1rem;transition:box-shadow .2s;position:relative;box-shadow:0 1px 2px #0000000d}.kanban-card:active{cursor:grabbing}.card-actions{gap:.25rem;display:flex;position:absolute;top:.5rem;right:.5rem}.card-actions button{cursor:pointer;filter:grayscale();background:0 0;border:none;padding:.2rem;font-size:.8rem}.card-actions button:hover{filter:grayscale(0)}.task-tag{color:#1e40af;background:#dbeafe;border-radius:4px;margin-bottom:.5rem;padding:.2rem .5rem;font-size:.7rem;display:inline-block}</style>
-  <script type="module" crossorigin src="/assets/admin_project-detail-DrOc1q1b.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/firebase-config-3n4qqNPS.js">
-  <link rel="modulepreload" crossorigin href="/assets/auth-nkQdWwku.js">
-  <link rel="stylesheet" crossorigin href="/assets/style-2tIJVkuo.css">
-  <link rel="stylesheet" crossorigin href="/assets/admin-x1XGuNl0.css">
-</head>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>.top-nav{z-index:50;background:#fff;justify-content:space-between;align-items:center;padding:1rem 2rem;display:flex;position:sticky;top:0;box-shadow:0 4px 6px -1px #0000000d}.top-nav h1{color:var(--primary-color,#4f46e5);margin:0;font-size:1.5rem;font-weight:800}.top-nav ul{gap:2rem;margin:0;padding:0;list-style:none;display:flex}.top-nav a{color:var(--text-secondary);font-size:.95rem;font-weight:600;text-decoration:none;transition:color .2s}.top-nav a:hover,.top-nav a.active{color:var(--primary-color,#4f46e5)}.kanban-board{flex-wrap:nowrap;gap:1rem;padding:1rem 0;display:flex;overflow-x:auto}.kanban-column{background:#f1f5f9;border:2px dashed #0000;border-radius:8px;flex-direction:column;gap:.5rem;width:300px;min-width:300px;padding:1rem;transition:border-color .2s;display:flex}.kanban-column.drag-over{border-color:var(--primary-color);background:#e2e8f0}.kanban-card{cursor:grab;background:#fff;border-radius:6px;padding:1rem;position:relative;box-shadow:0 1px 3px #0000001a}.kanban-card:active{cursor:grabbing;box-shadow:0 4px 6px #0000001a}.card-actions{gap:.25rem;display:flex;position:absolute;top:.5rem;right:.5rem}.card-actions button{cursor:pointer;color:#94a3b8;background:0 0;border:none;font-size:.8rem}.task-tag{color:#1e40af;background:#dbeafe;border-radius:4px;margin-bottom:.5rem;padding:.2rem .5rem;font-size:.7rem;display:inline-block}.overlay{-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);z-index:1000;background:#00000080;justify-content:center;align-items:center;display:none;position:fixed;inset:0}.ai-process-modal{text-align:center;background:#fff;border-radius:12px;width:80%;max-width:320px;padding:2rem;box-shadow:0 10px 15px -3px #0000001a}.spinner{border:4px solid #10b98133;border-left-color:#10b981;border-radius:50%;width:3rem;height:3rem;margin:0 auto 1.5rem;animation:1s linear infinite spin}@keyframes spin{0%{transform:rotate(0)}to{transform:rotate(360deg)}}</style>
 
-<body style="display: none;">
-    <header class="main-header">
-        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
-            <h1 class="logo">BESTwinner</h1>
-            <nav class="main-nav">
-                <ul>
-                    <li><a href="dashboard.html">대시보드</a></li>
-                    <li><a href="projects.html" style="color:var(--primary-color)">프로젝트</a></li>
-                    <li><a href="materials.html">자재관리</a></li>
-                    <li><a href="users.html">권한관리</a></li>
-                    <li id="navUserEmail"></li>
-                </ul>
-            </nav>
+    <!-- FORCE CSS -->
+<style>.top-nav{flex-wrap:nowrap;justify-content:space-between;align-items:center;display:flex;position:relative;overflow:visible}.logo-container{width:auto!important}.top-nav ul{align-items:center;gap:1rem;margin:0;padding:0;list-style:none;display:flex;flex-wrap:nowrap!important}.top-nav ul li a{white-space:nowrap!important}.mobile-only-btn{display:none!important}@media screen and (width<=900px){.mobile-only-btn{display:block!important}.logo-container{justify-content:space-between!important;width:100%!important}.top-nav{flex-direction:column!important;align-items:flex-start!important}.top-nav ul,.top-nav>div:last-child{display:none!important}.top-nav.menu-open ul{background:#fff;border-radius:.5rem;width:100%;max-height:70vh;margin-top:1rem;overflow-y:auto;box-shadow:0 10px 15px -3px #0000001a;flex-direction:column!important;gap:0!important;padding:.5rem 0!important;display:flex!important}.top-nav.menu-open ul li{text-align:center;border-bottom:1px solid #f1f5f9;width:100%}.top-nav.menu-open ul li a{padding:1rem!important;display:block!important}.metric-cards,.dashboard-grid,.client-summary,.finance-summary,.stats-grid,.summary-container{grid-template-columns:1fr!important;gap:1rem!important;display:grid!important}}</style>
+      <script type="module" crossorigin src="/assets/admin_project-detail-DDUxI8OH.js"></script>
+      <link rel="modulepreload" crossorigin href="/assets/firebase-config-3n4qqNPS.js">
+      <link rel="modulepreload" crossorigin href="/assets/auth-CRqREFiS.js">
+      <link rel="stylesheet" crossorigin href="/assets/style-CTsXkP_6.css">
+      <link rel="stylesheet" crossorigin href="/assets/admin-x1XGuNl0.css">
+    </head>
+    
+
+<body>
+    <nav class="top-nav">
+        <div class="logo-container" style="display:flex; align-items:center; justify-content:space-between; width:100%; margin-bottom:0;">
+    <div style="display:flex; align-items:center; gap:0.5rem; flex-shrink:0; cursor:pointer;" onclick="location.href='dashboard.html'">
+        <img src="/assets/logo-Bzhrz68d.png" style="height: 28px;" onerror="this.style.display='none';">
+        <h1 style="margin:0; font-size: 1.3rem; color: #4F46E5; font-weight: 800; white-space:nowrap;">AI경영관리</h1>
+    </div>
+    <div class="mobile-only-btn" style="display:none; cursor:pointer;" onclick="document.querySelector('.top-nav').classList.toggle('menu-open')">
+        <svg viewBox="0 0 24 24" width="28" height="28" stroke="#4F46E5" stroke-width="2" fill="none"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </div>
+</div>
+        <ul>
+            <li><a href="dashboard.html">대시보드</a></li>
+            <li><a href="projects.html" class="active">프로젝트</a></li>
+            <li><a href="materials.html">자재관리</a></li>
+            <li><a href="suppliers.html">협력업체</a></li>
+            <li><a href="finance.html">재무/회계</a></li>
+            <li><a href="employees.html">직원</a></li>
+            <li><a href="clients.html">고객</a></li>
+            <li><a href="contacts.html">인맥</a></li>
+        </ul>
+        <div style="font-size: 0.85rem; text-align: right;">
+            <strong style="color:var(--primary-color);">SUPER_ADMIN</strong><br>
+            최고 관리자 (daguri75@gmail.com) <a href="#" onclick="window.logoutAndRedirect()"
+                style="color:#2563eb;">[로그아웃]</a>
         </div>
-    </header>
-
-    <main class="container" style="padding: 2rem 1rem;">
-        <!-- Project Header -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
+    </nav>
+    <main style="padding: 2rem; max-width: 1400px; margin: 0 auto;">
+        <div
+            style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem;">
             <div>
                 <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
                     <span id="projectStatusBadge"
@@ -40,40 +55,52 @@
                         중...</span>
                     <span id="projectPmBadge" style="color: var(--text-secondary); font-size: 0.875rem;">PM: 불러오는
                         중...</span>
+                    <span id="projectDeadlineBadge"
+                        style="color: var(--text-secondary); font-size: 0.875rem; margin-left: 0.5rem;">종료예정일: -</span>
+                    <span id="projectTeamBadge"
+                        style="color: var(--text-secondary); font-size: 0.875rem; margin-left: 0.5rem;">팀원: -</span>
                 </div>
-                <h2 id="projectTitleHeader" style="margin: 0; font-size: 1.8rem;">프로젝트 정보를 불러오는 중입니다...</h2>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <h2 id="projectTitleHeader" style="margin: 0; font-size: 1.8rem;">프로젝트 정보를 불러오는 중입니다...</h2>
+                    <button id="editProjectBtn" onclick="window.editProjectInfo()"
+                        style="background:none; border:none; color:var(--primary-color); cursor:pointer; display:none;">✏️
+                        정보 수정</button>
+                    <button id="btnRequestSupport" class="btn-primary"
+                        style="padding: 0.4rem 1rem; border-radius: 8px; font-size: 0.9rem; margin-left: 1rem; display:none;"
+                        onclick="document.getElementById('supportModal').showModal()">PM 지원(자금/인력) 요청</button>
+                </div>
             </div>
             <div style="text-align: right;">
-                <p style="margin: 0 0 0.5rem 0; font-size: 0.875rem; color: var(--text-secondary);">전체 진척도 (<span
-                        id="progressText">0</span>%)</p>
-                <div style="width: 250px; background: #e2e8f0; height: 10px; border-radius: 5px; overflow: hidden;">
+                <p style="margin: 0 0 0.5rem 0; font-size: 0.875rem; color: var(--text-secondary); font-weight: bold;">
+                    전체 진척도 (<span id="progressText">0</span>%)</p>
+                <div
+                    style="width: 250px; background: #e2e8f0; height: 12px; border-radius: 6px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
                     <div id="progressBar"
-                        style="background: var(--primary-color); width: 0%; height: 100%; transition: width 0.3s;">
+                        style="background: linear-gradient(90deg, #3b82f6, #10b981); width: 0%; height: 100%; transition: width 0.5s ease-out; box-shadow: 0 0 8px rgba(16,185,129,0.4);">
                     </div>
                 </div>
             </div>
         </div>
 
-        <hr style="border: none; border-top: 1px solid #e2e8f0; margin-bottom: 2rem;">
-
-        <!-- Tabs -->
-        <div style="display: flex; gap: 2rem; border-bottom: 2px solid #e2e8f0; margin-bottom: 2rem; font-weight: 500;">
-            <div id="tab-kanban" onclick="window.switchTab('kanban')"
-                style="padding-bottom: 0.75rem; border-bottom: 2px solid var(--primary-color); color: var(--primary-color); cursor: pointer;">
-                칸반 보드 (Task)</div>
-            <div id="tab-files" onclick="window.switchTab('files')"
-                style="padding-bottom: 0.75rem; color: var(--text-secondary); cursor: pointer;">
-                결재 및 도면 자료</div>
+        <div style="display: flex; gap: 2rem; margin-bottom: 2rem;">
+            <a href="#" id="tab-kanban" onclick="window.switchTab('kanban')"
+                style="text-decoration:none; color:var(--primary-color); font-weight:bold; border-bottom:2px solid var(--primary-color); padding-bottom:0.25rem;">칸반
+                보드 (Task)</a>
+            <a href="#" id="tab-files" onclick="window.switchTab('files')"
+                style="text-decoration:none; color:var(--text-secondary); font-weight:bold; padding-bottom:0.25rem;">현장
+                자료실</a>
+            <a href="#" id="tab-qna" onclick="window.switchTab('qna')"
+                style="text-decoration:none; color:var(--text-secondary); font-weight:bold; padding-bottom:0.25rem;">QnA
+                & 지원 내역</a>
         </div>
 
-        <!-- Kanban View -->
+        <!-- Kanban Board -->
         <div id="view-kanban">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <h3 style="margin: 0; font-size: 1.25rem;">업무 현황 (공정 관리)</h3>
                 <button class="btn-primary" style="padding: 0.5rem 1rem;" onclick="window.addKanbanTask()">+ 새 태스크
                     추가</button>
             </div>
-
             <div class="kanban-board">
                 <div class="kanban-column" id="todo" ondragenter="window.allowDrop(event)"
                     ondragover="window.allowDrop(event)" ondragleave="window.dragLeave(event)"
@@ -101,15 +128,30 @@
         <!-- Files View -->
         <div id="view-files" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h3 style="margin: 0; font-size: 1.25rem;">결재문서 및 도면 자료실</h3>
-                <div>
+                <h3 style="margin: 0; font-size: 1.25rem;">결재문서 및 자료실</h3>
+                <div style="display: flex; gap: 0.5rem;">
                     <input type="file" id="fileUploadInput" style="display: none;"
                         onchange="window.handleFileUpload(event)">
-                    <button class="btn-primary" style="padding: 0.5rem 1rem;"
-                        onclick="document.getElementById('fileUploadInput').click()">+ 자료 업로드</button>
+                    <button class="btn-primary" style="padding: 0.5rem 1rem; background: #64748b; border: none;"
+                        onclick="document.getElementById('fileUploadInput').click()">+ 일반 자료 업로드</button>
+
+                    <input type="file" id="aiPhotoInput" accept="image/*" capture="environment" style="display: none;"
+                        onchange="window.handleAiPhotoUpload(event)">
+                    <button class="btn-primary" style="padding: 0.5rem 1rem; background: #10b981; border: none;"
+                        onclick="document.getElementById('aiPhotoInput').click()">📸 현장 사진 AI 분석</button>
                 </div>
             </div>
-
+            <div id="aiResultArea"
+                style="display:none; background: #ecfdf5; padding: 1rem; border: 1px solid #a7f3d0; border-radius: 8px; margin-bottom: 1rem;">
+                <div style="color: #047857; font-weight: bold; margin-bottom: 0.5rem;">🤖 AI 분석 완료</div>
+                <p id="aiResultText" style="font-size: 0.9rem; color: #065f46; margin: 0 0 1rem 0; line-height: 1.5;">
+                </p>
+                <div style="text-align: right;">
+                    <button class="btn-primary" id="btnConfirmAiUpload"
+                        style="background:#10b981; border:none; padding: 0.4rem 1rem; cursor: pointer;">결과 저장 (서버
+                        전송)</button>
+                </div>
+            </div>
             <div class="card">
                 <table style="width: 100%; border-collapse: collapse; text-align: left;">
                     <thead>
@@ -129,9 +171,144 @@
                 </table>
             </div>
         </div>
+
+        <!-- QnA View -->
+        <div id="view-qna" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin: 0; font-size: 1.25rem;">지원 내역 및 QnA</h3>
+            </div>
+            <div id="qnaList">
+                <p style="text-align:center; padding:1rem; color:var(--text-secondary);">데이터를 불러오는 중...</p>
+            </div>
+        </div>
     </main>
 
-    <!-- App Logic -->
+    <!-- Modals -->
+    <dialog id="projectModal"
+        style="border:none; border-radius:12px; padding:2rem; width:100%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.1);">
+        <h3 id="modalTitle" style="margin-top:0;">프로젝트 제목 수정</h3>
+        <div style="display:flex; flex-direction:column; gap:1rem; margin-top:1.5rem;">
+            <div>
+                <label
+                    style="font-size:0.875rem; color:var(--text-secondary); display:block; margin-bottom:0.25rem;">프로젝트
+                    명</label>
+                <input type="text" id="modalTitleInput"
+                    style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px; box-sizing:border-box;">
+            </div>
+            <div>
+                <label style="font-size:0.875rem; color:var(--text-secondary); display:block; margin-bottom:0.25rem;">진행
+                    상태</label>
+                <select id="modalStatusInput"
+                    style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px;">
+                    <option value="착공대기">착공대기</option>
+                    <option value="진행 중">진행 중</option>
+                    <option value="일시정지">일시정지</option>
+                    <option value="완료">완료 (Done)</option>
+                </select>
+            </div>
+            <div>
+                <label
+                    style="font-size:0.875rem; color:var(--text-secondary); display:block; margin-bottom:0.25rem;">담당자(PM
+                    - 복수선택가능)</label>
+                <select id="modalPmInput" multiple
+                    style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px; height:100px;"></select>
+            </div>
+            <div>
+                <label style="font-size:0.875rem; color:var(--text-secondary); display:block; margin-bottom:0.25rem;">팀원
+                    (참여자 - 복수선택가능)</label>
+                <select id="modalTeamInput" multiple
+                    style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px; height:100px;"></select>
+            </div>
+            <div>
+                <label
+                    style="font-size:0.875rem; color:var(--text-secondary); display:block; margin-bottom:0.25rem;">종료예정일</label>
+                <input type="date" id="modalDeadlineInput"
+                    style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px; box-sizing:border-box;">
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1rem;">
+                <button onclick="document.getElementById('projectModal').close()"
+                    style="padding:0.5rem 1rem; background:white; border:1px solid #cbd5e1; border-radius:4px; cursor:pointer;">취소</button>
+                <button id="modalSaveBtn" class="btn-primary" style="padding:0.5rem 1rem;">저장</button>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog id="supportModal"
+        style="border:none; border-radius:12px; padding:2rem; width:100%; max-width:500px; box-shadow:0 10px 25px rgba(0,0,0,0.1);">
+        <h3 style="margin-top:0;">PM 지원 요청서</h3>
+        <div style="display:flex; flex-direction:column; gap:1rem; margin-top:1.5rem;">
+            <div>
+                <label style="font-size:0.875rem; color:var(--text-secondary); display:block; margin-bottom:0.25rem;">지원
+                    유형</label>
+                <select id="supportTypeSelect"
+                    style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px;"
+                    onchange="window.toggleSupportFields()">
+                    <option value="자금">💰 자금 (지출결의서)</option>
+                    <option value="자재">🧱 자재</option>
+                    <option value="인력">👷‍♂️ 인력</option>
+                    <option value="장비">🚜 장비</option>
+                </select>
+            </div>
+            <!-- 지출결의서 전용 필드 -->
+            <div id="expenseFields"
+                style="display:flex; flex-direction:column; gap:1rem; background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <h4 style="margin: 0; color: #334155; font-size: 0.95rem;">지출결의서 상세</h4>
+                <div>
+                    <label
+                        style="font-size:0.875rem; color:var(--text-secondary); display:block; margin-bottom:0.25rem;">결제
+                        금액</label>
+                    <input type="number" id="expenseAmount" placeholder="예: 500000"
+                        style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px; box-sizing:border-box;">
+                </div>
+                <div>
+                    <label
+                        style="font-size:0.875rem; color:var(--text-secondary); display:block; margin-bottom:0.25rem;">지급처
+                        / 입금계좌</label>
+                    <input type="text" id="expensePayee" placeholder="예: (주)대한건재 / 신한은행 110-123-456"
+                        style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px; box-sizing:border-box;">
+                </div>
+                <div>
+                    <label
+                        style="font-size:0.875rem; color:var(--text-secondary); display:block; margin-bottom:0.25rem;">결제
+                        요청일</label>
+                    <input type="date" id="expenseDate"
+                        style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px; box-sizing:border-box;">
+                </div>
+            </div>
+            <!-- 일반 지원 필드 (자금 외) -->
+            <div id="generalFields" style="display:none; flex-direction:column; gap:1rem;">
+                <div>
+                    <label
+                        style="font-size:0.875rem; color:var(--text-secondary); display:block; margin-bottom:0.25rem;">수량
+                        / 예상금액</label>
+                    <input type="text" id="generalAmount" placeholder="예: 시멘트 50포"
+                        style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px; box-sizing:border-box;">
+                </div>
+            </div>
+            <!-- 공통 필드 -->
+            <div>
+                <label style="font-size:0.875rem; color:var(--text-secondary); display:block; margin-bottom:0.25rem;">상세
+                    사유 및 내역</label>
+                <textarea id="supportMemo" rows="3"
+                    style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px; box-sizing:border-box;"
+                    placeholder="사유를 상세히 적어주세요."></textarea>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1rem;">
+                <button onclick="document.getElementById('supportModal').close()"
+                    style="padding:0.5rem 1rem; border:1px solid #cbd5e1; background:white; border-radius:4px; cursor:pointer;">취소</button>
+                <button onclick="window.submitSupportRequest()" class="btn-primary" style="padding:0.5rem 1rem;">지원
+                    등록</button>
+            </div>
+        </div>
+    </dialog>
+
+    <div class="overlay" id="processingOverlay">
+        <div class="ai-process-modal">
+            <div class="spinner"></div>
+            <h3 style="margin: 0 0 0.5rem; color: #1f2937;">AI 현장 분석 중...</h3>
+            <p style="margin: 0; color: #6b7280; font-size: 0.9rem;">이미지를 인식하고 공정 상태를 평가하고 있습니다.<br>잠시만 기다려주세요.</p>
+        </div>
+    </div>
 </body>
 
 </html>

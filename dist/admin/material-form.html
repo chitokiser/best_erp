@@ -6,29 +6,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>자재 등록 - BEST MATERIAL</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/assets/admin_material-form-DWz72yLM.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/firebase-config-3n4qqNPS.js">
-  <link rel="modulepreload" crossorigin href="/assets/auth-nkQdWwku.js">
-  <link rel="modulepreload" crossorigin href="/assets/materialApi-DIz_0s85.js">
-  <link rel="stylesheet" crossorigin href="/assets/style-2tIJVkuo.css">
-  <link rel="stylesheet" crossorigin href="/assets/admin-x1XGuNl0.css">
-</head>
+    <style>.top-nav{z-index:50;background:#fff;justify-content:space-between;align-items:center;padding:1rem 2rem;display:flex;position:sticky;top:0;box-shadow:0 4px 6px -1px #0000000d}.top-nav h1{color:var(--primary-color,#4f46e5);margin:0;font-size:1.5rem;font-weight:800}.top-nav ul{gap:2rem;margin:0;padding:0;list-style:none;display:flex}.top-nav a{color:var(--text-secondary,#64748b);font-size:.95rem;font-weight:600;text-decoration:none;transition:color .2s}.top-nav a:hover,.top-nav a.active{color:var(--primary-color,#4f46e5)}</style>
 
-<body style="display: none;">
-    <header class="main-header">
-        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
-            <h1 class="logo">BEST Group</h1>
-            <nav class="main-nav">
-                <ul>
-                    <li><a href="dashboard.html">대시보드</a></li>
-                    <li><a href="materials.html" style="color:var(--primary-color)">자재관리</a></li>
-                    <li><a href="suppliers.html">공급업체</a></li>
-                    <li><a href="purchase-requests.html">결재관리(구매)</a></li>
-                    <li><a href="users.html">권한관리</a></li>
-                </ul>
-            </nav>
+    <!-- FORCE CSS -->
+<style>.top-nav{flex-wrap:nowrap;justify-content:space-between;align-items:center;display:flex;position:relative;overflow:visible}.logo-container{width:auto!important}.top-nav ul{align-items:center;gap:1rem;margin:0;padding:0;list-style:none;display:flex;flex-wrap:nowrap!important}.top-nav ul li a{white-space:nowrap!important}.mobile-only-btn{display:none!important}@media screen and (width<=900px){.mobile-only-btn{display:block!important}.logo-container{justify-content:space-between!important;width:100%!important}.top-nav{flex-direction:column!important;align-items:flex-start!important}.top-nav ul,.top-nav>div:last-child{display:none!important}.top-nav.menu-open ul{background:#fff;border-radius:.5rem;width:100%;max-height:70vh;margin-top:1rem;overflow-y:auto;box-shadow:0 10px 15px -3px #0000001a;flex-direction:column!important;gap:0!important;padding:.5rem 0!important;display:flex!important}.top-nav.menu-open ul li{text-align:center;border-bottom:1px solid #f1f5f9;width:100%}.top-nav.menu-open ul li a{padding:1rem!important;display:block!important}.metric-cards,.dashboard-grid,.client-summary,.finance-summary,.stats-grid,.summary-container{grid-template-columns:1fr!important;gap:1rem!important;display:grid!important}}</style>
+      <script type="module" crossorigin src="/assets/admin_material-form-Ee7FMqTd.js"></script>
+      <link rel="modulepreload" crossorigin href="/assets/firebase-config-3n4qqNPS.js">
+      <link rel="modulepreload" crossorigin href="/assets/materialApi-DIz_0s85.js">
+      <link rel="modulepreload" crossorigin href="/assets/auth-CRqREFiS.js">
+      <link rel="stylesheet" crossorigin href="/assets/style-CTsXkP_6.css">
+      <link rel="stylesheet" crossorigin href="/assets/admin-x1XGuNl0.css">
+    </head>
+    
+
+<body style="display: none; background: #f8fafc; font-family: 'Inter', sans-serif; margin: 0; padding: 0;">
+    <nav class="top-nav">
+        <div class="logo-container" style="display:flex; align-items:center; justify-content:space-between; width:100%; margin-bottom:0;">
+    <div style="display:flex; align-items:center; gap:0.5rem; flex-shrink:0; cursor:pointer;" onclick="location.href='dashboard.html'">
+        <img src="/assets/logo-Bzhrz68d.png" style="height: 28px;" onerror="this.style.display='none';">
+        <h1 style="margin:0; font-size: 1.3rem; color: #4F46E5; font-weight: 800; white-space:nowrap;">AI경영관리</h1>
+    </div>
+    <div class="mobile-only-btn" style="display:none; cursor:pointer;" onclick="document.querySelector('.top-nav').classList.toggle('menu-open')">
+        <svg viewBox="0 0 24 24" width="28" height="28" stroke="#4F46E5" stroke-width="2" fill="none"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </div>
+</div>
+        <ul>
+            <li><a href="dashboard.html">대시보드</a></li>
+            <li><a href="projects.html">프로젝트</a></li>
+            <li><a href="materials.html" class="active">자재관리</a></li>
+            <li><a href="suppliers.html">협력업체</a></li>
+            <li><a href="purchase-requests.html">결재관리(구매)</a></li>
+            <li><a href="finance.html">재무/회계</a></li>
+            <li><a href="employees.html">직원</a></li>
+            <li><a href="clients.html">고객</a></li>
+            <li><a href="contacts.html">인맥</a></li>
+        </ul>
+        <div style="font-size: 0.85rem; text-align: right;">
+            <strong style="color:var(--primary-color, #4F46E5);" id="navUserEmailSpan">SUPER_ADMIN</strong><br>
+            최고 관리자 <a href="#" onclick="window.logoutAndRedirect()" style="color:#2563eb;">[로그아웃]</a>
         </div>
-    </header>
+    </nav>
 
     <main class="container" style="padding: 2rem 1rem;">
         <h2>신규 자재 등록</h2>
@@ -118,6 +135,10 @@
                             <input type="number" id="numPurchasePrice" class="search-input" style="width: 100%;">
                         </div>
                         <div>
+                            <label>현재 재고 (수량)</label>
+                            <input type="number" id="numStock" class="search-input" style="width: 100%;">
+                        </div>
+                        <div>
                             <label>BEST 판매가격 (VND)</label>
                             <input type="number" id="numSellingPrice" class="search-input" style="width: 100%;">
                         </div>
@@ -147,10 +168,14 @@
                     </div>
                 </fieldset>
 
-                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
-                    <button type="button" class="btn-primary" style="background-color: var(--text-secondary);"
-                        onclick="location.href='materials.html'">취소</button>
-                    <button type="submit" class="btn-primary" id="btnSubmit">저장하기</button>
+                <div style="display: flex; gap: 1rem; justify-content: space-between; margin-top: 1rem;">
+                    <button type="button" class="btn-primary" id="btnDelete"
+                        style="background-color: #ef4444; display: none;">삭제하기</button>
+                    <div style="display: flex; gap: 1rem;">
+                        <button type="button" class="btn-primary" style="background-color: var(--text-secondary);"
+                            onclick="location.href='materials.html'">취소</button>
+                        <button type="submit" class="btn-primary" id="btnSubmit">저장하기</button>
+                    </div>
                 </div>
                 <p id="statusMsg" style="text-align: right; margin-top: 0.5rem;"></p>
             </form>

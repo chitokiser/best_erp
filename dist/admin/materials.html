@@ -5,58 +5,121 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>자재 관리 - BEST MATERIAL</title>
-  <script type="module" crossorigin src="/assets/admin_materials-BQRc9mmx.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/firebase-config-3n4qqNPS.js">
-  <link rel="modulepreload" crossorigin href="/assets/auth-nkQdWwku.js">
-  <link rel="modulepreload" crossorigin href="/assets/materialApi-DIz_0s85.js">
-  <link rel="stylesheet" crossorigin href="/assets/style-2tIJVkuo.css">
-  <link rel="stylesheet" crossorigin href="/assets/admin-x1XGuNl0.css">
-</head>
+    <style>.top-nav{z-index:50;background:#fff;justify-content:space-between;align-items:center;padding:1rem 2rem;display:flex;position:sticky;top:0;box-shadow:0 4px 6px -1px #0000000d}.top-nav h1{color:var(--primary-color,#4f46e5);margin:0;font-size:1.5rem;font-weight:800}.top-nav ul{gap:2rem;margin:0;padding:0;list-style:none;display:flex}.top-nav a{color:var(--text-secondary,#64748b);font-size:.95rem;font-weight:600;text-decoration:none;transition:color .2s}.top-nav a:hover,.top-nav a.active{color:var(--primary-color,#4f46e5)}</style>
 
-<body style="display: none;">
-    <header class="main-header">
-        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
-            <h1 class="logo">BEST Group</h1>
-            <nav class="main-nav">
-                <ul>
-                    <li><a href="dashboard.html">대시보드</a></li>
-                    <li><a href="materials.html" style="color:var(--primary-color)">자재관리</a></li>
-                    <li><a href="suppliers.html">공급업체</a></li>
-                    <li><a href="purchase-requests.html">결재관리(구매)</a></li>
-                    <li><a href="users.html">권한관리</a></li>
-                </ul>
-            </nav>
+    <!-- FORCE CSS -->
+<style>.top-nav{flex-wrap:nowrap;justify-content:space-between;align-items:center;display:flex;position:relative;overflow:visible}.logo-container{width:auto!important}.top-nav ul{align-items:center;gap:1rem;margin:0;padding:0;list-style:none;display:flex;flex-wrap:nowrap!important}.top-nav ul li a{white-space:nowrap!important}.mobile-only-btn{display:none!important}@media screen and (width<=900px){.mobile-only-btn{display:block!important}.logo-container{justify-content:space-between!important;width:100%!important}.top-nav{flex-direction:column!important;align-items:flex-start!important}.top-nav ul,.top-nav>div:last-child{display:none!important}.top-nav.menu-open ul{background:#fff;border-radius:.5rem;width:100%;max-height:70vh;margin-top:1rem;overflow-y:auto;box-shadow:0 10px 15px -3px #0000001a;flex-direction:column!important;gap:0!important;padding:.5rem 0!important;display:flex!important}.top-nav.menu-open ul li{text-align:center;border-bottom:1px solid #f1f5f9;width:100%}.top-nav.menu-open ul li a{padding:1rem!important;display:block!important}.metric-cards,.dashboard-grid,.client-summary,.finance-summary,.stats-grid,.summary-container{grid-template-columns:1fr!important;gap:1rem!important;display:grid!important}}</style>
+      <script type="module" crossorigin src="/assets/admin_materials-CILqL8IG.js"></script>
+      <link rel="modulepreload" crossorigin href="/assets/firebase-config-3n4qqNPS.js">
+      <link rel="modulepreload" crossorigin href="/assets/materialApi-DIz_0s85.js">
+      <link rel="modulepreload" crossorigin href="/assets/auth-CRqREFiS.js">
+      <link rel="stylesheet" crossorigin href="/assets/style-CTsXkP_6.css">
+      <link rel="stylesheet" crossorigin href="/assets/admin-x1XGuNl0.css">
+    </head>
+    
+
+<body style="display: none; background: #f8fafc; font-family: 'Inter', sans-serif; margin: 0; padding: 0;">
+    <nav class="top-nav">
+        <div class="logo-container" style="display:flex; align-items:center; justify-content:space-between; width:100%; margin-bottom:0;">
+    <div style="display:flex; align-items:center; gap:0.5rem; flex-shrink:0; cursor:pointer;" onclick="location.href='dashboard.html'">
+        <img src="/assets/logo-Bzhrz68d.png" style="height: 28px;" onerror="this.style.display='none';">
+        <h1 style="margin:0; font-size: 1.3rem; color: #4F46E5; font-weight: 800; white-space:nowrap;">AI경영관리</h1>
+    </div>
+    <div class="mobile-only-btn" style="display:none; cursor:pointer;" onclick="document.querySelector('.top-nav').classList.toggle('menu-open')">
+        <svg viewBox="0 0 24 24" width="28" height="28" stroke="#4F46E5" stroke-width="2" fill="none"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </div>
+</div>
+        <ul>
+            <li><a href="dashboard.html">대시보드</a></li>
+            <li><a href="projects.html">프로젝트</a></li>
+            <li><a href="materials.html" class="active">자재관리</a></li>
+            <li><a href="suppliers.html">협력업체</a></li>
+            <li><a href="purchase-requests.html">결재관리(구매)</a></li>
+            <li><a href="finance.html">재무/회계</a></li>
+            <li><a href="employees.html">직원</a></li>
+            <li><a href="clients.html">고객</a></li>
+            <li><a href="contacts.html">인맥</a></li>
+        </ul>
+        <div style="font-size: 0.85rem; text-align: right;">
+            <strong style="color:var(--primary-color, #4F46E5);" id="navUserEmailSpan">SUPER_ADMIN</strong><br>
+            최고 관리자 <a href="#" onclick="window.logoutAndRedirect()" style="color:#2563eb;">[로그아웃]</a>
         </div>
-    </header>
+    </nav>
 
     <main class="container" style="padding: 2rem 1rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-            <h2>자재 목록</h2>
-            <div style="display: flex; gap: 1rem;">
+        <div style="display: flex; gap: 2rem; margin-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0;">
+            <a href="#" id="tab-all" onclick="window.switchTab('all')"
+                style="text-decoration:none; color:var(--primary-color, #4F46E5); font-weight:bold; border-bottom:2px solid var(--primary-color, #4F46E5); padding-bottom:0.5rem;">전체
+                자재 DB</a>
+            <a href="#" id="tab-secured" onclick="window.switchTab('secured')"
+                style="text-decoration:none; color:var(--text-secondary); font-weight:bold; padding-bottom:0.5rem;">보유
+                자산 목록 (재고/확보분)</a>
+            <a href="#" id="tab-logs" onclick="window.switchTab('logs')"
+                style="text-decoration:none; color:var(--text-secondary); font-weight:bold; padding-bottom:0.5rem;">자재
+                소모(반출) 내역</a>
+        </div>
+
+        <dialog id="consumeModal" class="card"
+            style="border:none; border-radius:8px; padding:2rem; width:100%; max-width:400px;">
+            <h3 style="margin-top:0">재고 소모 / 반출</h3>
+            <p id="consumeItemName" style="font-weight:bold; margin-bottom: 1rem; color:var(--primary-color);"></p>
+            <div style="margin-bottom:1rem">
+                <label style="display:block; margin-bottom:0.5rem; font-size:0.9rem;">반출 수량 (현재: <span
+                        id="consumeCurrentStock" style="color:red; font-weight:bold;"></span>개)</label>
+                <input type="number" id="consumeQty" class="search-input" style="width:100%" min="1">
+            </div>
+            <div style="margin-bottom:1rem">
+                <label style="display:block; margin-bottom:0.5rem; font-size:0.9rem;">사용처 / 대상 프로젝트명</label>
+                <input type="text" id="consumeReason" class="search-input" style="width:100%"
+                    placeholder="어디에 사용되는지 기재">
+            </div>
+            <div style="text-align:right; margin-top:2rem;">
+                <button class="btn-primary" style="background:#64748b"
+                    onclick="document.getElementById('consumeModal').close()">취소</button>
+                <button class="btn-primary" style="background:#ef4444" id="btnConfirmConsume"
+                    onclick="window.submitConsume()">소모 확정</button>
+            </div>
+        </dialog>
+
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+            <h2 id="viewTitle" style="margin:0;">전체 자재 목록</h2>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                <input type="text" id="adminSearchFilter" class="search-input" placeholder="🔍 자재명 또는 코드 검색..."
+                    style="padding: 0.5rem; width: 220px;">
                 <select id="adminCatFilter" class="search-input" style="padding: 0.5rem;">
                     <option value="">모든 카테고리 ▼</option>
                     <option value="인테리어">인테리어</option>
-                        <option value="엘리베이터">엘리베이터</option>
-                        <option value="소방">소방</option>
-                        <option value="스마트주차장">스마트주차장</option>
-                        <option value="기타">기타</option>
+                    <option value="엘리베이터">엘리베이터</option>
+                    <option value="소방">소방</option>
+                    <option value="스마트주차장">스마트주차장</option>
+                    <option value="기타">기타</option>
                 </select>
-                <button class="btn-primary" onclick="location.href='material-form.html'">+ 자재 등록</button>
+                <div style="border-left: 1px solid #e2e8f0; margin: 0 0.5rem; height: 30px;"></div>
+                <button class="btn-primary" style="background:#f59e0b;" onclick="window.editSelected()">✏️ 선택
+                    수정</button>
+                <button class="btn-primary" style="background:#ef4444;" onclick="window.deleteSelected()">🗑️ 선택
+                    삭제</button>
+                <button class="btn-primary" style="background:var(--success, #10B981);"
+                    onclick="window.requestSelectedPurchase()">🛒 선택 구매요청</button>
+                <button class="btn-primary" onclick="window.goToRegisterMaterial()">+ 자재 등록</button>
             </div>
         </div>
 
         <div class="card" style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse; text-align: left;">
-                <thead>
+                <thead id="materialsHead">
                     <tr style="border-bottom: 2px solid var(--border-color);">
+                        <th style="padding: 1rem; width: 40px;"><input type="checkbox" id="selectAllMaterials"
+                                onclick="window.toggleAllMaterials(this.checked)"></th>
                         <th style="padding: 1rem; width: 60px;">사진</th>
                         <th style="padding: 1rem;">자재코드</th>
                         <th style="padding: 1rem;">자재명</th>
                         <th style="padding: 1rem;">규격</th>
                         <th style="padding: 1rem;">카테고리</th>
-                        <th style="padding: 1rem;">매입가격 (VND)</th>
-                        <th style="padding: 1rem;">공급처</th>
-                        <th style="padding: 1rem;">상태</th>
+                        <th style="padding: 1rem;">단가 (VND)</th>
+                        <th style="padding: 1rem;">재고/확보량</th>
+                        <th style="padding: 1rem;">총 자산가치</th>
                     </tr>
                 </thead>
                 <tbody id="materialsTableBody">

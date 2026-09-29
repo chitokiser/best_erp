@@ -1,171 +1,149 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>관리자 대시보드 - BEST MATERIAL</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script type="module" crossorigin src="/assets/admin_dashboard-bPzPyx-u.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/firebase-config-3n4qqNPS.js">
-  <link rel="modulepreload" crossorigin href="/assets/auth-nkQdWwku.js">
-  <link rel="stylesheet" crossorigin href="/assets/style-2tIJVkuo.css">
-  <link rel="stylesheet" crossorigin href="/assets/admin-x1XGuNl0.css">
-</head>
+    <title>AI CEO MANAGER - BESTwinner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>:root{--ai-primary:#4f46e5;--ai-secondary:#818cf8;--ai-gradient:linear-gradient(135deg, #4f46e5, #7c3aed);--danger:#ef4444;--warning:#f59e0b;--success:#10b981;--vip:#8b5cf6;--text-dark:#1e293b;--text-muted:#64748b;--bg-glass:#ffffffd9}body{color:var(--text-dark);background:#f8fafc;margin:0;padding:0;font-family:Inter,sans-serif}.top-nav{z-index:50;background:#fff;justify-content:space-between;align-items:center;padding:1rem 2rem;display:flex;position:sticky;top:0;box-shadow:0 4px 6px -1px #0000000d}.top-nav h1{color:var(--ai-primary);margin:0;font-size:1.5rem;font-weight:800}.top-nav ul{gap:2rem;margin:0;padding:0;list-style:none;display:flex}.top-nav a{color:var(--text-muted);font-size:.95rem;font-weight:600;text-decoration:none;transition:color .2s}.top-nav a:hover,.top-nav a.active{color:var(--ai-primary)}.container{max-width:1200px;margin:2rem auto;padding:0 1rem}.hero{text-align:center;margin-bottom:3rem}.hero h2{color:#1e293b;margin:0 0 .5rem;font-size:2.5rem;font-weight:800}.hero p{color:var(--ai-primary);align-items:center;gap:.5rem;margin:0;font-weight:600;display:inline-flex}.metric-cards{grid-template-columns:repeat(5,1fr);gap:1.5rem;margin-bottom:3rem;display:grid}.card{text-align:center;background:#fff;border-radius:16px;padding:1.5rem;box-shadow:0 4px 6px -1px #0000000d}.card-title{color:var(--text-muted);margin-bottom:.5rem;font-size:.9rem;font-weight:600}.card-value{color:#1e293b;font-size:2rem;font-weight:800}.card-subtitle{color:var(--text-muted);margin-top:.5rem;font-size:.8rem}.dashboard-grid{grid-template-columns:1fr 1fr;gap:2rem;display:grid}.panel{background:#fff;border-radius:16px;padding:2rem;box-shadow:0 4px 6px -1px #0000000d}.panel-header{justify-content:space-between;align-items:center;margin-bottom:1.5rem;font-size:1.1rem;font-weight:700;display:flex}.list-item{border:1px solid #e2e8f0;border-radius:8px;justify-content:space-between;margin-bottom:1rem;padding:1rem;font-weight:600;display:flex}.danger-item{border-left:4px solid var(--danger);color:var(--danger)}.warning-item{border-left:4px solid var(--warning);color:var(--warning)}.success-item{border-left:4px solid var(--success);color:var(--success)}.ai-report-item{color:#334155;margin-bottom:1.5rem;font-size:1rem;line-height:1.6}.ai-report-item strong{color:var(--ai-primary);margin-bottom:.25rem;display:block}</style>
 
-<body style="display: none;">
-    <!-- Login Section -->
-    <div id="loginSection" class="container" style="display: none; max-width: 400px; margin-top: 5rem;">
-        <div class="card">
-            <h2 style="text-align:center; margin-bottom: 2rem;">관리자 로그인</h2>
-            <form id="loginForm">
-                <div style="margin-bottom: 1rem;">
-                    <label>이메일</label>
-                    <input type="email" id="txtEmail" class="search-input" style="width: 100%; margin-top:0.5rem;"
-                        required>
-                </div>
-                <div style="margin-bottom: 2rem;">
-                    <label>비밀번호</label>
-                    <input type="password" id="txtPassword" class="search-input" style="width: 100%; margin-top:0.5rem;"
-                        required>
-                </div>
-                <button type="submit" class="btn-primary" style="width: 100%; margin-bottom: 0.5rem;">이메일 로그인</button>
-                <div
-                    style="display: flex; align-items: center; justify-content: center; margin: 1rem 0; color: #94a3b8;">
-                    <hr style="flex:1; border:none; border-top:1px solid #e2e8f0;">
-                    <span style="padding: 0 0.5rem; font-size: 0.875rem;">또는</span>
-                    <hr style="flex:1; border:none; border-top:1px solid #e2e8f0;">
-                </div>
-                <button type="button" id="btnGoogleLogin" class="btn-primary"
-                    style="width: 100%; background-color: white; color: #333; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
-                    <svg viewBox="0 0 24 24" width="20" height="20">
-                        <path
-                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                            fill="#4285F4" />
-                        <path
-                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                            fill="#34A853" />
-                        <path
-                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                            fill="#FBBC05" />
-                        <path
-                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                            fill="#EA4335" />
-                    </svg>
-                    Google 계정으로 연동/로그인
-                </button>
-            </form>
-            <p id="loginError" style="color: red; text-align:center; margin-top: 1rem;"></p>
+    <!-- FORCE CSS -->
+<style>.top-nav{flex-wrap:nowrap;justify-content:space-between;align-items:center;display:flex;position:relative;overflow:visible}.logo-container{width:auto!important}.top-nav ul{align-items:center;gap:1rem;margin:0;padding:0;list-style:none;display:flex;flex-wrap:nowrap!important}.top-nav ul li a{white-space:nowrap!important}.mobile-only-btn{display:none!important}@media screen and (width<=900px){.mobile-only-btn{display:block!important}.logo-container{justify-content:space-between!important;width:100%!important}.top-nav{flex-direction:column!important;align-items:flex-start!important}.top-nav ul,.top-nav>div:last-child{display:none!important}.top-nav.menu-open ul{background:#fff;border-radius:.5rem;width:100%;max-height:70vh;margin-top:1rem;overflow-y:auto;box-shadow:0 10px 15px -3px #0000001a;flex-direction:column!important;gap:0!important;padding:.5rem 0!important;display:flex!important}.top-nav.menu-open ul li{text-align:center;border-bottom:1px solid #f1f5f9;width:100%}.top-nav.menu-open ul li a{padding:1rem!important;display:block!important}.metric-cards,.dashboard-grid,.client-summary,.finance-summary,.stats-grid,.summary-container{grid-template-columns:1fr!important;gap:1rem!important;display:grid!important}}</style>
+      <script type="module" crossorigin src="/assets/firebase-config-3n4qqNPS.js"></script>
+      <script type="module" crossorigin src="/assets/ai-chat-WsoaByNE.js"></script>
+    </head>
+    
+
+<body>
+    <!-- Navigation -->
+    <nav class="top-nav">
+        <div class="logo-container" style="display:flex; align-items:center; justify-content:space-between; width:100%; margin-bottom:0;">
+    <div style="display:flex; align-items:center; gap:0.5rem; flex-shrink:0; cursor:pointer;" onclick="location.href='dashboard.html'">
+        <img src="/assets/logo-Bzhrz68d.png" style="height: 28px;" onerror="this.style.display='none';">
+        <h1 style="margin:0; font-size: 1.3rem; color: #4F46E5; font-weight: 800; white-space:nowrap;">AI경영관리</h1>
+    </div>
+    <div class="mobile-only-btn" style="display:none; cursor:pointer;" onclick="document.querySelector('.top-nav').classList.toggle('menu-open')">
+        <svg viewBox="0 0 24 24" width="28" height="28" stroke="#4F46E5" stroke-width="2" fill="none"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </div>
+</div>
+        <ul>
+            <li><a href="dashboard.html" class="active">대시보드</a></li>
+            <li><a href="projects.html">프로젝트</a></li>
+            <li><a href="materials.html">자재관리</a></li>
+            <li><a href="suppliers.html">협력업체</a></li>
+            <li><a href="finance.html">재무/회계</a></li>
+            <li><a href="employees.html">직원</a></li>
+            <li><a href="clients.html">고객</a></li>
+            <li><a href="contacts.html">인맥</a></li>
+        </ul>
+        <div style="font-size: 0.85rem; text-align: right;">
+            <strong style="color:var(--ai-primary);">SUPER_ADMIN</strong><br>
+            최고 관리자 (daguri75@gmail.com) <a href="#" style="color:#2563eb;">[로그아웃]</a>
         </div>
-    </div>
+    </nav>
 
-    <!-- Dashboard Section -->
-    <div id="dashboardSection" style="display: none;">
-        <header class="main-header">
-            <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
-                <h1 class="logo">BESTwinner</h1>
-                <nav class="main-nav">
-                    <ul>
-                        <li><a href="dashboard.html" style="color:var(--primary-color)">대시보드</a></li>
-                        <li><a href="projects.html">프로젝트</a></li>
-                        <li><a href="materials.html">자재관리</a></li>
-                        <li><a href="suppliers.html">협력업체</a></li>
-                        <li><a href="users.html">권한관리</a></li>
-                        <li><button id="btnLogout" class="btn-primary" style="padding: 0.5rem 1rem;">로그아웃</button></li>
-                    </ul>
-                </nav>
+    <!-- Main Content -->
+    <div class="container">
+        <div class="hero">
+            <h2>Good Morning, CEO</h2>
+            <p>🤖 오늘 회사를 분석하여 핵심 리포트를 준비했습니다.</p>
+        </div>
+
+        <div class="metric-cards">
+            <div class="card">
+                <div class="card-title">프로젝트 평점</div>
+                <div class="card-subtitle">고객 및 내부 평가</div>
+                <div class="card-value" style="color:var(--ai-primary);">5.0 점</div>
             </div>
-        </header>
-
-        <main class="container" style="padding: 2rem 1rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                <h2>BESTwinner 총괄 대시보드</h2>
-                <span style="font-size: 0.875rem; color: var(--text-secondary);">마지막 현황: 2026-09-25</span>
+            <div class="card">
+                <div class="card-title">협력사 신뢰도</div>
+                <div class="card-subtitle">최근 거래 기준</div>
+                <div class="card-value" style="color:var(--ai-primary);">4.8 점</div>
             </div>
-
-            <!-- 핵심 지표 요약 -->
-            <div class="quick-links"
-                style="margin-bottom: 2rem; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem;">
-                <div class="card" style="border-top: 4px solid var(--primary-color); padding: 1.5rem;">
-                    <h3 style="font-size: 1rem; color: var(--text-secondary); margin: 0;">진행중인 프로젝트</h3>
-                    <p style="font-size: 2.5rem; font-weight: bold; color: var(--text-primary); margin: 0.5rem 0;"
-                        id="statProjects">0</p>
-                    <p style="font-size: 0.875rem; color: #10b981; margin: 0; font-weight: 500;"
-                        id="statProjectsCaption">계산 중...</p>
-                </div>
-                <div class="card" style="border-top: 4px solid #f59e0b; padding: 1.5rem;">
-                    <h3 style="font-size: 1rem; color: var(--text-secondary); margin: 0;">진행 예산 소진율</h3>
-                    <p style="font-size: 2.5rem; font-weight: bold; color: var(--text-primary); margin: 0.5rem 0;"
-                        id="statBudget">0%</p>
-                    <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 0; font-weight: 500;">안정적 상태
-                    </p>
-                </div>
-                <div class="card" style="border-top: 4px solid #3b82f6; padding: 1.5rem;">
-                    <h3 style="font-size: 1rem; color: var(--text-secondary); margin: 0;">누적 자재 데이터</h3>
-                    <p style="font-size: 2.5rem; font-weight: bold; color: var(--text-primary); margin: 0.5rem 0;"
-                        id="txtTotalMaterials">0</p>
-                    <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 0; font-weight: 500;">BEST 자재
-                        DB</p>
-                </div>
-                <div class="card" style="border-top: 4px solid #ef4444; padding: 1.5rem;">
-                    <h3 style="font-size: 1rem; color: var(--text-secondary); margin: 0;">결재 대기</h3>
-                    <p style="font-size: 2.5rem; font-weight: bold; color: var(--text-primary); margin: 0.5rem 0;"
-                        id="statPendingReqs">0</p>
-                    <p style="font-size: 0.875rem; color: #ef4444; margin: 0; font-weight: 500;">요청 확인 필요</p>
-                </div>
+            <div class="card">
+                <div class="card-title">진행중인 프로젝트</div>
+                <div class="card-subtitle">현재 착공 기준</div>
+                <div class="card-value">3 개</div>
             </div>
+            <div class="card">
+                <div class="card-title">결재 대기 문서</div>
+                <div class="card-subtitle">즉시 확인 요망</div>
+                <div class="card-value" style="color:var(--danger)">5 건</div>
+            </div>
+            <div class="card">
+                <div class="card-title">현장 이슈</div>
+                <div class="card-subtitle">미결제 / 공정 지연</div>
+                <div class="card-value" style="color:var(--warning)">1 건</div>
+            </div>
+        </div>
 
-            <!-- 프로젝트 현황 & 차트 -->
-            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;" class="quick-links">
-                <!-- 주요 프로젝트 테이블 -->
-                <div class="card"
-                    style="padding: 1.5rem; background: white; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                        <h3 style="font-size: 1.25rem;">최근 기안 사항 (결재 대기)</h3>
-                        <a href="projects.html"
-                            style="font-size: 0.875rem; color: var(--primary-color); text-decoration: none; font-weight: bold;">전체보기
-                            &rarr;</a>
-                    </div>
-                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem;">
-                        <thead>
-                            <tr style="border-bottom: 2px solid #e2e8f0;">
-                                <th style="padding: 1rem 0.5rem; font-weight: 600; color: var(--text-secondary);">요청부서
-                                </th>
-                                <th style="padding: 1rem 0.5rem; font-weight: 600; color: var(--text-secondary);">기안자
-                                </th>
-                                <th style="padding: 1rem 0.5rem; font-weight: 600; color: var(--text-secondary);">금액
-                                </th>
-                                <th style="padding: 1rem 0.5rem; font-weight: 600; color: var(--text-secondary);">상태
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody id="dashboardPurchaseReqBody">
-                            <tr>
-                                <td colspan="4" style="text-align:center; padding:1rem; color:var(--text-secondary);">
-                                    데이터를 불러오는 중...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+        <div class="dashboard-grid">
+            <!-- Left Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    최근 기안결재 (결재 대상)
                 </div>
-
+                <!-- Items based on user screenshot -->
+                <div class="list-item danger-item">
+                    <span>🔴 긴급 자금 결제 (C프로젝트)</span>
+                    <span>3건</span>
+                </div>
+                <div class="list-item warning-item">
+                    <span>🟠 자재 발주 승인 대기</span>
+                    <span>7건</span>
+                </div>
+                <div class="list-item success-item">
+                    <span>🟢 도면/견적 확인 요망</span>
+                    <span>5건</span>
+                </div>
             </div>
 
-            <!-- 예산 시각화 차트 -->
-            <div class="chart-container"
-                style="background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); display:flex; flex-direction:column;">
-                <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">금월 프로젝트 총 예산 집행액</h3>
-                <div style="flex:1; position:relative;">
-                    <canvas id="budgetChart"></canvas>
+            <!-- Right Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    오늘의 종합 AI 리포트
+                </div>
+                <div class="ai-report-item">
+                    <strong>1. 인사/조직 분석</strong>
+                    A부서의 결근율 및 연차 사용이 전월 대비 9% 증가했습니다. 일부 개발 및 설계 인력의 업무량이 90% 이상 집중되어 있습니다. 인력 재분배가 권장됩니다.
+                </div>
+                <div class="ai-report-item">
+                    <strong>2. 재무/자금 분석</strong>
+                    C프로젝트의 자금 소진율이 다소 높습니다. 다음 주 예정된 협력사 결제 3건에 대해 자금 흐름 점검이 필요합니다. 예상 잔액 4.8억 원은 안정적입니다.
+                </div>
+                <div class="ai-report-item">
+                    <strong>3. 영업 기회 발견</strong>
+                    기존 우수 고객(B사)에서 추가 인테리어 발주 문의 패턴이 포착되었습니다. 영업부서에 방문 미팅을 제안합니다.
                 </div>
             </div>
-    </div>
-    </main>
+        </div>
+
+        <!-- AI 경영 참모 질문 영역 -->
+        <div class="panel" style="margin-top: 2rem; border-top: 4px solid var(--ai-primary);">
+            <div class="panel-header" style="color: var(--ai-primary); margin-bottom: 0.5rem;">
+                <span style="font-size: 1.3rem;">🤖 AI 경영 컨설팅</span>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0; margin-bottom: 1.5rem;">데이터를 종합하여
+                경영자의 의사결정을 돕습니다. 원하시는 질문을 입력하세요.</p>
+            <div style="display: flex; gap: 1rem; margin-top:1rem;">
+                <input type="text" id="aiQueryInput" placeholder="예: 현재 진행 중인 프로젝트 중 가장 지연될 위험이 높은 것은 무엇인가요?"
+                    style="flex: 1; padding: 1rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; font-family: 'Inter', sans-serif; outline: none;">
+                <button id="btnAiAnalyze"
+                    style="background: var(--ai-gradient); color: white; border: none; border-radius: 8px; padding: 0 2rem; font-size: 1rem; font-weight: bold; cursor: pointer;">분석
+                    질문</button>
+            </div>
+
+            <div id="aiResponseArea"
+                style="display: none; margin-top: 2rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.5rem;">
+                <div style="font-weight: 700; color: #334155; margin-bottom: 1rem; font-size: 1.1rem;">💡 AI 분석 보고서
+                </div>
+                <div id="aiResponseText" style="line-height: 1.6; color: #1e293b; font-size: 0.95rem;"></div>
+            </div>
+        </div>
+
     </div>
 
-
-    <!-- Global Auth Guard -->
 </body>
 
 </html>

@@ -4,4 +4,4 @@ import{S as e,c as t,d as n,f as r,g as i,l as a,n as o,p as s,s as c,t as l,u,w
                                 <span style="font-size:0.75rem; color:var(--text-secondary);">${l} (${r.email})</span>
                             </div>
                             <button onclick="window.logoutAndRedirect ? window.logoutAndRedirect() : (window.location.href='../index.html')" style="margin-left:0.5rem; background:none; border:none; cursor:pointer; color:var(--primary-color); font-weight:bold; white-space:nowrap;">[로그아웃]</button>
-                        `,t.style.display=`flex`,t.style.alignItems=`center`}catch(e){console.error(`Navbar user fetch error:`,e)}},300)):n&&n()})};export{h as a,v as i,g as n,_ as r,y as t};
+                        `,t.style.display=`flex`,t.style.alignItems=`center`}catch(e){console.error(`Navbar user fetch error:`,e)}},300)):n&&n()})};document.addEventListener(`DOMContentLoaded`,()=>{let e=document.getElementById(`hamburgerBtn`);e&&e.addEventListener(`click`,()=>{let t=e.closest(`.top-nav`);t&&t.classList.toggle(`menu-open`)})});export{h as a,v as i,g as n,_ as r,y as t};

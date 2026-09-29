@@ -13,6 +13,8 @@ export default defineConfig({
         "admin_material-form": resolve(__dirname, 'admin/material-form.html'),
         "admin_materials": resolve(__dirname, 'admin/materials.html'),
         "admin_price-history": resolve(__dirname, 'admin/price-history.html'),
+        "admin_projects": resolve(__dirname, 'admin/projects.html'),
+        "admin_sites": resolve(__dirname, 'admin/sites.html'),
         "admin_project-detail": resolve(__dirname, 'admin/project-detail.html'),
         "admin_purchase-requests": resolve(__dirname, 'admin/purchase-requests.html'),
         "admin_suppliers": resolve(__dirname, 'admin/suppliers.html'),
