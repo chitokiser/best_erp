@@ -5,7 +5,7 @@ async function loadBasicMetrics() {
     try {
         const projSnap = await getDocs(collection(db, 'projects'));
         if (!projSnap.empty) {
-            document.getElementById('projCount').textContent = projSnap.size + '개';
+            const pc = document.getElementById('projCount'); if (pc) pc.textContent = projSnap.size + '개';
         }
     } catch (err) {
         console.log('Error loading metrics', err);
@@ -23,7 +23,7 @@ function formatAiResponse(text) {
     return text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong></strong>');
 }
 
-btnAiAnalyze.addEventListener('click', async () => {
+if(btnAiAnalyze) btnAiAnalyze.addEventListener('click', async () => {
     const query = aiQueryInput.value.trim();
     if (!query) {
         alert('경영참모에게 물어볼 질문을 입력해주세요.');
@@ -75,7 +75,7 @@ btnAiAnalyze.addEventListener('click', async () => {
     }
 });
 
-aiQueryInput.addEventListener('keypress', (e) => {
+if(aiQueryInput) aiQueryInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         btnAiAnalyze.click();
     }
