@@ -40,3 +40,51 @@ export const callGeminiAI = async (contextData, customPrompt) => {
     const data = await response.json();
     return data.candidates[0].content.parts[0].text;
 };
+
+export const scanBusinessCardAI = async (base64Image, mimeType) => {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    if (!apiKey) throw new Error("VITE_GEMINI_API_KEY 환경변수가 설정되지 않았습니다.");
+
+    const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey";
+
+    const prompt = "이 이미지는 명함(Business Card)입니다. 텍스트를 추출하여 다음 JSON 형식으로만 반환하세요.
+{
+  \"name\": \"이름\",
+  \"company\": \"회사명\",
+  \"position\": \"직급/직책\",
+  \"phone\": \"전화번호 또는 휴대전화번호 (숫자와 하이픈만)\"
+}
+코드블럭(\\\json)이나 다른 설명 없이 오직 순수한 JSON 문자열만 반환하세요.";
+
+    const payload = {
+        contents: [{
+            parts: [
+                { text: prompt },
+                {
+                    inline_data: {
+                        mime_type: mimeType,
+                        data: base64Image
+                    }
+                }
+            ]
+        }],
+        generationConfig: {
+            temperature: 0.1,
+        }
+    };
+
+    const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+        throw new Error("명함 판독에 실패했습니다.");
+    }
+    const data = await response.json();
+    const rawText = data.candidates[0].content.parts[0].text;
+    
+    let cleanText = rawText.replace(/`json/gi, '').replace(/`/g, '').trim();
+    return JSON.parse(cleanText);
+};

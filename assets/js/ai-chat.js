@@ -1,149 +1,82 @@
-import { db } from './firebase-config.js';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+﻿import { db } from './firebase-config.js';
+import { collection, getDocs } from 'firebase/firestore';
 
-// 1. Create UI
-const createChatUI = () => {
-    const chatContainer = document.createElement('div');
-    chatContainer.id = 'aiChatContainer';
-    chatContainer.style = `
-        position: fixed;
-        bottom: 90px;
-        right: 2rem;
-        width: 380px;
-        height: 500px;
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        display: none;
-        flex-direction: column;
-        overflow: hidden;
-        z-index: 1000;
-        border: 1px solid #e2e8f0;
-    `;
-
-    chatContainer.innerHTML = `
-        <div style="background: linear-gradient(135deg, #4F46E5, #6366F1); color: white; padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
-            <div style="font-weight: 600; display:flex; align-items:center; gap:0.5rem;">
-                <span style="font-size:1.2rem;">붿붿</span> AI 뿯붿붿 뿯붿붿턴붿
-            </div>
-            <button id="closeAiChat" style="background:transparent; border:none; color:white; font-size:1.2rem; cursor:pointer;">&times;</button>
-        </div>
-        <div id="aiChatWindow" style="flex: 1; padding: 1rem; overflow-y: auto; background: #f8fafc; display:flex; flex-direction:column; gap:0.75rem;">
-            <div style="align-self: flex-start; max-width: 80%; background: #e0e7ff; padding: 0.75rem; border-radius: 8px; font-size: 0.875rem;">
-                붿붿붿붿뿯붿! AI-ERM 뿯슽붿템붿니뿯⺽ 붿뿯墽뿯墽뿯₽붿곖뿯墽뿯₽Ѐ뿯岽뿯ᶽ룈뿯₽붿뿯붿뿯ⲽ ᠀뿯疽뿯ㆽ뿯ⲽ 붿郇곇뿯₽붿뿯熽뿯₽붿뿯涽뿯ⲽ 砀뿯▽뿯₽붿뿯붿뿯墽뿯₽붿붿 뿯붿붿붿뿯₽ࠀ뿯↽뿯榽뿯좽붿. 뿯붿붿붿뿯붿 붿뿯붿뿯붿붿뿯붿!
-            </div>
-        </div>
-        <div style="padding: 1rem; border-top: 1px solid #e2e8f0; background: white; display: flex; gap: 0.5rem;">
-            <input type="text" id="aiChatInput" placeholder="붿뿯붿붿 붿붿붿 붿뿯붿붿?" style="flex:1; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px; outline:none;" />
-            <button id="aiChatSend" style="background: #4F46E5; color:white; border:none; padding:0.5rem 1rem; border-radius:4px; font-weight:600; cursor:pointer;">전붿</button>
-        </div>
-    `;
-
-    document.body.appendChild(chatContainer);
-    return chatContainer;
-};
-
-// 2. Fetch context from DB (Employees, Equipments, general)
-const buildSystemContext = async () => {
-    let context = "뿯붿뿯붿붿 붿붿뿯붿붿 붿뿯붿하붿 AI-ERM 붿붿 뿯붿붿 뿯붿붿턴트붿니뿯⺽ 붿곖뿯墽뿯₽붿뿯붿뿯⢽砀뿯▽뿯ⲽ 붿뿯䒽뿯⦽붿뿯₽Ѐ뿯岽뿯ᶽ룈뿯₽簀뿯ᖽ뿯䒽뿯₽　뿯ᢽ뿯㲽뿯岽뿯₽㠀뿯Ჽ뿯₽붿뿯碽뿯䒽뿯₽붿뿯붿붿뿯₽붿鳍뿯₽琀냕뿯䖽뿯䒽뿯₽ᰀ뿯붿뿯榽뿯좽붿.\n\n[현붿 뿯횽붿 붿붿붿 팩붿]\n";
+async function loadBasicMetrics() {
     try {
-        const empSnap = await getDocs(collection(db, 'employees'));
-        context += "- 뿯붿뿯붿 붿붿:\n";
-        empSnap.forEach(doc => {
-            const d = doc.data();
-            context += `  * ${d.name} (${d.department}): 투붿붿 ${d.load_percentage}%, 수붿 붿붿젝붿 [${d.current_projects.join(', ')}]\n`;
-        });
-
-        const eqSnap = await getDocs(collection(db, 'equipment'));
-        context += "- 뿯붿붿 붿붿:\n";
-        eqSnap.forEach(doc => {
-            const d = doc.data();
-            context += `  * ${d.name} (${d.status}): 뿯붿뿯붿 붿붿젝붿 ${d.current_project || '뿯붿붿'}, 붿붿붿뿯붿 ${d.daily_cost}뿯붿\n`;
-        });
-
-        context += "- 붿붿젝붿 붿붿 뿯붿붿:\n  * A, B, C, D 뿯₽붿붿 붿붿젝붿 뿯즽붿붿. 현붿 전붿 24붿 붿 붿뿯붿 17, 뿯붿붿 5, 붿뿯붿 2붿뿯붿니뿯⺽尀渀∀㬀਀        挀漀渀琀攀砀琀 ⬀㴀 ∀  ⨀ Ѐ뿯岽뿯ᶽ룈뿯₽䄀⠀倀ⴀ　　㄀⤀붿뿯₽붿곇뿯⢽붿뿯붿뿯⦽ 붿뿯熽뿯₽ࠀ뿯붿뿯⺽尀渀  ⨀ Ѐ뿯岽뿯ᶽ룈뿯₽䐀⠀倀ⴀ　　㐀⤀붿뿯₽␀뿯쒽€㈀簀뿯₽붿뿯붿뿯⺽ 붿뿯ソ뿯₽붿뿯붿뿯沽뿯₽붿뿯䲽뿯⺽尀渀∀㬀਀਀        挀漀渀琀攀砀琀 ⬀㴀 ∀尀渀Ѐ뿯₽瀀뿯璽뿯ソ뿯粽뿯₽᐀뿯붿뿯㲽뿯岽뿯₽붿뿯㢽뿯붿뿯₽ᔀ뿯喽뿯墽뿯붿 붿뿯붿붿붿붿 뿯붿붿뿯붿 붿붿붿 붿붿붿붿 뿯붿붿붿 뿯붿뿯붿붿뿯붿붿뿯붿. (붿붿붿뿯붿 뿯얽붿 뿯붿뿯붿붿 붿붿붿붿 뿯붿붿 뿯붿붿붿붿 뿯붿붿붿, 붿뿯붿붿 뿯좽붿뿯붿 붿붿붿붿 인붿붿붿뿯붿)";
-    } catch (e) {
-        console.error("Context build error:", e);
+        const projSnap = await getDocs(collection(db, 'projects'));
+        if (!projSnap.empty) {
+            document.getElementById('projCount').textContent = projSnap.size + '개';
+        }
+    } catch (err) {
+        console.log('Error loading metrics', err);
     }
-    return context;
-};
+}
+loadBasicMetrics();
 
-// 3. Chat Logic
-const initAIChat = () => {
-    const aiBtn = document.querySelector('.ai-chat-btn');
-    if (!aiBtn) return;
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const btnAiAnalyze = document.getElementById('btnAiAnalyze');
+const aiQueryInput = document.getElementById('aiQueryInput');
+const aiResponseArea = document.getElementById('aiResponseArea');
+const aiResponseText = document.getElementById('aiResponseText');
 
-    const chatContainer = createChatUI();
-    const closeBtn = document.getElementById('closeAiChat');
-    const sendBtn = document.getElementById('aiChatSend');
-    const chatInput = document.getElementById('aiChatInput');
-    const chatWindow = document.getElementById('aiChatWindow');
+function formatAiResponse(text) {
+    return text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong></strong>');
+}
 
-    let isOpen = false;
-    let systemPrompt = "";
+btnAiAnalyze.addEventListener('click', async () => {
+    const query = aiQueryInput.value.trim();
+    if (!query) {
+        alert('경영참모에게 물어볼 질문을 입력해주세요.');
+        return;
+    }
+    if (!GEMINI_API_KEY) {
+        alert('Gemini API 키가 설정되지 않았습니다 (.env)');
+        return;
+    }
 
-    // Pre-load context
-    buildSystemContext().then(ctx => systemPrompt = ctx);
+    aiResponseArea.style.display = 'block';
+    aiResponseText.innerHTML = '<span style=\"color:var(--text-muted);\">분석 중입니다... 잠시만 기다려주세요.</span>';
+    btnAiAnalyze.disabled = true;
+    btnAiAnalyze.textContent = '분석중...';
 
-    aiBtn.addEventListener('click', () => {
-        isOpen = !isOpen;
-        chatContainer.style.display = isOpen ? 'flex' : 'none';
-        if (isOpen) chatInput.focus();
-    });
+    // 안전하게 프롬프트 구성
+    const promptLines = [
+        '당신은 BEST_ERP 회사의 유능한 AI 경영참모입니다.',
+        '경영자(CEO)가 다음과 같이 질문했습니다: \"' + query + '\"',
+        '경영진이 읽기 편하도록 명쾌하게 현황/문제점/해결책(추천) 순으로 요약해서 존댓말로 대답해주세요.',
+        '가상의 상황이라고 가정하고 조언하셔도 좋습니다.'
+    ];
+    const prompt = promptLines.join('\\n');
 
-    closeBtn.addEventListener('click', () => {
-        isOpen = false;
-        chatContainer.style.display = 'none';
-    });
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }]
+            })
+        });
 
-    const addMessage = (text, sender) => {
-        const msgDiv = document.createElement('div');
-        msgDiv.style = `
-            align-self: ${sender === 'user' ? 'flex-end' : 'flex-start'};
-            max-width: 85%;
-            background: ${sender === 'user' ? '#4F46E5' : '#e0e7ff'};
-            color: ${sender === 'user' ? 'white' : '#1e293b'};
-            padding: 0.75rem;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            line-height: 1.5;
-            word-break: keep-all;
-        `;
+        const data = await response.json();
+        if (data.error) {
+            aiResponseText.innerHTML = '<span style=\"color:red;\">오류 발생: </span>' + data.error.message;
+        } else if (data.candidates && data.candidates.length > 0) {
+            const text = data.candidates[0].content.parts[0].text;
+            aiResponseText.innerHTML = formatAiResponse(text);
+        } else {
+            aiResponseText.innerHTML = 'AI가 답변을 생성하지 못했습니다.';
+        }
+    } catch (err) {
+        console.error('AI API Error:', err);
+        aiResponseText.innerHTML = '<span style=\"color:red;\">서버와 통신 중 오류가 발생했습니다.</span>';
+    } finally {
+        btnAiAnalyze.disabled = false;
+        btnAiAnalyze.textContent = '분석하기';
+    }
+});
 
-        // Simple Markdown bold / replace logic
-        let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        formattedText = formattedText.replace(/\*(.*?)\*/g, '<em>$1</em>');
-        formattedText = formattedText.replace(/\n/g, '<br>');
-
-        msgDiv.innerHTML = formattedText;
-        chatWindow.appendChild(msgDiv);
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-    };
-
-    const handleSend = async () => {
-        const text = chatInput.value.trim();
-        if (!text) return;
-
-        addMessage(text, 'user');
-        chatInput.value = '';
-
-        const loadingId = 'loading-' + Date.now();
-        const loadingDiv = document.createElement('div');
-        loadingDiv.id = loadingId;
-        loadingDiv.style = "align-self: flex-start; background: transparent; font-size:0.875rem; padding:0.5rem; color:#64748b;";
-        loadingDiv.textContent = "AI 분석 중입니다...";
-        chatWindow.appendChild(loadingDiv);
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-
-        const answer = await aiChatProcess(userText);
-        chatWindow.removeChild(loadingDiv);
-        addMessage(answer, false);
-    };
-
-    sendBtn.addEventListener('click', sendMessage);
-    chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
-    });
-};
-
-document.addEventListener('DOMContentLoaded', initAIChat);
+aiQueryInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        btnAiAnalyze.click();
+    }
+});

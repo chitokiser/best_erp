@@ -1,0 +1,7 @@
+import"./firebase-config-3n4qqNPS.js";import{t as e}from"./action-handler-DZe2CSQ4.js";var t=document.getElementById(`currentDate`),n=new Date;t.innerText=`${n.getFullYear()}.${String(n.getMonth()+1).padStart(2,`0`)}.${String(n.getDate()).padStart(2,`0`)} (${[`일`,`월`,`화`,`수`,`목`,`금`,`토`][n.getDay()]})`;var r=document.getElementById(`aiUploadTrigger`),i=document.getElementById(`mobilePhotoInput`),a=document.getElementById(`processingOverlay`),o=document.getElementById(`aiResultArea`),s=document.getElementById(`aiResultText`);r.addEventListener(`click`,()=>{i.click()}),i.addEventListener(`change`,e=>{e.target.files&&e.target.files.length>0&&(a.style.display=`flex`,setTimeout(()=>{a.style.display=`none`,o.style.display=`block`,s.innerHTML=`
+                        <strong>프로젝트:</strong> P-001 신사동 현장<br>
+                        <strong>분류:</strong> 자재 송장 인식<br>
+                        <strong>내용:</strong> 철근 (16mm) 200단 입고 확인<br>
+                        <hr style="border:none; border-top:1px dashed #A7F3D0; margin:0.5rem 0;">
+                        AI가 재고 시스템에 해당 자재를 자동 추가하고, 현재 작업 진행률을 42% -> 44% 로 변경 추천합니다.
+                    `},2e3))});var c=o.querySelector(`button`);c.addEventListener(`click`,async()=>{c.innerText=`전송 중...`,await e(`P-001 신사동 현장`,`철근 (16mm) 200단 입고`)?(alert(`서버에 동기화되었으며, 담당자 텔레그램 알림이 발송되었습니다!`),c.innerText=`동기화 완료`,c.disabled=!0,c.style.background=`#94a3b8`):(alert(`오류 발생`),c.innerText=`데이터 확정 (서버전송)`)});

@@ -232,4 +232,127 @@ a {
     .material-card small {
         font-size: 0.85rem !important;
     }
+
+    /* AI CEO MANAGER Global Admin Overrides for Mobile */
+    .top-nav {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem;
+        padding: 1rem !important;
+    }
+
+    .top-nav ul {
+        flex-wrap: wrap !important;
+        gap: 1rem !important;
+        width: 100%;
+    }
+
+    .top-nav div {
+        text-align: left !important;
+        width: 100%;
+    }
+
+    .header-action {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem;
+    }
+
+    .header-action button {
+        width: 100% !important;
+    }
+
+    .client-summary,
+    .finance-summary,
+    .stats-grid,
+    .summary-container {
+        grid-template-columns: 1fr !important;
+    }
+
+    .data-card {
+        overflow-x: auto !important;
+        padding: 1rem !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+        white-space: nowrap;
+    }
+
+    .modal-content {
+        padding: 1.5rem !important;
+        width: 100% !important;
+        margin: 1rem !important;
+    }
+
+    .form-row {
+        flex-direction: column !important;
+        gap: 0 !important;
+    }
+}/* AI CEO MANAGER COMPREHENSIVE MOBILE OVERRIDES */
+@media (max-width: 768px) {
+    html, body { overflow-x: hidden; width: 100%; }
+    .main-container, .container { padding: 0 1rem !important; margin: 1rem auto !important; }
+    .top-nav { flex-direction: column !important; align-items: flex-start !important; gap: 0.5rem !important; padding: 1rem !important; position: relative !important; }
+    .top-nav h1 { font-size: 1.25rem !important; margin-bottom: 0.5rem !important; }
+    .top-nav ul { flex-direction: row !important; flex-wrap: wrap !important; gap: 0.75rem !important; width: 100% !important; }
+    .top-nav ul li a { font-size: 0.9rem !important; padding: 0.2rem 0 !important; display: block !important; }
+    .top-nav > div { text-align: left !important; width: 100% !important; margin-top: 0.5rem !important; font-size: 0.8rem !important; }
+    .header-action { flex-direction: column !important; align-items: flex-start !important; gap: 1rem !important; margin-bottom: 1.5rem !important; }
+    .header-action h2 { font-size: 1.3rem !important; }
+    .header-action button, .header-action > div { width: 100% !important; justify-content: space-between !important; flex-wrap: wrap !important; }
+    .metric-cards, .dashboard-grid, .client-summary, .finance-summary, .stats-grid, .summary-container, .grid-container { grid-template-columns: 1fr !important; gap: 1rem !important; }
+    .tabs, .nav-tabs { flex-direction: column !important; width: 100% !important; border-bottom: none !important; }
+    .tab.active, .tab { width: 100% !important; text-align: center !important; margin-bottom: 0.2rem !important; border-bottom: 1px solid #ccc !important; }
+    .card, .panel, .data-card, .summary-box { padding: 1rem !important; margin-bottom: 1rem !important; }
+    .card-value { font-size: 1.5rem !important; }
+    .data-card { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+    table { min-width: 600px !important; }
+    .modal-content { padding: 1.2rem !important; width: 95% !important; max-width: 100% !important; margin: 1rem auto !important; }
+    .form-row { flex-direction: column !important; gap: 0 !important; }
+    .form-group { margin-bottom: 1rem !important; }
+    #networkGraphContainer { height: 400px !important; }
+}
+
+.mobile-only { display: none !important; }
+
+@media (max-width: 768px) {
+    .mobile-only { display: block !important; }
+    
+    /* Hamburger Menu Toggle Logic */
+    .top-nav ul { display: none !important; }
+    .top-nav > div:last-child { display: none !important; }
+    
+    .top-nav.menu-open ul { display: flex !important; flex-direction: column !important; }
+    .top-nav.menu-open > div:last-child { display: block !important; }
+
+    /* Font size reduction to prevent wrapping */
+    th, td, .form-group label, .card-title, .summary-label { font-size: 0.8rem !important; padding: 0.6rem !important; }
+    .card-value, .summary-val { font-size: 1.2rem !important; }
+    h2 { font-size: 1.2rem !important; }
+    h3 { font-size: 1rem !important; }
+    .btn-add, .submit-btn { font-size: 0.85rem !important; padding: 0.6rem 1rem !important; }
+    .top-nav ul li a { font-size: 0.95rem !important; white-space: nowrap; }
+}
+
+/* PC Desktop Nav Fix for Text Squishing & Layout */
+.logo-container {
+    width: auto !important; /* Do not take 100% width on Desktop */
+}
+.top-nav ul li a {
+    white-space: nowrap !important; /* Prevent vertical text stacking */
+}
+.top-nav {
+    flex-wrap: nowrap !important;
+}
+
+@media (max-width: 768px) {
+    .logo-container {
+        width: 100% !important; /* On mobile, take full width so logo is left and hamburger is right */
+        margin-bottom: 1rem !important;
+    }
+    .top-nav {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
 }

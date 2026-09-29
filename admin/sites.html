@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI CEO MANAGER - 현장 (Sites)</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --ai-primary: #4F46E5; --ai-secondary: #818CF8; --ai-gradient: linear-gradient(135deg, #4F46E5, #7C3AED); --text-dark: #1E293B; --text-muted: #64748B; }
+        body { background: #f8fafc; font-family: 'Inter', sans-serif; margin: 0; padding: 0; color: var(--text-dark); }
+        .top-nav { background: white; padding: 1rem 2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center; }
+        .top-nav .logo { font-size: 1.5rem; font-weight: 800; background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; cursor: pointer;}
+        .main-container { max-width: 1200px; margin: 3rem auto; padding: 0 1.5rem; text-align:center; }
+    </style>
+</head>
+<body>
+    <nav class="top-nav">
+        <div class="logo-container" style="display:flex; align-items:center; justify-content:space-between; width:100%; margin-bottom:0;">
+            <div style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;" onclick="location.href='dashboard.html'">
+                <img src="../images/logo/logo.png" style="height: 28px;" onerror="this.style.display='none';">
+                <h1 style="margin:0; font-size: 1.3rem; color: #4F46E5; font-weight: 800;">AI경영관리</h1>
+            </div>
+            <button id="hamburgerBtn" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#4F46E5;" class="mobile-only">☰</button>
+        </div>
+        <ul class="nav-links" style="display:flex; gap:1.5rem; list-style:none; margin:0; padding:0; font-weight:600; font-size:0.95rem;">
+            <li><a href="employees.html" style="text-decoration:none; color:#64748B;">직원</a></li>
+            <li><a href="clients.html" style="text-decoration:none; color:#64748B;">고객</a></li>
+            <li><a href="projects.html" style="text-decoration:none; color:#64748B;">프로젝트</a></li>
+            
+            <li><a href="suppliers.html" style="text-decoration:none; color:#64748B;">협력사</a></li>
+            <li><a href="contacts.html" style="text-decoration:none; color:#64748B;">인맥</a></li>
+            <li><a href="finance.html" style="text-decoration:none; color:#64748B;">재무</a></li>
+            <li><a href="materials.html" style="text-decoration:none; color:#64748B;">자재</a></li>
+        </ul>
+        <a href="dashboard.html" style="text-decoration:none; color: #4F46E5; font-size: 0.9rem; font-weight:700;">메인으로</a>
+    </nav>
+    <div class="main-container">
+        <h2>현장 (Sites) 데이터베이스</h2>
+        <p style="color:var(--text-muted); margin-top:1rem;">해당 DB 화면은 현재 상세 기획 및 개발(MVP) 대기 중입니다.<br>추후 AI 지식그래프 연동이 완료되면 실제 경영 데이터가 이곳에 표시될 예정입니다.</p>
+        <div style="margin-top:3rem; padding: 3rem; background:white; border-radius:1.5rem; border:1px dashed #cbd5e1;">UI 개발 진행 예정 영역</div>
+    </div>
+</body>
+</html>
+

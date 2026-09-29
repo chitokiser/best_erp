@@ -8,23 +8,74 @@
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/admin.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .top-nav {
+            background: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .top-nav h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--primary-color, #4F46E5);
+            font-weight: 800;
+        }
+
+        .top-nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+            margin: 0;
+            padding: 0;
+        }
+
+        .top-nav a {
+            text-decoration: none;
+            color: var(--text-secondary, #64748B);
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .top-nav a:hover,
+        .top-nav a.active {
+            color: var(--primary-color, #4F46E5);
+        }
+    </style>
 </head>
 
-<body style="display: none;">
-    <header class="main-header">
-        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
-            <h1 class="logo">BEST Group</h1>
-            <nav class="main-nav">
-                <ul>
-                    <li><a href="dashboard.html">대시보드</a></li>
-                    <li><a href="materials.html" style="color:var(--primary-color)">자재관리</a></li>
-                    <li><a href="suppliers.html">공급업체</a></li>
-                    <li><a href="purchase-requests.html">결재관리(구매)</a></li>
-                    <li><a href="users.html">권한관리</a></li>
-                </ul>
-            </nav>
+<body style="display: none; background: #f8fafc; font-family: 'Inter', sans-serif; margin: 0; padding: 0;">
+    <nav class="top-nav">
+        <div class="logo-container" style="display:flex; align-items:center; justify-content:space-between; width:100%; margin-bottom:0;">
+            <div style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;" onclick="location.href='dashboard.html'">
+                <img src="../images/logo/logo.png" style="height: 28px;" onerror="this.style.display='none';">
+                <h1 style="margin:0; font-size: 1.3rem; color: #4F46E5; font-weight: 800;">AI경영관리</h1>
+            </div>
+            <button id="hamburgerBtn" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#4F46E5;" class="mobile-only">☰</button>
         </div>
-    </header>
+        <ul>
+            <li><a href="dashboard.html">대시보드</a></li>
+            <li><a href="projects.html">프로젝트</a></li>
+            <li><a href="materials.html" class="active">자재관리</a></li>
+            <li><a href="suppliers.html">협력업체</a></li>
+            <li><a href="purchase-requests.html">결재관리(구매)</a></li>
+            <li><a href="finance.html">재무/회계</a></li>
+            <li><a href="employees.html">직원</a></li>
+            <li><a href="clients.html">고객</a></li>
+            <li><a href="contacts.html">인맥</a></li>
+        </ul>
+        <div style="font-size: 0.85rem; text-align: right;">
+            <strong style="color:var(--primary-color, #4F46E5);" id="navUserEmailSpan">SUPER_ADMIN</strong><br>
+            최고 관리자 <a href="#" onclick="window.logoutAndRedirect()" style="color:#2563eb;">[로그아웃]</a>
+        </div>
+    </nav>
 
     <main class="container" style="padding: 2rem 1rem;">
         <h2>신규 자재 등록</h2>
@@ -114,6 +165,10 @@
                             <input type="number" id="numPurchasePrice" class="search-input" style="width: 100%;">
                         </div>
                         <div>
+                            <label>현재 재고 (수량)</label>
+                            <input type="number" id="numStock" class="search-input" style="width: 100%;">
+                        </div>
+                        <div>
                             <label>BEST 판매가격 (VND)</label>
                             <input type="number" id="numSellingPrice" class="search-input" style="width: 100%;">
                         </div>
@@ -143,10 +198,14 @@
                     </div>
                 </fieldset>
 
-                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
-                    <button type="button" class="btn-primary" style="background-color: var(--text-secondary);"
-                        onclick="location.href='materials.html'">취소</button>
-                    <button type="submit" class="btn-primary" id="btnSubmit">저장하기</button>
+                <div style="display: flex; gap: 1rem; justify-content: space-between; margin-top: 1rem;">
+                    <button type="button" class="btn-primary" id="btnDelete"
+                        style="background-color: #ef4444; display: none;">삭제하기</button>
+                    <div style="display: flex; gap: 1rem;">
+                        <button type="button" class="btn-primary" style="background-color: var(--text-secondary);"
+                            onclick="location.href='materials.html'">취소</button>
+                        <button type="submit" class="btn-primary" id="btnSubmit">저장하기</button>
+                    </div>
                 </div>
                 <p id="statusMsg" style="text-align: right; margin-top: 0.5rem;"></p>
             </form>
@@ -155,11 +214,12 @@
 
     <script type="module">
         import { createMaterial, getMaterialById } from '../services/materialApi.js';
-        import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+        import { doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
         import { db } from '../assets/js/firebase-config.js';
 
         const materialForm = document.getElementById('materialForm');
         const btnSubmit = document.getElementById('btnSubmit');
+        const btnDelete = document.getElementById('btnDelete');
         const statusMsg = document.getElementById('statusMsg');
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -184,9 +244,28 @@
                 document.getElementById('txtUnit').value = m.unit || '';
                 document.getElementById('numPurchasePrice').value = m.ourPurchasePrice || '';
                 document.getElementById('numSellingPrice').value = m.ourSellingPrice || '';
+                document.getElementById('numStock').value = m.stock || 0;
                 document.getElementById('selVat').value = m.vatIncluded ? 'true' : 'false';
                 document.getElementById('txtDescription').value = m.description || '';
+                btnDelete.style.display = 'block';
             }).catch(console.error);
+
+            btnDelete.addEventListener('click', async () => {
+                if (confirm('정말로 이 자재 데이터를 삭제하시겠습니까? (삭제 시 복구할 수 없습니다)')) {
+                    try {
+                        btnDelete.textContent = '삭제 중...';
+                        btnDelete.disabled = true;
+                        await deleteDoc(doc(db, 'materials', editId));
+                        alert('자재가 삭제되었습니다.');
+                        window.location.href = 'materials.html';
+                    } catch (err) {
+                        console.error('Delete error', err);
+                        alert('삭제에 실패했습니다: ' + err.message);
+                        btnDelete.textContent = '삭제하기';
+                        btnDelete.disabled = false;
+                    }
+                }
+            });
         }
 
         materialForm.addEventListener('submit', async (e) => {
@@ -211,6 +290,7 @@
                     unit: document.getElementById('txtUnit').value,
                     ourPurchasePrice: Number(document.getElementById('numPurchasePrice').value) || 0,
                     ourSellingPrice: Number(document.getElementById('numSellingPrice').value) || 0,
+                    stock: Number(document.getElementById('numStock').value) || 0,
                     currency: "VND",
                     vatIncluded: document.getElementById('selVat').value === 'true',
                     description: document.getElementById('txtDescription').value,
@@ -248,19 +328,39 @@
     <!-- Global Auth Guard -->
     <script type="module">
         import { checkAdminAuth } from '../assets/js/auth.js';
+        import { collection, query, where, getDocs } from 'firebase/firestore';
+        import { db } from '../assets/js/firebase-config.js';
 
         checkAdminAuth(
-            (user) => {
+            async (user) => {
                 document.body.style.display = 'block';
 
-                // Add logout button / User email to header dynamically if header exists
-                const nav = document.querySelector('.main-nav ul');
-                if (nav && !document.getElementById('navUserEmail')) {
-                    const li = document.createElement('li');
-                    li.id = 'navUserEmail';
-                    li.innerHTML = `<span style="margin-left: 1rem; font-size:0.875rem; color:var(--text-secondary);">${user.email}</span>
-                                    <button onclick="window.logoutAndRedirect()" style="margin-left:0.5rem; background:none; border:none; cursor:pointer; color:var(--primary-color); font-weight:bold;">[로그아웃]</button>`;
-                    nav.appendChild(li);
+                const emailSpan = document.getElementById('navUserEmailSpan');
+                if (emailSpan) {
+                    emailSpan.textContent = user.email;
+                }
+
+                try {
+                    let role = 'GUEST';
+                    let position = '일반 직원';
+                    const q = query(collection(db, 'users'), where('email', '==', user.email));
+                    const snap = await getDocs(q);
+
+                    if (!snap.empty) {
+                        const data = snap.docs[0].data();
+                        role = data.role || 'GUEST';
+                        position = data.position || '직원';
+                    } else if (user.email === 'daguri75@gmail.com') {
+                        role = 'SUPER_ADMIN';
+                        position = '최고 관리자';
+                    }
+
+                    if (role !== 'SUPER_ADMIN' && role !== 'PM' && position.indexOf('팀장') === -1) {
+                        alert("접근 불가: 자재 조작 권한은 프로젝트 관리자(PM/팀장) 및 최고 관리자에게만 제한되어 있습니다.");
+                        window.location.href = 'materials.html';
+                    }
+                } catch (e) {
+                    console.error("Permission check failed:", e);
                 }
             },
             () => {

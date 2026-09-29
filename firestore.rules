@@ -2,56 +2,58 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Check if user is authenticated
-    function isAuthenticated() {
-      return request.auth != null;
+
+    function isAuthenticated() { 
+      return request.auth != null; 
     }
 
-    // Role-based helper functions (Can be expanded with Custom Claims later)
-    // For now, allow writes to any logged-in user so development is unblocked
-    function isStaffOrAdmin() {
-      return isAuthenticated(); 
+    function getUserData() {
+      // auth.uid 기반으로 users 컬렉션 문서를 가져옵니다
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
 
-    // materials collection
-    match /materials/{document=**} {
-      allow read: if true; // anyone can view materials
-      allow write: if isStaffOrAdmin(); // only logged-in users can create/edit
-    }
-
-    // suppliers collection
-    match /suppliers/{document=**} {
-      allow read: if true; 
-      allow write: if isStaffOrAdmin();
-    }
-
-    // price history
-    match /priceHistory/{document=**} {
-      allow read: if true;
-      allow write: if isStaffOrAdmin();
+    // CEO 또는 최고관리자 확인 (daguri75@gmail.com은 무조건 적용)
+    function isCEO() {
+      return isAuthenticated() && (
+        request.auth.token.email == 'daguri75@gmail.com' ||
+        getUserData().role == 'SUPER_ADMIN' || 
+        getUserData().role == 'CEO'
+      );
     }
     
-    // external prices (handled generally by background cloud function)
-    match /externalPrices/{document=**} {
-      allow read: if true;
-      allow write: if isStaffOrAdmin();
+    // 일반 직원/관리자 이상 (쓰기 권한용)
+    function isStaff() {
+      return isAuthenticated() && (
+        request.auth.token.email == 'daguri75@gmail.com' ||
+        getUserData().role in ['SUPER_ADMIN', 'CEO', 'ADMIN', 'STAFF']
+      );
     }
 
-    // users collection
-    match /users/{document=**} {
-      allow read, write: if isAuthenticated();
+    // 기본적으로 CEO는 모든 컬렉션에서 읽기/쓰기/삭제 완벽한 권한을 가짐
+    match /{document=**} {
+      allow read, write: if isCEO();
     }
 
-    // projects collection
-    match /projects/{document=**} {
-      allow read, write: if isAuthenticated();
+    // 일반 직원(Staff) 이상의 권한
+    match /materials/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+    match /suppliers/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+    match /priceHistory/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+    match /externalPrices/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+    
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      // 자신 정보 수정 허용 또는 CEO
+      allow write: if request.auth.uid == userId || isCEO();
     }
-
-    // purchase requests collection
-    match /purchaseRequests/{document=**} {
-      allow read, write: if isAuthenticated();
-    }
+    
+    match /projects/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+    match /purchaseRequests/{document=**} { allow read: if isAuthenticated(); allow write: if isAuthenticated(); }
+    
+    // 새로 설계된 AI 경영참모용 통합 DB Rules
+    match /employees/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+    match /clients/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+    match /contacts/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+    match /siteLogs/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+    match /aiInsights/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
   }
 }
-

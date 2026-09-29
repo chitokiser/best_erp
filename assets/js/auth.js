@@ -97,3 +97,16 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
         }
     });
 };
+
+// Global Hamburger Menu Logic
+document.addEventListener('DOMContentLoaded', () => {
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    if (hamburgerBtn) {
+        hamburgerBtn.addEventListener('click', () => {
+            const nav = hamburgerBtn.closest('.top-nav');
+            if (nav) {
+                nav.classList.toggle('menu-open');
+            }
+        });
+    }
+});

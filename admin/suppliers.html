@@ -8,29 +8,111 @@
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/admin.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .top-nav {
+            background: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .top-nav h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--primary-color, #4F46E5);
+            font-weight: 800;
+        }
+
+        .top-nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+            margin: 0;
+            padding: 0;
+        }
+
+        .top-nav a {
+            text-decoration: none;
+            color: var(--text-secondary, #64748B);
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .top-nav a:hover,
+        .top-nav a.active {
+            color: var(--primary-color, #4F46E5);
+        }
+    </style>
 </head>
 
-<body style="display: none;">
-    <header class="main-header">
-        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
-            <h1 class="logo">BESTwinner</h1>
-            <nav class="main-nav">
-                <ul>
-                    <li><a href="dashboard.html">대시보드</a></li>
-                    <li><a href="projects.html">프로젝트</a></li>
-                    <li><a href="materials.html">자재관리</a></li>
-                    <li><a href="suppliers.html" style="color:var(--primary-color)">협력업체</a></li>
-                    <li><a href="users.html">권한관리</a></li>
-                </ul>
-            </nav>
+<body style="display: none; background: #f8fafc; font-family: 'Inter', sans-serif; margin: 0; padding: 0;">
+    <nav class="top-nav">
+        <div class="logo-container" style="display:flex; align-items:center; justify-content:space-between; width:100%; margin-bottom:0;">
+            <div style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;" onclick="location.href='dashboard.html'">
+                <img src="../images/logo/logo.png" style="height: 28px;" onerror="this.style.display='none';">
+                <h1 style="margin:0; font-size: 1.3rem; color: #4F46E5; font-weight: 800;">AI경영관리</h1>
+            </div>
+            <button id="hamburgerBtn" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#4F46E5;" class="mobile-only">☰</button>
         </div>
-    </header>
+        <ul>
+            <li><a href="dashboard.html">대시보드</a></li>
+            <li><a href="projects.html">프로젝트</a></li>
+            <li><a href="materials.html">자재관리</a></li>
+            <li><a href="suppliers.html" class="active">협력업체</a></li>
+            <li><a href="purchase-requests.html">결재관리(구매)</a></li>
+            <li><a href="finance.html">재무/회계</a></li>
+            <li><a href="employees.html">직원</a></li>
+            <li><a href="clients.html">고객</a></li>
+            <li><a href="contacts.html">인맥</a></li>
+        </ul>
+        <div style="font-size: 0.85rem; text-align: right;">
+            <strong style="color:var(--primary-color, #4F46E5);" id="navUserEmailSpan">SUPER_ADMIN</strong><br>
+            최고 관리자 <a href="#" onclick="window.logoutAndRedirect()" style="color:#2563eb;">[로그아웃]</a>
+        </div>
+    </nav>
 
     <main class="container" style="padding: 2rem 1rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
             <h2>협력업체 평가 및 현황 (Suppliers & Resources)</h2>
-            <button class="btn-primary" onclick="alert('신규 파트너를 등록하고 초기 평가 그룹을 지정합니다.')">+ 신규 협력사 등록</button>
+            <button class="btn-primary" onclick="document.getElementById('supplierModal').showModal()">+ 신규 협력사
+                등록</button>
         </div>
+
+        <dialog id="supplierModal" class="card"
+            style="border:none; border-radius:8px; padding:2rem; width:100%; max-width:500px;">
+            <h3 style="margin-top:0; color:var(--primary-color);">신규 파트너 등록</h3>
+            <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
+                <div>
+                    <label style="display:block; margin-bottom:0.5rem; font-size:0.9rem;">업체명 *</label>
+                    <input type="text" id="supName" class="search-input" style="width:100%" placeholder="예: 삼성물산">
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:0.5rem; font-size:0.9rem;">취급품목 (카테고리)</label>
+                    <input type="text" id="supCategories" class="search-input" style="width:100%"
+                        placeholder="쉼표(,)로 구분 (예: 건축자재, 철강)">
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:0.5rem; font-size:0.9rem;">담당자명 *</label>
+                    <input type="text" id="supContact" class="search-input" style="width:100%" placeholder="예: 홍길동 부장">
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:0.5rem; font-size:0.9rem;">연락처 *</label>
+                    <input type="text" id="supPhone" class="search-input" style="width:100%"
+                        placeholder="예: 010-1234-5678">
+                </div>
+                <div style="text-align:right; margin-top:1rem;">
+                    <button class="btn-primary" style="background:#64748b"
+                        onclick="document.getElementById('supplierModal').close()">취소</button>
+                    <button class="btn-primary" id="btnSaveSupplier" onclick="window.saveNewSupplier()">등록하기</button>
+                </div>
+            </div>
+        </dialog>
 
         <div class="quick-links"
             style="margin-bottom: 2rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
@@ -80,21 +162,93 @@
 
     <script type="module" src="../assets/js/firebase-config.js"></script>
     <script type="module">
-        import { getAllSuppliers } from '../services/supplierApi.js';
+        import { getAllSuppliers, createSupplier } from '../services/supplierApi.js';
+
+        window.saveNewSupplier = async () => {
+            const name = document.getElementById('supName').value.trim();
+            const cats = document.getElementById('supCategories').value.split(',').map(s => s.trim()).filter(s => s);
+            const contact = document.getElementById('supContact').value.trim();
+            const phone = document.getElementById('supPhone').value.trim();
+
+            if (!name || !contact || !phone) {
+                alert("업체명, 담당자명, 연락처는 필수 항목입니다.");
+                return;
+            }
+
+            const btn = document.getElementById('btnSaveSupplier');
+            btn.disabled = true;
+            btn.textContent = '등록 중...';
+            try {
+                await createSupplier({
+                    companyName: name,
+                    categories: cats,
+                    contactPerson: contact,
+                    phone: phone,
+                });
+                alert("협력업체가 성공적으로 등록되었습니다!");
+                document.getElementById('supplierModal').close();
+                // Clear fields
+                document.getElementById('supName').value = '';
+                document.getElementById('supCategories').value = '';
+                document.getElementById('supContact').value = '';
+                document.getElementById('supPhone').value = '';
+
+                loadSuppliers();
+            } catch (e) {
+                console.error(e);
+                alert("에러 발생: " + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '등록하기';
+            }
+        };
 
         const loadSuppliers = async () => {
             const tbody = document.getElementById('suppliersTableBody');
             try {
                 const suppliers = await getAllSuppliers();
                 if (suppliers.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" style="padding: 1rem; text-align: center;">등록된 공급업체가 없습니다.</td></tr>`;
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" style="padding: 1rem; text-align: center;">
+                                <p style="margin-bottom:1rem; color:var(--text-secondary);">등록된 공급업체(협력사)가 없습니다.</p>
+                                <button id="btnInitSuppliers" class="btn-primary" style="background:var(--success, #10B981);">초기 샘플 데이터 생성하기</button>
+                            </td>
+                        </tr>
+                    `;
+                    document.getElementById('btnInitSuppliers').addEventListener('click', async () => {
+                        const btn = document.getElementById('btnInitSuppliers');
+                        btn.disabled = true;
+                        btn.textContent = '데이터 생성 중...';
+                        try {
+                            const { createSupplier } = await import('../services/supplierApi.js');
+                            const sampleData = [
+                                { companyName: "LG하우시스 (베트남법인)", categories: ["인테리어", "마감재"], contactPerson: "김태진 법인장", phone: "090-123-4567" },
+                                { companyName: "KONE 엘리베이터", categories: ["엘리베이터", "기계 설비"], contactPerson: "Nguyen Van A", phone: "091-234-5678" },
+                                { companyName: "호아팟 철강 (Hoa Phat)", categories: ["건축자재", "철강"], contactPerson: "Le Thi B", phone: "093-456-7890" },
+                                { companyName: "삼성 SDS (스마트홈)", categories: ["스마트주차장", "IT/네트워크"], contactPerson: "박성호 팀장", phone: "094-567-8901" },
+                                { companyName: "베트남 소방설비(VinaFire)", categories: ["소방", "안전장비"], contactPerson: "Tran Van C", phone: "096-789-0123" }
+                            ];
+                            for (const s of sampleData) {
+                                await createSupplier(s);
+                            }
+                            alert('샘플 협력업체 데이터 5건이 초기화되었습니다!');
+                            loadSuppliers();
+                        } catch (e) {
+                            console.error(e);
+                            alert("오류 발생: " + e.message);
+                            btn.disabled = false;
+                        }
+                    });
                     return;
                 }
 
                 tbody.innerHTML = '';
                 suppliers.forEach((s, idx) => {
                     // Mock evaluation logic for presentation
-                    const randomAmount = Math.floor(Math.random() * 80) + 10;
+                    const randomAmountVnd = (Math.floor(Math.random() * 80) + 10) * 100000000; // random offset up to 8 billion VND
+                    const fillPercentage = (randomAmountVnd / 10000000000) * 100;
+
                     let e = { label: '보통', color: '#1f2937', bg: '#f3f4f6' };
                     if (idx % 3 === 0) e = { label: '우수', color: '#065f46', bg: '#d1fae5' };
                     if (idx === 4) e = { label: '주의 (클레임)', color: '#991b1b', bg: '#fee2e2' };
@@ -110,9 +264,9 @@
                         <td style="padding: 1rem;">
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
                                 <div style="width: 100px; background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden;">
-                                    <div style="background: var(--primary-color); width: ${(randomAmount / 100) * 100}%; height: 100%;"></div>
+                                    <div style="background: var(--primary-color); width: ${fillPercentage}%; height: 100%;"></div>
                                 </div>
-                                <span style="font-size: 0.85rem; font-weight: 600;">₩ ${randomAmount}M</span>
+                                <span style="font-size: 0.85rem; font-weight: 600;">${randomAmountVnd.toLocaleString()} ₫</span>
                             </div>
                         </td>
                         <td style="padding: 1rem;">${(s.categories || []).join(', ') || '-'}</td>
@@ -138,14 +292,10 @@
             (user) => {
                 document.body.style.display = 'block';
 
-                // Add logout button / User email to header dynamically if header exists
-                const nav = document.querySelector('.main-nav ul');
-                if (nav && !document.getElementById('navUserEmail')) {
-                    const li = document.createElement('li');
-                    li.id = 'navUserEmail';
-                    li.innerHTML = `<span style="margin-left: 1rem; font-size:0.875rem; color:var(--text-secondary);">${user.email}</span>
-                                    <button onclick="window.logoutAndRedirect()" style="margin-left:0.5rem; background:none; border:none; cursor:pointer; color:var(--primary-color); font-weight:bold;">[로그아웃]</button>`;
-                    nav.appendChild(li);
+                // Update display email in our new top-nav
+                const emailSpan = document.getElementById('navUserEmailSpan');
+                if (emailSpan) {
+                    emailSpan.textContent = user.email;
                 }
             },
             () => {

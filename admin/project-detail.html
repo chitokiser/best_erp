@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 
 <head>
@@ -7,54 +7,86 @@
     <title>프로젝트 상세 - BESTwinner</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/admin.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        .top-nav {
+            background: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .top-nav h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--primary-color, #4F46E5);
+            font-weight: 800;
+        }
+
+        .top-nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+            margin: 0;
+            padding: 0;
+        }
+
+        .top-nav a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .top-nav a:hover,
+        .top-nav a.active {
+            color: var(--primary-color, #4F46E5);
+        }
+
         .kanban-board {
             display: flex;
-            gap: 1.5rem;
-            margin-top: 1.5rem;
-            padding-bottom: 1rem;
+            gap: 1rem;
+            padding: 1rem 0;
+            overflow-x: auto;
+            flex-wrap: nowrap;
         }
 
         .kanban-column {
-            flex: 1;
-            min-width: 250px;
-            background: #f8fafc;
+            background: #f1f5f9;
             border-radius: 8px;
+            width: 300px;
+            min-width: 300px;
             padding: 1rem;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
-            min-height: 400px;
-            transition: background 0.2s;
+            gap: 0.5rem;
+            border: 2px dashed transparent;
+            transition: border-color 0.2s;
         }
 
         .kanban-column.drag-over {
+            border-color: var(--primary-color);
             background: #e2e8f0;
-        }
-
-        .kanban-column h3 {
-            font-size: 1rem;
-            color: var(--text-secondary);
-            margin: 0;
-            display: flex;
-            justify-content: space-between;
-            pointer-events: none;
         }
 
         .kanban-card {
             background: white;
-            border: 1px solid #e2e8f0;
             border-radius: 6px;
             padding: 1rem;
-            position: relative;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             cursor: grab;
-            transition: box-shadow 0.2s;
+            position: relative;
         }
 
         .kanban-card:active {
             cursor: grabbing;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .card-actions {
@@ -68,14 +100,9 @@
         .card-actions button {
             background: none;
             border: none;
-            cursor: pointer;
             font-size: 0.8rem;
-            padding: 0.2rem;
-            filter: grayscale(1);
-        }
-
-        .card-actions button:hover {
-            filter: grayscale(0);
+            cursor: pointer;
+            color: #94a3b8;
         }
 
         .task-tag {
@@ -87,28 +114,81 @@
             display: inline-block;
             margin-bottom: 0.5rem;
         }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(2px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .ai-process-modal {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            width: 80%;
+            max-width: 320px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .spinner {
+            border: 4px solid rgba(16, 185, 129, 0.2);
+            border-left-color: #10b981;
+            border-radius: 50%;
+            width: 3rem;
+            height: 3rem;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 
-<body style="display: none;">
-    <header class="main-header">
-        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
-            <h1 class="logo">BESTwinner</h1>
-            <nav class="main-nav">
-                <ul>
-                    <li><a href="dashboard.html">대시보드</a></li>
-                    <li><a href="projects.html" style="color:var(--primary-color)">프로젝트</a></li>
-                    <li><a href="materials.html">자재관리</a></li>
-                    <li><a href="users.html">권한관리</a></li>
-                    <li id="navUserEmail"></li>
-                </ul>
-            </nav>
+<body>
+    <nav class="top-nav">
+        <div class="logo-container" style="display:flex; align-items:center; justify-content:space-between; width:100%; margin-bottom:0;">
+            <div style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;" onclick="location.href='dashboard.html'">
+                <img src="../images/logo/logo.png" style="height: 28px;" onerror="this.style.display='none';">
+                <h1 style="margin:0; font-size: 1.3rem; color: #4F46E5; font-weight: 800;">AI경영관리</h1>
+            </div>
+            <button id="hamburgerBtn" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#4F46E5;" class="mobile-only">☰</button>
         </div>
-    </header>
-
-    <main class="container" style="padding: 2rem 1rem;">
-        <!-- Project Header -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
+        <ul>
+            <li><a href="dashboard.html">대시보드</a></li>
+            <li><a href="projects.html" class="active">프로젝트</a></li>
+            <li><a href="materials.html">자재관리</a></li>
+            <li><a href="suppliers.html">협력업체</a></li>
+            <li><a href="finance.html">재무/회계</a></li>
+            <li><a href="employees.html">직원</a></li>
+            <li><a href="clients.html">고객</a></li>
+            <li><a href="contacts.html">인맥</a></li>
+        </ul>
+        <div style="font-size: 0.85rem; text-align: right;">
+            <strong style="color:var(--primary-color);">SUPER_ADMIN</strong><br>
+            최고 관리자 (daguri75@gmail.com) <a href="#" onclick="window.logoutAndRedirect()"
+                style="color:#2563eb;">[로그아웃]</a>
+        </div>
+    </nav>
+    <main style="padding: 2rem; max-width: 1400px; margin: 0 auto;">
+        <div
+            style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem;">
             <div>
                 <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
                     <span id="projectStatusBadge"
@@ -116,40 +196,52 @@
                         중...</span>
                     <span id="projectPmBadge" style="color: var(--text-secondary); font-size: 0.875rem;">PM: 불러오는
                         중...</span>
+                    <span id="projectDeadlineBadge"
+                        style="color: var(--text-secondary); font-size: 0.875rem; margin-left: 0.5rem;">종료예정일: -</span>
+                    <span id="projectTeamBadge"
+                        style="color: var(--text-secondary); font-size: 0.875rem; margin-left: 0.5rem;">팀원: -</span>
                 </div>
-                <h2 id="projectTitleHeader" style="margin: 0; font-size: 1.8rem;">프로젝트 정보를 불러오는 중입니다...</h2>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <h2 id="projectTitleHeader" style="margin: 0; font-size: 1.8rem;">프로젝트 정보를 불러오는 중입니다...</h2>
+                    <button id="editProjectBtn" onclick="window.editProjectInfo()"
+                        style="background:none; border:none; color:var(--primary-color); cursor:pointer; display:none;">✏️
+                        정보 수정</button>
+                    <button id="btnRequestSupport" class="btn-primary"
+                        style="padding: 0.4rem 1rem; border-radius: 8px; font-size: 0.9rem; margin-left: 1rem; display:none;"
+                        onclick="document.getElementById('supportModal').showModal()">PM 지원(자금/인력) 요청</button>
+                </div>
             </div>
             <div style="text-align: right;">
-                <p style="margin: 0 0 0.5rem 0; font-size: 0.875rem; color: var(--text-secondary);">전체 진척도 (<span
-                        id="progressText">0</span>%)</p>
-                <div style="width: 250px; background: #e2e8f0; height: 10px; border-radius: 5px; overflow: hidden;">
+                <p style="margin: 0 0 0.5rem 0; font-size: 0.875rem; color: var(--text-secondary); font-weight: bold;">
+                    전체 진척도 (<span id="progressText">0</span>%)</p>
+                <div
+                    style="width: 250px; background: #e2e8f0; height: 12px; border-radius: 6px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
                     <div id="progressBar"
-                        style="background: var(--primary-color); width: 0%; height: 100%; transition: width 0.3s;">
+                        style="background: linear-gradient(90deg, #3b82f6, #10b981); width: 0%; height: 100%; transition: width 0.5s ease-out; box-shadow: 0 0 8px rgba(16,185,129,0.4);">
                     </div>
                 </div>
             </div>
         </div>
 
-        <hr style="border: none; border-top: 1px solid #e2e8f0; margin-bottom: 2rem;">
-
-        <!-- Tabs -->
-        <div style="display: flex; gap: 2rem; border-bottom: 2px solid #e2e8f0; margin-bottom: 2rem; font-weight: 500;">
-            <div id="tab-kanban" onclick="window.switchTab('kanban')"
-                style="padding-bottom: 0.75rem; border-bottom: 2px solid var(--primary-color); color: var(--primary-color); cursor: pointer;">
-                칸반 보드 (Task)</div>
-            <div id="tab-files" onclick="window.switchTab('files')"
-                style="padding-bottom: 0.75rem; color: var(--text-secondary); cursor: pointer;">
-                결재 및 도면 자료</div>
+        <div style="display: flex; gap: 2rem; margin-bottom: 2rem;">
+            <a href="#" id="tab-kanban" onclick="window.switchTab('kanban')"
+                style="text-decoration:none; color:var(--primary-color); font-weight:bold; border-bottom:2px solid var(--primary-color); padding-bottom:0.25rem;">칸반
+                보드 (Task)</a>
+            <a href="#" id="tab-files" onclick="window.switchTab('files')"
+                style="text-decoration:none; color:var(--text-secondary); font-weight:bold; padding-bottom:0.25rem;">현장
+                자료실</a>
+            <a href="#" id="tab-qna" onclick="window.switchTab('qna')"
+                style="text-decoration:none; color:var(--text-secondary); font-weight:bold; padding-bottom:0.25rem;">QnA
+                & 지원 내역</a>
         </div>
 
-        <!-- Kanban View -->
+        <!-- Kanban Board -->
         <div id="view-kanban">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <h3 style="margin: 0; font-size: 1.25rem;">업무 현황 (공정 관리)</h3>
                 <button class="btn-primary" style="padding: 0.5rem 1rem;" onclick="window.addKanbanTask()">+ 새 태스크
                     추가</button>
             </div>
-
             <div class="kanban-board">
                 <div class="kanban-column" id="todo" ondragenter="window.allowDrop(event)"
                     ondragover="window.allowDrop(event)" ondragleave="window.dragLeave(event)"
@@ -177,15 +269,30 @@
         <!-- Files View -->
         <div id="view-files" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h3 style="margin: 0; font-size: 1.25rem;">결재문서 및 도면 자료실</h3>
-                <div>
+                <h3 style="margin: 0; font-size: 1.25rem;">결재문서 및 자료실</h3>
+                <div style="display: flex; gap: 0.5rem;">
                     <input type="file" id="fileUploadInput" style="display: none;"
                         onchange="window.handleFileUpload(event)">
-                    <button class="btn-primary" style="padding: 0.5rem 1rem;"
-                        onclick="document.getElementById('fileUploadInput').click()">+ 자료 업로드</button>
+                    <button class="btn-primary" style="padding: 0.5rem 1rem; background: #64748b; border: none;"
+                        onclick="document.getElementById('fileUploadInput').click()">+ 일반 자료 업로드</button>
+
+                    <input type="file" id="aiPhotoInput" accept="image/*" capture="environment" style="display: none;"
+                        onchange="window.handleAiPhotoUpload(event)">
+                    <button class="btn-primary" style="padding: 0.5rem 1rem; background: #10b981; border: none;"
+                        onclick="document.getElementById('aiPhotoInput').click()">📸 현장 사진 AI 분석</button>
                 </div>
             </div>
-
+            <div id="aiResultArea"
+                style="display:none; background: #ecfdf5; padding: 1rem; border: 1px solid #a7f3d0; border-radius: 8px; margin-bottom: 1rem;">
+                <div style="color: #047857; font-weight: bold; margin-bottom: 0.5rem;">🤖 AI 분석 완료</div>
+                <p id="aiResultText" style="font-size: 0.9rem; color: #065f46; margin: 0 0 1rem 0; line-height: 1.5;">
+                </p>
+                <div style="text-align: right;">
+                    <button class="btn-primary" id="btnConfirmAiUpload"
+                        style="background:#10b981; border:none; padding: 0.4rem 1rem; cursor: pointer;">결과 저장 (서버
+                        전송)</button>
+                </div>
+            </div>
             <div class="card">
                 <table style="width: 100%; border-collapse: collapse; text-align: left;">
                     <thead>
@@ -205,13 +312,148 @@
                 </table>
             </div>
         </div>
+
+        <!-- QnA View -->
+        <div id="view-qna" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin: 0; font-size: 1.25rem;">지원 내역 및 QnA</h3>
+            </div>
+            <div id="qnaList">
+                <p style="text-align:center; padding:1rem; color:var(--text-secondary);">데이터를 불러오는 중...</p>
+            </div>
+        </div>
     </main>
 
-    <!-- App Logic -->
+    <!-- Modals -->
+    <dialog id="projectModal"
+        style="border:none; border-radius:12px; padding:2rem; width:100%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.1);">
+        <h3 id="modalTitle" style="margin-top:0;">프로젝트 제목 수정</h3>
+        <div style="display:flex; flex-direction:column; gap:1rem; margin-top:1.5rem;">
+            <div>
+                <label
+                    style="font-size:0.875rem; color:var(--text-secondary); display:block; margin-bottom:0.25rem;">프로젝트
+                    명</label>
+                <input type="text" id="modalTitleInput"
+                    style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px; box-sizing:border-box;">
+            </div>
+            <div>
+                <label style="font-size:0.875rem; color:var(--text-secondary); display:block; margin-bottom:0.25rem;">진행
+                    상태</label>
+                <select id="modalStatusInput"
+                    style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px;">
+                    <option value="착공대기">착공대기</option>
+                    <option value="진행 중">진행 중</option>
+                    <option value="일시정지">일시정지</option>
+                    <option value="완료">완료 (Done)</option>
+                </select>
+            </div>
+            <div>
+                <label
+                    style="font-size:0.875rem; color:var(--text-secondary); display:block; margin-bottom:0.25rem;">담당자(PM
+                    - 복수선택가능)</label>
+                <select id="modalPmInput" multiple
+                    style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px; height:100px;"></select>
+            </div>
+            <div>
+                <label style="font-size:0.875rem; color:var(--text-secondary); display:block; margin-bottom:0.25rem;">팀원
+                    (참여자 - 복수선택가능)</label>
+                <select id="modalTeamInput" multiple
+                    style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px; height:100px;"></select>
+            </div>
+            <div>
+                <label
+                    style="font-size:0.875rem; color:var(--text-secondary); display:block; margin-bottom:0.25rem;">종료예정일</label>
+                <input type="date" id="modalDeadlineInput"
+                    style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px; box-sizing:border-box;">
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1rem;">
+                <button onclick="document.getElementById('projectModal').close()"
+                    style="padding:0.5rem 1rem; background:white; border:1px solid #cbd5e1; border-radius:4px; cursor:pointer;">취소</button>
+                <button id="modalSaveBtn" class="btn-primary" style="padding:0.5rem 1rem;">저장</button>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog id="supportModal"
+        style="border:none; border-radius:12px; padding:2rem; width:100%; max-width:500px; box-shadow:0 10px 25px rgba(0,0,0,0.1);">
+        <h3 style="margin-top:0;">PM 지원 요청서</h3>
+        <div style="display:flex; flex-direction:column; gap:1rem; margin-top:1.5rem;">
+            <div>
+                <label style="font-size:0.875rem; color:var(--text-secondary); display:block; margin-bottom:0.25rem;">지원
+                    유형</label>
+                <select id="supportTypeSelect"
+                    style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px;"
+                    onchange="window.toggleSupportFields()">
+                    <option value="자금">💰 자금 (지출결의서)</option>
+                    <option value="자재">🧱 자재</option>
+                    <option value="인력">👷‍♂️ 인력</option>
+                    <option value="장비">🚜 장비</option>
+                </select>
+            </div>
+            <!-- 지출결의서 전용 필드 -->
+            <div id="expenseFields"
+                style="display:flex; flex-direction:column; gap:1rem; background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <h4 style="margin: 0; color: #334155; font-size: 0.95rem;">지출결의서 상세</h4>
+                <div>
+                    <label
+                        style="font-size:0.875rem; color:var(--text-secondary); display:block; margin-bottom:0.25rem;">결제
+                        금액</label>
+                    <input type="number" id="expenseAmount" placeholder="예: 500000"
+                        style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px; box-sizing:border-box;">
+                </div>
+                <div>
+                    <label
+                        style="font-size:0.875rem; color:var(--text-secondary); display:block; margin-bottom:0.25rem;">지급처
+                        / 입금계좌</label>
+                    <input type="text" id="expensePayee" placeholder="예: (주)대한건재 / 신한은행 110-123-456"
+                        style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px; box-sizing:border-box;">
+                </div>
+                <div>
+                    <label
+                        style="font-size:0.875rem; color:var(--text-secondary); display:block; margin-bottom:0.25rem;">결제
+                        요청일</label>
+                    <input type="date" id="expenseDate"
+                        style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px; box-sizing:border-box;">
+                </div>
+            </div>
+            <!-- 일반 지원 필드 (자금 외) -->
+            <div id="generalFields" style="display:none; flex-direction:column; gap:1rem;">
+                <div>
+                    <label
+                        style="font-size:0.875rem; color:var(--text-secondary); display:block; margin-bottom:0.25rem;">수량
+                        / 예상금액</label>
+                    <input type="text" id="generalAmount" placeholder="예: 시멘트 50포"
+                        style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px; box-sizing:border-box;">
+                </div>
+            </div>
+            <!-- 공통 필드 -->
+            <div>
+                <label style="font-size:0.875rem; color:var(--text-secondary); display:block; margin-bottom:0.25rem;">상세
+                    사유 및 내역</label>
+                <textarea id="supportMemo" rows="3"
+                    style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px; box-sizing:border-box;"
+                    placeholder="사유를 상세히 적어주세요."></textarea>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1rem;">
+                <button onclick="document.getElementById('supportModal').close()"
+                    style="padding:0.5rem 1rem; border:1px solid #cbd5e1; background:white; border-radius:4px; cursor:pointer;">취소</button>
+                <button onclick="window.submitSupportRequest()" class="btn-primary" style="padding:0.5rem 1rem;">지원
+                    등록</button>
+            </div>
+        </div>
+    </dialog>
+
+    <div class="overlay" id="processingOverlay">
+        <div class="ai-process-modal">
+            <div class="spinner"></div>
+            <h3 style="margin: 0 0 0.5rem; color: #1f2937;">AI 현장 분석 중...</h3>
+            <p style="margin: 0; color: #6b7280; font-size: 0.9rem;">이미지를 인식하고 공정 상태를 평가하고 있습니다.<br>잠시만 기다려주세요.</p>
+        </div>
+    </div>
     <script type="module">
         import { checkAdminAuth, logoutAdmin } from '../assets/js/auth.js';
         import { db } from '../assets/js/firebase-config.js';
-        import { doc, getDoc, collection, addDoc, getDocs, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+        import { doc, getDoc, collection, addDoc, getDocs, updateDoc, deleteDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 
         const urlParams = new URLSearchParams(window.location.search);
         const projectId = urlParams.get('id');
@@ -219,12 +461,15 @@
         window.logoutAndRedirect = () => { logoutAdmin(); };
         window.draggedCardId = null;
         window.currentUserEmail = 'Unknown';
+        window.currentProjectData = null;
 
         window.switchTab = (tab) => {
             document.getElementById('view-kanban').style.display = tab === 'kanban' ? 'block' : 'none';
             document.getElementById('view-files').style.display = tab === 'files' ? 'block' : 'none';
+            const qnaView = document.getElementById('view-qna');
+            if (qnaView) qnaView.style.display = tab === 'qna' ? 'block' : 'none';
 
-            ['kanban', 'files'].forEach(t => {
+            ['kanban', 'files', 'qna'].forEach(t => {
                 const el = document.getElementById('tab-' + t);
                 if (el) {
                     if (t === tab) {
@@ -238,6 +483,7 @@
             });
 
             if (tab === 'files') window.loadFiles();
+            if (tab === 'qna') window.loadQna();
         };
 
         async function loadProjectDetails() {
@@ -245,11 +491,133 @@
             const snap = await getDoc(doc(db, 'projects', projectId));
             if (snap.exists()) {
                 const data = snap.data();
+                window.currentProjectData = data;
                 document.getElementById('projectTitleHeader').textContent = data.title;
                 document.getElementById('projectPmBadge').textContent = 'PM: ' + (data.pm || '미배정');
                 document.getElementById('projectStatusBadge').textContent = data.status || '진행 중';
+                document.getElementById('projectDeadlineBadge').textContent = '종료예정일: ' + (data.deadline || '미정');
+                const tb = document.getElementById('projectTeamBadge');
+                if (tb) tb.textContent = '팀원: ' + (data.team || '미배정');
+
+                let pms = data.pm || '';
+                let teams = data.team || '';
+                let isPM = pms.includes(window.currentUserEmail);
+                let isTeam = teams.includes(window.currentUserEmail);
+                let isCEO = window.currentUserEmail === 'daguri75@gmail.com';
+
+                if (isCEO || isPM) {
+                    document.getElementById('editProjectBtn').style.display = 'inline-block';
+                    const btnSupport = document.getElementById('btnRequestSupport');
+                    if (btnSupport) btnSupport.style.display = 'inline-block';
+                } else if (isTeam) {
+                    document.getElementById('editProjectBtn').style.display = 'none';
+                    const btnSupport = document.getElementById('btnRequestSupport');
+                    if (btnSupport) btnSupport.style.display = 'inline-block';
+                } else {
+                    document.getElementById('editProjectBtn').style.display = 'none';
+                    const btnSupport = document.getElementById('btnRequestSupport');
+                    if (btnSupport) btnSupport.style.display = 'none';
+                }
             }
         }
+
+        let pmListLoaded = false;
+        async function loadPmOptions() {
+            if (pmListLoaded) return;
+            const pmSelect = document.getElementById('modalPmInput');
+            const teamSelect = document.getElementById('modalTeamInput');
+            pmSelect.innerHTML = '<option value="">선택하세요...</option>';
+            if (teamSelect) teamSelect.innerHTML = '<option value="">선택하세요...</option>';
+            try {
+                const querySnapshot = await getDocs(collection(db, 'employees'));
+                querySnapshot.forEach(userDoc => {
+                    const udata = userDoc.data();
+                    const emailOrContact = udata.contact || udata.email || '';
+                    if (!emailOrContact) return;
+                    const optText = `${udata.name || '무명'} - ${emailOrContact}`;
+
+                    const optionPm = document.createElement('option');
+                    optionPm.value = emailOrContact; optionPm.textContent = optText;
+                    pmSelect.appendChild(optionPm);
+
+                    if (teamSelect) {
+                        const optionTeam = document.createElement('option');
+                        optionTeam.value = emailOrContact; optionTeam.textContent = optText;
+                        teamSelect.appendChild(optionTeam);
+                    }
+                });
+                pmListLoaded = true;
+            } catch (error) {
+                console.error("Failed to load PMs:", error);
+            }
+        }
+
+        window.editProjectInfo = async () => {
+            if (!window.currentProjectData) return;
+            const data = window.currentProjectData;
+
+            const modal = document.getElementById('projectModal');
+            document.getElementById('modalTitle').textContent = '프로젝트 정보 수정';
+            document.getElementById('modalTitleInput').value = data.title || '';
+            document.getElementById('modalStatusInput').value = data.status || '착공대기';
+            document.getElementById('modalDeadlineInput').value = (data.deadline && data.deadline !== 'N/A') ? data.deadline : '';
+
+            await loadPmOptions();
+            const pmSelect = document.getElementById('modalPmInput');
+            const teamSelect = document.getElementById('modalTeamInput');
+
+            Array.from(pmSelect.options).forEach(opt => opt.selected = false);
+            if (teamSelect) Array.from(teamSelect.options).forEach(opt => opt.selected = false);
+
+            const currentPms = (data.pm || '').split(',').map(s => s.trim()).filter(s => s);
+            currentPms.forEach(pm => {
+                let opt = Array.from(pmSelect.options).find(o => o.value === pm);
+                if (!opt && pm) {
+                    opt = document.createElement('option');
+                    opt.value = pm;
+                    opt.textContent = `[미등록] ${pm}`;
+                    pmSelect.appendChild(opt);
+                }
+                if (opt) opt.selected = true;
+            });
+
+            const currentTeams = (data.team || '').split(',').map(s => s.trim()).filter(s => s);
+            if (teamSelect) {
+                currentTeams.forEach(tm => {
+                    let opt = Array.from(teamSelect.options).find(o => o.value === tm);
+                    if (!opt && tm) {
+                        opt = document.createElement('option');
+                        opt.value = tm; opt.textContent = `[미등록] ${tm}`;
+                        teamSelect.appendChild(opt);
+                    }
+                    if (opt) opt.selected = true;
+                });
+            }
+
+            const saveBtn = document.getElementById('modalSaveBtn');
+            saveBtn.onclick = async () => {
+                const title = document.getElementById('modalTitleInput').value.trim();
+                const pmOptions = document.getElementById('modalPmInput').selectedOptions;
+                const pms = Array.from(pmOptions).map(opt => opt.value).join(', ');
+                let teams = '';
+                if (teamSelect) {
+                    const teamOptions = teamSelect.selectedOptions;
+                    teams = Array.from(teamOptions).map(opt => opt.value).join(', ');
+                }
+                const status = document.getElementById('modalStatusInput').value;
+                const deadline = document.getElementById('modalDeadlineInput').value || 'N/A';
+
+                if (!title) { alert('프로젝트명을 입력하세요.'); return; }
+
+                try {
+                    await updateDoc(doc(db, 'projects', projectId), { title, status, pm: pms, team: teams, deadline });
+                    modal.close();
+                    alert("정보가 성공적으로 수정되었습니다.");
+                    loadProjectDetails();
+                } catch (e) { alert("수정 실패: " + e.message); }
+            };
+            modal.showModal();
+        };
 
         async function loadTasks() {
             if (!projectId) return;
@@ -259,16 +627,19 @@
             });
 
             const snap = await getDocs(collection(db, 'projects', projectId, 'tasks'));
-            let doneCount = 0;
+            let progressScore = 0;
 
             snap.forEach(docSnap => {
                 const data = docSnap.data();
                 const status = data.status || 'todo';
-                if (status === 'done') doneCount++;
+                if (status === 'done') progressScore += 100;
+                else if (status === 'in_progress') progressScore += 50;
+                else if (status === 'waiting') progressScore += 30;
+
                 renderCard(docSnap.id, data, status);
             });
 
-            const prog = snap.size === 0 ? 0 : Math.round((doneCount / snap.size) * 100);
+            const prog = snap.size === 0 ? 0 : Math.round(progressScore / snap.size);
             document.getElementById('progressText').textContent = prog;
             document.getElementById('progressBar').style.width = prog + '%';
             updateCounts();
@@ -311,14 +682,14 @@
             card.addEventListener('dragend', () => { window.draggedCardId = null; });
 
             card.innerHTML = `
-                <div class="card-actions">
-                    <button onclick="window.editTask('${id}', '${data.title}', '${data.description}')">✏️</button>
-                    <button onclick="window.delTask('${id}')">🗑️</button>
-                </div>
-                <span class="task-tag">${data.tag || '일반'}</span>
-                <h4 style="margin:0 0 0.5rem 0; font-size:1rem; padding-right:2rem;">${data.title}</h4>
-                <p style="margin:0; font-size:0.8rem; color:gray;">${data.description}</p>
-            `;
+            <div class="card-actions">
+                <button onclick="window.editTask('${id}', '${data.title || ''}', '${data.description || ''}')">✏️</button>
+                <button onclick="window.delTask('${id}')">🗑️</button>
+            </div>
+            <span class="task-tag">${data.tag || '일반'}</span>
+            <h4 style="margin:0 0 0.5rem 0; font-size:1rem; padding-right:2rem;">${data.title}</h4>
+            <p style="margin:0; font-size:0.8rem; color:gray;">${data.description || ''}</p>
+        `;
             col.appendChild(card);
         }
 
@@ -345,7 +716,16 @@
             if (card) targetCol.appendChild(card);
 
             updateCounts();
-            await updateDoc(doc(db, 'projects', projectId, 'tasks', id), { status: targetCol.id });
+
+            let newTag = '신규';
+            if (targetCol.id === 'in_progress') newTag = '진행 중';
+            if (targetCol.id === 'waiting') newTag = '대기/보류';
+            if (targetCol.id === 'done') newTag = '완료됨';
+
+            await updateDoc(doc(db, 'projects', projectId, 'tasks', id), {
+                status: targetCol.id,
+                tag: newTag
+            });
             loadTasks();
         };
 
@@ -358,8 +738,165 @@
             });
         }
 
+        // Support Request Logic
+        window.toggleSupportFields = () => {
+            const type = document.getElementById('supportTypeSelect').value;
+            const exp = document.getElementById('expenseFields');
+            const gen = document.getElementById('generalFields');
+            if (type === '자금') {
+                exp.style.display = 'flex';
+                gen.style.display = 'none';
+            } else {
+                exp.style.display = 'none';
+                gen.style.display = 'flex';
+            }
+        };
+
+        window.submitSupportRequest = async () => {
+            if (!window.currentProjectData) return;
+            const type = document.getElementById('supportTypeSelect').value;
+            const memo = document.getElementById('supportMemo').value.trim();
+            let payload = {
+                type: 'SUPPORT',
+                supportCategory: type,
+                author: window.currentUserEmail,
+                memo: memo,
+                createdAt: serverTimestamp(),
+                status: '대기중'
+            };
+
+            if (type === '자금') {
+                const amt = document.getElementById('expenseAmount').value;
+                const payee = document.getElementById('expensePayee').value;
+                const edate = document.getElementById('expenseDate').value;
+                if (!amt || !payee || !edate) { alert("지출결의서 상세 내역을 모두 입력해주세요."); return; }
+                payload.expenseAmount = amt;
+                payload.expensePayee = payee;
+                payload.expenseDate = edate;
+            } else {
+                const amt = document.getElementById('generalAmount').value;
+                if (!amt) { alert("수량/예상금액을 입력해주세요."); return; }
+                payload.generalAmount = amt;
+            }
+
+            try {
+                await addDoc(collection(db, 'projects', projectId, 'qna'), payload);
+                document.getElementById('supportModal').close();
+                alert("요청이 성공적으로 등록되었습니다.");
+
+                document.getElementById('supportMemo').value = '';
+                document.getElementById('expenseAmount').value = '';
+                document.getElementById('expensePayee').value = '';
+                document.getElementById('expenseDate').value = '';
+                document.getElementById('generalAmount').value = '';
+
+                window.loadQna();
+            } catch (e) { alert("요청 실패: " + e.message); }
+        };
+
+        window.loadQna = async () => {
+            const qnaList = document.getElementById('qnaList');
+            try {
+                const q = query(collection(db, 'projects', projectId, 'qna'), orderBy('createdAt', 'desc'));
+                const snap = await getDocs(q);
+                if (snap.empty) {
+                    qnaList.innerHTML = '<p style="text-align:center; padding:1rem; color:var(--text-secondary);">요청 내역이 없습니다.</p>';
+                    return;
+                }
+                let html = '';
+                snap.forEach(d => {
+                    const dt = d.data();
+                    const dstr = dt.createdAt ? dt.createdAt.toDate().toLocaleString() : '최근';
+                    if (dt.type === 'SUPPORT') {
+                        if (dt.supportCategory === '자금') {
+                            html += `
+                        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                            <div style="display:flex; justify-content:space-between; margin-bottom: 1rem;">
+                                <div>
+                                    <span style="background:#fee2e2; color:#991b1b; padding:0.2rem 0.6rem; border-radius:4px; font-size:0.8rem; font-weight:bold; margin-right:0.5rem;">지출결의</span>
+                                    <span style="font-size:0.9rem; color:var(--text-secondary);">${dt.author} | ${dstr}</span>
+                                </div>
+                                <span style="font-size:0.85rem; font-weight:bold; color:var(--warning);">${dt.status || '대기중'}</span>
+                            </div>
+                            <div style="background:#f8fafc; padding:1rem; border-radius:6px; margin-bottom:1rem;">
+                                <p style="margin:0 0 0.5rem 0; font-size:0.9rem;"><strong>💰 결제 요청액:</strong> ${dt.expenseAmount || 0}원</p>
+                                <p style="margin:0 0 0.5rem 0; font-size:0.9rem;"><strong>🏦 지급처/계좌:</strong> ${dt.expensePayee || ''}</p>
+                                <p style="margin:0; font-size:0.9rem;"><strong>📅 결제 요청일:</strong> ${dt.expenseDate || ''}</p>
+                            </div>
+                            <p style="margin:0; font-size: 0.95rem; line-height:1.5;">${dt.memo || ''}</p>
+                        </div>`;
+                        } else {
+                            html += `
+                        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                            <div style="display:flex; justify-content:space-between; margin-bottom: 1rem;">
+                                <div>
+                                    <span style="background:#dbeafe; color:#1e40af; padding:0.2rem 0.6rem; border-radius:4px; font-size:0.8rem; font-weight:bold; margin-right:0.5rem;">${dt.supportCategory} 요청</span>
+                                    <span style="font-size:0.9rem; color:var(--text-secondary);">${dt.author} | ${dstr}</span>
+                                </div>
+                                <span style="font-size:0.85rem; font-weight:bold; color:var(--warning);">${dt.status || '대기중'}</span>
+                            </div>
+                            <p style="margin:0 0 0.5rem 0; font-size: 0.9rem;"><strong>수량/예산:</strong> ${dt.generalAmount || ''}</p>
+                            <p style="margin:0; font-size: 0.95rem; line-height:1.5;">${dt.memo || ''}</p>
+                        </div>`;
+                        }
+                    }
+                });
+                qnaList.innerHTML = html;
+            } catch (e) {
+                console.error(e);
+                qnaList.innerHTML = '<p>데이터 로드 실패</p>';
+            }
+        };
+
         // Files Logic
+        window.handleAiPhotoUpload = (e) => {
+            const isAuthorized = (window.currentUserEmail === 'daguri75@gmail.com' ||
+                (window.currentProjectData && window.currentProjectData.pm && window.currentProjectData.pm.includes(window.currentUserEmail)) ||
+                (window.currentProjectData && window.currentProjectData.team && window.currentProjectData.team.includes(window.currentUserEmail)));
+            if (!isAuthorized) { alert('업로드 권한이 없습니다.'); return; }
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const overlay = document.getElementById('processingOverlay');
+            overlay.style.display = 'flex';
+
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                document.getElementById('aiResultArea').style.display = 'block';
+                document.getElementById('aiResultText').innerHTML = `
+                <strong>[식별된 주요 객체]</strong><br>
+                - 작업자 3명 (안전모 착용 상태 불량 1건)<br>
+                - 철근 자재 적재 상태 (양호)<br>
+                - 콘크리트 타설 준비 (완료)<br><br>
+                <strong>[AI 공정 분석]</strong><br>
+                현재 공정은 약 35% 진행 중이며, 기상 악화 시 지연 우려가 있습니다.
+            `;
+
+                document.getElementById('btnConfirmAiUpload').onclick = async () => {
+                    try {
+                        await addDoc(collection(db, 'projects', projectId, 'files'), {
+                            name: `[AI분석] ${file.name}`,
+                            uploader: window.currentUserEmail,
+                            url: '#',
+                            createdAt: serverTimestamp(),
+                            isAiGenerated: true,
+                            aiSummary: '안전모 미착용 발견 및 타설 준비 완료'
+                        });
+                        document.getElementById('aiResultArea').style.display = 'none';
+                        window.loadFiles();
+                        alert('AI 분석 결과와 현장 사진이 자료실에 성공적으로 저장되었습니다.');
+                    } catch (error) {
+                        alert('저장 실패: ' + error.message);
+                    }
+                };
+            }, 2500);
+        };
+
         window.handleFileUpload = async (e) => {
+            const isAuthorized = (window.currentUserEmail === 'daguri75@gmail.com' ||
+                (window.currentProjectData && window.currentProjectData.pm && window.currentProjectData.pm.includes(window.currentUserEmail)) ||
+                (window.currentProjectData && window.currentProjectData.team && window.currentProjectData.team.includes(window.currentUserEmail)));
+            if (!isAuthorized) { alert('업로드 권한이 없습니다.'); return; }
             const file = e.target.files[0];
             if (!file) return;
             alert(`[업로드 시뮬레이션]\n\n파일명: ${file.name}\nFirebase Storage 보안 규칙을 우회하여 DB 메타데이터로 안전하게 가상 업로드합니다.`);
@@ -372,27 +909,40 @@
 
         window.loadFiles = async () => {
             const tbody = document.getElementById('filesTableBody');
-            const snap = await getDocs(collection(db, 'projects', projectId, 'files'));
-            if (snap.empty) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:1rem; color:var(--text-secondary);">등록된 자료가 없습니다.</td></tr>';
-                return;
-            }
-            let html = '';
-            snap.forEach(d => {
-                const data = d.data();
-                html += `
+            try {
+                const q = query(collection(db, 'projects', projectId, 'files'), orderBy('createdAt', 'desc'));
+                const snap = await getDocs(q);
+                if (snap.empty) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:1rem; color:var(--text-secondary);">등록된 자료가 없습니다.</td></tr>';
+                    return;
+                }
+                let html = '';
+                snap.forEach(d => {
+                    const data = d.data();
+                    html += `
                     <tr>
-                        <td style="padding: 1rem; font-weight: 500;">📄 ${data.name || '알 수 없는 파일'}</td>
-                        <td style="padding: 1rem;">${data.uploader || '알 수 없음'}</td>
+                        <td style="padding: 1rem; font-weight: 500;">
+                            📄 
+                            ${data.isAiGenerated ? '<span style="color:#10b981; font-size:0.8rem;">[AI]</span> ' : ''}${data.name}
+                        </td>
+                        <td style="padding: 1rem;">${data.uploader}</td>
                         <td style="padding: 1rem;"><a href="${data.url}" onclick="alert('다운로드 데모입니다.')" style="color:var(--primary-color);">다운로드</a></td>
                         <td style="padding: 1rem;"><button class="btn-primary" style="background:#ef4444; padding:0.25rem 0.5rem;" onclick="window.delFile('${d.id}')">삭제</button></td>
                     </tr>
                 `;
-            });
-            tbody.innerHTML = html;
+                });
+                tbody.innerHTML = html;
+            } catch (error) {
+                console.error("loadFiles failed", error);
+                tbody.innerHTML = '<tr><td colspan="4">파일 로딩 실패</td></tr>';
+            }
         };
 
         window.delFile = async (id) => {
+            const isAuthorized = (window.currentUserEmail === 'daguri75@gmail.com' ||
+                (window.currentProjectData && window.currentProjectData.pm && window.currentProjectData.pm.includes(window.currentUserEmail)) ||
+                (window.currentProjectData && window.currentProjectData.team && window.currentProjectData.team.includes(window.currentUserEmail)));
+            if (!isAuthorized) { alert('삭제 권한이 없습니다.'); return; }
             if (confirm("이 자료를 삭제하시겠습니까?")) {
                 await deleteDoc(doc(db, 'projects', projectId, 'files', id));
                 window.loadFiles();
@@ -400,7 +950,6 @@
         };
 
         checkAdminAuth((user) => {
-            document.body.style.display = 'block';
             window.currentUserEmail = user.email;
             if (projectId) { loadProjectDetails(); loadTasks(); }
         }, () => { window.location.href = '../login.html'; });

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>현장 업무 - AI-ERM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>:root{--ai-primary:#4f46e5;--ai-secondary:#818cf8;--success:#10b981;--bg-body:#f8fafc;--text-main:#1e293b}body{background-color:var(--bg-body);color:var(--text-main);-webkit-tap-highlight-color:transparent;margin:0;padding:0;font-family:Inter,sans-serif}.mobile-container{background:#fff;flex-direction:column;max-width:480px;min-height:100vh;margin:0 auto;display:flex;position:relative;box-shadow:0 0 20px #0000000d}.mobile-header{color:#fff;z-index:10;background:linear-gradient(135deg,#4f46e5,#6366f1);border-bottom-right-radius:20px;border-bottom-left-radius:20px;padding:1.25rem 1rem;position:sticky;top:0;box-shadow:0 4px 6px -1px #4f46e533}.header-title{margin:0;font-size:1.25rem;font-weight:700}.header-subtitle{opacity:.9;margin-top:.25rem;font-size:.8rem}.mobile-content{flex:1;padding:1.5rem 1rem}.section-title{justify-content:space-between;align-items:center;margin-bottom:1rem;font-size:1.1rem;font-weight:700;display:flex}.task-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:1rem;padding:1rem;position:relative;box-shadow:0 2px 4px #00000005}.task-header{justify-content:space-between;align-items:center;margin-bottom:.75rem;display:flex}.project-badge{color:var(--ai-primary);background:#e0e7ff;border-radius:4px;padding:.25rem .5rem;font-size:.75rem;font-weight:600}.task-checklist{margin:0;padding:0;list-style:none}.task-checklist li{border-bottom:1px solid #f1f5f9;align-items:center;gap:.75rem;padding:.75rem 0;font-size:.95rem;font-weight:500;display:flex}.task-checklist li:last-child{border-bottom:none}.check-circle{cursor:pointer;border:2px solid #cbd5e1;border-radius:50%;width:22px;height:22px;transition:all .2s;display:inline-block}.check-circle.completed{background:var(--success);border-color:var(--success);position:relative}.check-circle.completed:after{content:"✓";color:#fff;font-size:.8rem;font-weight:700;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}.ai-upload-box{text-align:center;cursor:pointer;background:#f8fafc;border:2px dashed #94a3b8;border-radius:12px;margin-top:1.5rem;padding:2rem 1rem;transition:all .2s}.ai-upload-box:active{background:#e2e8f0}.ai-upload-icon{margin-bottom:.5rem;font-size:2.5rem;display:block}.ai-upload-text{color:var(--ai-primary);font-size:1.1rem;font-weight:600}.ai-upload-desc{color:#64748b;margin-top:.25rem;font-size:.8rem}.overlay{-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);z-index:50;background:#0009;justify-content:center;align-items:center;display:none;position:fixed;inset:0}.ai-process-modal{text-align:center;background:#fff;border-radius:16px;width:80%;max-width:320px;padding:2rem;box-shadow:0 20px 25px -5px #0000001a}.spinner{border:4px solid #4f46e533;border-left-color:var(--ai-primary);border-radius:50%;width:3rem;height:3rem;margin:0 auto 1.5rem;animation:1s linear infinite spin}@keyframes spin{0%{transform:rotate(0)}to{transform:rotate(360deg)}}#mobilePhotoInput{display:none}.bottom-nav{z-index:10;background:#fff;border-top:1px solid #e2e8f0;justify-content:space-around;padding:1rem 0;display:flex;position:sticky;bottom:0;box-shadow:0 -4px 6px -1px #00000005}.nav-item{color:#94a3b8;flex-direction:column;align-items:center;gap:.25rem;font-size:.75rem;font-weight:500;text-decoration:none;display:flex}.nav-item.active{color:var(--ai-primary)}</style>
+  <script type="module" crossorigin src="/assets/mobile-task-DglZMgHR.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/firebase-config-3n4qqNPS.js">
+  <link rel="modulepreload" crossorigin href="/assets/action-handler-DZe2CSQ4.js">
+</head>
+
+<body>
+    <div class="mobile-container">
+        <!-- Header -->
+        <header class="mobile-header">
+            <h1 class="header-title">오늘의 현장 업무</h1>
+            <div class="header-subtitle" id="currentDate">2026.09.27 (목)</div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="mobile-content">
+            <div class="section-title">
+                할당된 프로젝트 <span
+                    style="font-size:0.8rem; background:#fee2e2; color:#b91c1c; padding:0.2rem 0.6rem; border-radius:12px;">마감
+                    임박 1건</span>
+            </div>
+
+            <div class="task-card">
+                <div class="task-header">
+                    <span class="project-badge">P-001 신사동 현장</span>
+                    <span style="font-size:0.8rem; color:#64748b;">진행률 42%</span>
+                </div>
+                <ul class="task-checklist">
+                    <li>
+                        <div class="check-circle completed"></div> 오전 현장 상황 파악
+                    </li>
+                    <li>
+                        <div class="check-circle" onclick="this.classList.toggle('completed')"></div> 자재(철근) 입고 확인
+                    </li>
+                    <li>
+                        <div class="check-circle" onclick="this.classList.toggle('completed')"></div> 사진 및 특이사항 업로드
+                    </li>
+                </ul>
+            </div>
+
+            <!-- AI Photo Input Box -->
+            <div class="section-title" style="margin-top:2rem;">AI 간편 등록</div>
+            <div class="ai-upload-box" id="aiUploadTrigger" style="position:relative; overflow:hidden;">
+        <!-- Hidden but actually clickable file input for strict mobile browsers -->
+        <input type="file" id="mobilePhotoInput" accept="image/*" style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer;" />
+                <span class="ai-upload-icon">📸</span>
+                <div class="ai-upload-text">현장 사진 촬영 / 업로드</div>
+                <div class="ai-upload-desc">송장이나 현장을 찍으면 AI가 자동으로 기록합니다.</div>
+            </div>
+
+            <!-- System Hidden File Input (supports camera on mobile) -->
+            <input type="file" id="mobilePhotoInput" accept="image/*" capture="environment" />
+
+            <div id="aiResultArea"
+                style="margin-top: 1.5rem; display:none; background: #ECFDF5; padding: 1rem; border: 1px solid #A7F3D0; border-radius: 12px;">
+                <div style="color: #047857; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.95rem;">🤖 AI 데이터 추출
+                    완료</div>
+                <p id="aiResultText" style="font-size: 0.85rem; color: #065F46; line-height: 1.5; margin:0;"></p>
+                <div style="margin-top: 0.75rem; text-align:right;">
+                    <button
+                        style="background:var(--success); color:white; border:none; padding:0.4rem 1rem; border-radius:6px; font-size:0.85rem; cursor:pointer;">데이터
+                        확정 (서버전송)</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item active">
+                <span style="font-size:1.25rem;">📋</span>홈
+            </a>
+            <a href="#" class="nav-item">
+                <span style="font-size:1.25rem;">📦</span>자재현황
+            </a>
+            <a href="index.html" class="nav-item">
+                <span style="font-size:1.25rem;">🏠</span>PC전환
+            </a>
+        </nav>
+    </div>
+
+    <!-- AI Processing Modal -->
+    <div class="overlay" id="processingOverlay">
+        <div class="ai-process-modal">
+            <div class="spinner"></div>
+            <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">AI가 이미지를<br>분석하고 있습니다</h3>
+            <p style="margin: 0; font-size: 0.85rem; color: #64748b;">자재 및 공정 정보를 자동으로 추출합니다..</p>
+        </div>
+    </div>
+
+</body>
+
+</html>

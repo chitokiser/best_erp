@@ -4,63 +4,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>프로젝트 관리 - BEST Group ERP</title>
+    <title>프로젝트 관리 - AI CEO MANAGER</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
+    <style>
+        :root {
+            --ai-primary: #4F46E5;
+            --ai-secondary: #818CF8;
+            --ai-gradient: linear-gradient(135deg, #4F46E5, #7C3AED);
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --success: #10B981;
+            --vip: #8B5CF6;
+            --text-dark: #1E293B;
+            --text-muted: #64748B;
+            --bg-glass: rgba(255, 255, 255, 0.85);
+        }
+
+        body {
+            background: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--text-dark);
+            display: none;
+            /* auth check 시 보이게 변경 */
+        }
+
+        .top-nav {
+            background: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .top-nav h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--ai-primary);
+            font-weight: 800;
+        }
+
+        .top-nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+            margin: 0;
+            padding: 0;
+        }
+
+        .top-nav a {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .top-nav a:hover,
+        .top-nav a.active {
+            color: var(--ai-primary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .panel-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-dark);
+        }
+
+        .btn-primary {
+            background: var(--ai-gradient);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.6rem 1.2rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th,
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            font-weight: 700;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        td {
+            font-size: 0.95rem;
+        }
+
+        .badge-status {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+    </style>
 </head>
 
-<body style="background-color: var(--background-color); display: none;">
-    <div id="dashboardSection">
-        <header class="main-header" style="box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <div class="container"
-                style="display: flex; justify-content: space-between; align-items: center; padding: 1rem;">
-                <h1 style="color: var(--primary-color); margin: 0;">BEST Group</h1>
-                <nav class="main-nav">
-                    <ul
-                        style="display: flex; gap: 1.5rem; list-style: none; margin: 0; padding: 0; align-items: center;">
-                        <li><a href="dashboard.html">대시보드</a></li>
-                        <li><a href="projects.html" style="color:var(--primary-color); font-weight:bold;">프로젝트</a></li>
-                        <li><a href="../materials.html">자재 DB</a></li>
-                        <li><a href="suppliers.html">협력업체</a></li>
-                        <li><a href="users.html">권한관리</a></li>
-                        <li id="navUserEmail"></li>
-                    </ul>
-                </nav>
+<body>
+    <!-- Navigation -->
+    <nav class="top-nav">
+        <div class="logo-container" style="display:flex; align-items:center; justify-content:space-between; width:100%; margin-bottom:0;">
+            <div style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;" onclick="location.href='dashboard.html'">
+                <img src="../images/logo/logo.png" style="height: 28px;" onerror="this.style.display='none';">
+                <h1 style="margin:0; font-size: 1.3rem; color: #4F46E5; font-weight: 800;">AI경영관리</h1>
             </div>
-        </header>
+            <button id="hamburgerBtn" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#4F46E5;" class="mobile-only">☰</button>
+        </div>
+        <ul>
+            <li><a href="dashboard.html">대시보드</a></li>
+            <li><a href="projects.html" class="active">프로젝트</a></li>
+            <li><a href="materials.html">자재관리</a></li>
+            <li><a href="suppliers.html">협력업체</a></li>
+            <li><a href="finance.html">재무/회계</a></li>
+            <li><a href="employees.html">직원</a></li>
+            <li><a href="clients.html">고객</a></li>
+            <li><a href="contacts.html">인맥</a></li>
+        </ul>
+        <div style="font-size: 0.85rem; text-align: right;">
+            <strong style="color:var(--ai-primary);" id="currentUserEmail">SUPER_ADMIN</strong><br>
+            최고 관리자 <a href="#" onclick="window.logoutAndRedirect()" style="color:#2563eb;">[로그아웃]</a>
+        </div>
+    </nav>
 
-        <main class="container" style="padding: 2rem 1rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <!-- Main Content -->
+    <main class="container">
+        <div class="panel">
+            <div class="panel-header">
                 <h2>프로젝트 (현장) 관리</h2>
                 <button class="btn-primary" onclick="window.createProject()">+ 새 프로젝트 파트너 할당</button>
             </div>
 
-            <div class="card" style="margin-bottom: 2rem;">
-                <table style="width: 100%; border-collapse: collapse; text-align: left;">
-                    <thead>
-                        <tr style="border-bottom: 2px solid var(--border-color);">
-                            <th style="padding: 1rem;">프로젝트 명</th>
-                            <th style="padding: 1rem;">진행 단계</th>
-                            <th style="padding: 1rem;">담당자(PM)</th>
-                            <th style="padding: 1rem;">종료 예정일</th>
-                            <th style="padding: 1rem;">관리</th>
-                        </tr>
-                    </thead>
-                    <tbody id="projectsTableBody">
-                        <tr>
-                            <td colspan="5" style="text-align:center; padding: 1rem; color: var(--text-secondary);">
-                                데이터를 불러오는 중...
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </main>
-    </div>
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr>
+                        <th>프로젝트 명</th>
+                        <th>진행 단계</th>
+                        <th>담당자(PM)</th>
+                        <th>종료 예정일</th>
+                        <th>관리</th>
+                    </tr>
+                </thead>
+                <tbody id="projectsTableBody">
+                    <tr>
+                        <td colspan="5" style="text-align:center; padding: 2rem; color: var(--text-muted);">
+                            데이터를 불러오는 중...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
 
     <script type="module">
         import { checkAdminAuth, logoutAdmin } from '../assets/js/auth.js';
         import { db } from '../assets/js/firebase-config.js';
-        import { collection, getDocs, updateDoc, doc, addDoc } from 'firebase/firestore';
+        import { collection, getDocs, addDoc } from 'firebase/firestore';
 
         window.logoutAndRedirect = () => {
             logoutAdmin();
@@ -90,23 +232,15 @@
         checkAdminAuth(
             async (user) => {
                 document.body.style.display = 'block';
-                const tbody = document.getElementById('projectsTableBody');
+                document.getElementById('currentUserEmail').textContent = user.email;
 
-                // Set Header
-                const nav = document.querySelector('.main-nav ul');
-                if (nav && !document.getElementById('navUserEmail')) {
-                    const li = document.createElement('li');
-                    li.id = 'navUserEmail';
-                    li.innerHTML = `<span style="margin-left: 1rem; font-size:0.875rem; color:var(--text-secondary);">${user.email}</span>
-                                    <button onclick="window.logoutAndRedirect()" style="margin-left:0.5rem; background:none; border:none; cursor:pointer; color:var(--primary-color); font-weight:bold;">[로그아웃]</button>`;
-                    nav.appendChild(li);
-                }
+                const tbody = document.getElementById('projectsTableBody');
 
                 // Load Projects
                 try {
                     const querySnapshot = await getDocs(collection(db, 'projects'));
                     if (querySnapshot.empty) {
-                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 1rem; color: var(--text-secondary);">생성된 프로젝트가 없습니다.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 2rem; color: var(--text-muted);">생성된 프로젝트가 없습니다.</td></tr>';
                         return;
                     }
 
@@ -116,25 +250,25 @@
                         const id = docSnap.id;
                         html += `
                             <tr>
-                                <td style="padding: 1rem; font-weight: 500;">
-                                    <a href="project-detail.html?id=${id}" style="color:var(--primary-color); text-decoration:none;">${data.title || '무제 프로젝트'}</a>
+                                <td style="padding: 1rem; font-weight: 600;">
+                                    <a href="project-detail.html?id=${id}" style="color:var(--ai-primary); text-decoration:none;">${data.title || '무제 프로젝트'}</a>
                                 </td>
                                 <td style="padding: 1rem;">
-                                    <span style="background: #e0f2fe; color: #0369a1; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight:bold;">
+                                    <span class="badge-status">
                                         ${data.status || '착공대기'}
                                     </span>
                                 </td>
                                 <td style="padding: 1rem;">${data.pm || '미지정'}</td>
-                                <td style="padding: 1rem; color: var(--text-secondary);">${data.deadline || 'N/A'}</td>
+                                <td style="padding: 1rem; color: var(--text-muted);">${data.deadline || 'N/A'}</td>
                                 <td style="padding: 1rem;">
-                                    <button class="btn-primary" style="padding:0.25rem 0.5rem;" onclick="location.href='project-detail.html?id=${id}'">칸반 열기</button>
+                                    <button class="btn-primary" style="padding:0.4rem 0.8rem; font-size: 0.85rem;" onclick="location.href='project-detail.html?id=${id}'">칸반 열기</button>
                                 </td>
                             </tr>
                         `;
                     });
                     tbody.innerHTML = html;
                 } catch (e) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 1rem; color: red;">오류가 발생했습니다.</td></tr>';
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 2rem; color: var(--danger);">오류가 발생했습니다.</td></tr>`;
                     console.error(e);
                 }
             },
