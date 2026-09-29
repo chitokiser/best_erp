@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>자재 등록 - BEST MATERIAL</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <title>?먯옱 ?깅줉 - BEST MATERIAL</title>
+    <link rel="stylesheet" href="../assets/css/style.css?v=3">
     <link rel="stylesheet" href="../assets/css/admin.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -56,155 +56,155 @@
         <div class="logo-container" style="display:flex; align-items:center; justify-content:space-between; width:100%; margin-bottom:0;">
             <div style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;" onclick="location.href='dashboard.html'">
                 <img src="../images/logo/logo.png" style="height: 28px;" onerror="this.style.display='none';">
-                <h1 style="margin:0; font-size: 1.3rem; color: #4F46E5; font-weight: 800;">AI경영관리</h1>
+                <h1 style="margin:0; font-size: 1.3rem; color: #4F46E5; font-weight: 800;">AI寃쎌쁺愿由?/h1>
             </div>
-            <button id="hamburgerBtn" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#4F46E5;" class="mobile-only">☰</button>
+            <button id="hamburgerBtn" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#4F46E5;" class="mobile-only">??/button>
         </div>
         <ul>
-            <li><a href="dashboard.html">대시보드</a></li>
-            <li><a href="projects.html">프로젝트</a></li>
-            <li><a href="materials.html" class="active">자재관리</a></li>
-            <li><a href="suppliers.html">협력업체</a></li>
-            <li><a href="purchase-requests.html">결재관리(구매)</a></li>
-            <li><a href="finance.html">재무/회계</a></li>
-            <li><a href="employees.html">직원</a></li>
-            <li><a href="clients.html">고객</a></li>
-            <li><a href="contacts.html">인맥</a></li>
+            <li><a href="dashboard.html">??쒕낫??/a></li>
+            <li><a href="projects.html">?꾨줈?앺듃</a></li>
+            <li><a href="materials.html" class="active">?먯옱愿由?/a></li>
+            <li><a href="suppliers.html">?묐젰?낆껜</a></li>
+            <li><a href="purchase-requests.html">寃곗옱愿由?援щℓ)</a></li>
+            <li><a href="finance.html">?щТ/?뚭퀎</a></li>
+            <li><a href="employees.html">吏곸썝</a></li>
+            <li><a href="clients.html">怨좉컼</a></li>
+            <li><a href="contacts.html">?몃㎘</a></li>
         </ul>
         <div style="font-size: 0.85rem; text-align: right;">
             <strong style="color:var(--primary-color, #4F46E5);" id="navUserEmailSpan">SUPER_ADMIN</strong><br>
-            최고 관리자 <a href="#" onclick="window.logoutAndRedirect()" style="color:#2563eb;">[로그아웃]</a>
+            理쒓퀬 愿由ъ옄 <a href="#" onclick="window.logoutAndRedirect()" style="color:#2563eb;">[濡쒓렇?꾩썐]</a>
         </div>
     </nav>
 
     <main class="container" style="padding: 2rem 1rem;">
-        <h2>신규 자재 등록</h2>
+        <h2>?좉퇋 ?먯옱 ?깅줉</h2>
         <div class="card" style="margin-top: 1.5rem;">
             <form id="materialForm" style="display: flex; flex-direction: column; gap: 1rem;">
 
-                <!-- 기본 정보 -->
+                <!-- 湲곕낯 ?뺣낫 -->
                 <fieldset style="border: 1px solid var(--border-color); padding: 1rem; border-radius: 4px;">
-                    <legend style="font-weight: bold; padding: 0 0.5rem;">기본 정보</legend>
+                    <legend style="font-weight: bold; padding: 0 0.5rem;">湲곕낯 ?뺣낫</legend>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div>
-                            <label>자재코드 *</label>
+                            <label>?먯옱肄붾뱶 *</label>
                             <input type="text" id="txtMaterialCode" class="search-input" style="width: 100%;" required>
                         </div>
                         <div>
-                            <label>자재명 (한국어) *</label>
+                            <label>?먯옱紐?(?쒓뎅?? *</label>
                             <input type="text" id="txtName" class="search-input" style="width: 100%;" required>
                         </div>
                         <div>
-                            <label>베트남어명</label>
+                            <label>踰좏듃?⑥뼱紐?/label>
                             <input type="text" id="txtNameVi" class="search-input" style="width: 100%;">
                         </div>
                         <div>
-                            <label>영문명</label>
+                            <label>?곷Ц紐?/label>
                             <input type="text" id="txtNameEn" class="search-input" style="width: 100%;">
                         </div>
                     </div>
                 </fieldset>
 
-                <!-- 분류 정보 -->
+                <!-- 遺꾨쪟 ?뺣낫 -->
                 <fieldset style="border: 1px solid var(--border-color); padding: 1rem; border-radius: 4px;">
-                    <legend style="font-weight: bold; padding: 0 0.5rem;">분류 정보</legend>
+                    <legend style="font-weight: bold; padding: 0 0.5rem;">遺꾨쪟 ?뺣낫</legend>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div>
-                            <label>카테고리 *</label>
+                            <label>移댄뀒怨좊━ *</label>
                             <select id="selCategory" class="search-input" style="width: 100%;" required>
-                                <option value="">선택하세요</option>
-                                <option value="석재">석재</option>
-                                <option value="목재">목재</option>
-                                <option value="조명">조명</option>
-                                <option value="IT">IT (네트워크/하드웨어)</option>
+                                <option value="">?좏깮?섏꽭??/option>
+                                <option value="?앹옱">?앹옱</option>
+                                <option value="紐⑹옱">紐⑹옱</option>
+                                <option value="議곕챸">議곕챸</option>
+                                <option value="IT">IT (?ㅽ듃?뚰겕/?섎뱶?⑥뼱)</option>
                             </select>
                         </div>
                         <div>
-                            <label>세부카테고리</label>
+                            <label>?몃?移댄뀒怨좊━</label>
                             <input type="text" id="txtSubCategory" class="search-input" style="width: 100%;">
                         </div>
                         <div>
-                            <label>용도 *</label>
+                            <label>?⑸룄 *</label>
                             <input type="text" id="txtApplications" class="search-input" style="width: 100%;"
-                                placeholder="예: 바닥, 벽체" required>
+                                placeholder="?? 諛붾떏, 踰쎌껜" required>
                         </div>
                     </div>
                 </fieldset>
 
-                <!-- 상세 및 가격 정보 -->
+                <!-- ?곸꽭 諛?媛寃??뺣낫 -->
                 <fieldset style="border: 1px solid var(--border-color); padding: 1rem; border-radius: 4px;">
-                    <legend style="font-weight: bold; padding: 0 0.5rem;">상세 기준 및 가격</legend>
+                    <legend style="font-weight: bold; padding: 0 0.5rem;">?곸꽭 湲곗? 諛?媛寃?/legend>
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
                         <div>
-                            <label>브랜드</label>
+                            <label>釉뚮옖??/label>
                             <input type="text" id="txtBrand" class="search-input" style="width: 100%;">
                         </div>
                         <div>
-                            <label>모델명</label>
+                            <label>紐⑤뜽紐?/label>
                             <input type="text" id="txtModel" class="search-input" style="width: 100%;">
                         </div>
                         <div>
-                            <label>색상</label>
+                            <label>?됱긽</label>
                             <input type="text" id="txtColor" class="search-input" style="width: 100%;">
                         </div>
                         <div>
-                            <label>규격 *</label>
+                            <label>洹쒓꺽 *</label>
                             <input type="text" id="txtSpecification" class="search-input" style="width: 100%;"
-                                placeholder="예: 600x600x20mm" required>
+                                placeholder="?? 600x600x20mm" required>
                         </div>
                         <div>
-                            <label>단위 *</label>
-                            <input type="text" id="txtUnit" class="search-input" style="width: 100%;" placeholder="예: ㎡"
+                            <label>?⑥쐞 *</label>
+                            <input type="text" id="txtUnit" class="search-input" style="width: 100%;" placeholder="?? ??
                                 required>
                         </div>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
                         <div>
-                            <label>BEST 매입가격 (VND)</label>
+                            <label>BEST 留ㅼ엯媛寃?(VND)</label>
                             <input type="number" id="numPurchasePrice" class="search-input" style="width: 100%;">
                         </div>
                         <div>
-                            <label>현재 재고 (수량)</label>
+                            <label>?꾩옱 ?ш퀬 (?섎웾)</label>
                             <input type="number" id="numStock" class="search-input" style="width: 100%;">
                         </div>
                         <div>
-                            <label>BEST 판매가격 (VND)</label>
+                            <label>BEST ?먮ℓ媛寃?(VND)</label>
                             <input type="number" id="numSellingPrice" class="search-input" style="width: 100%;">
                         </div>
                         <div>
-                            <label>VAT 포함 여부</label>
+                            <label>VAT ?ы븿 ?щ?</label>
                             <select id="selVat" class="search-input" style="width: 100%;">
-                                <option value="true">포함 (VAT Included)</option>
-                                <option value="false">별도 (VAT Excluded)</option>
+                                <option value="true">?ы븿 (VAT Included)</option>
+                                <option value="false">蹂꾨룄 (VAT Excluded)</option>
                             </select>
                         </div>
                     </div>
                 </fieldset>
 
-                <!-- 미디어 및 기타 -->
+                <!-- 誘몃뵒??諛?湲고? -->
                 <fieldset style="border: 1px solid var(--border-color); padding: 1rem; border-radius: 4px;">
-                    <legend style="font-weight: bold; padding: 0 0.5rem;">설명 및 미디어</legend>
+                    <legend style="font-weight: bold; padding: 0 0.5rem;">?ㅻ챸 諛?誘몃뵒??/legend>
                     <div style="margin-bottom: 1rem;">
-                        <label>상세 설명</label>
+                        <label>?곸꽭 ?ㅻ챸</label>
                         <textarea id="txtDescription" class="search-input"
                             style="width: 100%; height: 100px; resize: none;"></textarea>
                     </div>
                     <div>
-                        <label>이미지 첨부</label>
+                        <label>?대?吏 泥⑤?</label>
                         <input type="file" id="fileImages" accept="image/*" multiple class="search-input"
                             style="width: 100%; padding: 0.5rem;">
-                        <small style="color: var(--text-secondary);">여러 장의 이미지를 선택할 수 있습니다.</small>
+                        <small style="color: var(--text-secondary);">?щ윭 ?μ쓽 ?대?吏瑜??좏깮?????덉뒿?덈떎.</small>
                     </div>
                 </fieldset>
 
                 <div style="display: flex; gap: 1rem; justify-content: space-between; margin-top: 1rem;">
                     <button type="button" class="btn-primary" id="btnDelete"
-                        style="background-color: #ef4444; display: none;">삭제하기</button>
+                        style="background-color: #ef4444; display: none;">??젣?섍린</button>
                     <div style="display: flex; gap: 1rem;">
                         <button type="button" class="btn-primary" style="background-color: var(--text-secondary);"
-                            onclick="location.href='materials.html'">취소</button>
-                        <button type="submit" class="btn-primary" id="btnSubmit">저장하기</button>
+                            onclick="location.href='materials.html'">痍⑥냼</button>
+                        <button type="submit" class="btn-primary" id="btnSubmit">??ν븯湲?/button>
                     </div>
                 </div>
                 <p id="statusMsg" style="text-align: right; margin-top: 0.5rem;"></p>
@@ -226,7 +226,7 @@
         const editId = urlParams.get('id');
 
         if (editId) {
-            document.querySelector('h2').textContent = '자재 정보 수정';
+            document.querySelector('h2').textContent = '?먯옱 ?뺣낫 ?섏젙';
             // Load existing data
             getMaterialById(editId).then(m => {
                 if (!m) return;
@@ -251,17 +251,17 @@
             }).catch(console.error);
 
             btnDelete.addEventListener('click', async () => {
-                if (confirm('정말로 이 자재 데이터를 삭제하시겠습니까? (삭제 시 복구할 수 없습니다)')) {
+                if (confirm('?뺣쭚濡????먯옱 ?곗씠?곕? ??젣?섏떆寃좎뒿?덇퉴? (??젣 ??蹂듦뎄?????놁뒿?덈떎)')) {
                     try {
-                        btnDelete.textContent = '삭제 중...';
+                        btnDelete.textContent = '??젣 以?..';
                         btnDelete.disabled = true;
                         await deleteDoc(doc(db, 'materials', editId));
-                        alert('자재가 삭제되었습니다.');
+                        alert('?먯옱媛 ??젣?섏뿀?듬땲??');
                         window.location.href = 'materials.html';
                     } catch (err) {
                         console.error('Delete error', err);
-                        alert('삭제에 실패했습니다: ' + err.message);
-                        btnDelete.textContent = '삭제하기';
+                        alert('??젣???ㅽ뙣?덉뒿?덈떎: ' + err.message);
+                        btnDelete.textContent = '??젣?섍린';
                         btnDelete.disabled = false;
                     }
                 }
@@ -271,7 +271,7 @@
         materialForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             btnSubmit.disabled = true;
-            btnSubmit.textContent = '저장 중...';
+            btnSubmit.textContent = '???以?..';
             statusMsg.textContent = '';
 
             try {
@@ -304,12 +304,12 @@
                     materialData.updatedAt = serverTimestamp();
                     await updateDoc(doc(db, 'materials', editId), materialData);
                     statusMsg.style.color = "green";
-                    statusMsg.textContent = "수정되었습니다!";
+                    statusMsg.textContent = "?섏젙?섏뿀?듬땲??";
                 } else {
                     // Create Mode
                     await createMaterial({ ...materialData, supplierIds: [] }, fileImages);
                     statusMsg.style.color = "green";
-                    statusMsg.textContent = "성공적으로 등록되었습니다!";
+                    statusMsg.textContent = "?깃났?곸쑝濡??깅줉?섏뿀?듬땲??";
                 }
 
                 setTimeout(() => {
@@ -318,9 +318,9 @@
             } catch (err) {
                 console.error(err);
                 statusMsg.style.color = "red";
-                statusMsg.textContent = "저장에 실패했습니다: " + err.message;
+                statusMsg.textContent = "??μ뿉 ?ㅽ뙣?덉뒿?덈떎: " + err.message;
                 btnSubmit.disabled = false;
-                btnSubmit.textContent = '저장하기';
+                btnSubmit.textContent = '??ν븯湲?;
             }
         });
     </script>
@@ -342,21 +342,21 @@
 
                 try {
                     let role = 'GUEST';
-                    let position = '일반 직원';
+                    let position = '?쇰컲 吏곸썝';
                     const q = query(collection(db, 'users'), where('email', '==', user.email));
                     const snap = await getDocs(q);
 
                     if (!snap.empty) {
                         const data = snap.docs[0].data();
                         role = data.role || 'GUEST';
-                        position = data.position || '직원';
+                        position = data.position || '吏곸썝';
                     } else if (user.email === 'daguri75@gmail.com') {
                         role = 'SUPER_ADMIN';
-                        position = '최고 관리자';
+                        position = '理쒓퀬 愿由ъ옄';
                     }
 
-                    if (role !== 'SUPER_ADMIN' && role !== 'PM' && position.indexOf('팀장') === -1) {
-                        alert("접근 불가: 자재 조작 권한은 프로젝트 관리자(PM/팀장) 및 최고 관리자에게만 제한되어 있습니다.");
+                    if (role !== 'SUPER_ADMIN' && role !== 'PM' && position.indexOf('???) === -1) {
+                        alert("?묎렐 遺덇?: ?먯옱 議곗옉 沅뚰븳? ?꾨줈?앺듃 愿由ъ옄(PM/??? 諛?理쒓퀬 愿由ъ옄?먭쾶留??쒗븳?섏뼱 ?덉뒿?덈떎.");
                         window.location.href = 'materials.html';
                     }
                 } catch (e) {

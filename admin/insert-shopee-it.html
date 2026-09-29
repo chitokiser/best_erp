@@ -1,16 +1,16 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 
 <head>
     <meta charset="UTF-8">
-    <title>Shopee VN 기반 IT/기타 샘플 데이터 생성</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <title>Shopee VN 湲곕컲 IT/湲고? ?섑뵆 ?곗씠???앹꽦</title>
+    <link rel="stylesheet" href="../assets/css/style.css?v=3">
 </head>
 
 <body style="padding: 2rem;">
-    <h1>Shopee VN (컴퓨터/사무용품) 가상 연동기</h1>
-    <p>실제 Shopee API는 판매자(파트너) 키가 필요하므로, Shopee 베트남에서 인기리에 판매되는 형태의 IT / 사무용품 실데이터 40종을 가상으로 주입합니다.</p>
-    <button id="insertBtn" class="btn-primary">Shopee VN IT/사무용품 40개 생성</button>
+    <h1>Shopee VN (而댄벂???щТ?⑺뭹) 媛???곕룞湲?/h1>
+    <p>?ㅼ젣 Shopee API???먮ℓ???뚰듃?? ?ㅺ? ?꾩슂?섎?濡? Shopee 踰좏듃?⑥뿉???멸린由ъ뿉 ?먮ℓ?섎뒗 ?뺥깭??IT / ?щТ?⑺뭹 ?ㅻ뜲?댄꽣 40醫낆쓣 媛?곸쑝濡?二쇱엯?⑸땲??</p>
+    <button id="insertBtn" class="btn-primary">Shopee VN IT/?щТ?⑺뭹 40媛??앹꽦</button>
     <div id="log"
         style="margin-top: 1rem; font-family: monospace; height: 400px; overflow-y: auto; background: #f1f5f9; padding: 1rem; border-radius: 8px;">
     </div>
@@ -26,78 +26,78 @@
             logBox.scrollTop = logBox.scrollHeight;
         }
 
-        // 베트남 Shopee에서 판매되는 실제 인기 IT/사무용품 샘플 리스트
+        // 踰좏듃??Shopee?먯꽌 ?먮ℓ?섎뒗 ?ㅼ젣 ?멸린 IT/?щТ?⑺뭹 ?섑뵆 由ъ뒪??
         const shopeeItems = [
-            { name: "Dell UltraSharp U2723QE 27인치 4K 모니터", brand: "Dell", cat: "IT", price: 14500000 },
-            { name: "Logitech MX Master 3S 무선 마우스", brand: "Logitech", cat: "IT", price: 2450000 },
-            { 기name: "Keychron K8 Pro 기계식 키보드 (적축)", brand: "Keychron", cat: "IT", price: 2300000 },
-            { name: "LG 24MP400-B 24인치 사무용 모니터", brand: "LG", cat: "IT", price: 2650000 },
-            { name: "HP LaserJet Pro M15w 무선 흑백 레이저 프린터", brand: "HP", cat: "IT", price: 2150000 },
-            { name: "Epson EcoTank L3250 무한잉크 복합기", brand: "Epson", cat: "IT", price: 4200000 },
-            { name: "TP-Link Archer AX53 AX3000 기가비트 공유기", brand: "TP-Link", cat: "IT", price: 1150000 },
-            { name: "Asus RT-AX82U 듀얼밴드 WiFi 6 공유기", brand: "ASUS", cat: "IT", price: 3950000 },
-            { name: "Cisco SG95-24 24포트 기가비트 스위치 허브", brand: "Cisco", cat: "IT", price: 2850000 },
+            { name: "Dell UltraSharp U2723QE 27?몄튂 4K 紐⑤땲??, brand: "Dell", cat: "IT", price: 14500000 },
+            { name: "Logitech MX Master 3S 臾댁꽑 留덉슦??, brand: "Logitech", cat: "IT", price: 2450000 },
+            { 湲컉ame: "Keychron K8 Pro 湲곌퀎???ㅻ낫??(?곸텞)", brand: "Keychron", cat: "IT", price: 2300000 },
+            { name: "LG 24MP400-B 24?몄튂 ?щТ??紐⑤땲??, brand: "LG", cat: "IT", price: 2650000 },
+            { name: "HP LaserJet Pro M15w 臾댁꽑 ?묐갚 ?덉씠? ?꾨┛??, brand: "HP", cat: "IT", price: 2150000 },
+            { name: "Epson EcoTank L3250 臾댄븳?됲겕 蹂듯빀湲?, brand: "Epson", cat: "IT", price: 4200000 },
+            { name: "TP-Link Archer AX53 AX3000 湲곌?鍮꾪듃 怨듭쑀湲?, brand: "TP-Link", cat: "IT", price: 1150000 },
+            { name: "Asus RT-AX82U ??쇰객??WiFi 6 怨듭쑀湲?, brand: "ASUS", cat: "IT", price: 3950000 },
+            { name: "Cisco SG95-24 24?ы듃 湲곌?鍮꾪듃 ?ㅼ쐞移??덈툕", brand: "Cisco", cat: "IT", price: 2850000 },
             { name: "Synology DiskStation DS220+ NAS", brand: "Synology", cat: "IT", price: 8900000 },
-            { name: "WD Red Plus 4TB NAS용 HDD", brand: "Western Digital", cat: "IT", price: 2900000 },
+            { name: "WD Red Plus 4TB NAS??HDD", brand: "Western Digital", cat: "IT", price: 2900000 },
             { name: "SanDisk Ultra Flair USB 3.0 128GB", brand: "SanDisk", cat: "IT", price: 290000 },
-            { name: "APC Back-UPS 650VA UPS (무정전 전원 공급장치)", brand: "APC", cat: "IT", price: 1550000 },
-            { name: "Apple iPad 10세대 64GB WiFi", brand: "Apple", cat: "IT", price: 10900000 },
-            { name: "Samsung Galaxy Tab A8 10.5인치", brand: "Samsung", cat: "IT", price: 6200000 },
-            { name: "Lenovo ThinkPad E14 Gen 4 사무용 노트북", brand: "Lenovo", cat: "IT", price: 16500000 },
-            { name: "Ugreen 하이브리드 USB-C 멀티허브 (7-in-1)", brand: "Ugreen", cat: "IT", price: 650000 },
-            { name: "Baseus 100W GaN 충전기", brand: "Baseus", cat: "IT", price: 850000 },
-            { name: "Dahua 2MP 실내외 방수 돔 CCTV 카메라", brand: "Dahua", cat: "IT", price: 580000 },
-            { name: "Hikvision 4채널 PoE NVR 녹화기", brand: "Hikvision", cat: "IT", price: 1350000 },
-            { name: "Double A (더블에이) A4 복사용지 80g (1박스=5권)", brand: "Double A", cat: "기타", price: 320000 },
-            { name: "PaperOne A4 복사용지 70g (1박스=5권)", brand: "PaperOne", cat: "기타", price: 280000 },
-            { name: "Plus 플러스 수동 문서 세단기", brand: "Plus", cat: "기타", price: 1200000 },
-            { name: "Deli 델리 자동 연필깎이", brand: "Deli", cat: "기타", price: 150000 },
-            { name: "3M 포스트잇 인덱스 세트 (10팩)", brand: "3M", cat: "기타", price: 85000 },
-            { name: "스테들러 형광펜 6색 세트", brand: "Staedtler", cat: "기타", price: 45000 },
-            { name: "코락스 (Korloy) 사무용 칼 세트", brand: "Korloy", cat: "기타", price: 30000 },
-            { name: "펜텔 (Pentel) 에너겔 볼펜 1타스 (12자루)", brand: "Pentel", cat: "기타", price: 220000 },
-            { name: "맥스 (MAX) 대형 스테이플러", brand: "MAX", cat: "기타", price: 380000 },
-            { name: "코니카미놀타 비즈허브 C225i 복사기 임대/렌탈권", brand: "Konica Minolta", cat: "기타", price: 1200000 },
-            { name: "아크릴 데스크 명패 (대표/이사)", brand: "OEM", cat: "기타", price: 250000 },
-            { name: "화이트보드 자석 클립 10개입", brand: "OEM", cat: "기타", price: 45000 },
-            { name: "사무용 미니 공기청정기 (탁상용)", brand: "Xiaomi", cat: "기타", price: 850000 },
-            { name: "샤오미 미지아 스마트 스탠드", brand: "Xiaomi", cat: "기타", price: 450000 },
-            { name: "네스프레소 에센자 미니 캡슐 커피머신", brand: "Nespresso", cat: "기타", price: 2600000 },
-            { name: "네스프레소 프로페셔널 커피 캡슐 50개", brand: "Nespresso", cat: "기타", price: 950000 },
-            { name: "휴게실용 소형 전자레인지 20L", brand: "Sharp", cat: "기타", price: 1150000 },
-            { name: "Lock&Lock 직수형 정수기 필터 교체용", brand: "LocknLock", cat: "기타", price: 300000 },
-            { name: "코멧 사무/휴게실 분리수거함 (3단)", brand: "Comet", cat: "기타", price: 450000 },
-            { name: "사무실용 실내 슬리퍼 (통풍성형) 1켤레", brand: "OEM", cat: "기타", price: 75000 }
+            { name: "APC Back-UPS 650VA UPS (臾댁젙???꾩썝 怨듦툒?μ튂)", brand: "APC", cat: "IT", price: 1550000 },
+            { name: "Apple iPad 10?몃? 64GB WiFi", brand: "Apple", cat: "IT", price: 10900000 },
+            { name: "Samsung Galaxy Tab A8 10.5?몄튂", brand: "Samsung", cat: "IT", price: 6200000 },
+            { name: "Lenovo ThinkPad E14 Gen 4 ?щТ???명듃遺?, brand: "Lenovo", cat: "IT", price: 16500000 },
+            { name: "Ugreen ?섏씠釉뚮━??USB-C 硫?고뿀釉?(7-in-1)", brand: "Ugreen", cat: "IT", price: 650000 },
+            { name: "Baseus 100W GaN 異⑹쟾湲?, brand: "Baseus", cat: "IT", price: 850000 },
+            { name: "Dahua 2MP ?ㅻ궡??諛⑹닔 ??CCTV 移대찓??, brand: "Dahua", cat: "IT", price: 580000 },
+            { name: "Hikvision 4梨꾨꼸 PoE NVR ?뱁솕湲?, brand: "Hikvision", cat: "IT", price: 1350000 },
+            { name: "Double A (?붾툝?먯씠) A4 蹂듭궗?⑹? 80g (1諛뺤뒪=5沅?", brand: "Double A", cat: "湲고?", price: 320000 },
+            { name: "PaperOne A4 蹂듭궗?⑹? 70g (1諛뺤뒪=5沅?", brand: "PaperOne", cat: "湲고?", price: 280000 },
+            { name: "Plus ?뚮윭???섎룞 臾몄꽌 ?몃떒湲?, brand: "Plus", cat: "湲고?", price: 1200000 },
+            { name: "Deli ?몃━ ?먮룞 ?고븘源롮씠", brand: "Deli", cat: "湲고?", price: 150000 },
+            { name: "3M ?ъ뒪?몄엲 ?몃뜳???명듃 (10??", brand: "3M", cat: "湲고?", price: 85000 },
+            { name: "?ㅽ뀒?ㅻ윭 ?뺢킅??6???명듃", brand: "Staedtler", cat: "湲고?", price: 45000 },
+            { name: "肄붾씫??(Korloy) ?щТ??移??명듃", brand: "Korloy", cat: "湲고?", price: 30000 },
+            { name: "?쒗뀛 (Pentel) ?먮꼫寃?蹂쇳렂 1???(12?먮（)", brand: "Pentel", cat: "湲고?", price: 220000 },
+            { name: "留μ뒪 (MAX) ????ㅽ뀒?댄뵆??, brand: "MAX", cat: "湲고?", price: 380000 },
+            { name: "肄붾땲移대??? 鍮꾩쫰?덈툕 C225i 蹂듭궗湲??꾨?/?뚰깉沅?, brand: "Konica Minolta", cat: "湲고?", price: 1200000 },
+            { name: "?꾪겕由??곗뒪??紐낇뙣 (????댁궗)", brand: "OEM", cat: "湲고?", price: 250000 },
+            { name: "?붿씠?몃낫???먯꽍 ?대┰ 10媛쒖엯", brand: "OEM", cat: "湲고?", price: 45000 },
+            { name: "?щТ??誘몃땲 怨듦린泥?젙湲?(?곸긽??", brand: "Xiaomi", cat: "湲고?", price: 850000 },
+            { name: "?ㅼ삤誘?誘몄????ㅻ쭏???ㅽ깲??, brand: "Xiaomi", cat: "湲고?", price: 450000 },
+            { name: "?ㅼ뒪?꾨젅???먯꽱??誘몃땲 罹≪뒓 而ㅽ뵾癒몄떊", brand: "Nespresso", cat: "湲고?", price: 2600000 },
+            { name: "?ㅼ뒪?꾨젅???꾨줈?섏뀛??而ㅽ뵾 罹≪뒓 50媛?, brand: "Nespresso", cat: "湲고?", price: 950000 },
+            { name: "?닿쾶?ㅼ슜 ?뚰삎 ?꾩옄?덉씤吏 20L", brand: "Sharp", cat: "湲고?", price: 1150000 },
+            { name: "Lock&Lock 吏곸닔???뺤닔湲??꾪꽣 援먯껜??, brand: "LocknLock", cat: "湲고?", price: 300000 },
+            { name: "肄붾ĸ ?щТ/?닿쾶??遺꾨━?섍굅??(3??", brand: "Comet", cat: "湲고?", price: 450000 },
+            { name: "?щТ?ㅼ슜 ?ㅻ궡 ?щ━??(?듯뭾?깊삎) 1耳ㅻ젅", brand: "OEM", cat: "湲고?", price: 75000 }
         ];
 
         btn.addEventListener('click', async () => {
             btn.disabled = true;
-            btn.textContent = "Shopee 연동 데이터 생성 중...";
+            btn.textContent = "Shopee ?곕룞 ?곗씠???앹꽦 以?..";
 
             for (let i = 0; i < shopeeItems.length; i++) {
                 const item = shopeeItems[i];
 
                 const payload = {
-                    name: item.name || item.기name, // fallback handling
+                    name: item.name || item.湲컉ame, // fallback handling
                     brand: item.brand,
                     categoryId: item.cat,
-                    specification: "Shopee VN 연동 가상데이터",
+                    specification: "Shopee VN ?곕룞 媛?곷뜲?댄꽣",
                     materialCode: "SHP-" + (Math.floor(Math.random() * 90000) + 10000),
                     unit: "EA",
-                    applications: ["마감", "내장", "기타"],
+                    applications: ["留덇컧", "?댁옣", "湲고?"],
                     ourPurchasePrice: item.price
                 };
 
                 try {
                     await createMaterial(payload, null);
-                    log(`[${i + 1}/40] 성공: ${payload.name} 등록 완료 (Shopee 예상단가: ${item.price.toLocaleString()} VND)`);
+                    log(`[${i + 1}/40] ?깃났: ${payload.name} ?깅줉 ?꾨즺 (Shopee ?덉긽?④?: ${item.price.toLocaleString()} VND)`);
                 } catch (e) {
-                    log(`[${i + 1}/40] 실패: ${payload.name} - ${e.message}`);
+                    log(`[${i + 1}/40] ?ㅽ뙣: ${payload.name} - ${e.message}`);
                 }
             }
 
-            log("✔️ Shopee VN IT/사무기기 샘플 40종 생성이 완료되었습니다!");
-            btn.textContent = "생성 완료";
+            log("?뷂툘 Shopee VN IT/?щТ湲곌린 ?섑뵆 40醫??앹꽦???꾨즺?섏뿀?듬땲??");
+            btn.textContent = "?앹꽦 ?꾨즺";
         });
     </script>
 </body>

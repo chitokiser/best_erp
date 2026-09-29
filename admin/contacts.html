@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI CEO MANAGER - 인맥 (Contacts) DB</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <title>AI CEO MANAGER - ?몃㎘ (Contacts) DB</title>
+    <link rel="stylesheet" href="../assets/css/style.css?v=3">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <style>
@@ -244,35 +244,35 @@
         <div class="logo-container" style="display:flex; align-items:center; justify-content:space-between; width:100%; margin-bottom:0;">
             <div style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;" onclick="location.href='dashboard.html'">
                 <img src="../images/logo/logo.png" style="height: 28px;" onerror="this.style.display='none';">
-                <h1 style="margin:0; font-size: 1.3rem; color: #4F46E5; font-weight: 800;">AI경영관리</h1>
+                <h1 style="margin:0; font-size: 1.3rem; color: #4F46E5; font-weight: 800;">AI寃쎌쁺愿由?/h1>
             </div>
-            <button id="hamburgerBtn" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#4F46E5;" class="mobile-only">☰</button>
+            <button id="hamburgerBtn" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#4F46E5;" class="mobile-only">??/button>
         </div>
         <ul>
-            <li><a href="dashboard.html">대시보드</a></li>
-            <li><a href="projects.html">프로젝트</a></li>
-            <li><a href="materials.html">자재관리</a></li>
-            <li><a href="suppliers.html">협력업체</a></li>
-            <li><a href="purchase-requests.html">결재관리(구매)</a></li>
-            <li><a href="finance.html">재무/회계</a></li>
-            <li><a href="employees.html">직원</a></li>
-            <li><a href="clients.html">고객</a></li>
-            <li><a href="contacts.html" class="active">인맥</a></li>
+            <li><a href="dashboard.html">??쒕낫??/a></li>
+            <li><a href="projects.html">?꾨줈?앺듃</a></li>
+            <li><a href="materials.html">?먯옱愿由?/a></li>
+            <li><a href="suppliers.html">?묐젰?낆껜</a></li>
+            <li><a href="purchase-requests.html">寃곗옱愿由?援щℓ)</a></li>
+            <li><a href="finance.html">?щТ/?뚭퀎</a></li>
+            <li><a href="employees.html">吏곸썝</a></li>
+            <li><a href="clients.html">怨좉컼</a></li>
+            <li><a href="contacts.html" class="active">?몃㎘</a></li>
         </ul>
         <div style="font-size: 0.85rem; text-align: right;">
             <strong style="color:var(--ai-primary);" id="navUserEmailSpan">SUPER_ADMIN</strong><br>
-            최고 관리자 <a href="#" onclick="window.logoutAndRedirect()" style="color:#2563eb;">[로그아웃]</a>
+            理쒓퀬 愿由ъ옄 <a href="#" onclick="window.logoutAndRedirect()" style="color:#2563eb;">[濡쒓렇?꾩썐]</a>
         </div>
     </nav>
 
     <div class="main-container">
         <div class="header-action">
-            <h2>AI 인맥 네트워크 DB</h2>
+            <h2>AI ?몃㎘ ?ㅽ듃?뚰겕 DB</h2>
             <div style="display: flex; gap: 1rem;">
                 <button class="btn-add" id="toggleGraphBtn"
-                    style="background: white; color: var(--ai-primary); border: 2px solid var(--ai-primary);">🕸️ 그래프 뷰어
-                    열기</button>
-                <button class="btn-add" id="openAddModalBtn">+ 명함 정보 (인맥) 등록</button>
+                    style="background: white; color: var(--ai-primary); border: 2px solid var(--ai-primary);">?빖截?洹몃옒??酉곗뼱
+                    ?닿린</button>
+                <button class="btn-add" id="openAddModalBtn">+ 紐낇븿 ?뺣낫 (?몃㎘) ?깅줉</button>
             </div>
         </div>
 
@@ -282,10 +282,10 @@
             <div id="mynetwork" style="width: 100%; height: 100%; border-radius: 0.5rem; outline: none;"></div>
             <div
                 style="position: absolute; top: 1rem; right: 1rem; background: rgba(255,255,255,0.9); padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.8rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                <strong>범례:</strong><br>
-                <span style="color:#6366f1; font-weight:bold;">●</span> 사내 직원<br>
-                <span style="color:#10b981; font-weight:bold;">●</span> 외부 인맥<br>
-                <em style="color:#94a3b8;">마우스 휠(줌), 드래그(이동/선택)</em>
+                <strong>踰붾?:</strong><br>
+                <span style="color:#6366f1; font-weight:bold;">??/span> ?щ궡 吏곸썝<br>
+                <span style="color:#10b981; font-weight:bold;">??/span> ?몃? ?몃㎘<br>
+                <em style="color:#94a3b8;">留덉슦????以?, ?쒕옒洹??대룞/?좏깮)</em>
             </div>
         </div>
 
@@ -293,17 +293,17 @@
             <table>
                 <thead>
                     <tr>
-                        <th>이름</th>
-                        <th>소속 / 직급</th>
-                        <th>연락처</th>
-                        <th>등록자(최초)</th>
-                        <th>사내 인맥 라인 (소개)</th>
-                        <th>관리</th>
+                        <th>?대쫫</th>
+                        <th>?뚯냽 / 吏곴툒</th>
+                        <th>?곕씫泥?/th>
+                        <th>?깅줉??理쒖큹)</th>
+                        <th>?щ궡 ?몃㎘ ?쇱씤 (?뚭컻)</th>
+                        <th>愿由?/th>
                     </tr>
                 </thead>
                 <tbody id="contactsTableBody">
                     <tr>
-                        <td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted);">로딩 중...</td>
+                        <td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted);">濡쒕뵫 以?..</td>
                     </tr>
                 </tbody>
             </table>
@@ -314,7 +314,7 @@
     <div class="modal-overlay" id="addContactModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>새 인맥(명함) 등록</h3>
+                <h3>???몃㎘(紐낇븿) ?깅줉</h3>
                 <button class="close-btn"
                     onclick="document.getElementById('addContactModal').style.display='none'">&times;</button>
             </div>
@@ -322,18 +322,18 @@
                 <div
                     style="background:#f1f5f9; padding:0.8rem; border-radius:0.5rem; font-size:0.85rem; margin-bottom:1rem; color:#475569;">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span>💡 <strong>AI 명함 스캔:</strong> 카메라로 명함을 찍거나 업로드하면 AI가 자동 입력합니다.</span>
+                        <span>?뮕 <strong>AI 紐낇븿 ?ㅼ틪:</strong> 移대찓?쇰줈 紐낇븿??李띻굅???낅줈?쒗븯硫?AI媛 ?먮룞 ?낅젰?⑸땲??</span>
                         <input type="file" id="ocrInput" accept="image/*" capture="environment" style="display:none;" />
                         <button type="button" onclick="document.getElementById('ocrInput').click()"
-                            style="background:var(--ai-gradient); color:white; border:none; border-radius:0.3rem; padding:0.4rem 0.8rem; cursor:pointer; font-weight:bold; font-size:0.8rem;">📸
-                            스캔하기</button>
+                            style="background:var(--ai-gradient); color:white; border:none; border-radius:0.3rem; padding:0.4rem 0.8rem; cursor:pointer; font-weight:bold; font-size:0.8rem;">?벝
+                            ?ㅼ틪?섍린</button>
                     </div>
                 </div>
                 <div id="ocrLoading"
                     style="display:none; text-align:center; padding: 1rem; color: var(--ai-primary); font-weight:600;">
                     <span
-                        style="font-size: 1.5rem; vertical-align:middle; display:inline-block; animation: spin 1s linear infinite;">⏳</span>
-                    AI가 명함을 판독하고 있습니다...
+                        style="font-size: 1.5rem; vertical-align:middle; display:inline-block; animation: spin 1s linear infinite;">??/span>
+                    AI媛 紐낇븿???먮룆?섍퀬 ?덉뒿?덈떎...
                 </div>
                 <style>
                     @keyframes spin {
@@ -344,29 +344,29 @@
                 </style>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>이름</label>
-                        <input type="text" id="addName" required placeholder="예: 홍길동">
+                        <label>?대쫫</label>
+                        <input type="text" id="addName" required placeholder="?? ?띻만??>
                     </div>
                     <div class="form-group">
-                        <label>회사/소속</label>
-                        <input type="text" id="addCompany" required placeholder="예: (주)한국물산">
+                        <label>?뚯궗/?뚯냽</label>
+                        <input type="text" id="addCompany" required placeholder="?? (二??쒓뎅臾쇱궛">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>직급</label>
-                        <input type="text" id="addPosition" placeholder="예: 상무">
+                        <label>吏곴툒</label>
+                        <input type="text" id="addPosition" placeholder="?? ?곷Т">
                     </div>
                     <div class="form-group">
-                        <label>연락처</label>
+                        <label>?곕씫泥?/label>
                         <input type="text" id="addPhone" required placeholder="010-0000-0000">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>등록자 (본인)</label>
+                    <label>?깅줉??(蹂몄씤)</label>
                     <input type="text" id="addRegistrar" readonly style="background:#f8fafc; color:#64748B;">
                 </div>
-                <button type="submit" class="submit-btn" id="btnAddSubmit">인맥 DB 추가</button>
+                <button type="submit" class="submit-btn" id="btnAddSubmit">?몃㎘ DB 異붽?</button>
             </form>
         </div>
     </div>
@@ -375,28 +375,28 @@
     <div class="modal-overlay" id="shareContactModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>🤝 유관 직원에게 인맥 라인 연결(소개)</h3>
+                <h3>?쩃 ?좉? 吏곸썝?먭쾶 ?몃㎘ ?쇱씤 ?곌껐(?뚭컻)</h3>
                 <button class="close-btn"
                     onclick="document.getElementById('shareContactModal').style.display='none'">&times;</button>
             </div>
             <form id="shareContactForm">
                 <input type="hidden" id="shareContactId">
                 <p style="font-size:0.9rem; margin-bottom:1rem; color:var(--text-dark);">
-                    선택한 외부 인맥을 우리 회사 직원에게 연결시켜 줍니다.<br>
-                    <strong>대상 인맥:</strong> <span id="shareContactDisplay"
-                        style="color:var(--ai-primary); font-weight:bold;">(홍길동)</span>
+                    ?좏깮???몃? ?몃㎘???곕━ ?뚯궗 吏곸썝?먭쾶 ?곌껐?쒖폒 以띾땲??<br>
+                    <strong>????몃㎘:</strong> <span id="shareContactDisplay"
+                        style="color:var(--ai-primary); font-weight:bold;">(?띻만??</span>
                 </p>
                 <div class="form-group">
-                    <label>소개받을 사내 직원 선택</label>
+                    <label>?뚭컻諛쏆쓣 ?щ궡 吏곸썝 ?좏깮</label>
                     <select id="shareEmployee" required>
-                        <option value="">로딩 중...</option>
+                        <option value="">濡쒕뵫 以?..</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>소개 메모 (AI 참조용)</label>
-                    <textarea id="shareMemo" rows="2" placeholder="예: 다음 A프로젝트 발주 관련키맨이므로 영업팀 김대리가 컨택 바람"></textarea>
+                    <label>?뚭컻 硫붾え (AI 李몄“??</label>
+                    <textarea id="shareMemo" rows="2" placeholder="?? ?ㅼ쓬 A?꾨줈?앺듃 諛쒖＜ 愿?⑦궎留⑥씠誘濡??곸뾽? 源?由ш? 而⑦깮 諛붾엺"></textarea>
                 </div>
-                <button type="submit" class="submit-btn" id="btnShareSubmit">인맥 라인 연결하기</button>
+                <button type="submit" class="submit-btn" id="btnShareSubmit">?몃㎘ ?쇱씤 ?곌껐?섍린</button>
             </form>
         </div>
     </div>
