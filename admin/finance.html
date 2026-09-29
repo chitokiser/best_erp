@@ -1,11 +1,11 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI CEO MANAGER - ?щТ(Finance) DB</title>
-    <link rel="stylesheet" href="../assets/css/style.css?v=3">
+    <title>AI CEO MANAGER - 재무(Finance) DB</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -359,22 +359,44 @@
         <svg viewBox="0 0 24 24" width="28" height="28" stroke="#4F46E5" stroke-width="2" fill="none"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
     </div>
 </div>
+        <ul>
+            <li><a href="dashboard.html">대시보드</a></li>
+            <li><a href="projects.html">프로젝트</a></li>
+            <li><a href="materials.html">자재관리</a></li>
+            <li><a href="suppliers.html">협력업체</a></li>
+            <li><a href="purchase-requests.html">결재관리(구매)</a></li>
+            <li><a href="finance.html" class="active">재무/회계</a></li>
+            <li><a href="employees.html">직원</a></li>
+            <li><a href="clients.html">고객</a></li>
+            <li><a href="contacts.html">인맥</a></li>
+        </ul>
+        <div style="font-size: 0.85rem; text-align: right;">
+            <strong style="color:var(--ai-primary, #4F46E5);" id="navUserEmailSpan">SUPER_ADMIN</strong><br>
+            최고 관리자 <a href="#" onclick="window.logoutAndRedirect()" style="color:#2563eb;">[로그아웃]</a>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="header-action">
+            <h2>AI 재무/현금흐름 DB</h2>
+            <button class="btn-add" id="openModalBtn">+ 새 재무 데이터 등록</button>
+        </div>
 
         <div class="finance-summary">
             <div class="summary-box">
-                <div class="summary-label">?대쾲 ???섏엯</div>
+                <div class="summary-label">이번 달 수입</div>
                 <div class="summary-val val-income" id="sumIncome">0 VND</div>
             </div>
             <div class="summary-box">
-                <div class="summary-label">?대쾲 ??吏異?/div>
+                <div class="summary-label">이번 달 지출</div>
                 <div class="summary-val val-expense" id="sumExpense">0 VND</div>
             </div>
             <div class="summary-box">
-                <div class="summary-label">諛쏆쓣 ??(誘몄닔湲?</div>
+                <div class="summary-label">받을 돈 (미수금)</div>
                 <div class="summary-val val-receivable" id="sumReceivable">0 VND</div>
             </div>
             <div class="summary-box">
-                <div class="summary-label">以???(誘몄?湲됯툑)</div>
+                <div class="summary-label">줄 돈 (미지급금)</div>
                 <div class="summary-val val-payable" id="sumPayable">0 VND</div>
             </div>
         </div>
@@ -383,17 +405,17 @@
             <table>
                 <thead>
                     <tr>
-                        <th>諛쒖깮?쇱옄</th>
-                        <th>?좏삎/??ぉ</th>
-                        <th>湲덉븸</th>
-                        <th>愿??嫄곕옒泥??꾨줈?앺듃</th>
-                        <th>?곸슂(?댁슜)</th>
+                        <th>발생일자</th>
+                        <th>유형/항목</th>
+                        <th>금액</th>
+                        <th>관련 거래처/프로젝트</th>
+                        <th>적요(내용)</th>
                     </tr>
                 </thead>
                 <tbody id="financeTableBody">
                     <tr>
-                        <td colspan="5" style="text-align:center; padding:3rem; color:var(--text-muted);">?깅줉???щТ ?곗씠?곌?
-                            ?놁뒿?덈떎.</td>
+                        <td colspan="5" style="text-align:center; padding:3rem; color:var(--text-muted);">등록된 재무 데이터가
+                            없습니다.</td>
                     </tr>
                 </tbody>
             </table>
@@ -404,63 +426,63 @@
     <div class="modal-overlay" id="financeModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>?щТ 湲곕줉 異붽?</h3>
+                <h3>재무 기록 추가</h3>
                 <button class="close-btn" id="closeModalBtn">&times;</button>
             </div>
             <form id="financeForm">
                 <div class="form-row">
                     <div class="form-group">
-                        <label>?덉쓽 ?깃꺽 (?좏삎)</label>
+                        <label>돈의 성격 (유형)</label>
                         <select id="finType" required>
-                            <option value="INCOME">?뱢 ?섏엯 (?낃툑 ?꾨즺)</option>
-                            <option value="EXPENSE">?뱣 吏異?(異쒓툑 ?꾨즺)</option>
-                            <option value="RECEIVABLE">?뱿 諛쏆쓣 ??(?섏엯 ?덉젙/誘몄닔湲?</option>
-                            <option value="PAYABLE">?뱾 以???(吏異??덉젙/誘몄?湲됯툑)</option>
+                            <option value="INCOME">📈 수입 (입금 완료)</option>
+                            <option value="EXPENSE">📉 지출 (출금 완료)</option>
+                            <option value="RECEIVABLE">📥 받을 돈 (수입 예정/미수금)</option>
+                            <option value="PAYABLE">📤 줄 돈 (지출 예정/미지급금)</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>諛쒖깮/?덉젙 ?쇱옄</label>
+                        <label>발생/예정 일자</label>
                         <input type="date" id="finDate" required>
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>??ぉ 遺꾨쪟</label>
-                        <input type="text" id="finCategory" placeholder="?? ?멸굔鍮? ?꾨?猷? ?몄긽?湲? ?먯옱鍮? required
+                        <label>항목 분류</label>
+                        <input type="text" id="finCategory" placeholder="예: 인건비, 임대료, 외상대금, 자재비" required
                             list="catList">
                         <datalist id="catList">
-                            <option value="?먯옱鍮??먭?"></option>
-                            <option value="?멸굔鍮?湲됱뿬"></option>
-                            <option value="?꾨?猷?怨듦낵湲?></option>
-                            <option value="?몄＜/?⑹뿭鍮?></option>
-                            <option value="?λ퉬??щ즺"></option>
-                            <option value="?곸뾽/?댁쁺寃쎈퉬"></option>
-                            <option value="?몄긽?湲덉긽??></option>
+                            <option value="자재비/원가"></option>
+                            <option value="인건비/급여"></option>
+                            <option value="임대료/공과금"></option>
+                            <option value="외주/용역비"></option>
+                            <option value="장비대여료"></option>
+                            <option value="영업/운영경비"></option>
+                            <option value="외상대금상환"></option>
                         </datalist>
                     </div>
                     <div class="form-group">
-                        <label>湲덉븸 (VND)</label>
-                        <input type="number" id="finAmount" required placeholder="?? 5000000">
+                        <label>금액 (VND)</label>
+                        <input type="number" id="finAmount" required placeholder="예: 5000000">
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label>愿??嫄곕옒泥?(怨좉컼/?묐젰??</label>
-                            <input type="text" id="finPartner" placeholder="?? ?쇱꽦臾쇱궛">
+                            <label>관련 거래처 (고객/협력사)</label>
+                            <input type="text" id="finPartner" placeholder="예: 삼성물산">
                         </div>
                         <div class="form-group">
-                            <label>愿???꾨줈?앺듃</label>
-                            <input type="text" id="finProject" placeholder="?? A援ъ뿭 ?명뀒由ъ뼱">
+                            <label>관련 프로젝트</label>
+                            <input type="text" id="finProject" placeholder="예: A구역 인테리어">
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label>?곸슂 (?곸꽭 ?댁슜)</label>
-                        <textarea id="finMemo" rows="2" placeholder="?? 1李?以묐룄湲??섎졊, ?먯옱 ?湲?吏湲???></textarea>
+                        <label>적요 (상세 내용)</label>
+                        <textarea id="finMemo" rows="2" placeholder="예: 1차 중도금 수령, 자재 대금 지급 등"></textarea>
                     </div>
 
-                    <button type="submit" class="submit-btn" id="btnSubmit">??ν븯湲?/button>
+                    <button type="submit" class="submit-btn" id="btnSubmit">저장하기</button>
             </form>
         </div>
     </div>

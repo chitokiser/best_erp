@@ -110,39 +110,3 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
-
-// Inject Emergency Mobile Nav CSS to bypass Vite Cache
-(function() {
-    const style = document.createElement('style');
-    style.innerHTML = 
-        .mobile-only { display: none !important; }
-        
-        @media (max-width: 768px) {
-            .mobile-only { display: block !important; }
-            .logo-container { width: 100% !important; justify-content: space-between !important; margin-bottom: 1rem !important; }
-            
-            .top-nav { flex-direction: column !important; align-items: flex-start !important; }
-            .top-nav ul { display: none !important; }
-            .top-nav > div:last-child { display: none !important; }
-            
-            .top-nav.menu-open ul { 
-                display: flex !important; flex-direction: column !important; 
-                background: white; width: 100%; border-radius: 0.5rem; 
-                box-shadow: 0 4px 6px rgba(0,0,0,0.05); padding: 0.5rem !important; gap: 0 !important; 
-            }
-            .top-nav.menu-open > div:last-child { display: block !important; }
-            .top-nav.menu-open ul li { width: 100%; border-bottom: 1px solid #f1f5f9; }
-            .top-nav.menu-open ul li a { display: block !important; padding: 1rem !important; font-size: 1.1rem !important; text-align: center; white-space: normal !important; }
-            
-            th, td, .form-group label, .card-title, .summary-label { font-size: 0.8rem !important; padding: 0.6rem !important; }
-            .card-value, .summary-val { font-size: 1.2rem !important; }
-            h2 { font-size: 1.2rem !important; }
-            h3 { font-size: 1rem !important; }
-        }
-        
-        /* PC Anti-squish */
-        .top-nav ul { flex-wrap: nowrap !important; }
-        .top-nav ul li a { white-space: nowrap !important; }
-    ;
-    document.head.appendChild(style);
-})();

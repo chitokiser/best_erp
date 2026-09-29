@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>프로젝트 상세 - BESTwinner</title>
-    <link rel="stylesheet" href="../assets/css/style.css?v=3">
+    <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/admin.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -239,7 +239,7 @@
                 <div style="display: flex; align-items: center; gap: 1rem;">
                     <h2 id="projectTitleHeader" style="margin: 0; font-size: 1.8rem;">프로젝트 정보를 불러오는 중입니다...</h2>
                     <button id="editProjectBtn" onclick="window.editProjectInfo()"
-                        style="background:none; border:none; color:var(--primary-color); cursor:pointer; display:none;">??
+                        style="background:none; border:none; color:var(--primary-color); cursor:pointer; display:none;">✏️
                         정보 수정</button>
                     <button id="btnRequestSupport" class="btn-primary"
                         style="padding: 0.4rem 1rem; border-radius: 8px; font-size: 0.9rem; margin-left: 1rem; display:none;"
@@ -314,12 +314,12 @@
                     <input type="file" id="aiPhotoInput" accept="image/*" capture="environment" style="display: none;"
                         onchange="window.handleAiPhotoUpload(event)">
                     <button class="btn-primary" style="padding: 0.5rem 1rem; background: #10b981; border: none;"
-                        onclick="document.getElementById('aiPhotoInput').click()">?? 현장 사진 AI 분석</button>
+                        onclick="document.getElementById('aiPhotoInput').click()">📸 현장 사진 AI 분석</button>
                 </div>
             </div>
             <div id="aiResultArea"
                 style="display:none; background: #ecfdf5; padding: 1rem; border: 1px solid #a7f3d0; border-radius: 8px; margin-bottom: 1rem;">
-                <div style="color: #047857; font-weight: bold; margin-bottom: 0.5rem;">?? AI 분석 완료</div>
+                <div style="color: #047857; font-weight: bold; margin-bottom: 0.5rem;">🤖 AI 분석 완료</div>
                 <p id="aiResultText" style="font-size: 0.9rem; color: #065f46; margin: 0 0 1rem 0; line-height: 1.5;">
                 </p>
                 <div style="text-align: right;">
@@ -419,10 +419,10 @@
                 <select id="supportTypeSelect"
                     style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px;"
                     onchange="window.toggleSupportFields()">
-                    <option value="자금">?? 자금 (지출결의서)</option>
-                    <option value="자재">?? 자재</option>
-                    <option value="인력">???♂? 인력</option>
-                    <option value="장비">?? 장비</option>
+                    <option value="자금">💰 자금 (지출결의서)</option>
+                    <option value="자재">🧱 자재</option>
+                    <option value="인력">👷‍♂️ 인력</option>
+                    <option value="장비">🚜 장비</option>
                 </select>
             </div>
             <!-- 지출결의서 전용 필드 -->
@@ -718,8 +718,8 @@
 
             card.innerHTML = `
             <div class="card-actions">
-                <button onclick="window.editTask('${id}', '${data.title || ''}', '${data.description || ''}')">??</button>
-                <button onclick="window.delTask('${id}')">???</button>
+                <button onclick="window.editTask('${id}', '${data.title || ''}', '${data.description || ''}')">✏️</button>
+                <button onclick="window.delTask('${id}')">🗑️</button>
             </div>
             <span class="task-tag">${data.tag || '일반'}</span>
             <h4 style="margin:0 0 0.5rem 0; font-size:1rem; padding-right:2rem;">${data.title}</h4>
@@ -854,9 +854,9 @@
                                 <span style="font-size:0.85rem; font-weight:bold; color:var(--warning);">${dt.status || '대기중'}</span>
                             </div>
                             <div style="background:#f8fafc; padding:1rem; border-radius:6px; margin-bottom:1rem;">
-                                <p style="margin:0 0 0.5rem 0; font-size:0.9rem;"><strong>?? 결제 요청액:</strong> ${dt.expenseAmount || 0}원</p>
-                                <p style="margin:0 0 0.5rem 0; font-size:0.9rem;"><strong>?? 지급처/계좌:</strong> ${dt.expensePayee || ''}</p>
-                                <p style="margin:0; font-size:0.9rem;"><strong>?? 결제 요청일:</strong> ${dt.expenseDate || ''}</p>
+                                <p style="margin:0 0 0.5rem 0; font-size:0.9rem;"><strong>💰 결제 요청액:</strong> ${dt.expenseAmount || 0}원</p>
+                                <p style="margin:0 0 0.5rem 0; font-size:0.9rem;"><strong>🏦 지급처/계좌:</strong> ${dt.expensePayee || ''}</p>
+                                <p style="margin:0; font-size:0.9rem;"><strong>📅 결제 요청일:</strong> ${dt.expenseDate || ''}</p>
                             </div>
                             <p style="margin:0; font-size: 0.95rem; line-height:1.5;">${dt.memo || ''}</p>
                         </div>`;
@@ -957,7 +957,7 @@
                     html += `
                     <tr>
                         <td style="padding: 1rem; font-weight: 500;">
-                            ?? 
+                            📄 
                             ${data.isAiGenerated ? '<span style="color:#10b981; font-size:0.8rem;">[AI]</span> ' : ''}${data.name}
                         </td>
                         <td style="padding: 1rem;">${data.uploader}</td>

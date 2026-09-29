@@ -1,11 +1,11 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI CEO MANAGER - 怨좉컼(Clients) DB</title>
-    <link rel="stylesheet" href="../assets/css/style.css?v=3">
+    <title>AI CEO MANAGER - 고객(Clients) DB</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -333,23 +333,45 @@
         <svg viewBox="0 0 24 24" width="28" height="28" stroke="#4F46E5" stroke-width="2" fill="none"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
     </div>
 </div>
+        <ul>
+            <li><a href="dashboard.html">대시보드</a></li>
+            <li><a href="projects.html">프로젝트</a></li>
+            <li><a href="materials.html">자재관리</a></li>
+            <li><a href="suppliers.html">협력업체</a></li>
+            <li><a href="purchase-requests.html">결재관리(구매)</a></li>
+            <li><a href="finance.html">재무/회계</a></li>
+            <li><a href="employees.html">직원</a></li>
+            <li><a href="clients.html" class="active">고객</a></li>
+            <li><a href="contacts.html">인맥</a></li>
+        </ul>
+        <div style="font-size: 0.85rem; text-align: right;">
+            <strong style="color:var(--ai-primary, #4F46E5);" id="navUserEmailSpan">SUPER_ADMIN</strong><br>
+            최고 관리자 <a href="#" onclick="window.logoutAndRedirect()" style="color:#2563eb;">[로그아웃]</a>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="header-action">
+            <h2>AI 고객(CRM) 데이터베이스</h2>
+            <button class="btn-add" id="openModalBtn">+ 새 고객사 등록</button>
+        </div>
 
         <div class="client-summary">
             <div class="summary-box">
-                <div class="summary-label">?꾩껜 ?쒖꽦 怨좉컼</div>
-                <div class="summary-val" id="statTotal">0 媛쒖궗</div>
+                <div class="summary-label">전체 활성 고객</div>
+                <div class="summary-val" id="statTotal">0 개사</div>
             </div>
             <div class="summary-box">
-                <div class="summary-label">VVip 怨좉컼</div>
-                <div class="summary-val val-vip" id="statVip">0 媛쒖궗</div>
+                <div class="summary-label">VVip 고객</div>
+                <div class="summary-val val-vip" id="statVip">0 개사</div>
             </div>
             <div class="summary-box">
-                <div class="summary-label">?좉퇋 怨좉컼 (?대쾲??</div>
-                <div class="summary-val" id="statNew" style="color:var(--success);">0 媛쒖궗</div>
+                <div class="summary-label">신규 고객 (이번달)</div>
+                <div class="summary-val" id="statNew" style="color:var(--success);">0 개사</div>
             </div>
             <div class="summary-box">
-                <div class="summary-label">?댄깉 二쇱쓽 怨좉컼</div>
-                <div class="summary-val val-risk" id="statRisk">0 媛쒖궗</div>
+                <div class="summary-label">이탈 주의 고객</div>
+                <div class="summary-val val-risk" id="statRisk">0 개사</div>
             </div>
         </div>
 
@@ -357,17 +379,17 @@
             <table>
                 <thead>
                     <tr>
-                        <th>怨좉컼/?뚯궗紐?/th>
-                        <th>?곹깭/?깃툒</th>
-                        <th>?대떦??諛??곕씫泥?/th>
-                        <th>理쒓렐 ?곸뾽(誘명똿)??/th>
-                        <th>二쇱슂 ?뱀씠?ы빆</th>
+                        <th>고객/회사명</th>
+                        <th>상태/등급</th>
+                        <th>담당자 및 연락처</th>
+                        <th>최근 영업(미팅)일</th>
+                        <th>주요 특이사항</th>
                     </tr>
                 </thead>
                 <tbody id="clientTableBody">
                     <tr>
-                        <td colspan="5" style="text-align:center; padding:3rem; color:var(--text-muted);">濡쒕뵫 以묒씠嫄곕굹 ?깅줉??怨좉컼
-                            ?곗씠?곌? ?놁뒿?덈떎.</td>
+                        <td colspan="5" style="text-align:center; padding:3rem; color:var(--text-muted);">로딩 중이거나 등록된 고객
+                            데이터가 없습니다.</td>
                     </tr>
                 </tbody>
             </table>
@@ -378,49 +400,49 @@
     <div class="modal-overlay" id="clientModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>??怨좉컼 ?뺣낫 ?깅줉</h3>
+                <h3>새 고객 정보 등록</h3>
                 <button class="close-btn" id="closeModalBtn">&times;</button>
             </div>
             <form id="clientForm">
                 <div class="form-row">
                     <div class="form-group">
-                        <label>怨좉컼紐?(?뚯궗紐?</label>
-                        <input type="text" id="cliName" required placeholder="?? (二?踰좎뒪?멸굔??>
+                        <label>고객명 (회사명)</label>
+                        <input type="text" id="cliName" required placeholder="예: (주)베스트건설">
                     </div>
                     <div class="form-group">
-                        <label>怨좉컼 ?깃툒/?곹깭</label>
+                        <label>고객 등급/상태</label>
                         <select id="cliGrade" required>
-                            <option value="NORMAL">?쇰컲 怨좉컼</option>
-                            <option value="VIP">狩?VIP 怨좉컼 (?듭떖)</option>
-                            <option value="NEW">?윟 ?좉퇋 怨좉컼</option>
-                            <option value="RISK">?좑툘 ?댄깉 ?꾪뿕 (愿由ъ슂留?</option>
+                            <option value="NORMAL">일반 고객</option>
+                            <option value="VIP">⭐ VIP 고객 (핵심)</option>
+                            <option value="NEW">🟢 신규 고객</option>
+                            <option value="RISK">⚠️ 이탈 위험 (관리요망)</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>?대떦???깊븿/吏곴툒</label>
-                        <input type="text" id="cliContactName" required placeholder="?? 源泥좎닔 遺??>
+                        <label>담당자 성함/직급</label>
+                        <input type="text" id="cliContactName" required placeholder="예: 김철수 부장">
                     </div>
                     <div class="form-group">
-                        <label>?곕씫泥?(?꾪솕/?대찓??</label>
+                        <label>연락처 (전화/이메일)</label>
                         <input type="text" id="cliPhone" required placeholder="010-1234-5678">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label>理쒓렐 ?곸뾽(而⑦깮) ?쇱옄</label>
+                    <label>최근 영업(컨택) 일자</label>
                     <input type="date" id="cliLastContact" required>
                 </div>
 
                 <div class="form-group">
-                    <label>二쇱슂 ?뱀씠?ы빆 諛?AI ?꾨떖 硫붾え</label>
+                    <label>주요 특이사항 및 AI 전달 메모</label>
                     <textarea id="cliMemo" rows="3"
-                        placeholder="?? ?ㅼ쓬 ???洹쒕え 諛쒖＜ ?덉긽?? 寃쎌웳?ъ? ?④? 鍮꾧탳 以묒씠誘濡?鍮좊Ⅸ ????꾩슂."></textarea>
+                        placeholder="예: 다음 달 대규모 발주 예상됨. 경쟁사와 단가 비교 중이므로 빠른 대응 필요."></textarea>
                 </div>
 
-                <button type="submit" class="submit-btn" id="btnSubmit">怨좉컼 ?뺣낫 ??ν븯湲?/button>
+                <button type="submit" class="submit-btn" id="btnSubmit">고객 정보 저장하기</button>
             </form>
         </div>
     </div>

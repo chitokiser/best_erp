@@ -1,12 +1,12 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>?꾨줈?앺듃 愿由?- AI CEO MANAGER</title>
+    <title>프로젝트 관리 - AI CEO MANAGER</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../assets/css/style.css?v=3">
+    <link rel="stylesheet" href="../assets/css/style.css">
     <style>
         :root {
             --ai-primary: #4F46E5;
@@ -28,7 +28,7 @@
             padding: 0;
             color: var(--text-dark);
             display: none;
-            /* auth check ??蹂댁씠寃?蹂寃?*/
+            /* auth check 시 보이게 변경 */
         }
 
         .top-nav {
@@ -189,21 +189,44 @@
         <svg viewBox="0 0 24 24" width="28" height="28" stroke="#4F46E5" stroke-width="2" fill="none"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
     </div>
 </div>
+        <ul>
+            <li><a href="dashboard.html">대시보드</a></li>
+            <li><a href="projects.html" class="active">프로젝트</a></li>
+            <li><a href="materials.html">자재관리</a></li>
+            <li><a href="suppliers.html">협력업체</a></li>
+            <li><a href="finance.html">재무/회계</a></li>
+            <li><a href="employees.html">직원</a></li>
+            <li><a href="clients.html">고객</a></li>
+            <li><a href="contacts.html">인맥</a></li>
+        </ul>
+        <div style="font-size: 0.85rem; text-align: right;">
+            <strong style="color:var(--ai-primary);" id="currentUserEmail">SUPER_ADMIN</strong><br>
+            최고 관리자 <a href="#" onclick="window.logoutAndRedirect()" style="color:#2563eb;">[로그아웃]</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container">
+        <div class="panel">
+            <div class="panel-header">
+                <h2>프로젝트 (현장) 관리</h2>
+                <button class="btn-primary" onclick="window.createProject()">+ 새 프로젝트 파트너 할당</button>
+            </div>
 
             <table style="width: 100%; border-collapse: collapse; text-align: left;">
                 <thead>
                     <tr>
-                        <th>?꾨줈?앺듃 紐?/th>
-                        <th>吏꾪뻾 ?④퀎</th>
-                        <th>?대떦??PM)</th>
-                        <th>醫낅즺 ?덉젙??/th>
-                        <th>愿由?/th>
+                        <th>프로젝트 명</th>
+                        <th>진행 단계</th>
+                        <th>담당자(PM)</th>
+                        <th>종료 예정일</th>
+                        <th>관리</th>
                     </tr>
                 </thead>
                 <tbody id="projectsTableBody">
                     <tr>
                         <td colspan="5" style="text-align:center; padding: 2rem; color: var(--text-muted);">
-                            ?곗씠?곕? 遺덈윭?ㅻ뒗 以?..
+                            데이터를 불러오는 중...
                         </td>
                     </tr>
                 </tbody>
@@ -221,23 +244,23 @@
         };
 
         window.createProject = async () => {
-            const title = prompt("?덈줈???꾨줈?앺듃(怨듭궗 ?꾩옣) ?대쫫???낅젰?섏꽭??");
+            const title = prompt("새로운 프로젝트(공사 현장) 이름을 입력하세요:");
             if (!title) return;
-            const pmEmail = prompt("???꾨줈?앺듃瑜??대떦??PM(?대떦?????대찓?쇱쓣 ?낅젰?섏꽭??(?? kfu134252@gmail.com):");
+            const pmEmail = prompt("이 프로젝트를 담당할 PM(담당자)의 이메일을 입력하세요 (예: kfu134252@gmail.com):");
             if (!pmEmail) return;
 
             try {
                 const docRef = await addDoc(collection(db, 'projects'), {
                     title: title,
-                    status: '李⑷났?湲?,
+                    status: '착공대기',
                     pm: pmEmail,
                     createdAt: new Date(),
                     deadline: 'N/A'
                 });
-                alert('?꾨줈?앺듃媛 ?깃났?곸쑝濡??앹꽦 諛??좊떦?섏뿀?듬땲??');
+                alert('프로젝트가 성공적으로 생성 및 할당되었습니다!');
                 window.location.href = `project-detail.html?id=${docRef.id}`;
             } catch (e) {
-                alert('?꾨줈?앺듃 ?앹꽦 ?ㅽ뙣: ' + e.message);
+                alert('프로젝트 생성 실패: ' + e.message);
             }
         };
 
@@ -252,7 +275,7 @@
                 try {
                     const querySnapshot = await getDocs(collection(db, 'projects'));
                     if (querySnapshot.empty) {
-                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 2rem; color: var(--text-muted);">?앹꽦???꾨줈?앺듃媛 ?놁뒿?덈떎.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 2rem; color: var(--text-muted);">생성된 프로젝트가 없습니다.</td></tr>';
                         return;
                     }
 
@@ -263,24 +286,24 @@
                         html += `
                             <tr>
                                 <td style="padding: 1rem; font-weight: 600;">
-                                    <a href="project-detail.html?id=${id}" style="color:var(--ai-primary); text-decoration:none;">${data.title || '臾댁젣 ?꾨줈?앺듃'}</a>
+                                    <a href="project-detail.html?id=${id}" style="color:var(--ai-primary); text-decoration:none;">${data.title || '무제 프로젝트'}</a>
                                 </td>
                                 <td style="padding: 1rem;">
                                     <span class="badge-status">
-                                        ${data.status || '李⑷났?湲?}
+                                        ${data.status || '착공대기'}
                                     </span>
                                 </td>
-                                <td style="padding: 1rem;">${data.pm || '誘몄???}</td>
+                                <td style="padding: 1rem;">${data.pm || '미지정'}</td>
                                 <td style="padding: 1rem; color: var(--text-muted);">${data.deadline || 'N/A'}</td>
                                 <td style="padding: 1rem;">
-                                    <button class="btn-primary" style="padding:0.4rem 0.8rem; font-size: 0.85rem;" onclick="location.href='project-detail.html?id=${id}'">移몃컲 ?닿린</button>
+                                    <button class="btn-primary" style="padding:0.4rem 0.8rem; font-size: 0.85rem;" onclick="location.href='project-detail.html?id=${id}'">칸반 열기</button>
                                 </td>
                             </tr>
                         `;
                     });
                     tbody.innerHTML = html;
                 } catch (e) {
-                    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 2rem; color: var(--danger);">?ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 2rem; color: var(--danger);">오류가 발생했습니다.</td></tr>`;
                     console.error(e);
                 }
             },

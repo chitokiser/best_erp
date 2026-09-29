@@ -1,11 +1,11 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 吏곸썝 DB 愿由?- BESTwinner</title>
-    <link rel="stylesheet" href="../assets/css/style.css?v=3">
+    <title>AI 직원 DB 관리 - BESTwinner</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/admin.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -280,23 +280,45 @@
         <svg viewBox="0 0 24 24" width="28" height="28" stroke="#4F46E5" stroke-width="2" fill="none"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
     </div>
 </div>
+        <ul>
+            <li><a href="dashboard.html">대시보드</a></li>
+            <li><a href="projects.html">프로젝트</a></li>
+            <li><a href="materials.html">자재관리</a></li>
+            <li><a href="suppliers.html">협력업체</a></li>
+            <li><a href="purchase-requests.html">결재관리(구매)</a></li>
+            <li><a href="finance.html">재무/회계</a></li>
+            <li><a href="employees.html" class="active">직원</a></li>
+            <li><a href="clients.html">고객</a></li>
+            <li><a href="contacts.html">인맥</a></li>
+        </ul>
+        <div style="font-size: 0.85rem; text-align: right;">
+            <strong style="color:var(--ai-primary, #4F46E5);" id="navUserEmailSpan">SUPER_ADMIN</strong><br>
+            최고 관리자 <a href="#" onclick="window.logoutAndRedirect()" style="color:#2563eb;">[로그아웃]</a>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="header-action">
+            <h2>AI 분석용 직원 데이터</h2>
+            <button class="btn-add" id="openModalBtn">+ 새 직원 등록</button>
+        </div>
 
         <div class="data-card">
             <table>
                 <thead>
                     <tr>
-                        <th>?대쫫/吏곴툒</th>
-                        <th>遺??/th>
-                        <th>?곕씫泥?/th>
-                        <th>蹂댁쑀 湲곗닠(??웾)</th>
-                        <th>湲됱뿬/?됯?</th>
-                        <th>?꾩옱 ?낅Т??/th>
-                        <th>愿由?/th>
+                        <th>이름/직급</th>
+                        <th>부서</th>
+                        <th>연락처</th>
+                        <th>보유 기술(역량)</th>
+                        <th>급여/평가</th>
+                        <th>현재 업무량</th>
+                        <th>관리</th>
                     </tr>
                 </thead>
                 <tbody id="empTableBody">
                     <tr>
-                        <td colspan="5" style="text-align:center; padding:2rem; color:var(--text-muted);">濡쒕뵫 以?..</td>
+                        <td colspan="5" style="text-align:center; padding:2rem; color:var(--text-muted);">로딩 중...</td>
                     </tr>
                 </tbody>
             </table>
@@ -307,57 +329,57 @@
     <div class="modal-overlay" id="empModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="modalEmpTitle">吏곸썝 ?꾨줈???깅줉</h3><input type="hidden" id="empId" value="">
+                <h3 id="modalEmpTitle">직원 프로필 등록</h3><input type="hidden" id="empId" value="">
                 <button class="close-btn" id="closeModalBtn">&times;</button>
             </div>
             <form id="empForm">
                 <div class="form-row">
                     <div class="form-group">
-                        <label>?대쫫</label>
-                        <input type="text" id="empName" required placeholder="?? 源泥좎닔">
+                        <label>이름</label>
+                        <input type="text" id="empName" required placeholder="예: 김철수">
                     </div>
                     <div class="form-group">
-                        <label>吏곴툒</label>
-                        <input type="text" id="empPosition" required placeholder="?? 怨쇱옣">
+                        <label>직급</label>
+                        <input type="text" id="empPosition" required placeholder="예: 과장">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>遺??/label>
-                        <input type="text" id="empDept" required placeholder="?? 湲곗닠?">
+                        <label>부서</label>
+                        <input type="text" id="empDept" required placeholder="예: 기술팀">
                     </div>
                     <div class="form-group">
-                        <label>?꾩옱 ?낅Т??(%)</label>
-                        <input type="number" id="empWorkload" min="0" max="150" required placeholder="?? 85 (0~100)">
+                        <label>현재 업무량 (%)</label>
+                        <input type="number" id="empWorkload" min="0" max="150" required placeholder="예: 85 (0~100)">
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>??湲됱뿬 (VND)</label>
-                        <input type="number" id="empSalary" placeholder="?? 25000000 (?レ옄留?"
+                        <label>월 급여 (VND)</label>
+                        <input type="number" id="empSalary" placeholder="예: 25000000 (숫자만)"
                             style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; box-sizing: border-box;">
                     </div>
                     <div class="form-group">
-                        <label>理쒓렐 ?몄궗?됯?</label>
+                        <label>최근 인사평가</label>
                         <select id="empPerformance">
-                            <option value="">?됯? ??/option>
-                            <option value="S (理쒖슦??">S (理쒖슦??</option>
-                            <option value="A (?곗닔)">A (?곗닔)</option>
-                            <option value="B (蹂댄넻)">B (蹂댄넻)</option>
-                            <option value="C (誘명씉)">C (誘명씉)</option>
+                            <option value="">평가 전</option>
+                            <option value="S (최우수)">S (최우수)</option>
+                            <option value="A (우수)">A (우수)</option>
+                            <option value="B (보통)">B (보통)</option>
+                            <option value="C (미흡)">C (미흡)</option>
                         </select>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>?대찓??/ ?곕씫泥?/label>
-                    <input type="email" id="empContact" required placeholder="?? chulsoo@best.com">
+                    <label>이메일 / 연락처</label>
+                    <input type="email" id="empContact" required placeholder="예: chulsoo@best.com">
                 </div>
                 <div class="form-group">
-                    <label>蹂댁쑀 湲곗닠 諛??꾨Ц遺꾩빞 (?쇳몴濡?援щ텇)</label>
-                    <input type="text" id="empSkills" placeholder="?? CAD, ?꾩옣?뚯옣, ?먯옱愿由?>
+                    <label>보유 기술 및 전문분야 (쉼표로 구분)</label>
+                    <input type="text" id="empSkills" placeholder="예: CAD, 현장소장, 자재관리">
                 </div>
-                <button type="submit" class="submit-btn" id="btnSubmit">??ν븯湲?/button>
+                <button type="submit" class="submit-btn" id="btnSubmit">저장하기</button>
             </form>
         </div>
     </div>

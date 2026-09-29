@@ -1,11 +1,11 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>?묐젰?낆껜 ?됯? 諛??꾪솴 - BESTwinner</title>
-    <link rel="stylesheet" href="../assets/css/style.css?v=3">
+    <title>협력업체 평가 및 현황 - BESTwinner</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/admin.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -95,49 +95,100 @@
         <svg viewBox="0 0 24 24" width="28" height="28" stroke="#4F46E5" stroke-width="2" fill="none"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
     </div>
 </div>
+        <ul>
+            <li><a href="dashboard.html">대시보드</a></li>
+            <li><a href="projects.html">프로젝트</a></li>
+            <li><a href="materials.html">자재관리</a></li>
+            <li><a href="suppliers.html" class="active">협력업체</a></li>
+            <li><a href="purchase-requests.html">결재관리(구매)</a></li>
+            <li><a href="finance.html">재무/회계</a></li>
+            <li><a href="employees.html">직원</a></li>
+            <li><a href="clients.html">고객</a></li>
+            <li><a href="contacts.html">인맥</a></li>
+        </ul>
+        <div style="font-size: 0.85rem; text-align: right;">
+            <strong style="color:var(--primary-color, #4F46E5);" id="navUserEmailSpan">SUPER_ADMIN</strong><br>
+            최고 관리자 <a href="#" onclick="window.logoutAndRedirect()" style="color:#2563eb;">[로그아웃]</a>
+        </div>
+    </nav>
+
+    <main class="container" style="padding: 2rem 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h2>협력업체 평가 및 현황 (Suppliers & Resources)</h2>
+            <button class="btn-primary" onclick="document.getElementById('supplierModal').showModal()">+ 신규 협력사
+                등록</button>
+        </div>
+
+        <dialog id="supplierModal" class="card"
+            style="border:none; border-radius:8px; padding:2rem; width:100%; max-width:500px;">
+            <h3 style="margin-top:0; color:var(--primary-color);">신규 파트너 등록</h3>
+            <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
+                <div>
+                    <label style="display:block; margin-bottom:0.5rem; font-size:0.9rem;">업체명 *</label>
+                    <input type="text" id="supName" class="search-input" style="width:100%" placeholder="예: 삼성물산">
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:0.5rem; font-size:0.9rem;">취급품목 (카테고리)</label>
+                    <input type="text" id="supCategories" class="search-input" style="width:100%"
+                        placeholder="쉼표(,)로 구분 (예: 건축자재, 철강)">
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:0.5rem; font-size:0.9rem;">담당자명 *</label>
+                    <input type="text" id="supContact" class="search-input" style="width:100%" placeholder="예: 홍길동 부장">
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:0.5rem; font-size:0.9rem;">연락처 *</label>
+                    <input type="text" id="supPhone" class="search-input" style="width:100%"
+                        placeholder="예: 010-1234-5678">
+                </div>
+                <div style="text-align:right; margin-top:1rem;">
+                    <button class="btn-primary" style="background:#64748b"
+                        onclick="document.getElementById('supplierModal').close()">취소</button>
+                    <button class="btn-primary" id="btnSaveSupplier" onclick="window.saveNewSupplier()">등록하기</button>
+                </div>
             </div>
         </dialog>
 
         <div class="quick-links"
             style="margin-bottom: 2rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
             <div class="card" style="border-top: 4px solid #10b981; padding: 1.5rem;">
-                <h3 style="font-size: 1rem; color: var(--text-secondary); margin: 0;">?곗닔 ?뚰듃?덉뒪 (A?깃툒)</h3>
-                <p style="font-size: 2rem; font-weight: bold; color: #065f46; margin: 0.5rem 0;">4怨?/p>
+                <h3 style="font-size: 1rem; color: var(--text-secondary); margin: 0;">우수 파트너스 (A등급)</h3>
+                <p style="font-size: 2rem; font-weight: bold; color: #065f46; margin: 0.5rem 0;">4곳</p>
             </div>
             <div class="card" style="border-top: 4px solid #3b82f6; padding: 1.5rem;">
-                <h3 style="font-size: 1rem; color: var(--text-secondary); margin: 0;">?꾩껜 由ъ냼??媛????/h3>
-                <p style="font-size: 2rem; font-weight: bold; color: #1e3a8a; margin: 0.5rem 0;">18嫄?/p>
+                <h3 style="font-size: 1rem; color: var(--text-secondary); margin: 0;">전체 리소스 가용 수</h3>
+                <p style="font-size: 2rem; font-weight: bold; color: #1e3a8a; margin: 0.5rem 0;">18건</p>
             </div>
             <div class="card" style="border-top: 4px solid #ef4444; padding: 1.5rem;">
-                <h3 style="font-size: 1rem; color: var(--text-secondary); margin: 0;">二쇱쓽 / ?대젅??諛쒖깮</h3>
-                <p style="font-size: 2rem; font-weight: bold; color: #991b1b; margin: 0.5rem 0;">1嫄?/p>
+                <h3 style="font-size: 1rem; color: var(--text-secondary); margin: 0;">주의 / 클레임 발생</h3>
+                <p style="font-size: 2rem; font-weight: bold; color: #991b1b; margin: 0.5rem 0;">1건</p>
             </div>
         </div>
 
         <div class="card" style="overflow-x: auto;">
             <div style="margin-bottom: 1rem; display:flex; gap:1rem; align-items:center;">
-                <input type="text" placeholder="?낆껜紐? 痍④툒?덈ぉ 寃?? class="search-input" style="flex:1;">
+                <input type="text" placeholder="업체명, 취급품목 검색" class="search-input" style="flex:1;">
                 <select class="search-input" style="width:150px;">
-                    <option>?깃툒 ?꾩껜</option>
-                    <option>?곗닔 (A?깃툒)</option>
-                    <option>蹂댄넻 (B?깃툒)</option>
-                    <option>二쇱쓽 (C?깃툒)</option>
+                    <option>등급 전체</option>
+                    <option>우수 (A등급)</option>
+                    <option>보통 (B등급)</option>
+                    <option>주의 (C등급)</option>
                 </select>
             </div>
             <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem;">
                 <thead>
                     <tr style="border-bottom: 2px solid var(--border-color); color:var(--text-secondary);">
-                        <th style="padding: 1rem;">?낆껜紐?/th>
-                        <th style="padding: 1rem;">醫낇빀 ?됯? (?쒓렇)</th>
-                        <th style="padding: 1rem;">?꾩쟻 諛쒖＜???쒓컖??/th>
-                        <th style="padding: 1rem;">痍④툒?덈ぉ</th>
-                        <th style="padding: 1rem;">?곕씫泥?/th>
-                        <th style="padding: 1rem;">湲곕줉</th>
+                        <th style="padding: 1rem;">업체명</th>
+                        <th style="padding: 1rem;">종합 평가 (태그)</th>
+                        <th style="padding: 1rem;">누적 발주액 시각화</th>
+                        <th style="padding: 1rem;">취급품목</th>
+                        <th style="padding: 1rem;">연락처</th>
+                        <th style="padding: 1rem;">기록</th>
                     </tr>
                 </thead>
                 <tbody id="suppliersTableBody">
                     <tr>
-                        <td colspan="5" style="padding: 1rem; text-align: center;">濡쒕뵫 以?..</td>
+                        <td colspan="5" style="padding: 1rem; text-align: center;">로딩 중...</td>
                     </tr>
                 </tbody>
             </table>
@@ -155,13 +206,13 @@
             const phone = document.getElementById('supPhone').value.trim();
 
             if (!name || !contact || !phone) {
-                alert("?낆껜紐? ?대떦?먮챸, ?곕씫泥섎뒗 ?꾩닔 ??ぉ?낅땲??");
+                alert("업체명, 담당자명, 연락처는 필수 항목입니다.");
                 return;
             }
 
             const btn = document.getElementById('btnSaveSupplier');
             btn.disabled = true;
-            btn.textContent = '?깅줉 以?..';
+            btn.textContent = '등록 중...';
             try {
                 await createSupplier({
                     companyName: name,
@@ -169,7 +220,7 @@
                     contactPerson: contact,
                     phone: phone,
                 });
-                alert("?묐젰?낆껜媛 ?깃났?곸쑝濡??깅줉?섏뿀?듬땲??");
+                alert("협력업체가 성공적으로 등록되었습니다!");
                 document.getElementById('supplierModal').close();
                 // Clear fields
                 document.getElementById('supName').value = '';
@@ -180,10 +231,10 @@
                 loadSuppliers();
             } catch (e) {
                 console.error(e);
-                alert("?먮윭 諛쒖깮: " + e.message);
+                alert("에러 발생: " + e.message);
             } finally {
                 btn.disabled = false;
-                btn.textContent = '?깅줉?섍린';
+                btn.textContent = '등록하기';
             }
         };
 
@@ -195,32 +246,32 @@
                     tbody.innerHTML = `
                         <tr>
                             <td colspan="6" style="padding: 1rem; text-align: center;">
-                                <p style="margin-bottom:1rem; color:var(--text-secondary);">?깅줉??怨듦툒?낆껜(?묐젰??媛 ?놁뒿?덈떎.</p>
-                                <button id="btnInitSuppliers" class="btn-primary" style="background:var(--success, #10B981);">珥덇린 ?섑뵆 ?곗씠???앹꽦?섍린</button>
+                                <p style="margin-bottom:1rem; color:var(--text-secondary);">등록된 공급업체(협력사)가 없습니다.</p>
+                                <button id="btnInitSuppliers" class="btn-primary" style="background:var(--success, #10B981);">초기 샘플 데이터 생성하기</button>
                             </td>
                         </tr>
                     `;
                     document.getElementById('btnInitSuppliers').addEventListener('click', async () => {
                         const btn = document.getElementById('btnInitSuppliers');
                         btn.disabled = true;
-                        btn.textContent = '?곗씠???앹꽦 以?..';
+                        btn.textContent = '데이터 생성 중...';
                         try {
                             const { createSupplier } = await import('../services/supplierApi.js');
                             const sampleData = [
-                                { companyName: "LG?섏슦?쒖뒪 (踰좏듃?⑤쾿??", categories: ["?명뀒由ъ뼱", "留덇컧??], contactPerson: "源?쒖쭊 踰뺤씤??, phone: "090-123-4567" },
-                                { companyName: "KONE ?섎━踰좎씠??, categories: ["?섎━踰좎씠??, "湲곌퀎 ?ㅻ퉬"], contactPerson: "Nguyen Van A", phone: "091-234-5678" },
-                                { companyName: "?몄븘??泥좉컯 (Hoa Phat)", categories: ["嫄댁텞?먯옱", "泥좉컯"], contactPerson: "Le Thi B", phone: "093-456-7890" },
-                                { companyName: "?쇱꽦 SDS (?ㅻ쭏?명솃)", categories: ["?ㅻ쭏?몄＜李⑥옣", "IT/?ㅽ듃?뚰겕"], contactPerson: "諛뺤꽦?????, phone: "094-567-8901" },
-                                { companyName: "踰좏듃???뚮갑?ㅻ퉬(VinaFire)", categories: ["?뚮갑", "?덉쟾?λ퉬"], contactPerson: "Tran Van C", phone: "096-789-0123" }
+                                { companyName: "LG하우시스 (베트남법인)", categories: ["인테리어", "마감재"], contactPerson: "김태진 법인장", phone: "090-123-4567" },
+                                { companyName: "KONE 엘리베이터", categories: ["엘리베이터", "기계 설비"], contactPerson: "Nguyen Van A", phone: "091-234-5678" },
+                                { companyName: "호아팟 철강 (Hoa Phat)", categories: ["건축자재", "철강"], contactPerson: "Le Thi B", phone: "093-456-7890" },
+                                { companyName: "삼성 SDS (스마트홈)", categories: ["스마트주차장", "IT/네트워크"], contactPerson: "박성호 팀장", phone: "094-567-8901" },
+                                { companyName: "베트남 소방설비(VinaFire)", categories: ["소방", "안전장비"], contactPerson: "Tran Van C", phone: "096-789-0123" }
                             ];
                             for (const s of sampleData) {
                                 await createSupplier(s);
                             }
-                            alert('?섑뵆 ?묐젰?낆껜 ?곗씠??5嫄댁씠 珥덇린?붾릺?덉뒿?덈떎!');
+                            alert('샘플 협력업체 데이터 5건이 초기화되었습니다!');
                             loadSuppliers();
                         } catch (e) {
                             console.error(e);
-                            alert("?ㅻ쪟 諛쒖깮: " + e.message);
+                            alert("오류 발생: " + e.message);
                             btn.disabled = false;
                         }
                     });
@@ -233,9 +284,9 @@
                     const randomAmountVnd = (Math.floor(Math.random() * 80) + 10) * 100000000; // random offset up to 8 billion VND
                     const fillPercentage = (randomAmountVnd / 10000000000) * 100;
 
-                    let e = { label: '蹂댄넻', color: '#1f2937', bg: '#f3f4f6' };
-                    if (idx % 3 === 0) e = { label: '?곗닔', color: '#065f46', bg: '#d1fae5' };
-                    if (idx === 4) e = { label: '二쇱쓽 (?대젅??', color: '#991b1b', bg: '#fee2e2' };
+                    let e = { label: '보통', color: '#1f2937', bg: '#f3f4f6' };
+                    if (idx % 3 === 0) e = { label: '우수', color: '#065f46', bg: '#d1fae5' };
+                    if (idx === 4) e = { label: '주의 (클레임)', color: '#991b1b', bg: '#fee2e2' };
 
                     const tr = document.createElement('tr');
                     tr.style.borderBottom = '1px solid var(--border-color)';
@@ -250,18 +301,18 @@
                                 <div style="width: 100px; background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden;">
                                     <div style="background: var(--primary-color); width: ${fillPercentage}%; height: 100%;"></div>
                                 </div>
-                                <span style="font-size: 0.85rem; font-weight: 600;">${randomAmountVnd.toLocaleString()} ??/span>
+                                <span style="font-size: 0.85rem; font-weight: 600;">${randomAmountVnd.toLocaleString()} ₫</span>
                             </div>
                         </td>
                         <td style="padding: 1rem;">${(s.categories || []).join(', ') || '-'}</td>
                         <td style="padding: 1rem; font-size:0.875rem;">${s.contactPerson || '-'} (${s.phone || '-'})</td>
-                        <td style="padding: 1rem;"><button class="btn-primary" style="padding:0.25rem 0.5rem; background:#64748b; font-size:0.8rem;" onclick="alert('?됯? ?덉뒪?좊━ 蹂닿린 ?앹뾽 ?꾩슦湲?)">?됯?/由щ럭 議고쉶</button></td>
+                        <td style="padding: 1rem;"><button class="btn-primary" style="padding:0.25rem 0.5rem; background:#64748b; font-size:0.8rem;" onclick="alert('평가 히스토리 보기 팝업 띄우기')">평가/리뷰 조회</button></td>
                     `;
                     tbody.appendChild(tr);
                 });
             } catch (err) {
                 console.error(err);
-                tbody.innerHTML = `<tr><td colspan="5" style="padding: 1rem; text-align: center; color: red;">?ㅻ쪟 諛쒖깮: ${err.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" style="padding: 1rem; text-align: center; color: red;">오류 발생: ${err.message}</td></tr>`;
             }
         };
 

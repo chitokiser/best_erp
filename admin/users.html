@@ -1,11 +1,11 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>沅뚰븳 諛??대떦??愿由?- BEST Group</title>
-    <link rel="stylesheet" href="../assets/css/style.css?v=3">
+    <title>권한 및 담당자 관리 - BEST Group</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/admin.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -77,11 +77,11 @@
             <h1 class="logo">BEST Group</h1>
             <nav class="main-nav">
                 <ul>
-                    <li><a href="dashboard.html">??쒕낫??/a></li>
-                    <li><a href="materials.html">?먯옱愿由?/a></li>
-                    <li><a href="suppliers.html">怨듦툒?낆껜</a></li>
-                    <li><a href="purchase-requests.html">寃곗옱愿由?援щℓ)</a></li>
-                    <li><a href="users.html" style="color:var(--primary-color)">沅뚰븳愿由?/a></li>
+                    <li><a href="dashboard.html">대시보드</a></li>
+                    <li><a href="materials.html">자재관리</a></li>
+                    <li><a href="suppliers.html">공급업체</a></li>
+                    <li><a href="purchase-requests.html">결재관리(구매)</a></li>
+                    <li><a href="users.html" style="color:var(--primary-color)">권한관리</a></li>
                 </ul>
             </nav>
         </div>
@@ -89,20 +89,20 @@
 
     <main class="container" style="padding: 2rem 1rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-            <h2>?대떦??諛?沅뚰븳 ?ㅼ젙</h2>
-            <button class="btn-primary" onclick="window.inviteNewUser()">+ ??沅뚰븳 遺??/button>
+            <h2>담당자 및 권한 설정</h2>
+            <button class="btn-primary" onclick="window.inviteNewUser()">+ 새 권한 부여</button>
         </div>
 
         <div class="card" style="margin-bottom: 2rem;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
                 <div>
-                    <h3>?쒖꽦 ?대떦??紐⑸줉</h3>
+                    <h3>활성 담당자 목록</h3>
                     <p style="color: var(--text-secondary); margin-bottom: 0; font-size: 0.875rem;">
-                        ?쒖뒪?쒖뿉 ?묎렐 媛?ν븳 ?ъ슜?먯? 愿由?移댄뀒怨좊━瑜?吏?뺥븷 ???덉뒿?덈떎.
+                        시스템에 접근 가능한 사용자와 관리 카테고리를 지정할 수 있습니다.
                     </p>
                 </div>
                 <div>
-                    <input type="text" id="userSearchInput" placeholder="?대찓???먮뒗 ?대쫫 寃??.."
+                    <input type="text" id="userSearchInput" placeholder="이메일 또는 이름 검색..."
                         style="padding: 0.5rem 1rem; border-radius: 4px; border: 1px solid var(--border-color); width: 250px; outline: none; transition: border-color 0.2s;">
                 </div>
             </div>
@@ -110,17 +110,17 @@
             <table style="width: 100%; border-collapse: collapse; text-align: left;">
                 <thead>
                     <tr style="border-bottom: 2px solid var(--border-color);">
-                        <th style="padding: 1rem;">?대떦??紐??대찓??/th>
-                        <th style="padding: 1rem;">?쒖뒪??沅뚰븳</th>
-                        <th style="padding: 1rem;">?대떦 移댄뀒怨좊━</th>
-                        <th style="padding: 1rem;">?곹깭</th>
-                        <th style="padding: 1rem;">沅뚰븳 蹂寃?/th>
+                        <th style="padding: 1rem;">담당자 명/이메일</th>
+                        <th style="padding: 1rem;">시스템 권한</th>
+                        <th style="padding: 1rem;">담당 카테고리</th>
+                        <th style="padding: 1rem;">상태</th>
+                        <th style="padding: 1rem;">권한 변경</th>
                     </tr>
                 </thead>
                 <tbody id="usersTableBody">
                     <tr>
                         <td colspan="5" style="text-align:center; padding: 1rem; color: var(--text-secondary);">
-                            ?곗씠?곕? 遺덈윭?ㅻ뒗 以?..
+                            데이터를 불러오는 중...
                         </td>
                     </tr>
                 </tbody>
@@ -135,26 +135,26 @@
         import { collection, getDocs, updateDoc, doc, addDoc } from 'firebase/firestore';
 
         window.updateUserRole = async (userId, currentRole) => {
-            const newRole = prompt(`?덈줈??沅뚰븳???낅젰?섏꽭??(SUPER_ADMIN, ADMIN, STAFF, VIEWER)\n?꾩옱 沅뚰븳: ${currentRole}`, currentRole);
+            const newRole = prompt(`새로운 권한을 입력하세요 (SUPER_ADMIN, ADMIN, STAFF, VIEWER)\n현재 권한: ${currentRole}`, currentRole);
             if (newRole && ['SUPER_ADMIN', 'ADMIN', 'STAFF', 'VIEWER'].includes(newRole.toUpperCase())) {
                 try {
-                    await updateDoc(doc(db, 'users', userId), { role: newRole.toUpperCase(), status: '?뱀씤?? });
-                    alert('沅뚰븳???깃났?곸쑝濡?蹂寃쎈릺?덉뒿?덈떎.');
+                    await updateDoc(doc(db, 'users', userId), { role: newRole.toUpperCase(), status: '승인됨' });
+                    alert('권한이 성공적으로 변경되었습니다.');
                     location.reload();
                 } catch (e) {
-                    alert('沅뚰븳 ?좎? ?뺣낫 ?섏젙 以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎: ' + e.message);
+                    alert('권한 유지 정보 수정 중 오류가 발생했습니다: ' + e.message);
                 }
             } else if (newRole) {
-                alert('?좏슚?섏? ?딆? 沅뚰븳?낅땲??');
+                alert('유효하지 않은 권한입니다.');
             }
         };
 
         window.inviteNewUser = async () => {
-            const email = prompt("沅뚰븳??遺?ы븷 ???대떦?먯쓽 援ш? 怨꾩젙(?대찓?????낅젰?섏꽭??");
+            const email = prompt("권한을 부여할 새 담당자의 구글 계정(이메일)을 입력하세요:");
             if (!email || email.trim() === '') return;
 
-            const position = prompt("吏곴툒 ?먮뒗 ??븷紐낆쓣 ?낅젰?섏꽭??(?? ?닿낵?? ?몄＜?낆껜 ??:", "?대떦??);
-            const role = prompt("?쒖뒪??沅뚰븳 ?깃툒???낅젰?섏꽭??(?? ADMIN, STAFF, VIEWER):", "STAFF");
+            const position = prompt("직급 또는 역할명을 입력하세요 (예: 이과장, 외주업체 등):", "담당자");
+            const role = prompt("시스템 권한 등급을 입력하세요 (예: ADMIN, STAFF, VIEWER):", "STAFF");
 
             if (email && role) {
                 try {
@@ -163,13 +163,13 @@
                         name: position,
                         position: position || 'N/A',
                         role: role.toUpperCase(),
-                        status: '?뱀씤??,
+                        status: '승인됨',
                         createdAt: new Date()
                     });
-                    alert(`[${email}] 怨꾩젙??${role.toUpperCase()} 沅뚰븳?쇰줈 ?쒖뒪?쒖뿉 ?깅줉?섏뿀?듬땲??`);
+                    alert(`[${email}] 계정이 ${role.toUpperCase()} 권한으로 시스템에 등록되었습니다!`);
                     location.reload();
                 } catch (e) {
-                    alert('?ъ슜???깅줉 ?ㅽ뙣: ' + e.message);
+                    alert('사용자 등록 실패: ' + e.message);
                 }
             }
         };
@@ -179,15 +179,15 @@
         function renderUsersTable(users) {
             const tbody = document.getElementById('usersTableBody');
             if (users.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1rem; color:var(--text-secondary);">寃??寃곌낵媛 ?놁뒿?덈떎.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1rem; color:var(--text-secondary);">검색 결과가 없습니다.</td></tr>';
                 return;
             }
 
             let html = '';
             users.forEach(data => {
                 const role = data.role || 'VIEWER';
-                const status = data.status || '?湲곗쨷';
-                const category = data.category || '?꾩껜 議고쉶';
+                const status = data.status || '대기중';
+                const category = data.category || '전체 조회';
 
                 let badgeClass = 'role-viewer';
                 if (role === 'SUPER_ADMIN') badgeClass = 'role-super';
@@ -196,12 +196,12 @@
 
                 html += `
                     <tr>
-                        <td style="padding: 1rem; font-weight: 500;">${data.name || data.position || '?대쫫 ?놁쓬'} (${data.email || '?대찓???놁쓬'})</td>
+                        <td style="padding: 1rem; font-weight: 500;">${data.name || data.position || '이름 없음'} (${data.email || '이메일 없음'})</td>
                         <td style="padding: 1rem;"><span class="role-badge ${badgeClass}">${role}</span></td>
                         <td style="padding: 1rem;">${category}</td>
-                        <td style="padding: 1rem; color: ${status === '?湲곗쨷' ? '#94a3b8' : 'inherit'}">${status}</td>
+                        <td style="padding: 1rem; color: ${status === '대기중' ? '#94a3b8' : 'inherit'}">${status}</td>
                         <td style="padding: 1rem;">
-                            <button class="btn-primary" style="padding:0.25rem 0.5rem;" onclick="window.updateUserRole('${data.id}', '${role}')">?ㅼ젙</button>
+                            <button class="btn-primary" style="padding:0.25rem 0.5rem;" onclick="window.updateUserRole('${data.id}', '${role}')">설정</button>
                         </td>
                     </tr>
                 `;
@@ -239,7 +239,7 @@
 
                 } catch (error) {
                     console.error("Error fetching users:", error);
-                    document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 1rem; color: red;">?곗씠?곕? 遺덈윭?ㅻ뒗 以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.</td></tr>';
+                    document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 1rem; color: red;">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>';
                 }
 
                 // Add user header
@@ -248,7 +248,7 @@
                     const li = document.createElement('li');
                     li.id = 'navUserEmail';
                     li.innerHTML = `<span style="margin-left: 1rem; font-size:0.875rem; color:var(--text-secondary);">${user.email}</span>
-                                    <button onclick="window.logoutAndRedirect()" style="margin-left:0.5rem; background:none; border:none; cursor:pointer; color:var(--primary-color); font-weight:bold;">[濡쒓렇?꾩썐]</button>`;
+                                    <button onclick="window.logoutAndRedirect()" style="margin-left:0.5rem; background:none; border:none; cursor:pointer; color:var(--primary-color); font-weight:bold;">[로그아웃]</button>`;
                     nav.appendChild(li);
                 }
             },
