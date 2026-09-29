@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>프로젝트 관리 - AI CEO MANAGER</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>:root{--ai-primary:#4f46e5;--ai-secondary:#818cf8;--ai-gradient:linear-gradient(135deg, #4f46e5, #7c3aed);--danger:#ef4444;--warning:#f59e0b;--success:#10b981;--vip:#8b5cf6;--text-dark:#1e293b;--text-muted:#64748b;--bg-glass:#ffffffd9}body{color:var(--text-dark);background:#f8fafc;margin:0;padding:0;font-family:Inter,sans-serif;display:none}.top-nav{z-index:50;background:#fff;justify-content:space-between;align-items:center;padding:1rem 2rem;display:flex;position:sticky;top:0;box-shadow:0 4px 6px -1px #0000000d}.top-nav h1{color:var(--ai-primary);margin:0;font-size:1.5rem;font-weight:800}.top-nav ul{gap:2rem;margin:0;padding:0;list-style:none;display:flex}.top-nav a{color:var(--text-muted);font-size:.95rem;font-weight:600;text-decoration:none;transition:color .2s}.top-nav a:hover,.top-nav a.active{color:var(--ai-primary)}.container{max-width:1200px;margin:2rem auto;padding:0 1rem}.panel{background:#fff;border-radius:16px;margin-bottom:2rem;padding:2rem;box-shadow:0 4px 6px -1px #0000000d}.panel-header{justify-content:space-between;align-items:center;margin-bottom:2rem;display:flex}.panel-header h2{color:var(--text-dark);margin:0;font-size:1.5rem;font-weight:800}.btn-primary{background:var(--ai-gradient);color:#fff;cursor:pointer;border:none;border-radius:8px;padding:.6rem 1.2rem;font-size:.95rem;font-weight:600;box-shadow:0 2px 4px #4f46e54d}table{border-collapse:collapse;text-align:left;width:100%}th,td{border-bottom:1px solid #e2e8f0;padding:1rem}th{color:var(--text-muted);font-size:.9rem;font-weight:700}td{font-size:.95rem}.badge-status{color:#0369a1;background:#e0f2fe;border-radius:4px;padding:.25rem .5rem;font-size:.8rem;font-weight:700}</style>
+
+    <!-- FORCE CSS -->
+<style>.top-nav{flex-wrap:nowrap;justify-content:space-between;align-items:center;display:flex;position:relative;overflow:visible}.logo-container{width:auto!important}.top-nav ul{align-items:center;gap:1rem;margin:0;padding:0;list-style:none;display:flex;flex-wrap:nowrap!important}.top-nav ul li a{white-space:nowrap!important}.mobile-only-btn{display:none!important}@media screen and (width<=900px){.mobile-only-btn{display:block!important}.logo-container{justify-content:space-between!important;width:100%!important}.top-nav{flex-direction:column!important;align-items:flex-start!important}.top-nav ul,.top-nav>div:last-child{display:none!important}.top-nav.menu-open ul{background:#fff;border-radius:.5rem;width:100%;max-height:70vh;margin-top:1rem;overflow-y:auto;box-shadow:0 10px 15px -3px #0000001a;flex-direction:column!important;gap:0!important;padding:.5rem 0!important;display:flex!important}.top-nav.menu-open ul li{text-align:center;border-bottom:1px solid #f1f5f9;width:100%}.top-nav.menu-open ul li a{padding:1rem!important;display:block!important}.metric-cards,.dashboard-grid,.client-summary,.finance-summary,.stats-grid,.summary-container{grid-template-columns:1fr!important;gap:1rem!important;display:grid!important}}</style>
+      <script type="module" crossorigin src="/assets/admin_projects-Dgc8G3k5.js"></script>
+      <link rel="modulepreload" crossorigin href="/assets/firebase-config-3n4qqNPS.js">
+      <link rel="modulepreload" crossorigin href="/assets/ai-chat-B_XWIIUI.js">
+      <link rel="modulepreload" crossorigin href="/assets/auth-CRqREFiS.js">
+      <link rel="stylesheet" crossorigin href="/assets/style-CTsXkP_6.css">
+    </head>
+    
+
+<body>
+    <!-- Navigation -->
+    <nav class="top-nav">
+        <div class="logo-container" style="display:flex; align-items:center; justify-content:space-between; width:100%; margin-bottom:0;">
+    <div style="display:flex; align-items:center; gap:0.5rem; flex-shrink:0; cursor:pointer;" onclick="location.href='dashboard.html'">
+        <img src="/assets/logo-Bzhrz68d.png" style="height: 28px;" onerror="this.style.display='none';">
+        <h1 style="margin:0; font-size: 1.3rem; color: #4F46E5; font-weight: 800; white-space:nowrap;">AI경영관리</h1>
+    </div>
+    <div class="mobile-only-btn" style="display:none; cursor:pointer;" onclick="document.querySelector('.top-nav').classList.toggle('menu-open')">
+        <svg viewBox="0 0 24 24" width="28" height="28" stroke="#4F46E5" stroke-width="2" fill="none"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </div>
+</div>
+        <ul>
+            <li><a href="dashboard.html">대시보드</a></li>
+            <li><a href="projects.html" class="active">프로젝트</a></li>
+            <li><a href="materials.html">자재관리</a></li>
+            <li><a href="suppliers.html">협력업체</a></li>
+            <li><a href="finance.html">재무/회계</a></li>
+            <li><a href="employees.html">직원</a></li>
+            <li><a href="clients.html">고객</a></li>
+            <li><a href="contacts.html">인맥</a></li>
+        </ul>
+        <div style="font-size: 0.85rem; text-align: right;">
+            <strong style="color:var(--ai-primary);" id="currentUserEmail">SUPER_ADMIN</strong><br>
+            최고 관리자 <a href="#" onclick="window.logoutAndRedirect()" style="color:#2563eb;">[로그아웃]</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container">
+        <div class="panel">
+            <div class="panel-header">
+                <h2>프로젝트 (현장) 관리</h2>
+                <button class="btn-primary" onclick="window.createProject()">+ 새 프로젝트 파트너 할당</button>
+            </div>
+
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr>
+                        <th>프로젝트 명</th>
+                        <th>진행 단계</th>
+                        <th>담당자(PM)</th>
+                        <th>종료 예정일</th>
+                        <th>관리</th>
+                    </tr>
+                </thead>
+                <tbody id="projectsTableBody">
+                    <tr>
+                        <td colspan="5" style="text-align:center; padding: 2rem; color: var(--text-muted);">
+                            데이터를 불러오는 중...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+</body>
+
+</html>

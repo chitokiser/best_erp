@@ -6,12 +6,11 @@ export const callGeminiAI = async (contextData, customPrompt) => {
 
     const systemPrompt = `
     당신은 BEST WINNER GROUP의 최고 등급 AI 비즈니스 컨설턴트 및 수석 프로젝트 매니저입니다.
-    제공된 데이터(프로젝트 진행 상황, 자재, 할 일 목록, 결재 대기 등)를 분석하여 다음과 같은 역할을 수행합니다.
-    1. 오늘 당장 우선적으로 처리해야 할 핵심 업무(To-Do)를 집어줍니다.
-    2. 데이터 바탕으로 현재 상황에 대한 냉철하고 전문적인 'AI 오피니언 및 인사이트'를 제시합니다.
-    3. 리스크가 보이거나 병목이 예상되는 지점을 미리 경고하고 전략적 조언을 포함합니다.
-    
-    답변은 읽기 쉽고 전문적인 비즈니스 말투(경어체)를 사용하며, 마크다운(HTML 변환 고려) 형식으로 핵심만 간결히 줄바꿈하여 작성하세요.
+    제공된 데이터(프로젝트 진행 상황, 자재, 연락처 목록, 결재 대기 건 등)를 분석하여 다음과 같은 역할을 수행합니다:
+    1. 오늘 당장 선행되어야 할 핵심 업무(To-Do)를 짚어줍니다.
+    2. 결재 대기 중인 문서나 지연 중인 프로젝트의 리스크를 경고합니다.
+    3. 전반적인 경영 상태(재무, 인사, 협력사 관계 등)를 요약 리포트합니다.
+    CEO가 읽기 쉽게 명쾌하고 직관적으로 브리핑해주세요.
     `;
 
     const fullPrompt = `${systemPrompt}\n\n[현재 데이터 상황]\n${JSON.stringify(contextData, null, 2)}\n\n[사용자 요청]\n${customPrompt}`;
@@ -41,20 +40,42 @@ export const callGeminiAI = async (contextData, customPrompt) => {
     return data.candidates[0].content.parts[0].text;
 };
 
+export const analyzeBusinessQuery = async (query) => {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    if (!apiKey) throw new Error("VITE_GEMINI_API_KEY 환경변수가 설정되지 않았습니다.");
+
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const payload = {
+        contents: [{
+            parts: [{ text: query }]
+        }]
+    };
+    const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+        throw new Error("AI 질의 중 오류 발생");
+    }
+    const data = await response.json();
+    return data.candidates[0].content.parts[0].text;
+};
+
 export const scanBusinessCardAI = async (base64Image, mimeType) => {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) throw new Error("VITE_GEMINI_API_KEY ȯ�溯���� �������� �ʾҽ��ϴ�.");
+    if (!apiKey) throw new Error("VITE_GEMINI_API_KEY 환경변수가 설정되지 않았습니다.");
 
-    const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey";
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
-    const prompt = "�� �̹����� ����(Business Card)�Դϴ�. �ؽ�Ʈ�� �����Ͽ� ���� JSON �������θ� ��ȯ�ϼ���.
+    const prompt = `이 이미지는 명함(Business Card)입니다. 
+다음 정보를 추출하여 정확한 JSON 형식으로만 응답하세요. 마크다운표시나 다른 설명은 일절 추가하지 마세요.
 {
-  \"name\": \"�̸�\",
-  \"company\": \"ȸ���\",
-  \"position\": \"����/��å\",
-  \"phone\": \"��ȭ��ȣ �Ǵ� �޴���ȭ��ȣ (���ڿ� �����¸�)\"
-}
-�ڵ����(\\\json)�̳� �ٸ� ���� ���� ���� ������ JSON ���ڿ��� ��ȯ�ϼ���.";
+  "name": "홍길동",
+  "company": "회사명",
+  "position": "직급/직책",
+  "phone": "전화번호 또는 휴대전화"
+}`;
 
     const payload = {
         contents: [{
@@ -67,10 +88,7 @@ export const scanBusinessCardAI = async (base64Image, mimeType) => {
                     }
                 }
             ]
-        }],
-        generationConfig: {
-            temperature: 0.1,
-        }
+        }]
     };
 
     const response = await fetch(endpoint, {
@@ -80,11 +98,12 @@ export const scanBusinessCardAI = async (base64Image, mimeType) => {
     });
 
     if (!response.ok) {
-        throw new Error("���� �ǵ��� �����߽��ϴ�.");
+        throw new Error("명함 인식 AI 통신 오류");
     }
+
     const data = await response.json();
     const rawText = data.candidates[0].content.parts[0].text;
-    
-    let cleanText = rawText.replace(/`json/gi, '').replace(/`/g, '').trim();
+
+    const cleanText = rawText.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
     return JSON.parse(cleanText);
 };
