@@ -234,39 +234,51 @@
             color: var(--ai-primary, #4F46E5);
         }
     </style>
-</head>
+
+    <!-- FORCE CSS -->
+    <style>
+        .top-nav { display: flex; align-items: center; justify-content: space-between; flex-wrap: nowrap; overflow: visible; }
+        .logo-container { width: auto !important; }
+        .top-nav ul { display: flex; align-items: center; gap: 1rem; list-style: none; margin: 0; padding: 0; flex-wrap: nowrap !important; }
+        .top-nav ul li a { white-space: nowrap !important; }
+        .mobile-only-btn { display: none !important; }
+        
+        @media screen and (max-width: 900px) {
+            .mobile-only-btn { display: block !important; }
+            .logo-container { width: 100% !important; justify-content: space-between !important; }
+            .top-nav { flex-direction: column !important; align-items: flex-start !important; }
+            .top-nav ul { display: none !important; }
+            .top-nav > div:last-child { display: none !important; }
+            
+            .top-nav.menu-open ul { 
+                display: flex !important; flex-direction: column !important; 
+                width: 100%; border-radius: 0.5rem; background:#fff; 
+                box-shadow: 0 4px 6px rgba(0,0,0,0.05); padding: 0.5rem 0 !important; gap: 0 !important;
+                margin-top: 1rem;
+            }
+            .top-nav.menu-open ul li { width: 100%; border-bottom: 1px solid #f1f5f9; text-align:center; }
+            .top-nav.menu-open ul li a { display: block !important; padding: 1rem !important; }
+            
+            /* Metric cards wrap */
+            .metric-cards, .dashboard-grid, .client-summary, .finance-summary, .stats-grid, .summary-container { 
+                grid-template-columns: 1fr !important; gap: 1rem !important; display: grid !important;
+            }
+        }
+    </style>
+    </head>
+    
 
 <body style="display: none;">
     <nav class="top-nav">
         <div class="logo-container" style="display:flex; align-items:center; justify-content:space-between; width:100%; margin-bottom:0;">
-            <div style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;" onclick="location.href='dashboard.html'">
-                <img src="../images/logo/logo.png" style="height: 28px;" onerror="this.style.display='none';">
-                <h1 style="margin:0; font-size: 1.3rem; color: #4F46E5; font-weight: 800;">AI寃쎌쁺愿由?/h1>
-            </div>
-            <button id="hamburgerBtn" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#4F46E5;" class="mobile-only">??/button>
-        </div>
-        <ul>
-            <li><a href="dashboard.html">??쒕낫??/a></li>
-            <li><a href="projects.html">?꾨줈?앺듃</a></li>
-            <li><a href="materials.html">?먯옱愿由?/a></li>
-            <li><a href="suppliers.html">?묐젰?낆껜</a></li>
-            <li><a href="purchase-requests.html">寃곗옱愿由?援щℓ)</a></li>
-            <li><a href="finance.html">?щТ/?뚭퀎</a></li>
-            <li><a href="employees.html" class="active">吏곸썝</a></li>
-            <li><a href="clients.html">怨좉컼</a></li>
-            <li><a href="contacts.html">?몃㎘</a></li>
-        </ul>
-        <div style="font-size: 0.85rem; text-align: right;">
-            <strong style="color:var(--ai-primary, #4F46E5);" id="navUserEmailSpan">SUPER_ADMIN</strong><br>
-            理쒓퀬 愿由ъ옄 <a href="#" onclick="window.logoutAndRedirect()" style="color:#2563eb;">[濡쒓렇?꾩썐]</a>
-        </div>
-    </nav>
-
-    <div class="main-container">
-        <div class="header-action">
-            <h2>AI 遺꾩꽍??吏곸썝 ?곗씠??/h2>
-            <button class="btn-add" id="openModalBtn">+ ??吏곸썝 ?깅줉</button>
-        </div>
+    <div style="display:flex; align-items:center; gap:0.5rem; flex-shrink:0; cursor:pointer;" onclick="location.href='dashboard.html'">
+        <img src="../images/logo/logo.png" style="height: 28px;" onerror="this.style.display='none';">
+        <h1 style="margin:0; font-size: 1.3rem; color: #4F46E5; font-weight: 800; white-space:nowrap;">AI경영관리</h1>
+    </div>
+    <div class="mobile-only-btn" style="display:none; cursor:pointer;" onclick="this.closest('.top-nav').classList.toggle('menu-open')">
+        <svg viewBox="0 0 24 24" width="28" height="28" stroke="#4F46E5" stroke-width="2" fill="none"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </div>
+</div>
 
         <div class="data-card">
             <table>
