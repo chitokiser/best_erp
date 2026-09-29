@@ -1,5 +1,5 @@
 export const callGeminiAI = async (contextData, customPrompt) => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "AIzaSyCR_02faI9P-EoYWT9OW3GxaxWxyLu-hYg";
     if (!apiKey) throw new Error("VITE_GEMINI_API_KEY 환경변수가 설정되지 않았습니다.");
 
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
@@ -41,7 +41,7 @@ export const callGeminiAI = async (contextData, customPrompt) => {
 };
 
 export const analyzeBusinessQuery = async (query) => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "AIzaSyCR_02faI9P-EoYWT9OW3GxaxWxyLu-hYg";
     if (!apiKey) throw new Error("VITE_GEMINI_API_KEY 환경변수가 설정되지 않았습니다.");
 
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
@@ -63,7 +63,7 @@ export const analyzeBusinessQuery = async (query) => {
 };
 
 export const scanBusinessCardAI = async (base64Image, mimeType) => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "AIzaSyCR_02faI9P-EoYWT9OW3GxaxWxyLu-hYg";
     if (!apiKey) throw new Error("VITE_GEMINI_API_KEY 환경변수가 설정되지 않았습니다.");
 
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
