@@ -11,7 +11,7 @@
 
     <!-- FORCE CSS -->
 <style>.top-nav{flex-wrap:nowrap;justify-content:space-between;align-items:center;display:flex;position:relative;overflow:visible}.logo-container{width:auto!important}.top-nav ul{align-items:center;gap:1rem;margin:0;padding:0;list-style:none;display:flex;flex-wrap:nowrap!important}.top-nav ul li a{white-space:nowrap!important}.mobile-only-btn{display:none!important}@media screen and (width<=900px){.mobile-only-btn{display:block!important}.logo-container{justify-content:space-between!important;width:100%!important}.top-nav{flex-direction:column!important;align-items:flex-start!important}.top-nav ul,.top-nav>div:last-child{display:none!important}.top-nav.menu-open ul{background:#fff;border-radius:.5rem;width:100%;max-height:70vh;margin-top:1rem;overflow-y:auto;box-shadow:0 10px 15px -3px #0000001a;flex-direction:column!important;gap:0!important;padding:.5rem 0!important;display:flex!important}.top-nav.menu-open ul li{text-align:center;border-bottom:1px solid #f1f5f9;width:100%}.top-nav.menu-open ul li a{padding:1rem!important;display:block!important}.metric-cards,.dashboard-grid,.client-summary,.finance-summary,.stats-grid,.summary-container{grid-template-columns:1fr!important;gap:1rem!important;display:grid!important}}</style>
-      <script type="module" crossorigin src="/assets/admin_contacts-5SkOf_-G.js"></script>
+      <script type="module" crossorigin src="/assets/admin_contacts-DSxSNGUU.js"></script>
       <link rel="modulepreload" crossorigin href="/assets/firebase-config-3n4qqNPS.js">
       <link rel="modulepreload" crossorigin href="/assets/auth-CRqREFiS.js">
       <link rel="modulepreload" crossorigin href="/assets/preload-helper-BZ1Pz5am.js">
@@ -103,12 +103,16 @@
             <form id="addContactForm">
                 <div
                     style="background:#f1f5f9; padding:0.8rem; border-radius:0.5rem; font-size:0.85rem; margin-bottom:1rem; color:#475569;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span>💡 <strong>AI 명함 스캔:</strong> 카메라로 명함을 찍거나 업로드하면 AI가 자동 입력합니다.</span>
-                        <input type="file" id="ocrInput" accept="image/*" capture="environment" style="display:none;" />
-                        <button type="button" onclick="document.getElementById('ocrInput').click()"
-                            style="background:var(--ai-gradient); color:white; border:none; border-radius:0.3rem; padding:0.4rem 0.8rem; cursor:pointer; font-weight:bold; font-size:0.8rem;">📸
-                            스캔하기</button>
+                                        <div style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom: 0.5rem;">
+                        <span style="font-size:0.85rem; color:#475569;">💡 <strong>AI 명함 스캔:</strong> 카메라 촬영 또는 기기 앨범에서 사진을 불러와주세요.</span>
+                        <div style="display:flex; gap:0.5rem; justify-content:center;">
+                            <input type="file" id="ocrCamera" accept="image/*" capture="environment" style="display:none;" />
+                            <input type="file" id="ocrGallery" accept="image/*" style="display:none;" />
+                            <button type="button" onclick="document.getElementById('ocrCamera').click()"
+                                style="background:var(--ai-gradient); color:white; border:none; border-radius:0.3rem; padding:0.5rem 1rem; cursor:pointer; font-weight:bold; font-size:0.9rem; flex:1;">📸 촬영 켜기</button>
+                            <button type="button" onclick="document.getElementById('ocrGallery').click()"
+                                style="background:#10B981; color:white; border:none; border-radius:0.3rem; padding:0.5rem 1rem; cursor:pointer; font-weight:bold; font-size:0.9rem; flex:1;">🖼️ 앨범 선택</button>
+                        </div>
                     </div>
                 </div>
                 <div id="ocrLoading"

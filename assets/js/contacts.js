@@ -281,42 +281,44 @@ document.addEventListener('DOMContentLoaded', () => {
     const ocrInputs = [document.getElementById('ocrCamera'), document.getElementById('ocrGallery')];
     const ocrLoading = document.getElementById('ocrLoading');
     ocrInputs.forEach(input => {
-      if (input) {
-        input.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+        if (input) {
+            input.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
 
-            ocrLoading.style.display = 'block';
+                ocrLoading.style.display = 'block';
 
-            try {
-                // Convert to base64
-                const reader = new FileReader();
-                reader.onloadend = async () => {
-                    const base64Data = reader.result.split(',')[1];
-                    try {
-                        const { scanBusinessCardAI } = await import('./aiApi.js');
-                        const result = await scanBusinessCardAI(base64Data, file.type);
+                try {
+                    // Convert to base64
+                    const reader = new FileReader();
+                    reader.onloadend = async () => {
+                        const base64Data = reader.result.split(',')[1];
+                        try {
+                            const { scanBusinessCardAI } = await import('./aiApi.js');
+                            const result = await scanBusinessCardAI(base64Data, file.type);
 
-                        // Fill form
-                        if (result.name) document.getElementById('addName').value = result.name;
-                        if (result.company) document.getElementById('addCompany').value = result.company;
-                        if (result.position) document.getElementById('addPosition').value = result.position;
-                        if (result.phone) document.getElementById('addPhone').value = result.phone;
+                            // Fill form
+                            if (result.name) document.getElementById('addName').value = result.name;
+                            if (result.company) document.getElementById('addCompany').value = result.company;
+                            if (result.position) document.getElementById('addPosition').value = result.position;
+                            if (result.phone) document.getElementById('addPhone').value = result.phone;
 
-                        alert('명함 인식이 완료되었습니다.');
-                    } catch (err) {
-                        alert(err.message);
-                    } finally {
-                        ocrLoading.style.display = 'none';
-                        ocrInput.value = ''; // reset
-                    }
-                };
-                reader.readAsDataURL(file);
-            } catch (e) {
-                console.error(e);
-                alert('오류 발생');
-                ocrLoading.style.display = 'none';
-            }
-        });
-    }
+                            alert('명함 인식이 완료되었습니다.');
+                        } catch (err) {
+                            alert(err.message);
+                        } finally {
+                            ocrLoading.style.display = 'none';
+                            ocrInput.value = ''; // reset
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                } catch (e) {
+                    console.error(e);
+                    alert('오류 발생');
+                    ocrLoading.style.display = 'none';
+                }
+            });
+        }
+    });
+
 });
