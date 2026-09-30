@@ -43,6 +43,7 @@ export const logoutAdmin = async () => {
         console.error("Logout Error:", error);
     }
 };
+window.logoutAndRedirect = logoutAdmin;
 
 export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
     onAuthStateChanged(auth, async (user) => {

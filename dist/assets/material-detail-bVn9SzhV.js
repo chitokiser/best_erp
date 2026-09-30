@@ -1,4 +1,4 @@
-import"./firebase-config-3n4qqNPS.js";/* empty css              */import{i as e,t}from"./auth-CRqREFiS.js";import{a as n,i as r}from"./materialApi-DIz_0s85.js";var i=document.getElementById(`mainContent`),a=new URLSearchParams(window.location.search).get(`id`);(async()=>{if(!a){i.innerHTML=`<p>자재 ID가 제공되지 않았습니다.</p>`;return}try{let e=await r(a);if(!e){i.innerHTML=`<p>자재를 찾을 수 없습니다.</p>`;return}i.innerHTML=`
+import"./firebase-config-3n4qqNPS.js";/* empty css              */import{i as e,t}from"./auth-JLcT0c3c.js";import{a as n,i as r}from"./materialApi-DIz_0s85.js";var i=document.getElementById(`mainContent`),a=new URLSearchParams(window.location.search).get(`id`);(async()=>{if(!a){i.innerHTML=`<p>자재 ID가 제공되지 않았습니다.</p>`;return}try{let e=await r(a);if(!e){i.innerHTML=`<p>자재를 찾을 수 없습니다.</p>`;return}i.innerHTML=`
                     <div style="margin-bottom: 1rem;">
                         <a href="materials.html" style="color: var(--primary-color); font-weight: 500;">&larr; 목록으로 돌아가기</a>
                     </div>
