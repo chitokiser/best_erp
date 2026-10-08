@@ -1,6 +1,6 @@
 ﻿import { auth, db } from './firebase-config.js';
 import { getFunctions, httpsCallable } from "firebase/functions";
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, doc, getDoc } from 'firebase/firestore';
 
 const functions = getFunctions(db.app);
 let storedMentees = [];
@@ -18,6 +18,20 @@ async function loadMentees() {
             mentees = res.data.mentees;
         } else if (Array.isArray(res.data)) {
             mentees = res.data; // Depending on cloud function structure
+        }
+
+        // Augment missing emails from DB
+        const { doc, getDoc } = await import('firebase/firestore');
+        for (let i = 0; i < mentees.length; i++) {
+            if (!mentees[i].email && mentees[i].uid) {
+                try {
+                    const snap = await getDoc(doc(db, 'users', mentees[i].uid));
+                    if (snap.exists()) {
+                        mentees[i].email = snap.data().email || "";
+                        if (!mentees[i].name) mentees[i].name = snap.data().name || "";
+                    }
+                } catch(err) { /* ignore */ }
+            }
         }
 
         storedMentees = mentees;
