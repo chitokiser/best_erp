@@ -89,7 +89,10 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                 window.currentUserStatus = status;
 
                 // Stop unapproved users
-                if (!['CEO', 'SUPER_ADMIN', 'ADMIN'].includes(role) && user.email !== 'daguri75@gmail.com') {
+                
+                // Jumper DB: if the user has a merchantId, they are an approved franchisee.
+                const isMerchant = !!uData.merchantId;
+                if (!isMerchant && !['CEO', 'SUPER_ADMIN', 'ADMIN'].includes(role) && user.email !== 'daguri75@gmail.com') {
                     alert('ERP 접근 권한이 없습니다. CEO 자격(정기구독)을 획득해주세요.');
                     await signOut(auth);
                     window.location.href = 'https://bestclubvn.netlify.app/';
