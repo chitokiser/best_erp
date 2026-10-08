@@ -1,132 +1,96 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>권한 및 담당자 관리 - BEST Group</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>.role-badge{border-radius:4px;padding:.2rem .5rem;font-size:.75rem;font-weight:700}.role-super{color:#991b1b;background:#fee2e2}.role-admin{color:#075985;background:#dbfafe}.role-staff{color:#92400e;background:#fef3c7}.role-viewer{color:#475569;background:#f1f5f9}.dropdown{margin-top:2px;display:inline-block;position:relative}.dropdown-content{z-index:1000;background-color:#fff;border:1px solid #e2e8f0;border-radius:.5rem;min-width:180px;display:none;position:absolute;top:100%;left:0;overflow:hidden;box-shadow:0 10px 25px #0000001a}.dropdown-content a{white-space:nowrap;border-bottom:1px solid #f1f5f9;font-size:.95rem;font-weight:500;text-decoration:none;transition:all .2s;display:block;color:#334155!important;padding:.8rem 1rem!important}.dropdown-content a:last-child{border-bottom:none}.dropdown-content a:hover{background-color:#f8fafc;color:#4f46e5!important;padding-left:1.25rem!important}.dropdown:hover .dropdown-content{animation:.2s ease-out fadeInUp;display:block}.dropbtn{color:#475569;cursor:pointer;border-radius:.5rem;padding:.5rem .75rem;font-weight:600;transition:background .2s;display:inline-block}.dropdown:hover .dropbtn{color:#4f46e5;background:#4f46e50d}@keyframes fadeInUp{0%{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}</style>
-
-    <!-- FORCE CSS -->
-    <style>.top-nav{flex-wrap:nowrap;justify-content:space-between;align-items:center;display:flex;position:relative;overflow:visible}.logo-container{width:auto!important}.top-nav ul{align-items:center;gap:1rem;margin:0;padding:0;list-style:none;display:flex;flex-wrap:nowrap!important}.top-nav ul li a{white-space:nowrap!important}.mobile-only-btn{display:none!important}@media screen and (width<=900px){.mobile-only-btn{display:block!important}.logo-container{justify-content:space-between!important;width:100%!important}.top-nav{flex-direction:column!important;align-items:flex-start!important}.top-nav ul,.top-nav>div:last-child{display:none!important}.top-nav.menu-open ul{background:#fff;border-radius:.5rem;width:100%;max-height:70vh;margin-top:1rem;overflow-y:auto;box-shadow:0 10px 15px -3px #0000001a;flex-direction:column!important;gap:0!important;padding:.5rem 0!important;display:flex!important}.top-nav.menu-open ul li{text-align:center;border-bottom:1px solid #f1f5f9;width:100%}.top-nav.menu-open ul li a{padding:1rem!important;display:block!important}.metric-cards,.dashboard-grid,.client-summary,.finance-summary,.stats-grid,.summary-container{grid-template-columns:1fr!important;gap:1rem!important;display:grid!important}}</style>
-  <script type="module" crossorigin src="/assets/admin_users-Cd6oh3o1.js"></script>
+    <title>SaaS 회원권한 관리 - AI 경영관리</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/index.css">
+    <style>table{border-collapse:collapse;width:100%;margin-top:1rem}th,td{text-align:left;border-bottom:1px solid #e2e8f0;padding:1rem;font-size:.95rem}th{color:#475569;background:#f8fafc;font-weight:600}.tag{border-radius:999px;padding:.25rem .6rem;font-size:.75rem;font-weight:600}.tag-super{color:#b91c1c;background:#fecaca}.tag-admin{color:#166534;background:#dcfce7}.tag-guest{color:#475569;background:#f1f5f9}.modal{z-index:1000;background:#00000080;justify-content:center;align-items:center;display:none;position:fixed;inset:0}.modal-content{background:#fff;border-radius:1rem;width:100%;max-width:500px;padding:2.5rem}.role-option{cursor:pointer;border:2px solid #e2e8f0;border-radius:.75rem;margin-bottom:1rem;padding:1rem;transition:all .2s}.role-option:hover{background:#4f46e505;border-color:#4f46e5}.role-option.selected{background:#4f46e50d;border-color:#4f46e5}.role-option h4{color:#1e293b;justify-content:space-between;align-items:center;margin:0 0 .25rem;display:flex}.role-option p{color:#64748b;margin:0;font-size:.85rem}.dropdown{margin-top:2px;display:inline-block;position:relative}.dropdown-content{z-index:1000;background-color:#fff;border:1px solid #e2e8f0;border-radius:.5rem;min-width:180px;display:none;position:absolute;top:100%;left:0;box-shadow:0 10px 25px #0000001a}.dropdown-content a{white-space:nowrap;border-bottom:1px solid #f1f5f9;font-size:.95rem;font-weight:500;text-decoration:none;display:block;color:#334155!important;padding:.8rem 1rem!important}.dropdown-content a:hover{background-color:#f8fafc;color:#4f46e5!important;padding-left:1.25rem!important}.dropdown:hover .dropdown-content{display:block}.dropbtn{color:#475569;cursor:pointer;border-radius:.5rem;padding:.5rem .75rem;font-weight:600;display:inline-block}.top-nav ul{align-items:center;gap:1rem;margin:0;padding:0;list-style:none;display:flex}</style>
+  <script type="module" crossorigin src="/assets/admin_users-Bwf6dQlx.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/firebase-config-CqE3I3UV.js">
   <link rel="modulepreload" crossorigin href="/assets/auth-kXrOMnaF.js">
-  <link rel="modulepreload" crossorigin href="/assets/ai-chat-ihFqXHeM.js">
   <link rel="stylesheet" crossorigin href="/assets/admin-x1XGuNl0.css">
-  <link rel="stylesheet" crossorigin href="/assets/style-CTsXkP_6.css">
 </head>
-
-
-<body style="display: none;">
-    <nav class="top-nav">
-        <div class="logo-container"
-            style="display:flex; align-items:center; justify-content:space-between; width:100%; margin-bottom:0;">
-            <div style="display:flex; align-items:center; gap:0.5rem; flex-shrink:0; cursor:pointer;"
-                onclick="location.href='dashboard.html'">
-                <img src="/assets/logo-Bzhrz68d.png" style="height: 28px;" onerror="this.style.display='none';">
-                <h1 style="margin:0; font-size: 1.3rem; color: #4F46E5; font-weight: 800; white-space:nowrap;">AI경영관리
-                </h1>
-            </div>
-            <div class="mobile-only-btn" style="display:none; cursor:pointer;"
-                onclick="document.querySelector('.top-nav').classList.toggle('menu-open')">
-                <svg viewBox="0 0 24 24" width="28" height="28" stroke="#4F46E5" stroke-width="2" fill="none">
-                    <path d="M3 12h18M3 6h18M3 18h18" />
-                </svg>
-            </div>
+<body class="admin-body">
+    <nav class="top-nav" style="background:#fff; padding: 1rem 2rem; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;" onclick="location.href='dashboard.html'">
+            <img src="/assets/logo-Bzhrz68d.png" style="height: 28px;" onerror="this.style.display='none';">
+            <h1 style="color:var(--ai-primary); margin:0; font-size:1.5rem; font-weight:800;"><span id="brandLogoText" style="color:#ef4444;">BEST</span> <span id="brandMainText">AI경영관리</span></h1>
         </div>
         <ul>
             <li><a href="dashboard.html">대시보드</a></li>
-            <li class="dropdown">
-                <span class="dropbtn">내부운영(HR) ▾</span>
-                <div class="dropdown-content">
-                    <a href="tasks.html">업무지시/보고</a>
-                    <a href="finance.html">재무/회계</a>
-                    <a href="employees.html">직원목록</a>
-                </div>
+            <li class="dropdown"><span class="dropbtn">내부운영(HR) ▾</span>
+                <div class="dropdown-content"><a href="tasks.html">업무지시/보고</a><a href="finance.html">재무/회계</a><a href="employees.html">직원목록</a></div>
             </li>
-            <li class="dropdown">
-                <span class="dropbtn">영업/프로젝트 ▾</span>
-                <div class="dropdown-content">
-                    <a href="projects.html">프로젝트 보드</a>
-                    <a href="materials.html">자재관리</a>
-                    <a href="suppliers.html">협력업체</a>
-                </div>
+            <li class="dropdown"><span class="dropbtn">영업/프로젝트 ▾</span>
+                <div class="dropdown-content"><a href="projects.html">프로젝트 보드</a><a href="materials.html">자재관리</a><a href="suppliers.html">협력업체</a></div>
             </li>
-            <li class="dropdown">
-                <span class="dropbtn">고객/회원관리 ▾</span>
-                <div class="dropdown-content">
-                    <a href="clients.html">고객 리스트</a>
-                    <a href="contacts.html">인맥(명함)</a>
-                    <a href="users.html">SaaS 회원관리</a>
-                </div>
+            <li class="dropdown"><span class="dropbtn" style="color:#4F46E5; background:rgba(79,70,229,0.05);">고객/회원관리 ▾</span>
+                <div class="dropdown-content"><a href="clients.html">멘티(고객) CRM</a><a href="contacts.html">인맥(명함)</a><a href="users.html" style="color:#4F46E5!important;">SaaS 회원관리</a></div>
             </li>
         </ul>
-        <div style="font-size: 0.85rem; text-align: right;" id="navUserEmail">
-        </div>
+        <div id="navUserEmail" style="display:none;"></div>
     </nav>
 
-    <main class="container" style="padding: 2rem 1rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-            <h2>담당자 및 권한 설정</h2>
-            <button class="btn-primary" onclick="window.inviteNewUser()">+ 새 권한 부여</button>
+    <div class="admin-container" style="max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="font-size: 1.8rem; font-weight: 800; color: #1e293b; margin:0;">담당자 및 권한 설정</h2>
+            <button class="btn-primary" onclick="inviteNewUser()" style="background:#4F46E5; border:none; padding:0.75rem 1.5rem; border-radius:0.5rem; color:white; font-weight:600; cursor:pointer;">+ 새 권한 부여</button>
         </div>
 
-        <div class="card" style="margin-bottom: 2rem;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+        <div style="background: white; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); padding: 2rem; margin-top: 1.5rem; border: 1px solid #e2e8f0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom:1rem;">
                 <div>
-                    <h3>활성 담당자 목록</h3>
-                    <p style="color: var(--text-secondary); margin-bottom: 0; font-size: 0.875rem;">
-                        시스템에 접근 가능한 사용자와 관리 카테고리를 지정할 수 있습니다.
-                    </p>
+                    <h3 style="margin: 0; color: #1e293b;">활성 사용자 목록</h3>
+                    <p style="margin: 0.25rem 0 0 0; color: #64748b; font-size: 0.9rem;">SaaS(Jumper)에 등록된 유저 중, ERP 접근 권한을 가진 사용자들을 관리합니다.</p>
                 </div>
-                <div>
-                    <input type="text" id="userSearchInput" placeholder="이메일 또는 이름 검색..."
-                        style="padding: 0.5rem 1rem; border-radius: 4px; border: 1px solid var(--border-color); width: 250px; outline: none; transition: border-color 0.2s;">
-                </div>
+                <input type="text" id="searchInput" placeholder="이름 또는 이메일 검색..." style="padding: 0.5rem 1rem; border:1px solid #e2e8f0; border-radius:0.5rem; outline:none; width:250px;">
             </div>
 
-            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <table>
                 <thead>
-                    <tr style="border-bottom: 2px solid var(--border-color);">
-                        <th style="padding: 1rem;">담당자 명/이메일</th>
-                        <th style="padding: 1rem;">시스템 권한</th>
-                        <th style="padding: 1rem;">담당 카테고리</th>
-                        <th style="padding: 1rem;">상태</th>
-                        <th style="padding: 1rem;">권한 변경</th>
+                    <tr>
+                        <th>담당자 명/이메일</th>
+                        <th>시스템 권한</th>
+                        <th>상태</th>
+                        <th>권한 부여 및 관리</th>
                     </tr>
                 </thead>
                 <tbody id="usersTableBody">
-                    <tr>
-                        <td colspan="5" style="text-align:center; padding: 1rem; color: var(--text-secondary);">
-                            데이터를 불러오는 중...
-                        </td>
-                    </tr>
+                    <tr><td colspan="4" style="text-align:center; padding:2rem; color:#64748b;">데이터를 불러오는 중입니다...</td></tr>
                 </tbody>
             </table>
         </div>
-    </main>
-
-<script>
-            function highlightActiveMenu() {
-                const current = location.pathname.split('/').pop() || 'dashboard.html';
-                document.querySelectorAll('.top-nav a').forEach(a => {
-                    const href = a.getAttribute('href');
-                    if (href && href === current) {
-                        a.style.color = 'var(--primary-color, #4F46E5)';
-                        a.style.fontWeight = '700';
-                        const parentDropBtn = a.closest('.dropdown');
-                        if (parentDropBtn) {
-                            parentDropBtn.querySelector('.dropbtn').style.color = 'var(--primary-color, #4F46E5)';
-                            parentDropBtn.querySelector('.dropbtn').style.background = 'rgba(79, 70, 229, 0.05)';
-                        }
-                    } else if (a.classList.contains('active') && href !== current) {
-                        a.classList.remove('active');
-                    }
-                });
-            }
-            document.addEventListener('DOMContentLoaded', highlightActiveMenu);
-        </script></body>
+    </div>
 
+    <!-- Role Assignment Modal -->
+    <div class="modal" id="roleModal">
+        <div class="modal-content">
+            <h2 style="margin: 0 0 0.5rem 0; color: #1e293b;">ERP 접근 권한 부여</h2>
+            <p style="color: #64748b; margin: 0 0 1.5rem 0; font-size:0.9rem;" id="roleModalTarget">대상: </p>
+            
+            <div class="role-option" onclick="selectRole('ADMIN')" id="opt-ADMIN">
+                <h4>ERP 관리자 (ADMIN) <span style="font-size:1.2rem;">👑</span></h4>
+                <p>시스템에 로그인하여 대시보드 및 모든 기능(결제, 재무 제외)을 열람/수정할 수 있는 전체 접근 권한입니다.</p>
+            </div>
+            
+            <div class="role-option" onclick="selectRole('STAFF')" id="opt-STAFF">
+                <h4>일반 직원 (STAFF) <span style="font-size:1.2rem;">💼</span></h4>
+                <p>제한된 정보 열람 및 자신에게 할당된 업무만 처리 가능한 권한입니다.</p>
+            </div>
+            
+            <div class="role-option" onclick="selectRole('VIEWER')" id="opt-VIEWER">
+                <h4>권한 회수 (차단) <span style="font-size:1.2rem;">🚫</span></h4>
+                <p>ERP에 로그인할 권한이 없으며 접속 시 쫓겨납니다.</p>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:2rem;">
+                <button onclick="document.getElementById('roleModal').style.display='none'" style="padding:0.75rem 1.5rem; border:none; background:#f1f5f9; color:#475569; border-radius:0.5rem; font-weight:600; cursor:pointer;">취소</button>
+                <button id="btnSaveRole" style="padding:0.75rem 1.5rem; border:none; background:#4F46E5; color:white; border-radius:0.5rem; font-weight:600; cursor:pointer;">권한 저장 (승인)</button>
+            </div>
+        </div>
+    </div>
+
+</body>
 </html>

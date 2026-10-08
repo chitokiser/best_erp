@@ -1,333 +1,177 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>권한 및 담당자 관리 - BEST Group</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <title>SaaS 회원권한 관리 - AI 경영관리</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/index.css">
     <link rel="stylesheet" href="../assets/css/admin.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        .role-badge {
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: bold;
-        }
-
-        .role-super {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .role-admin {
-            background: #dbfafe;
-            color: #075985;
-        }
-
-        .role-staff {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .role-viewer {
-            background: #f1f5f9;
-            color: #475569;
-        }
-    
+        table { width: 100%; border-collapse: collapse; margin-top:1rem; }
+        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 0.95rem; }
+        th { background: #f8fafc; font-weight: 600; color: #475569; }
+        .tag { padding: 0.25rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+        .tag-super { background: #fecaca; color: #b91c1c; }
+        .tag-admin { background: #dcfce7; color: #166534; }
+        .tag-guest { background: #f1f5f9; color: #475569; }
+        
+        /* Modal */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 2.5rem; border-radius: 1rem; width: 100%; max-width: 500px; }
+        
+        .role-option { border: 2px solid #e2e8f0; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1rem; cursor: pointer; transition: all 0.2s; }
+        .role-option:hover { border-color: #4F46E5; background: rgba(79,70,229,0.02); }
+        .role-option.selected { border-color: #4F46E5; background: rgba(79,70,229,0.05); }
+        .role-option h4 { margin: 0 0 0.25rem 0; color: #1e293b; display: flex; align-items: center; justify-content: space-between; }
+        .role-option p { margin: 0; font-size: 0.85rem; color: #64748b; }
+        
         .dropdown { position: relative; display: inline-block; margin-top:2px; }
-        .dropdown-content { display: none; position: absolute; background-color: white; min-width: 180px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 0.5rem; border: 1px solid #e2e8f0; z-index: 1000; overflow: hidden; top:100%; left:0; }
-        .dropdown-content a { color: #334155 !important; padding: 0.8rem 1rem !important; text-decoration: none; display: block; font-size: 0.95rem; font-weight: 500; border-bottom: 1px solid #f1f5f9; transition: all 0.2s; white-space: nowrap; }
-        .dropdown-content a:last-child { border-bottom: none; }
+        .dropdown-content { display: none; position: absolute; background-color: white; min-width: 180px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 0.5rem; border: 1px solid #e2e8f0; z-index: 1000; top:100%; left:0; }
+        .dropdown-content a { color: #334155 !important; padding: 0.8rem 1rem !important; text-decoration: none; display: block; font-size: 0.95rem; font-weight: 500; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
         .dropdown-content a:hover { background-color: #f8fafc; color: #4F46E5 !important; padding-left: 1.25rem !important; }
-        .dropdown:hover .dropdown-content { display: block; animation: fadeInUp 0.2s ease-out; }
-        .dropbtn { padding: 0.5rem 0.75rem; color: #475569; font-weight: 600; cursor: pointer; border-radius: 0.5rem; transition: background 0.2s; display:inline-block; }
-        .dropdown:hover .dropbtn { color: #4F46E5; background: rgba(79, 70, 229, 0.05); }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-    </style>
-
-    <!-- FORCE CSS -->
-    <style>
-        .top-nav {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: nowrap;
-            overflow: visible;
-            position: relative;
-        }
-
-        .logo-container {
-            width: auto !important;
-        }
-
-        .top-nav ul {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            flex-wrap: nowrap !important;
-        }
-
-        .top-nav ul li a {
-            white-space: nowrap !important;
-        }
-
-        .mobile-only-btn {
-            display: none !important;
-        }
-
-        @media screen and (max-width: 900px) {
-            .mobile-only-btn {
-                display: block !important;
-            }
-
-            .logo-container {
-                width: 100% !important;
-                justify-content: space-between !important;
-            }
-
-            .top-nav {
-                flex-direction: column !important;
-                align-items: flex-start !important;
-            }
-
-            .top-nav ul {
-                display: none !important;
-            }
-
-            .top-nav>div:last-child {
-                display: none !important;
-            }
-
-            .top-nav.menu-open ul {
-                display: flex !important;
-                flex-direction: column !important;
-                width: 100%;
-                border-radius: 0.5rem;
-                background: #fff;
-                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-                padding: 0.5rem 0 !important;
-                gap: 0 !important;
-                margin-top: 1rem;
-                max-height: 70vh;
-                /* Prevent it from going offscreen */
-                overflow-y: auto;
-                /* Scrollable if too many items */
-            }
-
-            .top-nav.menu-open ul li {
-                width: 100%;
-                border-bottom: 1px solid #f1f5f9;
-                text-align: center;
-            }
-
-            .top-nav.menu-open ul li a {
-                display: block !important;
-                padding: 1rem !important;
-            }
-
-            .metric-cards,
-            .dashboard-grid,
-            .client-summary,
-            .finance-summary,
-            .stats-grid,
-            .summary-container {
-                grid-template-columns: 1fr !important;
-                gap: 1rem !important;
-                display: grid !important;
-            }
-        }
+        .dropdown:hover .dropdown-content { display: block; }
+        .dropbtn { padding: 0.5rem 0.75rem; color: #475569; font-weight: 600; cursor: pointer; border-radius: 0.5rem; display:inline-block; }
+        .top-nav ul { display: flex; align-items: center; gap: 1rem; list-style: none; margin: 0; padding: 0; }
     </style>
 </head>
-
-
-<body style="display: none;">
-    <nav class="top-nav">
-        <div class="logo-container"
-            style="display:flex; align-items:center; justify-content:space-between; width:100%; margin-bottom:0;">
-            <div style="display:flex; align-items:center; gap:0.5rem; flex-shrink:0; cursor:pointer;"
-                onclick="location.href='dashboard.html'">
-                <img src="../images/logo/logo.png" style="height: 28px;" onerror="this.style.display='none';">
-                <h1 style="margin:0; font-size: 1.3rem; color: #4F46E5; font-weight: 800; white-space:nowrap;">AI경영관리
-                </h1>
-            </div>
-            <div class="mobile-only-btn" style="display:none; cursor:pointer;"
-                onclick="document.querySelector('.top-nav').classList.toggle('menu-open')">
-                <svg viewBox="0 0 24 24" width="28" height="28" stroke="#4F46E5" stroke-width="2" fill="none">
-                    <path d="M3 12h18M3 6h18M3 18h18" />
-                </svg>
-            </div>
+<body class="admin-body">
+    <nav class="top-nav" style="background:#fff; padding: 1rem 2rem; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;" onclick="location.href='dashboard.html'">
+            <img src="../images/logo/logo.png" style="height: 28px;" onerror="this.style.display='none';">
+            <h1 style="color:var(--ai-primary); margin:0; font-size:1.5rem; font-weight:800;"><span id="brandLogoText" style="color:#ef4444;">BEST</span> <span id="brandMainText">AI경영관리</span></h1>
         </div>
         <ul>
             <li><a href="dashboard.html">대시보드</a></li>
-            <li class="dropdown">
-                <span class="dropbtn">내부운영(HR) ▾</span>
-                <div class="dropdown-content">
-                    <a href="tasks.html">업무지시/보고</a>
-                    <a href="finance.html">재무/회계</a>
-                    <a href="employees.html">직원목록</a>
-                </div>
+            <li class="dropdown"><span class="dropbtn">내부운영(HR) ▾</span>
+                <div class="dropdown-content"><a href="tasks.html">업무지시/보고</a><a href="finance.html">재무/회계</a><a href="employees.html">직원목록</a></div>
             </li>
-            <li class="dropdown">
-                <span class="dropbtn">영업/프로젝트 ▾</span>
-                <div class="dropdown-content">
-                    <a href="projects.html">프로젝트 보드</a>
-                    <a href="materials.html">자재관리</a>
-                    <a href="suppliers.html">협력업체</a>
-                </div>
+            <li class="dropdown"><span class="dropbtn">영업/프로젝트 ▾</span>
+                <div class="dropdown-content"><a href="projects.html">프로젝트 보드</a><a href="materials.html">자재관리</a><a href="suppliers.html">협력업체</a></div>
             </li>
-            <li class="dropdown">
-                <span class="dropbtn">고객/회원관리 ▾</span>
-                <div class="dropdown-content">
-                    <a href="clients.html">고객 리스트</a>
-                    <a href="contacts.html">인맥(명함)</a>
-                    <a href="users.html">SaaS 회원관리</a>
-                </div>
+            <li class="dropdown"><span class="dropbtn" style="color:#4F46E5; background:rgba(79,70,229,0.05);">고객/회원관리 ▾</span>
+                <div class="dropdown-content"><a href="clients.html">멘티(고객) CRM</a><a href="contacts.html">인맥(명함)</a><a href="users.html" style="color:#4F46E5!important;">SaaS 회원관리</a></div>
             </li>
         </ul>
-        <div style="font-size: 0.85rem; text-align: right;" id="navUserEmail">
-        </div>
+        <div id="navUserEmail" style="display:none;"></div>
     </nav>
 
-    <main class="container" style="padding: 2rem 1rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-            <h2>담당자 및 권한 설정</h2>
-            <button class="btn-primary" onclick="window.inviteNewUser()">+ 새 권한 부여</button>
+    <div class="admin-container" style="max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="font-size: 1.8rem; font-weight: 800; color: #1e293b; margin:0;">담당자 및 권한 설정</h2>
+            <button class="btn-primary" onclick="inviteNewUser()" style="background:#4F46E5; border:none; padding:0.75rem 1.5rem; border-radius:0.5rem; color:white; font-weight:600; cursor:pointer;">+ 새 권한 부여</button>
         </div>
 
-        <div class="card" style="margin-bottom: 2rem;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+        <div style="background: white; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); padding: 2rem; margin-top: 1.5rem; border: 1px solid #e2e8f0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom:1rem;">
                 <div>
-                    <h3>활성 담당자 목록</h3>
-                    <p style="color: var(--text-secondary); margin-bottom: 0; font-size: 0.875rem;">
-                        시스템에 접근 가능한 사용자와 관리 카테고리를 지정할 수 있습니다.
-                    </p>
+                    <h3 style="margin: 0; color: #1e293b;">활성 사용자 목록</h3>
+                    <p style="margin: 0.25rem 0 0 0; color: #64748b; font-size: 0.9rem;">SaaS(Jumper)에 등록된 유저 중, ERP 접근 권한을 가진 사용자들을 관리합니다.</p>
                 </div>
-                <div>
-                    <input type="text" id="userSearchInput" placeholder="이메일 또는 이름 검색..."
-                        style="padding: 0.5rem 1rem; border-radius: 4px; border: 1px solid var(--border-color); width: 250px; outline: none; transition: border-color 0.2s;">
-                </div>
+                <input type="text" id="searchInput" placeholder="이름 또는 이메일 검색..." style="padding: 0.5rem 1rem; border:1px solid #e2e8f0; border-radius:0.5rem; outline:none; width:250px;">
             </div>
 
-            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <table>
                 <thead>
-                    <tr style="border-bottom: 2px solid var(--border-color);">
-                        <th style="padding: 1rem;">담당자 명/이메일</th>
-                        <th style="padding: 1rem;">시스템 권한</th>
-                        <th style="padding: 1rem;">담당 카테고리</th>
-                        <th style="padding: 1rem;">상태</th>
-                        <th style="padding: 1rem;">권한 변경</th>
+                    <tr>
+                        <th>담당자 명/이메일</th>
+                        <th>시스템 권한</th>
+                        <th>상태</th>
+                        <th>권한 부여 및 관리</th>
                     </tr>
                 </thead>
                 <tbody id="usersTableBody">
-                    <tr>
-                        <td colspan="5" style="text-align:center; padding: 1rem; color: var(--text-secondary);">
-                            데이터를 불러오는 중...
-                        </td>
-                    </tr>
+                    <tr><td colspan="4" style="text-align:center; padding:2rem; color:#64748b;">데이터를 불러오는 중입니다...</td></tr>
                 </tbody>
             </table>
         </div>
-    </main>
+    </div>
+
+    <!-- Role Assignment Modal -->
+    <div class="modal" id="roleModal">
+        <div class="modal-content">
+            <h2 style="margin: 0 0 0.5rem 0; color: #1e293b;">ERP 접근 권한 부여</h2>
+            <p style="color: #64748b; margin: 0 0 1.5rem 0; font-size:0.9rem;" id="roleModalTarget">대상: </p>
+            
+            <div class="role-option" onclick="selectRole('ADMIN')" id="opt-ADMIN">
+                <h4>ERP 관리자 (ADMIN) <span style="font-size:1.2rem;">👑</span></h4>
+                <p>시스템에 로그인하여 대시보드 및 모든 기능(결제, 재무 제외)을 열람/수정할 수 있는 전체 접근 권한입니다.</p>
+            </div>
+            
+            <div class="role-option" onclick="selectRole('STAFF')" id="opt-STAFF">
+                <h4>일반 직원 (STAFF) <span style="font-size:1.2rem;">💼</span></h4>
+                <p>제한된 정보 열람 및 자신에게 할당된 업무만 처리 가능한 권한입니다.</p>
+            </div>
+            
+            <div class="role-option" onclick="selectRole('VIEWER')" id="opt-VIEWER">
+                <h4>권한 회수 (차단) <span style="font-size:1.2rem;">🚫</span></h4>
+                <p>ERP에 로그인할 권한이 없으며 접속 시 쫓겨납니다.</p>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:2rem;">
+                <button onclick="document.getElementById('roleModal').style.display='none'" style="padding:0.75rem 1.5rem; border:none; background:#f1f5f9; color:#475569; border-radius:0.5rem; font-weight:600; cursor:pointer;">취소</button>
+                <button id="btnSaveRole" style="padding:0.75rem 1.5rem; border:none; background:#4F46E5; color:white; border-radius:0.5rem; font-weight:600; cursor:pointer;">권한 저장 (승인)</button>
+            </div>
+        </div>
+    </div>
 
     <script type="module" src="../assets/js/firebase-config.js"></script>
     <script type="module">
         import { checkAdminAuth } from '../assets/js/auth.js';
         import { db } from '../assets/js/firebase-config.js';
-        import { collection, getDocs, updateDoc, doc, addDoc, deleteDoc } from 'firebase/firestore';
+        import { collection, getDocs, updateDoc, doc, deleteDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 
-        window.updateUserRole = async (userId, currentRole) => {
-            const newRole = prompt(`새로운 권한을 입력하세요 (SUPER_ADMIN, ADMIN, STAFF, VIEWER)\n현재 권한: ${currentRole}`, currentRole);
-            if (newRole && ['SUPER_ADMIN', 'ADMIN', 'STAFF', 'VIEWER'].includes(newRole.toUpperCase())) {
-                try {
-                    await updateDoc(doc(db, 'users', userId), { role: newRole.toUpperCase(), status: '승인됨' });
-                    alert('권한이 성공적으로 변경되었습니다.');
-                    location.reload();
-                } catch (e) {
-                    alert('권한 유지 정보 수정 중 오류가 발생했습니다: ' + e.message);
-                }
-            } else if (newRole) {
-                alert('유효하지 않은 권한입니다.');
-            }
-        };
+        let allUsers = [];
+        let currentlyEditingUserId = null;
+        let selectedRole = 'VIEWER';
 
-        window.deleteUser = async (userId, email) => {
-            if (email === 'daguri75@gmail.com') {
-                alert('최고 관리자(CEO) 계정은 삭제할 수 없습니다!');
-                return;
-            }
-            if (confirm(`정말로 [${email}] 사용자의 권한 및 데이터를 삭제하시겠습니까?\n이후 접속 시 다시 대기중인 GUEST 상태로 돌아갑니다.`)) {
-                try {
-                    await deleteDoc(doc(db, 'users', userId));
-                    alert('사용자 데이터가 삭제(접근 차단) 처리되었습니다.');
-                    location.reload();
-                } catch (e) {
-                    alert('삭제 중 오류 발생: ' + e.message);
-                }
-            }
-        };
+        function getRoleBadge(role) {
+            if (!role) return `<span class="tag tag-guest">GUEST</span>`;
+            const r = role.toUpperCase();
+            if (r === 'SUPER_ADMIN' || r === 'CEO') return `<span class="tag tag-super">${r}</span>`;
+            if (r === 'ADMIN') return `<span class="tag tag-admin">ADMIN (승인됨)</span>`;
+            return `<span class="tag tag-guest">${r}</span>`;
+        }
 
-        window.inviteNewUser = async () => {
-            const email = prompt("권한을 부여할 새 담당자의 구글 계정(이메일)을 입력하세요:");
-            if (!email || email.trim() === '') return;
-
-            const position = prompt("직급 또는 역할명을 입력하세요 (예: 이과장, 외주업체 등):", "담당자");
-            const role = prompt("시스템 권한 등급을 입력하세요 (예: ADMIN, STAFF, VIEWER):", "STAFF");
-
-            if (email && role) {
-                try {
-                    await addDoc(collection(db, 'users'), {
-                        email: email.trim(),
-                        name: position,
-                        position: position || 'N/A',
-                        role: role.toUpperCase(),
-                        status: '승인됨',
-                        createdAt: new Date()
-                    });
-                    alert(`[${email}] 계정이 ${role.toUpperCase()} 권한으로 시스템에 등록되었습니다!`);
-                    location.reload();
-                } catch (e) {
-                    alert('사용자 등록 실패: ' + e.message);
-                }
-            }
-        };
-
-        let loadedUsers = [];
-
-        function renderUsersTable(users) {
+        async function loadUsers() {
             const tbody = document.getElementById('usersTableBody');
-            if (users.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1rem; color:var(--text-secondary);">검색 결과가 없습니다.</td></tr>';
+            try {
+                const snap = await getDocs(collection(db, 'users'));
+                allUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderUsers();
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="4" style="color:red;text-align:center;">데이터를 불러올 수 없습니다. (${e.message})</td></tr>`;
+            }
+        }
+
+        function renderUsers() {
+            const tbody = document.getElementById('usersTableBody');
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allUsers.filter(u => 
+                (u.name && u.name.toLowerCase().includes(search)) || 
+                (u.email && u.email.toLowerCase().includes(search))
+            );
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:2rem; color:#64748b;">결과가 없습니다.</td></tr>';
                 return;
             }
 
             let html = '';
-            users.forEach(data => {
-                const role = data.role || 'VIEWER';
-                const status = data.status || '대기중';
-                const category = data.category || '전체 조회';
-
-                let badgeClass = 'role-viewer';
-                if (role === 'SUPER_ADMIN') badgeClass = 'role-super';
-                else if (role === 'ADMIN') badgeClass = 'role-admin';
-                else if (role === 'STAFF') badgeClass = 'role-staff';
-
+            filtered.forEach(u => {
+                const roleBadge = getRoleBadge(u.role);
+                const statusStr = (u.status === '승인' || u.status === '승인완료') ? `<span style="color:#059669;font-weight:600;">승인됨</span>` : `<span style="color:#94a3b8;">대기중</span>`;
+                
                 html += `
                     <tr>
-                        <td style="padding: 1rem; font-weight: 500;">${data.name || data.position || '이름 없음'} (${data.email || '이메일 없음'})</td>
-                        <td style="padding: 1rem;"><span class="role-badge ${badgeClass}">${role}</span></td>
-                        <td style="padding: 1rem;">${category}</td>
-                        <td style="padding: 1rem; color: ${status === '대기중' ? '#94a3b8' : 'inherit'}">${status}</td>
-                        <td style="padding: 1rem;">
-                            <div style="display: flex; gap: 0.5em;">
-                                <button class="btn-primary" style="padding:0.25rem 0.5rem;" onclick="window.updateUserRole('${data.id}', '${role}')">설정</button>
-                                <button class="btn-primary" style="padding:0.25rem 0.5rem; background:#ef4444;" onclick="window.deleteUser('${data.id}', '${data.email}')">삭제</button>
-                            </div>
+                        <td>
+                            <div style="font-weight:600; color:#1e293b;">${u.name || '-'}</div>
+                            <div style="font-size:0.85rem; color:#64748b;">${u.email || u.id}</div>
+                        </td>
+                        <td>${roleBadge}</td>
+                        <td>${statusStr}</td>
+                        <td>
+                            <button onclick="openRoleModal('${u.id}', '${u.email || u.id}', '${u.role || 'VIEWER'}')" style="padding:0.4rem 0.8rem; background:#4F46E5; color:white; border:none; border-radius:0.25rem; font-weight:600; cursor:pointer;">ERP 엑세스 권한 부여</button>
                         </td>
                     </tr>
                 `;
@@ -335,81 +179,61 @@
             tbody.innerHTML = html;
         }
 
-        checkAdminAuth(
-            async (user) => {
-                // Fetch data
-                try {
-                    document.body.style.display = 'block';
-                    const querySnapshot = await getDocs(collection(db, 'users'));
-
-                    querySnapshot.forEach((docRef) => {
-                        loadedUsers.push({ id: docRef.id, ...docRef.data() });
-                    });
-
-                    renderUsersTable(loadedUsers);
-
-                    // Add search functionality
-                    document.getElementById('userSearchInput').addEventListener('input', (e) => {
-                        const target = e.target.value.toLowerCase();
-                        if (!target) {
-                            renderUsersTable(loadedUsers);
-                        } else {
-                            const filtered = loadedUsers.filter(u =>
-                                (u.email && u.email.toLowerCase().includes(target)) ||
-                                (u.name && u.name.toLowerCase().includes(target)) ||
-                                (u.position && u.position.toLowerCase().includes(target))
-                            );
-                            renderUsersTable(filtered);
-                        }
-                    });
-
-                } catch (error) {
-                    console.error("Error fetching users:", error);
-                    document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 1rem; color: red;">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>';
-                }
-
-                // Add user header
-                const nav = document.querySelector('.main-nav ul');
-                if (nav && !document.getElementById('navUserEmail')) {
-                    const li = document.createElement('li');
-                    li.id = 'navUserEmail';
-                    li.innerHTML = `<span style="margin-left: 1rem; font-size:0.875rem; color:var(--text-secondary);">${user.email}</span>
-                                    <button onclick="window.logoutAndRedirect()" style="margin-left:0.5rem; background:none; border:none; cursor:pointer; color:var(--primary-color); font-weight:bold;">[로그아웃]</button>`;
-                    nav.appendChild(li);
-                }
-            },
-            () => {
-                const current = window.location.pathname + window.location.search;
-                window.location.href = '../login.html?redirect=' + encodeURIComponent(current);
-            }
-        );
-
-        import { logoutAdmin } from '../assets/js/auth.js';
-        window.logoutAndRedirect = () => {
-            logoutAdmin();
-            window.location.href = '../login.html';
+        window.openRoleModal = (uid, email, currentRole) => {
+            currentlyEditingUserId = uid;
+            document.getElementById('roleModalTarget').textContent = `대상: ${email}`;
+            
+            // preset selection
+            const initialRole = ['ADMIN', 'STAFF'].includes(currentRole?.toUpperCase()) ? currentRole.toUpperCase() : 'VIEWER';
+            window.selectRole(initialRole);
+            
+            document.getElementById('roleModal').style.display = 'flex';
         };
-    </script>
-    <script type="module" src="../assets/js/ai-chat.js"></script>
-<script>
-            function highlightActiveMenu() {
-                const current = location.pathname.split('/').pop() || 'dashboard.html';
-                document.querySelectorAll('.top-nav a').forEach(a => {
-                    const href = a.getAttribute('href');
-                    if (href && href === current) {
-                        a.style.color = 'var(--primary-color, #4F46E5)';
-                        a.style.fontWeight = '700';
-                        const parentDropBtn = a.closest('.dropdown');
-                        if (parentDropBtn) {
-                            parentDropBtn.querySelector('.dropbtn').style.color = 'var(--primary-color, #4F46E5)';
-                            parentDropBtn.querySelector('.dropbtn').style.background = 'rgba(79, 70, 229, 0.05)';
-                        }
-                    } else if (a.classList.contains('active') && href !== current) {
-                        a.classList.remove('active');
-                    }
-                });
-            }
-            document.addEventListener('DOMContentLoaded', highlightActiveMenu);
-        </script></body>
 
+        window.selectRole = (role) => {
+            selectedRole = role;
+            document.querySelectorAll('.role-option').forEach(el => el.classList.remove('selected'));
+            const opt = document.getElementById('opt-' + role);
+            if (opt) opt.classList.add('selected');
+        };
+
+        document.getElementById('btnSaveRole').addEventListener('click', async () => {
+            if (!currentlyEditingUserId) return;
+            document.getElementById('btnSaveRole').innerText = '저장 중...';
+            try {
+                // If they are granted ERP access, we sync them to the Master Tenant so they become an admin of this instance.
+                const updateData = { role: selectedRole, status: selectedRole === 'VIEWER' ? '대기중' : '승인' };
+                if (selectedRole === 'ADMIN' || selectedRole === 'STAFF') {
+                    updateData.tenant_id = 'system_master'; // Bond them to the Super Admin's workspace!
+                }
+                
+                await updateDoc(doc(db, 'users', currentlyEditingUserId), updateData);
+                document.getElementById('roleModal').style.display = 'none';
+                loadUsers();
+            } catch (e) {
+                alert('권한 부여 중 오류 발생: ' + e.message);
+            } finally {
+                document.getElementById('btnSaveRole').innerText = '권한 저장 (승인)';
+            }
+        });
+
+        window.inviteNewUser = async () => {
+            const email = prompt("권한을 임의로 부여할 계정 아이디(이메일)를 입력하세요.\n(미가입 유저일 시 자동 생성됩니다.)");
+            if (!email) return;
+            
+            const dummyUid = 'ext_' + new Date().getTime();
+            try {
+                await setDoc(doc(db, 'users', dummyUid), {
+                    email: email, name: email.split('@')[0], role: 'ADMIN', status: '승인', tenant_id: 'system_master', createdAt: serverTimestamp()
+                });
+                alert('승인 완료! 사용자가 해당 구글 계정으로 로그인 시 즉시 ERP에 접속할 수 있습니다.');
+                loadUsers();
+            } catch (e) { alert(e.message); }
+        };
+
+        document.getElementById('searchInput').addEventListener('input', renderUsers);
+
+        checkAdminAuth(() => loadUsers());
+    </script>
+</body>
 </html>
