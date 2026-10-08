@@ -177,6 +177,17 @@
             border-radius: 6px;
             margin-top: 0.25rem;
         }
+    
+        .dropdown { position: relative; display: inline-block; margin-top:2px; }
+        .dropdown-content { display: none; position: absolute; background-color: white; min-width: 180px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 0.5rem; border: 1px solid #e2e8f0; z-index: 1000; overflow: hidden; top:100%; left:0; }
+        .dropdown-content a { color: #334155 !important; padding: 0.8rem 1rem !important; text-decoration: none; display: block; font-size: 0.95rem; font-weight: 500; border-bottom: 1px solid #f1f5f9; transition: all 0.2s; white-space: nowrap; }
+        .dropdown-content a:last-child { border-bottom: none; }
+        .dropdown-content a:hover { background-color: #f8fafc; color: #4F46E5 !important; padding-left: 1.25rem !important; }
+        .dropdown:hover .dropdown-content { display: block; animation: fadeInUp 0.2s ease-out; }
+        .dropbtn { padding: 0.5rem 0.75rem; color: #475569; font-weight: 600; cursor: pointer; border-radius: 0.5rem; transition: background 0.2s; display:inline-block; }
+        .dropdown:hover .dropbtn { color: #4F46E5; background: rgba(79, 70, 229, 0.05); }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
     </style>
 </head>
 
@@ -351,6 +362,25 @@
     </template>
 
     <script type="module" src="../assets/js/admin/tasks.js"></script>
-</body>
+<script>
+            function highlightActiveMenu() {
+                const current = location.pathname.split('/').pop() || 'dashboard.html';
+                document.querySelectorAll('.top-nav a').forEach(a => {
+                    const href = a.getAttribute('href');
+                    if (href && href === current) {
+                        a.style.color = 'var(--primary-color, #4F46E5)';
+                        a.style.fontWeight = '700';
+                        const parentDropBtn = a.closest('.dropdown');
+                        if (parentDropBtn) {
+                            parentDropBtn.querySelector('.dropbtn').style.color = 'var(--primary-color, #4F46E5)';
+                            parentDropBtn.querySelector('.dropbtn').style.background = 'rgba(79, 70, 229, 0.05)';
+                        }
+                    } else if (a.classList.contains('active') && href !== current) {
+                        a.classList.remove('active');
+                    }
+                });
+            }
+            document.addEventListener('DOMContentLoaded', highlightActiveMenu);
+        </script></body>
 
 </html>

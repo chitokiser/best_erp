@@ -12,6 +12,17 @@
         .top-nav { background: white; padding: 1rem 2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center; }
         .top-nav .logo { font-size: 1.5rem; font-weight: 800; background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; cursor: pointer;}
         .main-container { max-width: 1200px; margin: 3rem auto; padding: 0 1.5rem; text-align:center; }
+    
+        .dropdown { position: relative; display: inline-block; margin-top:2px; }
+        .dropdown-content { display: none; position: absolute; background-color: white; min-width: 180px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 0.5rem; border: 1px solid #e2e8f0; z-index: 1000; overflow: hidden; top:100%; left:0; }
+        .dropdown-content a { color: #334155 !important; padding: 0.8rem 1rem !important; text-decoration: none; display: block; font-size: 0.95rem; font-weight: 500; border-bottom: 1px solid #f1f5f9; transition: all 0.2s; white-space: nowrap; }
+        .dropdown-content a:last-child { border-bottom: none; }
+        .dropdown-content a:hover { background-color: #f8fafc; color: #4F46E5 !important; padding-left: 1.25rem !important; }
+        .dropdown:hover .dropdown-content { display: block; animation: fadeInUp 0.2s ease-out; }
+        .dropbtn { padding: 0.5rem 0.75rem; color: #475569; font-weight: 600; cursor: pointer; border-radius: 0.5rem; transition: background 0.2s; display:inline-block; }
+        .dropdown:hover .dropbtn { color: #4F46E5; background: rgba(79, 70, 229, 0.05); }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
     </style>
 
     <!-- FORCE CSS -->
@@ -78,6 +89,25 @@
         <p style="color:var(--text-muted); margin-top:1rem;">해당 DB 화면은 현재 상세 기획 및 개발(MVP) 대기 중입니다.<br>추후 AI 지식그래프 연동이 완료되면 실제 경영 데이터가 이곳에 표시될 예정입니다.</p>
         <div style="margin-top:3rem; padding: 3rem; background:white; border-radius:1.5rem; border:1px dashed #cbd5e1;">UI 개발 진행 예정 영역</div>
     </div>
-</body>
+<script>
+            function highlightActiveMenu() {
+                const current = location.pathname.split('/').pop() || 'dashboard.html';
+                document.querySelectorAll('.top-nav a').forEach(a => {
+                    const href = a.getAttribute('href');
+                    if (href && href === current) {
+                        a.style.color = 'var(--primary-color, #4F46E5)';
+                        a.style.fontWeight = '700';
+                        const parentDropBtn = a.closest('.dropdown');
+                        if (parentDropBtn) {
+                            parentDropBtn.querySelector('.dropbtn').style.color = 'var(--primary-color, #4F46E5)';
+                            parentDropBtn.querySelector('.dropbtn').style.background = 'rgba(79, 70, 229, 0.05)';
+                        }
+                    } else if (a.classList.contains('active') && href !== current) {
+                        a.classList.remove('active');
+                    }
+                });
+            }
+            document.addEventListener('DOMContentLoaded', highlightActiveMenu);
+        </script></body>
 </html>
 

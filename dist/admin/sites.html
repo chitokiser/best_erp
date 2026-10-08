@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI CEO MANAGER - 현장 (Sites)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>:root{--ai-primary:#4f46e5;--ai-secondary:#818cf8;--ai-gradient:linear-gradient(135deg, #4f46e5, #7c3aed);--text-dark:#1e293b;--text-muted:#64748b}body{color:var(--text-dark);background:#f8fafc;margin:0;padding:0;font-family:Inter,sans-serif}.top-nav{background:#fff;justify-content:space-between;align-items:center;padding:1rem 2rem;display:flex;box-shadow:0 4px 15px #00000008}.top-nav .logo{background:var(--ai-gradient);-webkit-text-fill-color:transparent;cursor:pointer;-webkit-background-clip:text;margin:0;font-size:1.5rem;font-weight:800}.main-container{text-align:center;max-width:1200px;margin:3rem auto;padding:0 1.5rem}</style>
+    <style>:root{--ai-primary:#4f46e5;--ai-secondary:#818cf8;--ai-gradient:linear-gradient(135deg, #4f46e5, #7c3aed);--text-dark:#1e293b;--text-muted:#64748b}body{color:var(--text-dark);background:#f8fafc;margin:0;padding:0;font-family:Inter,sans-serif}.top-nav{background:#fff;justify-content:space-between;align-items:center;padding:1rem 2rem;display:flex;box-shadow:0 4px 15px #00000008}.top-nav .logo{background:var(--ai-gradient);-webkit-text-fill-color:transparent;cursor:pointer;-webkit-background-clip:text;margin:0;font-size:1.5rem;font-weight:800}.main-container{text-align:center;max-width:1200px;margin:3rem auto;padding:0 1.5rem}.dropdown{margin-top:2px;display:inline-block;position:relative}.dropdown-content{z-index:1000;background-color:#fff;border:1px solid #e2e8f0;border-radius:.5rem;min-width:180px;display:none;position:absolute;top:100%;left:0;overflow:hidden;box-shadow:0 10px 25px #0000001a}.dropdown-content a{white-space:nowrap;border-bottom:1px solid #f1f5f9;font-size:.95rem;font-weight:500;text-decoration:none;transition:all .2s;display:block;color:#334155!important;padding:.8rem 1rem!important}.dropdown-content a:last-child{border-bottom:none}.dropdown-content a:hover{background-color:#f8fafc;color:#4f46e5!important;padding-left:1.25rem!important}.dropdown:hover .dropdown-content{animation:.2s ease-out fadeInUp;display:block}.dropbtn{color:#475569;cursor:pointer;border-radius:.5rem;padding:.5rem .75rem;font-weight:600;transition:background .2s;display:inline-block}.dropdown:hover .dropbtn{color:#4f46e5;background:#4f46e50d}@keyframes fadeInUp{0%{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}</style>
 
     <!-- FORCE CSS -->
 <style>.top-nav{flex-wrap:nowrap;justify-content:space-between;align-items:center;display:flex;position:relative;overflow:visible}.logo-container{width:auto!important}.top-nav ul{align-items:center;gap:1rem;margin:0;padding:0;list-style:none;display:flex;flex-wrap:nowrap!important}.top-nav ul li a{white-space:nowrap!important}.mobile-only-btn{display:none!important}@media screen and (width<=900px){.mobile-only-btn{display:block!important}.logo-container{justify-content:space-between!important;width:100%!important}.top-nav{flex-direction:column!important;align-items:flex-start!important}.top-nav ul,.top-nav>div:last-child{display:none!important}.top-nav.menu-open ul{background:#fff;border-radius:.5rem;width:100%;max-height:70vh;margin-top:1rem;overflow-y:auto;box-shadow:0 10px 15px -3px #0000001a;flex-direction:column!important;gap:0!important;padding:.5rem 0!important;display:flex!important}.top-nav.menu-open ul li{text-align:center;border-bottom:1px solid #f1f5f9;width:100%}.top-nav.menu-open ul li a{padding:1rem!important;display:block!important}.metric-cards,.dashboard-grid,.client-summary,.finance-summary,.stats-grid,.summary-container{grid-template-columns:1fr!important;gap:1rem!important;display:grid!important}}</style>
@@ -43,6 +43,25 @@
         <p style="color:var(--text-muted); margin-top:1rem;">해당 DB 화면은 현재 상세 기획 및 개발(MVP) 대기 중입니다.<br>추후 AI 지식그래프 연동이 완료되면 실제 경영 데이터가 이곳에 표시될 예정입니다.</p>
         <div style="margin-top:3rem; padding: 3rem; background:white; border-radius:1.5rem; border:1px dashed #cbd5e1;">UI 개발 진행 예정 영역</div>
     </div>
-</body>
+<script>
+            function highlightActiveMenu() {
+                const current = location.pathname.split('/').pop() || 'dashboard.html';
+                document.querySelectorAll('.top-nav a').forEach(a => {
+                    const href = a.getAttribute('href');
+                    if (href && href === current) {
+                        a.style.color = 'var(--primary-color, #4F46E5)';
+                        a.style.fontWeight = '700';
+                        const parentDropBtn = a.closest('.dropdown');
+                        if (parentDropBtn) {
+                            parentDropBtn.querySelector('.dropbtn').style.color = 'var(--primary-color, #4F46E5)';
+                            parentDropBtn.querySelector('.dropbtn').style.background = 'rgba(79, 70, 229, 0.05)';
+                        }
+                    } else if (a.classList.contains('active') && href !== current) {
+                        a.classList.remove('active');
+                    }
+                });
+            }
+            document.addEventListener('DOMContentLoaded', highlightActiveMenu);
+        </script></body>
 </html>
 

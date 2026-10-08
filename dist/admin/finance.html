@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI CEO MANAGER - 재무(Finance) DB</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>:root{--ai-primary:#4f46e5;--ai-secondary:#818cf8;--ai-gradient:linear-gradient(135deg, #4f46e5, #7c3aed);--danger:#ef4444;--warning:#f59e0b;--success:#10b981;--info:#3b82f6;--text-dark:#1e293b;--text-muted:#64748b}body{color:var(--text-dark);background:#f8fafc;margin:0;padding:0;font-family:Inter,sans-serif}.top-nav{background:#fff;justify-content:space-between;align-items:center;padding:1rem 2rem;display:flex;box-shadow:0 4px 15px #00000008}.top-nav .logo{background:var(--ai-gradient);-webkit-text-fill-color:transparent;cursor:pointer;-webkit-background-clip:text;margin:0;font-size:1.5rem;font-weight:800}.main-container{max-width:1200px;margin:2rem auto;padding:0 1.5rem}.header-action{justify-content:space-between;align-items:center;margin-bottom:2rem;display:flex}.header-action h2{margin:0;font-size:1.8rem;font-weight:800}.btn-add{background:var(--ai-gradient);color:#fff;cursor:pointer;border:none;border-radius:.5rem;padding:.75rem 1.5rem;font-weight:600;transition:transform .2s}.btn-add:hover{transform:translateY(-2px)}.finance-summary{grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;display:grid}.summary-box{text-align:center;background:#fff;border:1px solid #e2e8f0;border-radius:1rem;padding:1.5rem;box-shadow:0 2px 4px #00000005}.summary-label{color:var(--text-muted);margin-bottom:.5rem;font-size:.9rem;font-weight:600}.summary-val{font-size:1.5rem;font-weight:800}.val-income{color:var(--success)}.val-expense{color:var(--danger)}.val-receivable{color:var(--info)}.val-payable{color:var(--warning)}.data-card{background:#fff;border-radius:1rem;padding:1.5rem;box-shadow:0 4px 6px -1px #0000000d}table{border-collapse:collapse;text-align:left;width:100%}th{color:var(--text-muted);border-bottom:2px solid #e2e8f0;padding:1rem;font-weight:600}td{border-bottom:1px solid #f1f5f9;padding:1rem}.type-badge{border-radius:.5rem;padding:.3rem .6rem;font-size:.8rem;font-weight:700;display:inline-block}.badge-income{color:#065f46;background:#d1fae5}.badge-expense{color:#991b1b;background:#fee2e2}.badge-receivable{color:#1e40af;background:#dbeafe}.badge-payable{color:#92400e;background:#fef3c7}.modal-overlay{z-index:100;background:#00000080;justify-content:center;align-items:center;width:100%;height:100%;display:none;position:fixed;top:0;left:0}.modal-content{background:#fff;border-radius:1rem;width:600px;max-width:95%;padding:2.5rem}.modal-header{justify-content:space-between;align-items:center;margin-bottom:1.5rem;display:flex}.modal-header h3{margin:0;font-size:1.4rem;font-weight:800}.close-btn{cursor:pointer;color:var(--text-muted);background:0 0;border:none;font-size:1.5rem}.form-group{margin-bottom:1.25rem}.form-group label{color:var(--text-dark);margin-bottom:.5rem;font-size:.9rem;font-weight:600;display:block}.form-group input,.form-group select,.form-group textarea{box-sizing:border-box;border:1px solid #cbd5e1;border-radius:.5rem;width:100%;padding:.8rem;font-family:inherit;font-size:1rem}.form-row{gap:1rem;display:flex}.form-row .form-group{flex:1;margin-bottom:1rem}.submit-btn{background:var(--text-dark);color:#fff;cursor:pointer;border:none;border-radius:.5rem;width:100%;margin-top:1rem;padding:1rem;font-size:1.1rem;font-weight:700;transition:all .2s}.submit-btn:hover{background:var(--ai-primary)}.top-nav{z-index:50;background:#fff;justify-content:space-between;align-items:center;padding:1rem 2rem;display:flex;position:sticky;top:0;box-shadow:0 4px 6px -1px #0000000d}.top-nav h1{color:var(--ai-primary,#4f46e5);margin:0;font-size:1.5rem;font-weight:800}.top-nav ul{gap:2rem;margin:0;padding:0;list-style:none;display:flex}.top-nav a{color:var(--text-muted,#64748b);font-size:.95rem;font-weight:600;text-decoration:none;transition:color .2s}.top-nav a:hover,.top-nav a.active{color:var(--ai-primary,#4f46e5)}</style>
+    <style>:root{--ai-primary:#4f46e5;--ai-secondary:#818cf8;--ai-gradient:linear-gradient(135deg, #4f46e5, #7c3aed);--danger:#ef4444;--warning:#f59e0b;--success:#10b981;--info:#3b82f6;--text-dark:#1e293b;--text-muted:#64748b}body{color:var(--text-dark);background:#f8fafc;margin:0;padding:0;font-family:Inter,sans-serif}.top-nav{background:#fff;justify-content:space-between;align-items:center;padding:1rem 2rem;display:flex;box-shadow:0 4px 15px #00000008}.top-nav .logo{background:var(--ai-gradient);-webkit-text-fill-color:transparent;cursor:pointer;-webkit-background-clip:text;margin:0;font-size:1.5rem;font-weight:800}.main-container{max-width:1200px;margin:2rem auto;padding:0 1.5rem}.header-action{justify-content:space-between;align-items:center;margin-bottom:2rem;display:flex}.header-action h2{margin:0;font-size:1.8rem;font-weight:800}.btn-add{background:var(--ai-gradient);color:#fff;cursor:pointer;border:none;border-radius:.5rem;padding:.75rem 1.5rem;font-weight:600;transition:transform .2s}.btn-add:hover{transform:translateY(-2px)}.finance-summary{grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;display:grid}.summary-box{text-align:center;background:#fff;border:1px solid #e2e8f0;border-radius:1rem;padding:1.5rem;box-shadow:0 2px 4px #00000005}.summary-label{color:var(--text-muted);margin-bottom:.5rem;font-size:.9rem;font-weight:600}.summary-val{font-size:1.5rem;font-weight:800}.val-income{color:var(--success)}.val-expense{color:var(--danger)}.val-receivable{color:var(--info)}.val-payable{color:var(--warning)}.data-card{background:#fff;border-radius:1rem;padding:1.5rem;box-shadow:0 4px 6px -1px #0000000d}table{border-collapse:collapse;text-align:left;width:100%}th{color:var(--text-muted);border-bottom:2px solid #e2e8f0;padding:1rem;font-weight:600}td{border-bottom:1px solid #f1f5f9;padding:1rem}.type-badge{border-radius:.5rem;padding:.3rem .6rem;font-size:.8rem;font-weight:700;display:inline-block}.badge-income{color:#065f46;background:#d1fae5}.badge-expense{color:#991b1b;background:#fee2e2}.badge-receivable{color:#1e40af;background:#dbeafe}.badge-payable{color:#92400e;background:#fef3c7}.modal-overlay{z-index:100;background:#00000080;justify-content:center;align-items:center;width:100%;height:100%;display:none;position:fixed;top:0;left:0}.modal-content{background:#fff;border-radius:1rem;width:600px;max-width:95%;padding:2.5rem}.modal-header{justify-content:space-between;align-items:center;margin-bottom:1.5rem;display:flex}.modal-header h3{margin:0;font-size:1.4rem;font-weight:800}.close-btn{cursor:pointer;color:var(--text-muted);background:0 0;border:none;font-size:1.5rem}.form-group{margin-bottom:1.25rem}.form-group label{color:var(--text-dark);margin-bottom:.5rem;font-size:.9rem;font-weight:600;display:block}.form-group input,.form-group select,.form-group textarea{box-sizing:border-box;border:1px solid #cbd5e1;border-radius:.5rem;width:100%;padding:.8rem;font-family:inherit;font-size:1rem}.form-row{gap:1rem;display:flex}.form-row .form-group{flex:1;margin-bottom:1rem}.submit-btn{background:var(--text-dark);color:#fff;cursor:pointer;border:none;border-radius:.5rem;width:100%;margin-top:1rem;padding:1rem;font-size:1.1rem;font-weight:700;transition:all .2s}.submit-btn:hover{background:var(--ai-primary)}.top-nav{z-index:50;background:#fff;justify-content:space-between;align-items:center;padding:1rem 2rem;display:flex;position:sticky;top:0;box-shadow:0 4px 6px -1px #0000000d}.top-nav h1{color:var(--ai-primary,#4f46e5);margin:0;font-size:1.5rem;font-weight:800}.top-nav ul{gap:2rem;margin:0;padding:0;list-style:none;display:flex}.top-nav a{color:var(--text-muted,#64748b);font-size:.95rem;font-weight:600;text-decoration:none;transition:color .2s}.top-nav a:hover,.top-nav a.active{color:var(--ai-primary,#4f46e5)}.dropdown{margin-top:2px;display:inline-block;position:relative}.dropdown-content{z-index:1000;background-color:#fff;border:1px solid #e2e8f0;border-radius:.5rem;min-width:180px;display:none;position:absolute;top:100%;left:0;overflow:hidden;box-shadow:0 10px 25px #0000001a}.dropdown-content a{white-space:nowrap;border-bottom:1px solid #f1f5f9;font-size:.95rem;font-weight:500;text-decoration:none;transition:all .2s;display:block;color:#334155!important;padding:.8rem 1rem!important}.dropdown-content a:last-child{border-bottom:none}.dropdown-content a:hover{background-color:#f8fafc;color:#4f46e5!important;padding-left:1.25rem!important}.dropdown:hover .dropdown-content{animation:.2s ease-out fadeInUp;display:block}.dropbtn{color:#475569;cursor:pointer;border-radius:.5rem;padding:.5rem .75rem;font-weight:600;transition:background .2s;display:inline-block}.dropdown:hover .dropbtn{color:#4f46e5;background:#4f46e50d}@keyframes fadeInUp{0%{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}</style>
 
     <!-- FORCE CSS -->
 <style>.top-nav{flex-wrap:nowrap;justify-content:space-between;align-items:center;display:flex;position:relative;overflow:visible}.logo-container{width:auto!important}.top-nav ul{align-items:center;gap:1rem;margin:0;padding:0;list-style:none;display:flex;flex-wrap:nowrap!important}.top-nav ul li a{white-space:nowrap!important}.mobile-only-btn{display:none!important}@media screen and (width<=900px){.mobile-only-btn{display:block!important}.logo-container{justify-content:space-between!important;width:100%!important}.top-nav{flex-direction:column!important;align-items:flex-start!important}.top-nav ul,.top-nav>div:last-child{display:none!important}.top-nav.menu-open ul{background:#fff;border-radius:.5rem;width:100%;max-height:70vh;margin-top:1rem;overflow-y:auto;box-shadow:0 10px 15px -3px #0000001a;flex-direction:column!important;gap:0!important;padding:.5rem 0!important;display:flex!important}.top-nav.menu-open ul li{text-align:center;border-bottom:1px solid #f1f5f9;width:100%}.top-nav.menu-open ul li a{padding:1rem!important;display:block!important}.metric-cards,.dashboard-grid,.client-summary,.finance-summary,.stats-grid,.summary-container{grid-template-columns:1fr!important;gap:1rem!important;display:grid!important}}</style>
@@ -30,18 +30,30 @@
 </div>
         <ul>
             <li><a href="dashboard.html">대시보드</a></li>
-            <li><a href="tasks.html">업무지시/보고</a></li>
-
-            <li><a href="projects.html">프로젝트</a></li>
-            <li><a href="materials.html">자재관리</a></li>
-            <li><a href="suppliers.html">협력업체</a></li>
-            <li><a href="purchase-requests.html">결재관리(구매)</a></li>
-            <li><a href="finance.html" class="active">재무/회계</a></li>
-            <li><a href="employees.html">직원</a></li>
-            <li><a href="users.html">회원관리</a></li>
-            <li><a href="clients.html">고객</a></li>
-            <li><a href="contacts.html">인맥</a></li>
-            <li><a href="https://bestwinner.netlify.app/" target="_blank">🏠 BESTWINNER 바로가기</a></li>
+            <li class="dropdown">
+                <span class="dropbtn">내부운영(HR) ▾</span>
+                <div class="dropdown-content">
+                    <a href="tasks.html">업무지시/보고</a>
+                    <a href="finance.html">재무/회계</a>
+                    <a href="employees.html">직원목록</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <span class="dropbtn">영업/프로젝트 ▾</span>
+                <div class="dropdown-content">
+                    <a href="projects.html">프로젝트 보드</a>
+                    <a href="materials.html">자재관리</a>
+                    <a href="suppliers.html">협력업체</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <span class="dropbtn">고객/회원관리 ▾</span>
+                <div class="dropdown-content">
+                    <a href="clients.html">고객 리스트</a>
+                    <a href="contacts.html">인맥(명함)</a>
+                    <a href="users.html">SaaS 회원관리</a>
+                </div>
+            </li>
         </ul>
         <div style="font-size: 0.85rem; text-align: right;">
             <strong style="color:var(--ai-primary, #4F46E5);" id="navUserEmailSpan">SUPER_ADMIN</strong><br>
@@ -163,6 +175,25 @@
     <!-- AI Chat Module -->
 
     <!-- Global Auth Guard -->
-</body>
+<script>
+            function highlightActiveMenu() {
+                const current = location.pathname.split('/').pop() || 'dashboard.html';
+                document.querySelectorAll('.top-nav a').forEach(a => {
+                    const href = a.getAttribute('href');
+                    if (href && href === current) {
+                        a.style.color = 'var(--primary-color, #4F46E5)';
+                        a.style.fontWeight = '700';
+                        const parentDropBtn = a.closest('.dropdown');
+                        if (parentDropBtn) {
+                            parentDropBtn.querySelector('.dropbtn').style.color = 'var(--primary-color, #4F46E5)';
+                            parentDropBtn.querySelector('.dropbtn').style.background = 'rgba(79, 70, 229, 0.05)';
+                        }
+                    } else if (a.classList.contains('active') && href !== current) {
+                        a.classList.remove('active');
+                    }
+                });
+            }
+            document.addEventListener('DOMContentLoaded', highlightActiveMenu);
+        </script></body>
 
 </html>

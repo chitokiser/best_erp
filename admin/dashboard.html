@@ -214,6 +214,17 @@
         .ai-chat-btn:hover {
             transform: scale(1.1);
         }
+    
+        .dropdown { position: relative; display: inline-block; margin-top:2px; }
+        .dropdown-content { display: none; position: absolute; background-color: white; min-width: 180px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 0.5rem; border: 1px solid #e2e8f0; z-index: 1000; overflow: hidden; top:100%; left:0; }
+        .dropdown-content a { color: #334155 !important; padding: 0.8rem 1rem !important; text-decoration: none; display: block; font-size: 0.95rem; font-weight: 500; border-bottom: 1px solid #f1f5f9; transition: all 0.2s; white-space: nowrap; }
+        .dropdown-content a:last-child { border-bottom: none; }
+        .dropdown-content a:hover { background-color: #f8fafc; color: #4F46E5 !important; padding-left: 1.25rem !important; }
+        .dropdown:hover .dropdown-content { display: block; animation: fadeInUp 0.2s ease-out; }
+        .dropbtn { padding: 0.5rem 0.75rem; color: #475569; font-weight: 600; cursor: pointer; border-radius: 0.5rem; transition: background 0.2s; display:inline-block; }
+        .dropdown:hover .dropbtn { color: #4F46E5; background: rgba(79, 70, 229, 0.05); }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
     </style>
 
     <!-- FORCE CSS -->
@@ -494,6 +505,57 @@
             color: var(--ai-primary);
         }
     </style>
+
+        <script type="module">
+        import { doc, getDoc, setDoc } from 'firebase/firestore';
+        import { db } from '../assets/js/firebase-config.js';
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(async () => {
+                const tId = window.tenantId || 'system_master';
+                const brandRef = doc(db, 'system_branding', tId);
+                
+                try {
+                    const snap = await getDoc(brandRef);
+                    if(snap.exists()) {
+                        const bData = snap.data();
+                        if(bData.logoText) document.getElementById('brandLogoText').innerText = bData.logoText;
+                        if(bData.logoColor) document.getElementById('brandLogoText').style.color = bData.logoColor;
+                        if(bData.mainText) document.getElementById('brandMainText').innerText = bData.mainText;
+                    }
+                } catch(e) { console.error("Brand loading error", e); }
+
+                if (window.currentUserRole === 'SUPER_ADMIN' || window.currentUserRole === 'CEO') {
+                    const btn = document.getElementById('btnEditBrand');
+                    if(btn) {
+                        btn.style.display = 'inline-block';
+                        btn.onclick = async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation(); // prevent navigation
+                            const newLogo = prompt('포인트 로고 텍스트 (예: BEST):', document.getElementById('brandLogoText').innerText);
+                            if(newLogo === null) return;
+                            const newColor = prompt('포인트 컬러 (예: #ef4444 또는 red):', document.getElementById('brandLogoText').style.color || '#ef4444');
+                            if(newColor === null) return;
+                            const newMain = prompt('메인 브랜딩 타이틀 (예: AI경영관리):', document.getElementById('brandMainText').innerText);
+                            if(newMain === null) return;
+                            
+                            document.getElementById('brandLogoText').innerText = newLogo;
+                            document.getElementById('brandLogoText').style.color = newColor;
+                            document.getElementById('brandMainText').innerText = newMain;
+                            
+                            await setDoc(brandRef, {
+                                logoText: newLogo,
+                                logoColor: newColor,
+                                mainText: newMain
+                            });
+                            alert('브랜딩이 저장되었습니다. (테넌트 전용)');
+                        };
+                    }
+                }
+            }, 1500);
+        });
+        </script>
+
 </head>
 
 
@@ -502,25 +564,42 @@
         <div class="logo-container" style="display:flex; align-items:center; justify-content:space-between; width:100%; margin-bottom:0;">
     <div style="display:flex; align-items:center; gap:0.5rem; flex-shrink:0; cursor:pointer;" onclick="location.href='dashboard.html'">
         <img src="../images/logo/logo.png" style="height: 28px;" onerror="this.style.display='none';">
-        <h1 style="margin:0; font-size: 1.3rem; color: #4F46E5; font-weight: 800; white-space:nowrap;">AI경영관리</h1>
+        <h1 id="brandTitle" style="color:var(--ai-primary); margin:0; font-size:1.5rem; font-weight:800; display:flex; align-items:center; gap:0.5rem;">
+               <span id="brandLogoText" style="color:#ef4444;">BEST</span> 
+               <span id="brandMainText">AI경영관리</span>
+               <button id="btnEditBrand" style="display:none; background:none; border:none; cursor:pointer; font-size:0.8rem;" title="로고/타이틀 설정">⚙️</button>
+           </h1>
     </div>
     <div class="mobile-only-btn" style="display:none; cursor:pointer;" onclick="document.querySelector('.top-nav').classList.toggle('menu-open')">
         <svg viewBox="0 0 24 24" width="28" height="28" stroke="#4F46E5" stroke-width="2" fill="none"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
     </div>
 </div>
         <ul>
-            <li><a href="dashboard.html" class="active">대시보드</a></li>
-            <li><a href="tasks.html">업무지시/보고</a></li>
-
-            <li><a href="projects.html">프로젝트</a></li>
-            <li><a href="materials.html">자재관리</a></li>
-            <li><a href="suppliers.html">협력업체</a></li>
-            <li><a href="finance.html">재무/회계</a></li>
-            <li><a href="employees.html">직원</a></li>
-            <li><a href="users.html">회원관리</a></li>
-            <li><a href="clients.html">고객</a></li>
-            <li><a href="contacts.html">인맥</a></li>
-            <li><a href="https://bestwinner.netlify.app/" target="_blank">🏠 BESTWINNER 바로가기</a></li>
+            <li><a href="dashboard.html">대시보드</a></li>
+            <li class="dropdown">
+                <span class="dropbtn">내부운영(HR) ▾</span>
+                <div class="dropdown-content">
+                    <a href="tasks.html">업무지시/보고</a>
+                    <a href="finance.html">재무/회계</a>
+                    <a href="employees.html">직원목록</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <span class="dropbtn">영업/프로젝트 ▾</span>
+                <div class="dropdown-content">
+                    <a href="projects.html">프로젝트 보드</a>
+                    <a href="materials.html">자재관리</a>
+                    <a href="suppliers.html">협력업체</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <span class="dropbtn">고객/회원관리 ▾</span>
+                <div class="dropdown-content">
+                    <a href="clients.html">고객 리스트</a>
+                    <a href="contacts.html">인맥(명함)</a>
+                    <a href="users.html">SaaS 회원관리</a>
+                </div>
+            </li>
         </ul>
         <div style="font-size: 0.85rem; text-align: right;">
             <strong style="color:var(--ai-primary);" id="navUserName2">SUPER_ADMIN</strong><br>
@@ -834,6 +913,25 @@
         });
         </script>
 
-</body>
+<script>
+            function highlightActiveMenu() {
+                const current = location.pathname.split('/').pop() || 'dashboard.html';
+                document.querySelectorAll('.top-nav a').forEach(a => {
+                    const href = a.getAttribute('href');
+                    if (href && href === current) {
+                        a.style.color = 'var(--primary-color, #4F46E5)';
+                        a.style.fontWeight = '700';
+                        const parentDropBtn = a.closest('.dropdown');
+                        if (parentDropBtn) {
+                            parentDropBtn.querySelector('.dropbtn').style.color = 'var(--primary-color, #4F46E5)';
+                            parentDropBtn.querySelector('.dropbtn').style.background = 'rgba(79, 70, 229, 0.05)';
+                        }
+                    } else if (a.classList.contains('active') && href !== current) {
+                        a.classList.remove('active');
+                    }
+                });
+            }
+            document.addEventListener('DOMContentLoaded', highlightActiveMenu);
+        </script></body>
 
 </html>
