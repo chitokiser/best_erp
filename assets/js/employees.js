@@ -1,5 +1,5 @@
 ﻿import { db } from './firebase-config.js';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, where } from 'firebase/firestore';
 
 const modal = document.getElementById('empModal');
 const openBtn = document.getElementById('openModalBtn');
@@ -46,6 +46,7 @@ async function loadEmployees() {
                     <td>
                         <button onclick="window.editEmp('${doc.id}')" style="padding:0.25rem 0.5rem; background:white; border:1px solid #cbd5e1; border-radius:4px; cursor:pointer;">수정</button>
                         <button onclick="window.deleteEmp('${doc.id}')" style="padding:0.25rem 0.5rem; background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:4px; cursor:pointer; margin-left:0.25rem;">삭제</button>
+                        <button onclick="window.location.href='tasks.html?assignee=${doc.id}'" style="padding:0.25rem 0.5rem; background:var(--ai-primary); color:white; border:none; border-radius:4px; cursor:pointer; margin-left:0.25rem;">업무지시</button>
                     </td>
                 </tr>
             `;
@@ -98,7 +99,49 @@ empForm.addEventListener('submit', async (e) => {
     }
 });
 
-loadEmployees();
+
+// -------------------------------------------------------------
+// Initialize STAFF Users Dropdown
+// -------------------------------------------------------------
+const initSelect = () => {
+    const userSelect = document.getElementById('empUserSelect');
+    if (userSelect && userSelect.options.length <= 1) { // Populate only once
+        const qUsers = query(collection(db, 'users'), where('role', '==', 'STAFF'));
+        getDocs(qUsers).then(snap => {
+            snap.forEach(docSnap => {
+                const ud = docSnap.data();
+                const opt = document.createElement('option');
+                opt.value = docSnap.id;
+                opt.dataset.email = ud.email || '';
+                opt.dataset.name = ud.name || '';
+                
+                // Text representation
+                let txt = ud.email;
+                if(ud.name) txt += ' (' + ud.name + ')';
+                if(ud.position) txt += ' - ' + ud.position;
+                opt.textContent = txt;
+                
+                userSelect.appendChild(opt);
+            });
+        }).catch(err => {
+            console.error("STAFF 유저 목록 로드 실패:", err);
+        });
+
+        // When a user is selected, populate Name and Contact
+        userSelect.addEventListener('change', (e) => {
+            const opt = e.target.selectedOptions[0];
+            if(opt && opt.value) {
+                const contactEl = document.getElementById('empContact');
+                const nameEl = document.getElementById('empName');
+                if(contactEl) contactEl.value = opt.dataset.email || '';
+                if(nameEl && opt.dataset.name) nameEl.value = opt.dataset.name;
+            }
+        });
+    }
+};
+
+initSelect(); // Call when script loads
+loadEmployees(); // Finally load standard table
 
 
 window.editEmp = (id) => {

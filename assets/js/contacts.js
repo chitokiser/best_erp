@@ -291,25 +291,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     // Convert to base64
                     const reader = new FileReader();
-                    reader.onloadend = async () => {
-                        const base64Data = reader.result.split(',')[1];
-                        try {
-                            const { scanBusinessCardAI } = await import('./aiApi.js');
-                            const result = await scanBusinessCardAI(base64Data, file.type);
+                    reader.onloadend = () => {
+                        const img = new Image();
+                        img.onload = async () => {
+                            const canvas = document.createElement('canvas');
+                            const MAX_WIDTH = 1000;
+                            const MAX_HEIGHT = 1000;
+                            let width = img.width;
+                            let height = img.height;
 
-                            // Fill form
-                            if (result.name) document.getElementById('addName').value = result.name;
-                            if (result.company) document.getElementById('addCompany').value = result.company;
-                            if (result.position) document.getElementById('addPosition').value = result.position;
-                            if (result.phone) document.getElementById('addPhone').value = result.phone;
+                            if (width > height) {
+                                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                            } else {
+                                if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                            }
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
 
-                            alert('명함 인식이 완료되었습니다.');
-                        } catch (err) {
-                            alert(err.message);
-                        } finally {
-                            ocrLoading.style.display = 'none';
-                            ocrInput.value = ''; // reset
-                        }
+                            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                            const base64Data = compressedDataUrl.split(',')[1];
+                            const mimeType = 'image/jpeg';
+
+                            try {
+                                const { scanBusinessCardAI } = await import('./aiApi.js');
+                                const result = await scanBusinessCardAI(base64Data, mimeType);
+
+                                // Fill form
+                                if (result.name) document.getElementById('addName').value = result.name;
+                                if (result.company) document.getElementById('addCompany').value = result.company;
+                                if (result.position) document.getElementById('addPosition').value = result.position;
+                                if (result.phone) document.getElementById('addPhone').value = result.phone;
+
+                                alert('명함 인식이 완료되었습니다.');
+                            } catch (err) {
+                                alert(err.message);
+                            } finally {
+                                ocrLoading.style.display = 'none';
+                                input.value = ''; // reset
+                            }
+                        };
+                        img.src = reader.result;
                     };
                     reader.readAsDataURL(file);
                 } catch (e) {

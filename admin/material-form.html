@@ -51,52 +51,124 @@
     </style>
 
     <!-- FORCE CSS -->
-<style>
-    .top-nav { display: flex; align-items: center; justify-content: space-between; flex-wrap: nowrap; overflow: visible; position: relative; }
-    .logo-container { width: auto !important; }
-    .top-nav ul { display: flex; align-items: center; gap: 1rem; list-style: none; margin: 0; padding: 0; flex-wrap: nowrap !important; }
-    .top-nav ul li a { white-space: nowrap !important; }
-    .mobile-only-btn { display: none !important; }
-    
-    @media screen and (max-width: 900px) {
-        .mobile-only-btn { display: block !important; }
-        .logo-container { width: 100% !important; justify-content: space-between !important; }
-        .top-nav { flex-direction: column !important; align-items: flex-start !important; }
-        .top-nav ul { display: none !important; }
-        .top-nav > div:last-child { display: none !important; }
-        
-        .top-nav.menu-open ul { 
-            display: flex !important; flex-direction: column !important; 
-            width: 100%; border-radius: 0.5rem; background:#fff; 
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); padding: 0.5rem 0 !important; gap: 0 !important;
-            margin-top: 1rem;
-            max-height: 70vh; /* Prevent it from going offscreen */
-            overflow-y: auto; /* Scrollable if too many items */
+    <style>
+        .top-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: nowrap;
+            overflow: visible;
+            position: relative;
         }
-        .top-nav.menu-open ul li { width: 100%; border-bottom: 1px solid #f1f5f9; text-align:center; }
-        .top-nav.menu-open ul li a { display: block !important; padding: 1rem !important; }
-        
-        .metric-cards, .dashboard-grid, .client-summary, .finance-summary, .stats-grid, .summary-container { 
-            grid-template-columns: 1fr !important; gap: 1rem !important; display: grid !important;
+
+        .logo-container {
+            width: auto !important;
         }
-    }
-</style>
-    </head>
-    
+
+        .top-nav ul {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            flex-wrap: nowrap !important;
+        }
+
+        .top-nav ul li a {
+            white-space: nowrap !important;
+        }
+
+        .mobile-only-btn {
+            display: none !important;
+        }
+
+        @media screen and (max-width: 900px) {
+            .mobile-only-btn {
+                display: block !important;
+            }
+
+            .logo-container {
+                width: 100% !important;
+                justify-content: space-between !important;
+            }
+
+            .top-nav {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+            }
+
+            .top-nav ul {
+                display: none !important;
+            }
+
+            .top-nav>div:last-child {
+                display: none !important;
+            }
+
+            .top-nav.menu-open ul {
+                display: flex !important;
+                flex-direction: column !important;
+                width: 100%;
+                border-radius: 0.5rem;
+                background: #fff;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                padding: 0.5rem 0 !important;
+                gap: 0 !important;
+                margin-top: 1rem;
+                max-height: 70vh;
+                /* Prevent it from going offscreen */
+                overflow-y: auto;
+                /* Scrollable if too many items */
+            }
+
+            .top-nav.menu-open ul li {
+                width: 100%;
+                border-bottom: 1px solid #f1f5f9;
+                text-align: center;
+            }
+
+            .top-nav.menu-open ul li a {
+                display: block !important;
+                padding: 1rem !important;
+            }
+
+            .metric-cards,
+            .dashboard-grid,
+            .client-summary,
+            .finance-summary,
+            .stats-grid,
+            .summary-container {
+                grid-template-columns: 1fr !important;
+                gap: 1rem !important;
+                display: grid !important;
+            }
+        }
+    </style>
+</head>
+
 
 <body style="display: none; background: #f8fafc; font-family: 'Inter', sans-serif; margin: 0; padding: 0;">
     <nav class="top-nav">
-        <div class="logo-container" style="display:flex; align-items:center; justify-content:space-between; width:100%; margin-bottom:0;">
-    <div style="display:flex; align-items:center; gap:0.5rem; flex-shrink:0; cursor:pointer;" onclick="location.href='dashboard.html'">
-        <img src="../images/logo/logo.png" style="height: 28px;" onerror="this.style.display='none';">
-        <h1 style="margin:0; font-size: 1.3rem; color: #4F46E5; font-weight: 800; white-space:nowrap;">AI경영관리</h1>
-    </div>
-    <div class="mobile-only-btn" style="display:none; cursor:pointer;" onclick="document.querySelector('.top-nav').classList.toggle('menu-open')">
-        <svg viewBox="0 0 24 24" width="28" height="28" stroke="#4F46E5" stroke-width="2" fill="none"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
-    </div>
-</div>
+        <div class="logo-container"
+            style="display:flex; align-items:center; justify-content:space-between; width:100%; margin-bottom:0;">
+            <div style="display:flex; align-items:center; gap:0.5rem; flex-shrink:0; cursor:pointer;"
+                onclick="location.href='dashboard.html'">
+                <img src="../images/logo/logo.png" style="height: 28px;" onerror="this.style.display='none';">
+                <h1 style="margin:0; font-size: 1.3rem; color: #4F46E5; font-weight: 800; white-space:nowrap;">AI경영관리
+                </h1>
+            </div>
+            <div class="mobile-only-btn" style="display:none; cursor:pointer;"
+                onclick="document.querySelector('.top-nav').classList.toggle('menu-open')">
+                <svg viewBox="0 0 24 24" width="28" height="28" stroke="#4F46E5" stroke-width="2" fill="none">
+                    <path d="M3 12h18M3 6h18M3 18h18" />
+                </svg>
+            </div>
+        </div>
         <ul>
             <li><a href="dashboard.html">대시보드</a></li>
+            <li><a href="tasks.html">업무지시/보고</a></li>
+
             <li><a href="projects.html">프로젝트</a></li>
             <li><a href="materials.html" class="active">자재관리</a></li>
             <li><a href="suppliers.html">협력업체</a></li>
@@ -106,6 +178,7 @@
             <li><a href="users.html">회원관리</a></li>
             <li><a href="clients.html">고객</a></li>
             <li><a href="contacts.html">인맥</a></li>
+            <li><a href="https://bestwinner.netlify.app/" target="_blank">🏠 BESTWINNER 바로가기</a></li>
         </ul>
         <div style="font-size: 0.85rem; text-align: right;">
             <strong style="color:var(--primary-color, #4F46E5);" id="navUserEmailSpan">SUPER_ADMIN</strong><br>
@@ -220,17 +293,31 @@
 
                 <!-- 미디어 및 기타 -->
                 <fieldset style="border: 1px solid var(--border-color); padding: 1rem; border-radius: 4px;">
-                    <legend style="font-weight: bold; padding: 0 0.5rem;">설명 및 미디어</legend>
+                    <legend style="font-weight: bold; padding: 0 0.5rem;">설명 및 스마트 채우기</legend>
+                    <div
+                        style="margin-bottom: 1rem; border: 1px dashed var(--primary-color); padding: 1rem; border-radius: 4px; background: #ebf8ff;">
+                        <label style="color: var(--primary-color);">💡 스마트 상품 검색 (실시간)</label>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <input type="text" id="shopeeUrl" class="search-input" style="flex:1;"
+                                placeholder="상품명, 브랜드 등을 자유롭게 입력하세요 (예: 시디즈 T50)">
+                            <button type="button" class="btn-primary" id="btnFetchShopee">실제 상품 가져오기</button>
+                        </div>
+                        <small style="color: var(--text-secondary);">인터넷에서 실제 판매되는 상품 정보와 이미지를 즉시 검색하여 양식을 자동
+                            채웁니다.</small>
+                    </div>
+
                     <div style="margin-bottom: 1rem;">
-                        <label>상세 설명</label>
+                        <label>상세 설명 (또는 스크랩된 원본 링크)</label>
                         <textarea id="txtDescription" class="search-input"
                             style="width: 100%; height: 100px; resize: none;"></textarea>
                     </div>
                     <div>
-                        <label>이미지 첨부</label>
+                        <label>이미지 첨부 (또는 원본 웹 이미지 링크)</label>
+                        <input type="text" id="txtImageUrl" class="search-input"
+                            style="width: 100%; margin-bottom: 0.5rem;" placeholder="이미지 URL (검색 시 자동 채워짐)">
                         <input type="file" id="fileImages" accept="image/*" multiple class="search-input"
                             style="width: 100%; padding: 0.5rem;">
-                        <small style="color: var(--text-secondary);">여러 장의 이미지를 선택할 수 있습니다.</small>
+                        <small style="color: var(--text-secondary);">파일을 직접 첨부하거나 이미지 주소를 입력할 수 있습니다.</small>
                     </div>
                 </fieldset>
 
@@ -248,10 +335,92 @@
         </div>
     </main>
 
+    <!-- 커스텀 검색 결과 모달 (자체 프록시) -->
+    <div id="searchModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+        <div
+            style="background:white; padding:1.5rem; border-radius:8px; width:90%; max-width:800px; max-height:80vh; display:flex; flex-direction:column;">
+            <h3 style="margin-top:0;">검색 결과 선택 (자체 프록시)</h3>
+            <div id="searchResults"
+                style="flex:1; overflow-y:auto; margin:1rem 0; display:grid; grid-template-columns:1fr; gap:1rem;">
+                <!-- Results will be injected here -->
+            </div>
+            <div style="text-align:right;">
+                <button class="btn-primary" style="background:#ef4444;"
+                    onclick="document.getElementById('searchModal').style.display='none'">닫기</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { createMaterial, getMaterialById } from '../services/materialApi.js';
         import { doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
         import { db } from '../assets/js/firebase-config.js';
+
+        // 자체 프록시 검색 모달 적용
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnFetchShopee = document.getElementById('btnFetchShopee');
+            if (btnFetchShopee) {
+                btnFetchShopee.addEventListener('click', async () => {
+                    const query = document.getElementById('shopeeUrl').value.trim();
+                    if (!query) return alert("검색할 상품명이나 브랜드명을 입력해주세요.");
+
+                    btnFetchShopee.textContent = '가져오는 중 (자체엔진)...';
+                    btnFetchShopee.disabled = true;
+
+                    // IPv6/IPv4 바인딩 이슈 방지를 위해 localhost 대신 127.0.0.1 사용
+                    const url = `http://127.0.0.1:3000/api/search?q=${encodeURIComponent(query)}`;
+
+                    try {
+                        const response = await fetch(url);
+                        const data = await response.json();
+
+                        if (data.error) throw new Error(data.error);
+                        if (!data.items || data.items.length === 0) throw new Error("인터넷에서 관련 상품을 찾지 못했습니다.");
+
+                        const modal = document.getElementById('searchModal');
+                        const resultsContainer = document.getElementById('searchResults');
+                        resultsContainer.innerHTML = '';
+
+                        data.items.forEach(item => {
+                            const imgUrl = (item.pagemap && item.pagemap.cse_image && item.pagemap.cse_image.length > 0)
+                                ? item.pagemap.cse_image[0].src
+                                : 'https://via.placeholder.com/100x100?text=No%20Image';
+
+                            const div = document.createElement('div');
+                            div.style.cssText = 'display:flex; gap:1rem; border:1px solid #e2e8f0; padding:10px; border-radius:8px; align-items:center; cursor:pointer; background:#fff; transition:0.2s;';
+                            div.innerHTML = `
+                                <img src="${imgUrl}" style="width:100px; height:100px; object-fit:cover; border-radius:4px; border:1px solid #ccc;">
+                                <div style="flex:1;">
+                                    <h4 style="margin:0 0 0.5rem 0;">${item.title}</h4>
+                                    <p style="font-size:0.875rem; color:#64748b; margin:0 0 0.5rem 0;">${item.snippet.substring(0, 80)}...</p>
+                                    <a href="${item.link}" target="_blank" style="font-size:0.75rem; color:blue;" onclick="event.stopPropagation()">🌐 원문 보기</a>
+                                </div>
+                                <button class="btn-primary" style="padding:0.5rem 1rem;">이 상품 정보로 채우기</button>
+                            `;
+
+                            div.onclick = () => {
+                                document.getElementById('txtName').value = item.title;
+                                document.getElementById('txtBrand').value = item.title.split(' ')[0] || '';
+                                document.getElementById('txtDescription').value = `[인터넷 스크랩]\n${item.snippet}\n\n출처: ${item.link}`;
+                                document.getElementById('txtImageUrl').value = imgUrl;
+
+                                modal.style.display = 'none';
+                                alert('상품 정보가 마법처럼 폼에 채워졌습니다!');
+                            };
+                            resultsContainer.appendChild(div);
+                        });
+
+                        modal.style.display = 'flex';
+                    } catch (err) {
+                        alert("로컬 프록시 봇(scraper-bot) 연결 실패! (Node 서버가 커져있는지 확인!)\n원인: " + err.message);
+                    } finally {
+                        btnFetchShopee.textContent = '실제 상품 가져오기';
+                        btnFetchShopee.disabled = false;
+                    }
+                });
+            }
+        });
 
         const materialForm = document.getElementById('materialForm');
         const btnSubmit = document.getElementById('btnSubmit');
@@ -330,6 +499,7 @@
                     currency: "VND",
                     vatIncluded: document.getElementById('selVat').value === 'true',
                     description: document.getElementById('txtDescription').value,
+                    txtImageUrl: document.getElementById('txtImageUrl') ? document.getElementById('txtImageUrl').value : ''
                 };
 
                 const fileImages = document.getElementById('fileImages').files;

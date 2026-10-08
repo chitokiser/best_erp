@@ -79,7 +79,7 @@
                         placeholder="프로젝트명 및 구매 사유를 적어주세요"></textarea>
                 </div>
                 <button type="submit" class="btn-primary"
-                    style="padding: 1rem; font-size: 1.1rem; border-radius: 8px;">팀장 승인 요청하기</button>
+                    style="padding: 1rem; font-size: 1.1rem; border-radius: 8px;">결재 상신하기</button>
                 <div id="statusMsg" style="text-align:center; font-weight:bold; margin-top:0.5rem;"></div>
             </form>
         </div>
@@ -153,24 +153,28 @@
             try {
                 let totalAmount = cart.reduce((acc, curr) => acc + (curr.price * curr.quantity), 0);
 
+                const reqName = document.getElementById('reqName').value;
+                const isLeader = reqName.includes('팀장') || reqName.includes('관리자') || reqName.includes('CEO') || reqName.includes('대표');
+
                 const data = {
                     department: document.getElementById('reqDepartment').value,
-                    requesterName: document.getElementById('reqName').value,
+                    requesterName: reqName,
                     notes: document.getElementById('reqNotes').value,
                     items: cart,
-                    totalAmount: totalAmount
+                    totalAmount: totalAmount,
+                    status: isLeader ? 'PENDING_CEO' : 'PENDING_TEAM_LEAD'
                 };
 
                 await createPurchaseRequest(data);
 
                 msg.style.color = "green";
-                msg.textContent = "성공적으로 품의가 상신(팀장 승인 대기) 되었습니다!";
+                msg.textContent = isLeader ? "성공적으로 품의가 상신(CEO 승인 대기) 되었습니다!" : "성공적으로 품의가 상신(팀장 승인 대기) 되었습니다!";
                 localStorage.removeItem('best_cart'); // clear cart
                 cart = [];
 
                 setTimeout(() => {
                     updateCartUI();
-                    btn.textContent = "팀장 승인 요청하기";
+                    btn.textContent = "결재 상신하기";
                     btn.disabled = false;
                     msg.textContent = "";
                 }, 2000);
@@ -180,7 +184,7 @@
                 msg.style.color = "red";
                 msg.textContent = "오류 발생: " + err.message;
                 btn.disabled = false;
-                btn.textContent = "팀장 승인 요청하기";
+                btn.textContent = "결재 상신하기";
             }
         });
 
@@ -190,14 +194,14 @@
     <!-- Global Auth Guard -->
     <script type="module">
         import { checkAdminAuth } from './assets/js/auth.js';
-        
+
         checkAdminAuth(
-            (user) => { 
+            (user) => {
                 document.body.style.display = 'block';
-                
+
                 // Add logout button / User email to header dynamically if header exists
                 const nav = document.querySelector('.main-nav ul');
-                if(nav && !document.getElementById('navUserEmail')) {
+                if (nav && !document.getElementById('navUserEmail')) {
                     const li = document.createElement('li');
                     li.id = 'navUserEmail';
                     li.innerHTML = `<span style="margin-left: 1rem; font-size:0.875rem; color:var(--text-secondary);">${user.email}</span>

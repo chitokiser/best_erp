@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-ERM 업무 지시 및 관리 (CEO / 팀장)</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .board-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            margin-top: 2rem;
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .task-list,
+        .task-detail {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            min-height: 500px;
+        }
+
+        .task-item {
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .task-item:hover {
+            border-color: var(--ai-primary);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .task-item.overdue {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .priority-badge {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .pri-HIGH,
+        .pri-URGENT {
+            background: #ef4444;
+        }
+
+        .pri-NORMAL {
+            background: #3b82f6;
+        }
+
+        .pri-LOW {
+            background: #10b981;
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .stat-PENDING {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .stat-ACCEPTED {
+            background: #e0e7ff;
+            color: #4f46e5;
+        }
+
+        .stat-IN_PROGRESS {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .stat-COMPLETED {
+            background: #d1fae5;
+            color: #047857;
+        }
+
+        .stat-OVERDUE {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-family: inherit;
+        }
+
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 1rem;
+        }
+
+        /* Timeline Styles */
+        .timeline {
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e2e8f0;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -1.75rem;
+            top: 0.25rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--ai-primary);
+            border: 2px solid white;
+        }
+
+        .timeline-date {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .timeline-content {
+            font-size: 0.9rem;
+            color: #334155;
+            background: #f8fafc;
+            padding: 0.5rem;
+            border-radius: 6px;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="ceo-nav"
+        style="background:#1E293B; padding:1rem 2rem; color:white; display:flex; justify-content:space-between;">
+        <h1 style="margin:0; font-size:1.5rem; color:#818CF8;">AI-ERM 업무관리</h1>
+        <div>
+            <a href="ceo-dashboard.html" style="color:#cbd5e1; text-decoration:none; margin-right:1rem;">대시보드</a>
+            <a href="https://bestwinner.netlify.app/" target="_blank" style="color: #cbd5e1; text-decoration:none; margin-right:1rem; font-size: 0.875rem;">🏠 BESTWINNER 바로가기</a>
+            <span id="userInfo" style="font-size:0.875rem;"></span>
+        </div>
+    </nav>
+
+    <div class="board-container">
+        <!-- 업무 리스트 -->
+        <div class="task-list">
+            <div class="header-actions">
+                <h2 style="margin:0; font-size:1.25rem;">전체 / 부서 업무</h2>
+                <button id="btnNewTask" class="btn-primary" style="padding:0.5rem 1rem; font-size:0.875rem;">+ 새 업무
+                    지시</button>
+            </div>
+
+            <!-- 필터부 -->
+            <div style="margin-bottom:1rem; display:flex; gap:0.5rem;">
+                <select id="filterStatus" style="padding:0.25rem; border-radius:4px; border:1px solid #ccc;">
+                    <option value="">모든 상태</option>
+                    <option value="PENDING">대기</option>
+                    <option value="IN_PROGRESS">진행중</option>
+                    <option value="COMPLETED">완료</option>
+                </select>
+                <select id="filterTeam" style="padding:0.25rem; border-radius:4px; border:1px solid #ccc;">
+                    <option value="">모든 팀</option>
+                    <option value="SALES">영업팀</option>
+                    <option value="DEV">개발팀</option>
+                    <option value="MARKETING">마케팅</option>
+                </select>
+            </div>
+
+            <div id="taskListContainer" style="max-height: 600px; overflow-y:auto; padding-right:0.5rem;">
+                <!-- JS 생성 영역 -->
+            </div>
+        </div>
+
+        <!-- 업무 상세 / 등록 폼 -->
+        <div class="task-detail" id="taskDetailContainer">
+            <div style="display:flex; justify-content:center; align-items:center; height:100%; color:#94a3b8;">
+                좌측에서 업무를 선택하거나 '새 업무 지시'를 클릭하세요.
+            </div>
+        </div>
+    </div>
+
+    <!-- Template for Task Form -->
+    <template id="tplTaskForm">
+        <h2 style="margin-top:0; font-size:1.25rem;" id="formTitle">새 업무 지시</h2>
+        <form id="taskForm">
+            <div class="form-group">
+                <label>업무 제목</label>
+                <input type="text" id="taskTitle" required placeholder="예: 10월 매출 목표 수립">
+            </div>
+            <div class="form-group">
+                <label>업무 내용</label>
+                <textarea id="taskDesc" rows="5" required placeholder="업무 지시 내용을 상세히 작성하세요."></textarea>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                <div class="form-group">
+                    <label>담당 부서/팀</label>
+                    <select id="taskTeam">
+                        <option value="SALES">영업팀</option>
+                        <option value="DEV">개발팀</option>
+                        <option value="MARKETING">마케팅팀</option>
+                        <option value="HR">인사총무팀</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>담당 직원 (선택)</label>
+                    <select id="taskAssignee">
+                        <option value="">-- 팀장에게 일괄 위임 --</option>
+                        <!-- Users will be populated here -->
+                    </select>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                <div class="form-group">
+                    <label>마감일</label>
+                    <input type="datetime-local" id="taskDueDate" required>
+                </div>
+                <div class="form-group">
+                    <label>우선순위</label>
+                    <select id="taskPriority">
+                        <option value="NORMAL">보통 (NORMAL)</option>
+                        <option value="HIGH">높음 (HIGH)</option>
+                        <option value="URGENT">긴급 (URGENT)</option>
+                        <option value="LOW">낮음 (LOW)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>상위 업무 아이디 (선택)</label>
+                <input type="text" id="taskParentId" placeholder="하위 업무일 경우 입력 (자동 매핑 포함)">
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:2rem;">
+                <button type="button" class="btn-primary"
+                    style="background:white; color:#64748b; border:1px solid #ccc;" id="btnCancelForm">취소</button>
+                <button type="submit" class="btn-primary">해당 부서/직원에게 업무 지시 발송</button>
+            </div>
+        </form>
+    </template>
+
+    <!-- Template for Task Detail View -->
+    <template id="tplTaskDetailView">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
+            <div>
+                <span id="dtlPriority" class="priority-badge"></span>
+                <span id="dtlStatus" class="status-badge" style="margin-left:0.5rem;"></span>
+                <h2 id="dtlTitle" style="margin: 0.5rem 0 0.25rem 0; font-size:1.5rem;"></h2>
+                <div style="font-size:0.85rem; color:#64748b;">담당: <span id="dtlTeam"></span> / <strong
+                        id="dtlAssignee"></strong></div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:0.8rem; color:#64748b;">마감 기한</div>
+                <div id="dtlDueDate" style="font-weight:600; color:#b91c1c;"></div>
+            </div>
+        </div>
+
+        <div style="background:#f8fafc; padding:1rem; border-radius:8px; margin-bottom:2rem; font-size:0.95rem; white-space:pre-wrap;"
+            id="dtlDesc"></div>
+
+        <div
+            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-top:1px solid #e2e8f0; padding-top:1.5rem;">
+            <h3 style="margin:0; font-size:1.1rem;">진행 상황: <span id="dtlProgress">0</span>%</h3>
+            <!-- CEO/Team Leader Actions -->
+            <div id="actionButtons" style="display:none; gap:0.5rem;">
+                <button id="btnCreateSubTask" class="btn-primary"
+                    style="background:#6366f1; padding:0.4rem 0.8rem; font-size:0.8rem;">팀원에게 업무 배정</button>
+                <button id="btnRejectProcess" class="btn-primary"
+                    style="background:#ef4444; padding:0.4rem 0.8rem; font-size:0.8rem; display:none;">반려 (재지시)</button>
+            </div>
+        </div>
+
+        
+          <!-- Employee Report Action -->
+          <div id="employeeActionSection" style="display:none; background:#e0e7ff; padding:1.5rem; border-radius:8px; margin-bottom:2rem;">
+              <h3 style="margin-top:0; color:#4338ca;">진행 상황 보고하기</h3>
+              <textarea id="reportContent" rows="3" style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px; margin-bottom:1rem; resize:vertical;" placeholder="금일 진행 내용, 이슈 사항, 결과 등을 입력하세요."></textarea>
+              <div style="display:flex; gap:1rem; align-items:center;">
+                  <label style="font-weight:600; color:#334155;">진행률 (%):</label>
+                  <input type="number" id="reportProgress" min="0" max="100" style="width:80px; padding:0.4rem; border:1px solid #cbd5e1; border-radius:4px;">
+                  <button id="btnSubmitReport" style="background:#4f46e5; color:white; padding:0.5rem 1rem; border:none; border-radius:4px; cursor:pointer; font-weight:600;">보고 제출</button>
+              </div>
+          </div>
+          <!-- Progress Bar Visual -->
+        <div
+            style="width:100%; background:#e2e8f0; height:12px; border-radius:6px; margin-bottom:2rem; overflow:hidden;">
+            <div id="dtlProgressBar" style="width: 0%; background:var(--success); height:100%; transition: width 0.3s;">
+            </div>
+        </div>
+
+        <h3 style="font-size:1.1rem; margin-bottom:1rem;">결과 보고 / 이슈 내역</h3>
+        <div id="dtlReports" style="margin-bottom:2rem;">
+            <!-- Reports go here -->
+        </div>
+
+        <h3 style="font-size:1.1rem; margin-bottom:1rem;">업무 이력 (Timeline)</h3>
+        <div class="timeline" id="dtlTimeline">
+            <!-- Timeline items -->
+        </div>
+    </template>
+
+    <script type="module" src="../assets/js/admin/tasks.js"></script>
+</body>
+
+</html>

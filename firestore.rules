@@ -1,4 +1,4 @@
-rules_version = '2';
+﻿rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -8,11 +8,11 @@ service cloud.firestore {
     }
 
     function getUserData() {
-      // auth.uid 기반으로 users 컬렉션 문서를 가져옵니다
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      let docPath = /databases/$(database)/documents/users/$(request.auth.uid);
+      return exists(docPath) ? get(docPath).data : {"role": "EMPLOYEE"};
     }
 
-    // CEO 또는 최고관리자 확인 (daguri75@gmail.com은 무조건 적용)
+    // CEO ?먮뒗 理쒓퀬愿由ъ옄 ?뺤씤 (daguri75@gmail.com? 臾댁“嫄??곸슜)
     function isCEO() {
       return isAuthenticated() && (
         request.auth.token.email == 'daguri75@gmail.com' ||
@@ -21,7 +21,7 @@ service cloud.firestore {
       );
     }
     
-    // 일반 직원/관리자 이상 (쓰기 권한용)
+    // ?쇰컲 吏곸썝/愿由ъ옄 ?댁긽 (?곌린 沅뚰븳??
     function isStaff() {
       return isAuthenticated() && (
         request.auth.token.email == 'daguri75@gmail.com' ||
@@ -29,12 +29,11 @@ service cloud.firestore {
       );
     }
 
-    // 기본적으로 CEO는 모든 컬렉션에서 읽기/쓰기/삭제 완벽한 권한을 가짐
-    match /{document=**} {
+    // 湲곕낯?곸쑝濡?CEO??紐⑤뱺 而щ젆?섏뿉???쎄린/?곌린/??젣 ?꾨꼍??沅뚰븳??媛吏?    match /{document=**} {
       allow read, write: if isCEO();
     }
 
-    // 일반 직원(Staff) 이상의 권한
+    // ?쇰컲 吏곸썝(Staff) ?댁긽??沅뚰븳
     match /materials/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
     match /suppliers/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
     match /priceHistory/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
@@ -42,18 +41,57 @@ service cloud.firestore {
     
     match /users/{userId} {
       allow read: if isAuthenticated();
-      // 자신 정보 수정 허용 또는 CEO
+      // ?먯떊 ?뺣낫 ?섏젙 ?덉슜 ?먮뒗 CEO
       allow write: if request.auth.uid == userId || isCEO();
     }
     
     match /projects/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
     match /purchaseRequests/{document=**} { allow read: if isAuthenticated(); allow write: if isAuthenticated(); }
     
-    // 새로 설계된 AI 경영참모용 통합 DB Rules
+    // ?덈줈 ?ㅺ퀎??AI 寃쎌쁺李몃え???듯빀 DB Rules
     match /employees/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
     match /clients/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
     match /contacts/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
     match /siteLogs/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
     match /aiInsights/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+
+    // ?낅Т 諛?蹂닿퀬 ?쒖뒪??(Task Management System)
+    match /tasks/{taskId} {
+      allow read: if isCEO() 
+        || (isAuthenticated() && getUserData().role == 'TEAM_LEADER' && resource.data.teamId == getUserData().teamId)
+        || (isAuthenticated() && resource.data.assignedTo == request.auth.token.email);
+      allow write: if isCEO() 
+        || (isAuthenticated() && getUserData().role == 'TEAM_LEADER' && resource.data.teamId == getUserData().teamId)
+        || (isAuthenticated() && resource.data.assignedTo == request.auth.token.email);
+    }
+
+    match /task_reports/{reportId} {
+      allow read: if isCEO() 
+        || (isAuthenticated() && getUserData().role == 'TEAM_LEADER')
+        || (isAuthenticated() && resource.data.submittedBy == request.auth.uid);
+      allow write: if isCEO() 
+        || (isAuthenticated() && getUserData().role == 'TEAM_LEADER')
+        || (isAuthenticated() && request.resource.data.submittedBy == request.auth.uid);
+    }
+
+    match /task_comments/{commentId} {
+      allow read: if isCEO() 
+        || (isAuthenticated() && getUserData().role == 'TEAM_LEADER')
+        || (isAuthenticated());
+      allow write: if isCEO() 
+        || (isAuthenticated() && getUserData().role == 'TEAM_LEADER')
+        || (isAuthenticated() && request.resource.data.userId == request.auth.uid);
+    }
+
+    match /task_attachments/{attachmentId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    match /task_logs/{logId} {
+      allow read, write: if isAuthenticated();
+    }
   }
 }
+
+

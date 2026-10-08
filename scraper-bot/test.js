@@ -1,0 +1,1 @@
+const axios = require("axios"); axios.post("https://lite.duckduckgo.com/lite/", "q=" + encodeURIComponent("chair"), {headers: {"Content-Type": "application/x-www-form-urlencoded", "User-Agent": "Mozilla/5.0"}}).then(r => {console.log(r.data.substring(0,600)); }).catch(console.error);

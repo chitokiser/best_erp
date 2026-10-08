@@ -1,8 +1,8 @@
 export const callGeminiAI = async (contextData, customPrompt) => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "AIzaSyCR_02faI9P-EoYWT9OW3GxaxWxyLu-hYg";
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (!apiKey) throw new Error("VITE_GEMINI_API_KEY 환경변수가 설정되지 않았습니다.");
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
     const systemPrompt = `
     당신은 BEST WINNER GROUP의 최고 등급 AI 비즈니스 컨설턴트 및 수석 프로젝트 매니저입니다.
@@ -41,10 +41,10 @@ export const callGeminiAI = async (contextData, customPrompt) => {
 };
 
 export const analyzeBusinessQuery = async (query) => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "AIzaSyCR_02faI9P-EoYWT9OW3GxaxWxyLu-hYg";
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (!apiKey) throw new Error("VITE_GEMINI_API_KEY 환경변수가 설정되지 않았습니다.");
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
     const payload = {
         contents: [{
             parts: [{ text: query }]
@@ -63,10 +63,10 @@ export const analyzeBusinessQuery = async (query) => {
 };
 
 export const scanBusinessCardAI = async (base64Image, mimeType) => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "AIzaSyCR_02faI9P-EoYWT9OW3GxaxWxyLu-hYg";
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (!apiKey) throw new Error("VITE_GEMINI_API_KEY 환경변수가 설정되지 않았습니다.");
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
     const prompt = `이 이미지는 명함(Business Card)입니다. 
 다음 정보를 추출하여 정확한 JSON 형식으로만 응답하세요. 마크다운표시나 다른 설명은 일절 추가하지 마세요.

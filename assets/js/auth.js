@@ -48,37 +48,52 @@ window.logoutAndRedirect = logoutAdmin;
 export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            if (onAuthSuccess) onAuthSuccess(user);
+            try {
+                const q = query(collection(db, 'users'), where('email', '==', user.email));
+                const snap = await getDocs(q);
 
-            // Globally enhance the user badge in the navbar if it exists
-            setTimeout(async () => {
-                const navEmail = document.getElementById('navUserEmail');
-                if (navEmail) {
-                    try {
-                        const q = query(collection(db, 'users'), where('email', '==', user.email));
-                        const snap = await getDocs(q);
+                let role = 'GUEST';
+                let position = '방문자';
+                let status = '대기중';
 
-                        let role = 'GUEST';
-                        let position = '방문자';
+                if (snap.empty && user.email === 'daguri75@gmail.com') {
+                    // First time auto-provisioning for Super Admin
+                    await addDoc(collection(db, 'users'), {
+                        email: user.email,
+                        name: 'CEO',
+                        position: '최고 관리자',
+                        role: 'SUPER_ADMIN',
+                        status: '승인됨',
+                        createdAt: serverTimestamp()
+                    });
+                    role = 'SUPER_ADMIN';
+                    position = '최고 관리자';
+                    status = '승인됨';
+                } else if (!snap.empty) {
+                    const data = snap.docs[0].data();
+                    role = data.role || 'GUEST';
+                    position = data.position || data.name || '직원';
+                    status = data.status || '대기중';
+                }
 
-                        if (snap.empty && user.email === 'daguri75@gmail.com') {
-                            // First time auto-provisioning for Super Admin
-                            await addDoc(collection(db, 'users'), {
-                                email: user.email,
-                                name: 'CEO',
-                                position: '최고 관리자',
-                                role: 'SUPER_ADMIN',
-                                status: '승인됨',
-                                createdAt: serverTimestamp()
-                            });
-                            role = 'SUPER_ADMIN';
-                            position = '최고 관리자';
-                        } else if (!snap.empty) {
-                            const data = snap.docs[0].data();
-                            role = data.role || 'GUEST';
-                            position = data.position || data.name || '직원';
-                        }
+                // Global variables for RBAC
+                window.currentUserRole = role;
+                window.currentUserStatus = status;
 
+                // Stop unapproved users
+                if (status === '대기중' && user.email !== 'daguri75@gmail.com') {
+                    alert('접근 거부: 관리자의 승인을 기다리는 중입니다. (대기중 상태)');
+                    await signOut(auth);
+                    window.location.href = '../login.html';
+                    return;
+                }
+
+                if (onAuthSuccess) onAuthSuccess(user);
+
+                // Globally enhance the user badge in the navbar if it exists
+                setTimeout(() => {
+                    const navEmail = document.getElementById('navUserEmail') || document.querySelector('.top-nav > div[style*="text-align: right"]');
+                    if (navEmail && navEmail.id === 'navUserEmail') {
                         navEmail.innerHTML = `
                             <div style="display:flex; flex-direction:column; line-height:1.2; text-align:right; margin-left: 1rem;">
                                 <span style="font-size:0.8rem; font-weight:bold; color:var(--primary-color);">${role}</span>
@@ -88,11 +103,12 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                         `;
                         navEmail.style.display = 'flex';
                         navEmail.style.alignItems = 'center';
-                    } catch (e) {
-                        console.error('Navbar user fetch error:', e);
                     }
-                }
-            }, 300);
+                }, 100);
+
+            } catch (e) {
+                console.error('Auth verification error:', e);
+            }
         } else {
             if (onAuthFail) onAuthFail();
         }

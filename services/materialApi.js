@@ -12,8 +12,14 @@ export const createMaterial = async (materialData, imageFiles) => {
         if (!currentUser) throw new Error("Unauthorized");
 
         let imageUrls = [];
+        if (materialData.txtImageUrl) {
+            imageUrls.push(materialData.txtImageUrl);
+            delete materialData.txtImageUrl;
+        }
+
         if (imageFiles && imageFiles.length > 0) {
-            imageUrls = await uploadMaterialImages(imageFiles, materialData.materialCode || Date.now().toString());
+            const uploadedUrls = await uploadMaterialImages(imageFiles, materialData.materialCode || Date.now().toString());
+            imageUrls = imageUrls.concat(uploadedUrls);
         }
 
         const newMaterial = {

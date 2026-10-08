@@ -191,6 +191,8 @@
 </div>
         <ul>
             <li><a href="dashboard.html">대시보드</a></li>
+            <li><a href="tasks.html">업무지시/보고</a></li>
+
             <li><a href="projects.html" class="active">프로젝트</a></li>
             <li><a href="materials.html">자재관리</a></li>
             <li><a href="suppliers.html">협력업체</a></li>
@@ -199,6 +201,7 @@
             <li><a href="users.html">회원관리</a></li>
             <li><a href="clients.html">고객</a></li>
             <li><a href="contacts.html">인맥</a></li>
+            <li><a href="https://bestwinner.netlify.app/" target="_blank">🏠 BESTWINNER 바로가기</a></li>
         </ul>
         <div style="font-size: 0.85rem; text-align: right;">
             <strong style="color:var(--ai-primary);" id="currentUserEmail">SUPER_ADMIN</strong><br>
@@ -274,6 +277,16 @@
 
                 // Load Projects
                 try {
+                    // Fetch Users to map email -> name
+                    const usersSnap = await getDocs(collection(db, 'users'));
+                    const emailToName = {};
+                    usersSnap.forEach(uDoc => {
+                        const ud = uDoc.data();
+                        if(ud.email && ud.name) {
+                            emailToName[ud.email] = ud.name;
+                        }
+                    });
+
                     const querySnapshot = await getDocs(collection(db, 'projects'));
                     if (querySnapshot.empty) {
                         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 2rem; color: var(--text-muted);">생성된 프로젝트가 없습니다.</td></tr>';
@@ -284,6 +297,8 @@
                     querySnapshot.forEach(docSnap => {
                         const data = docSnap.data();
                         const id = docSnap.id;
+                        const pmEmail = data.pm || '미지정';
+                        const pmName = emailToName[pmEmail] ? emailToName[pmEmail] : pmEmail;
                         html += `
                             <tr>
                                 <td style="padding: 1rem; font-weight: 600;">
@@ -294,7 +309,7 @@
                                         ${data.status || '착공대기'}
                                     </span>
                                 </td>
-                                <td style="padding: 1rem;">${data.pm || '미지정'}</td>
+                                <td style="padding: 1rem;">${pmName}</td>
                                 <td style="padding: 1rem; color: var(--text-muted);">${data.deadline || 'N/A'}</td>
                                 <td style="padding: 1rem;">
                                     <button class="btn-primary" style="padding:0.4rem 0.8rem; font-size: 0.85rem;" onclick="location.href='project-detail.html?id=${id}'">칸반 열기</button>

@@ -282,6 +282,8 @@
 </div>
         <ul>
             <li><a href="dashboard.html">대시보드</a></li>
+            <li><a href="tasks.html">업무지시/보고</a></li>
+
             <li><a href="projects.html">프로젝트</a></li>
             <li><a href="materials.html">자재관리</a></li>
             <li><a href="suppliers.html">협력업체</a></li>
@@ -291,6 +293,7 @@
             <li><a href="users.html">회원관리</a></li>
             <li><a href="clients.html">고객</a></li>
             <li><a href="contacts.html">인맥</a></li>
+            <li><a href="https://bestwinner.netlify.app/" target="_blank">🏠 BESTWINNER 바로가기</a></li>
         </ul>
         <div style="font-size: 0.85rem; text-align: right;">
             <strong style="color:var(--ai-primary, #4F46E5);" id="navUserEmailSpan">SUPER_ADMIN</strong><br>
@@ -335,13 +338,21 @@
             </div>
             <form id="empForm">
                 <div class="form-row">
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>시스템 회원 찾기 (STAFF 계정 연동)</label>
+                        <select id="empUserSelect" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; margin-bottom:1rem;">
+                            <option value="">-- 연동할 계정을 선택하세요 --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
                     <div class="form-group">
                         <label>이름</label>
-                        <input type="text" id="empName" required placeholder="예: 김철수">
+                        <input type="text" id="empName" required placeholder="예: 김철수" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; box-sizing: border-box;">
                     </div>
                     <div class="form-group">
                         <label>직급</label>
-                        <input type="text" id="empPosition" required placeholder="예: 과장">
+                        <input type="text" id="empPosition" required placeholder="예: 과장" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; box-sizing: border-box;">
                     </div>
                 </div>
                 <div class="form-row">
@@ -374,11 +385,11 @@
                 </div>
                 <div class="form-group">
                     <label>이메일 / 연락처</label>
-                    <input type="email" id="empContact" required placeholder="예: chulsoo@best.com">
+                    <input type="email" id="empContact" required placeholder="예: chulsoo@best.com" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; box-sizing: border-box;">
                 </div>
                 <div class="form-group">
                     <label>보유 기술 및 전문분야 (쉼표로 구분)</label>
-                    <input type="text" id="empSkills" placeholder="예: CAD, 현장소장, 자재관리">
+                    <input type="text" id="empSkills" placeholder="예: CAD, 현장소장, 자재관리" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; box-sizing: border-box;">
                 </div>
                 <button type="submit" class="submit-btn" id="btnSubmit">저장하기</button>
             </form>

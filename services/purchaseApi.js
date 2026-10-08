@@ -1,11 +1,10 @@
-
 import { db } from '../assets/js/firebase-config.js';
-import { collection, addDoc, getDocs, doc, updateDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 
 export const createPurchaseRequest = async (requestData) => {
     const docRef = await addDoc(collection(db, 'purchaseRequests'), {
         ...requestData,
-        status: 'PENDING_TEAM_LEAD', // PENDING_TEAM_LEAD -> PENDING_CEO -> APPROVED -> PURCHASED
+        status: requestData.status || 'PENDING_TEAM_LEAD', // PENDING_TEAM_LEAD -> PENDING_CEO -> APPROVED -> PURCHASED
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
     });
@@ -19,6 +18,11 @@ export const updateRequestStatus = async (id, status, approverName = '') => {
         lastApprover: approverName,
         updatedAt: serverTimestamp()
     });
+};
+
+export const deletePurchaseRequest = async (id) => {
+    const ref = doc(db, 'purchaseRequests', id);
+    await deleteDoc(ref);
 };
 
 export const getPurchaseRequests = async () => {
