@@ -91,7 +91,7 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                 // Stop unapproved users
                 
                 // Jumper DB: if the user has a merchantId, they are an approved franchisee.
-                const isMerchant = !!uData.merchantId;
+                const isMerchant = !!data.merchantId;
                 if (!isMerchant && !['CEO', 'SUPER_ADMIN', 'ADMIN'].includes(role) && user.email !== 'daguri75@gmail.com') {
                     alert('ERP 접근 권한이 없습니다. CEO 자격(정기구독)을 획득해주세요.');
                     await signOut(auth);
