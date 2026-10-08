@@ -110,38 +110,12 @@
                     window.location.href = 'admin/dashboard.html';
                 }
             },
-            () => { } // Stay on login page
-        );
-
-        document.getElementById('authForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const errP = document.getElementById('loginError');
-            errP.textContent = '';
-
-            const email = document.getElementById('txtEmail').value;
-            const pw = document.getElementById('txtPassword').value;
-            const name = document.getElementById('txtName').value;
-
-            try {
-                if (mode === 'login') {
-                    await loginAdmin(email, pw);
-                } else {
-                    if (!name) { errP.textContent = '이름을 입력하세요.'; return; }
-                    await registerUser(email, pw, name);
-                    alert('가입이 완료되었습니다! 최고 관리자의 시스템 접속 승인을 기다려주세요.');
-                    setMode('login');
-                }
-            } catch (err) {
-                console.error(err);
-                if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-                    errP.textContent = '이메일 또는 비밀번호가 일치하지 않습니다.';
-                } else if (err.code === 'auth/email-already-in-use') {
-                    errP.textContent = '이미 가입된 이메일 계정입니다.';
-                } else {
-                    errP.textContent = '오류 발생: ' + err.message;
+            (errMsg) => { 
+                if (errMsg) {
+                    document.getElementById('loginError').textContent = errMsg;
                 }
             }
-        });
+        );
 
         document.getElementById('btnGoogle').addEventListener('click', async () => {
             document.getElementById('loginError').textContent = '';
