@@ -85,6 +85,12 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                     if (role === 'ceo') role = 'CEO';
                     
                     isMerchant = !!data.merchantId;
+                    
+                    if (isMerchant) {
+                        role = 'CEO';
+                        position = '가맹점 대표';
+                        status = '승인완료';
+                    }
 
                     // Store tenant ID globally. Fallback to user email if missing
                     window.tenantId = data.merchantId || data.tenant_id || data.company_id || user.uid;
