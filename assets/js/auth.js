@@ -1,13 +1,13 @@
 import { auth, db } from './firebase-config.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'firebase/auth';
-import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, getDoc, setDoc } from 'firebase/firestore';
 
 const googleProvider = new GoogleAuthProvider();
 
 export const registerUser = async (email, password, name) => {
     try {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
-        await addDoc(collection(db, 'users'), {
+        await setDoc(doc(db, 'users', user.uid), {
             email: email, name: name || email.split('@')[0], position: '시스템 가입자',
             role: 'VIEWER', status: '대기중', createdAt: serverTimestamp()
         });
@@ -49,14 +49,13 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             try {
-                const q = query(collection(db, 'users'), where('email', '==', user.email));
-                const snap = await getDocs(q);
+                const snap = await getDoc(doc(db, 'users', user.uid));
 
                 let role = 'GUEST';
                 let position = '방문자';
                 let status = '대기중';
 
-                if (snap.empty && user.email === 'daguri75@gmail.com') {
+                if (!snap.exists() && user.email === 'daguri75@gmail.com') {
                     // First time auto-provisioning for Super Admin
                     await addDoc(collection(db, 'users'), {
                         email: user.email,
@@ -75,8 +74,8 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                 
                 let isMerchant = false;
                 
-                if (!snap.empty) {
-                    const data = snap.docs[0].data();
+                if (snap.exists()) {
+                    const data = snap.data();
                     role = data.role || data.tier || 'GUEST';
                     position = data.position || data.name || '직원';
                     status = data.status || '대기중';
