@@ -12,10 +12,11 @@
     <!-- FORCE CSS -->
     <style>.top-nav{flex-wrap:nowrap;justify-content:space-between;align-items:center;display:flex;position:relative;overflow:visible}.logo-container{width:auto!important}.top-nav ul{align-items:center;gap:1rem;margin:0;padding:0;list-style:none;display:flex;flex-wrap:nowrap!important}.top-nav ul li a{white-space:nowrap!important}.mobile-only-btn{display:none!important}@media screen and (width<=900px){.mobile-only-btn{display:block!important}.logo-container{justify-content:space-between!important;width:100%!important}.top-nav{flex-direction:column!important;align-items:flex-start!important}.top-nav ul,.top-nav>div:last-child{display:none!important}.top-nav.menu-open ul{background:#fff;border-radius:.5rem;width:100%;max-height:70vh;margin-top:1rem;overflow-y:auto;box-shadow:0 10px 15px -3px #0000001a;flex-direction:column!important;gap:0!important;padding:.5rem 0!important;display:flex!important}.top-nav.menu-open ul li{text-align:center;border-bottom:1px solid #f1f5f9;width:100%}.top-nav.menu-open ul li a{padding:1rem!important;display:block!important}.metric-cards,.dashboard-grid,.client-summary,.finance-summary,.stats-grid,.summary-container{grid-template-columns:1fr!important;gap:1rem!important;display:grid!important}}</style>
 <style>:root{--ai-primary:#4f46e5;--ai-secondary:#818cf8;--ai-gradient:linear-gradient(135deg, #4f46e5, #7c3aed);--danger:#ef4444;--warning:#f59e0b;--success:#10b981;--vip:#8b5cf6;--text-dark:#1e293b;--text-muted:#64748b;--bg-glass:#ffffffd9}body{color:var(--text-dark);background:#f8fafc;margin:0;padding:0;font-family:Inter,sans-serif}.top-nav{z-index:50;background:#fff;justify-content:space-between;align-items:center;padding:1rem 2rem;display:flex;position:sticky;top:0;box-shadow:0 4px 6px -1px #0000000d}.top-nav h1{color:var(--ai-primary);margin:0;font-size:1.5rem;font-weight:800}.top-nav ul{gap:2rem;margin:0;padding:0;list-style:none;display:flex}.top-nav a{color:var(--text-muted);font-size:.95rem;font-weight:600;text-decoration:none;transition:color .2s}.top-nav a:hover,.top-nav a.active{color:var(--ai-primary)}.container{max-width:1200px;margin:2rem auto;padding:0 1rem}.hero{text-align:center;margin-bottom:3rem}.hero h2{color:#1e293b;margin:0 0 .5rem;font-size:2.5rem;font-weight:800}.hero p{color:var(--ai-primary);align-items:center;gap:.5rem;margin:0;font-weight:600;display:inline-flex}.metric-cards{grid-template-columns:repeat(5,1fr);gap:1.5rem;margin-bottom:3rem;display:grid}.card{text-align:center;background:#fff;border-radius:16px;padding:1.5rem;box-shadow:0 4px 6px -1px #0000000d}.card-title{color:var(--text-muted);margin-bottom:.5rem;font-size:.9rem;font-weight:600}.card-value{color:#1e293b;font-size:2rem;font-weight:800}.card-subtitle{color:var(--text-muted);margin-top:.5rem;font-size:.8rem}.dashboard-grid{grid-template-columns:1fr 1fr;gap:2rem;display:grid}.panel{background:#fff;border-radius:16px;padding:2rem;box-shadow:0 4px 6px -1px #0000000d}.panel-header{justify-content:space-between;align-items:center;margin-bottom:1.5rem;font-size:1.1rem;font-weight:700;display:flex}.list-item{border:1px solid #e2e8f0;border-radius:8px;justify-content:space-between;margin-bottom:1rem;padding:1rem;font-weight:600;display:flex}.danger-item{border-left:4px solid var(--danger);color:var(--danger)}.warning-item{border-left:4px solid var(--warning);color:var(--warning)}.success-item{border-left:4px solid var(--success);color:var(--success)}.ai-report-item{color:#334155;margin-bottom:1.5rem;font-size:1rem;line-height:1.6}.ai-report-item strong{color:var(--ai-primary);margin-bottom:.25rem;display:block}</style>
-  <script type="module" crossorigin src="/assets/admin_dashboard-DTLCoz2m.js"></script>
+  <script type="module" crossorigin src="/assets/admin_dashboard-CuwEZGkb.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/firebase-config-D73aOZik.js">
   <link rel="modulepreload" crossorigin href="/assets/auth-D6uIIjLg.js">
-  <link rel="modulepreload" crossorigin href="/assets/ai-chat-BV7Qa46-.js">
+  <link rel="modulepreload" crossorigin href="/assets/preload-helper-BZ1Pz5am.js">
+  <link rel="modulepreload" crossorigin href="/assets/ai-chat-Bikpaq3c.js">
   <link rel="modulepreload" crossorigin href="/assets/action-handler-qIznwTpb.js">
   <link rel="stylesheet" crossorigin href="/assets/style-CTsXkP_6.css">
   <link rel="stylesheet" crossorigin href="/assets/admin-x1XGuNl0.css">
@@ -105,14 +106,13 @@
             </div>
 
             <div class="panel">
-                <h3 class="section-header" style="font-size: 1rem;">AI Daily Report <span
-                        style="color:#64748b; font-size:0.75rem; font-weight:400;">2026.09.27</span></h3>
-                <ul style="padding-left: 1rem; color: #475569; font-size: 0.9rem; line-height: 1.8;">
-                    <li><strong>프로젝트:</strong> 전체 24개 중 정상 17 / 주의 5 / 위험 2</li>
-                    <li><strong>인력:</strong> 평균 활용률 91% (다음 주 김OO 과장 과부하 예상)</li>
-                    <li><strong>자재:</strong> 현장 B에서 내일 시공용 철근 부족 예상 품목 확인됨</li>
-                    <li><strong>비용:</strong> 전체 예산 대비하여 비용 발생률이 양호하나 물류비용의 소폭 증가 발견</li>
-                </ul>
+                <h3 class="section-header" style="font-size: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                    <span>AI Daily Report <span style="color:#64748b; font-size:0.75rem; font-weight:400;" id="aiReportDate"></span></span>
+                    <button class="btn-primary" id="btnGenerateAiReport" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">🔄 실시간 리포트 생성</button>
+                </h3>
+                <div id="aiDailyReportContent" style="padding-left: 0.5rem; color: #475569; font-size: 0.9rem; line-height: 1.8;">
+                    <p style="color:var(--text-muted);">우측 '생성' 버튼을 눌러 오늘 회사의 주요 지표를 AI로 분석하세요.</p>
+                </div>
             </div>
         </main>
 
@@ -156,6 +156,8 @@
     <style>@keyframes pulse{0%{transform:scale(.95);box-shadow:0 0 #dc2626b3}70%{transform:scale(1);box-shadow:0 0 0 10px #dc262600}to{transform:scale(.95);box-shadow:0 0 #dc262600}}</style>
 
 
+
+
 </body>
 
 </html>
