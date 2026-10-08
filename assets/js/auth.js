@@ -63,15 +63,19 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                         name: 'CEO',
                         position: '최고 관리자',
                         role: 'SUPER_ADMIN',
-                        status: '승인됨',
+                        status: '승인',
                         tenantId: 'system_master',
                         createdAt: serverTimestamp()
                     });
                     role = 'SUPER_ADMIN';
                     position = '최고 관리자';
-                    status = '승인됨';
+                    status = '승인';
                     window.tenantId = 'system_master';
-                } else if (!snap.empty) {
+                }
+                
+                let isMerchant = false;
+                
+                if (!snap.empty) {
                     const data = snap.docs[0].data();
                     role = data.role || data.tier || 'GUEST';
                     position = data.position || data.name || '직원';
@@ -79,9 +83,11 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
 
                     // Jumper Auth DB often uses role='ceo' (lowercase) or 'CEO'
                     if (role === 'ceo') role = 'CEO';
+                    
+                    isMerchant = !!data.merchantId;
 
                     // Store tenant ID globally. Fallback to user email if missing
-                    window.tenantId = data.tenant_id || data.company_id || user.uid;
+                    window.tenantId = data.merchantId || data.tenant_id || data.company_id || user.uid;
                 }
 
                 // Global variables for RBAC
@@ -89,10 +95,7 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                 window.currentUserStatus = status;
 
                 // Stop unapproved users
-                
-                // Jumper DB: if the user has a merchantId, they are an approved franchisee.
-                const isMerchant = !!data.merchantId;
-                if (!isMerchant && !['CEO', 'SUPER_ADMIN', 'ADMIN'].includes(role) && user.email !== 'daguri75@gmail.com') {
+                if (!isMerchant && !['CEO', 'SUPER_ADMIN', 'ADMIN'].includes(role) && user.email !== 'daguri75@gmail.com', 'SUPER_ADMIN', 'ADMIN'].includes(role) && user.email !== 'daguri75@gmail.com') {
                     alert('ERP 접근 권한이 없습니다. CEO 자격(정기구독)을 획득해주세요.');
                     await signOut(auth);
                     window.location.href = 'https://bestclubvn.netlify.app/';
