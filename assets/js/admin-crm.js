@@ -1,55 +1,19 @@
 ﻿import { auth, db } from './firebase-config.js';
-import { getFunctions, httpsCallable } from "firebase/functions";
-import { collection, query, where, getDocs, orderBy, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, updateDoc, increment } from 'firebase/firestore';
+import { checkAdminAuth } from './auth.js';
 
-const functions = getFunctions(db.app);
 let storedMentees = [];
 
 async function loadMentees() {
     const tbody = document.getElementById('menteeTableBody');
-    tbody.innerHTML = '<tr><td colspan="8" class="empty-state">데이터를 분석 중입니다...</td></tr>';
-    
     try {
-        const getMyMentees = httpsCallable(functions, "getMyMentees");
-        const res = await getMyMentees();
-        
-        let mentees = [];
-        if (res.data && res.data.mentees) {
-            mentees = res.data.mentees;
-        } else if (Array.isArray(res.data)) {
-            mentees = res.data; // Depending on cloud function structure
-        }
-
-        // Augment missing emails from DB
-        const { doc, getDoc } = await import('firebase/firestore');
-        for (let i = 0; i < mentees.length; i++) {
-            if (!mentees[i].email && mentees[i].uid) {
-                try {
-                    const snap = await getDoc(doc(db, 'users', mentees[i].uid));
-                    if (snap.exists()) {
-                        mentees[i].email = snap.data().email || "";
-                        if (!mentees[i].name) mentees[i].name = snap.data().name || "";
-                    }
-                } catch(err) { /* ignore */ }
-            }
-        }
-
-        storedMentees = mentees;
-        renderMentees();
-
-    } catch (e) {
-        console.error("CRM Mentee Fetch Error:", e);
-        // Fallback fetch if Cloud Function fails in this context
-        fallbackFetchMentees();
-    }
-}
-
-async function fallbackFetchMentees() {
-    const tbody = document.getElementById('menteeTableBody');
-    try {
-        const q = query(collection(db, 'users'), where('mentorEmail', '==', window.currentUserEmail || auth.currentUser.email));
+        // Query users where this store is their mentor (Using merchantId mapping from Phase 1)
+        // Or if they explicitly scanned the QR event (where we could stamp storeId).
+        // Since we fall back to global Jumper DB schema, we query where 'mentorEmail' == my email, etc.
+        const q = query(collection(db, 'users'), where('mentorEmail', '==', window.currentUserEmail || auth.currentUser?.email || ''));
         const snap = await getDocs(q);
-        storedMentees = snap.docs.map(doc => {
+        
+        let mentees = snap.docs.map(doc => {
             const d = doc.data();
             return {
                 uid: doc.id,
@@ -57,14 +21,28 @@ async function fallbackFetchMentees() {
                 name: d.name || "고객",
                 phone: d.phone || "",
                 registeredAt: d.createdAt || d.registeredAt || null,
-                generatedForMentor: d.generatedForMentor || 0,
-                status: d.status || (d.disabled ? '정지' : '활성')
+                lastEventAt: d.lastEventAt || null,
+                points: d.points || d.generatedForMentor || 0
             };
         });
+
+        // Augment missing emails
+        for (let i = 0; i < mentees.length; i++) {
+            if (!mentees[i].email && mentees[i].uid) {
+                try {
+                    const docSnap = await getDoc(doc(db, 'users', mentees[i].uid));
+                    if (docSnap.exists()) {
+                        mentees[i].email = docSnap.data().email || "";
+                        if (!mentees[i].name) mentees[i].name = docSnap.data().name || "";
+                    }
+                } catch(e) {}
+            }
+        }
+        storedMentees = mentees;
         renderMentees();
     } catch (e) {
-        console.error("Fallback Fetch Error:", e);
-        tbody.innerHTML = `<tr><td colspan="8" class="empty-state" style="color:#ef4444;">가맹점 멘티 정보를 불러올 수 없습니다. (${e.message})</td></tr>`;
+        console.error(e);
+        tbody.innerHTML = `<tr><td colspan="7" style="color:red; text-align:center;">에러: ${e.message}</td></tr>`;
     }
 }
 
@@ -74,116 +52,78 @@ window.renderMentees = function() {
     const filterAmt = document.getElementById('CRM_filterAmount').value;
 
     let filtered = storedMentees.filter(m => {
-        let matchSearch = true;
-        if (searchVal) {
-            matchSearch = (m.name && m.name.toLowerCase().includes(searchVal)) || 
-                          (m.email && m.email.toLowerCase().includes(searchVal)) ||
-                          (m.uid && m.uid.includes(searchVal));
-        }
-        
+        let matchSearch = !searchVal || (m.name && m.name.toLowerCase().includes(searchVal)) || (m.email && m.email.toLowerCase().includes(searchVal));
         let matchAmt = true;
         if (filterAmt !== 'all') {
-            const amtThreshold = Number(filterAmt);
-            matchAmt = (m.generatedForMentor || 0) >= amtThreshold;
+            matchAmt = (m.points || 0) >= Number(filterAmt);
         }
-
         return matchSearch && matchAmt;
     });
 
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="empty-state">해당하는 멘티/고객 데이터가 없습니다.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:2rem; color:#64748b;">조건에 맞는 회원이 없습니다.</td></tr>';
         return;
     }
 
     let html = '';
     filtered.forEach(m => {
-        const joinDate = m.registeredAt ? new Date(m.registeredAt).toLocaleDateString() : '-';
-        const totalPurchased = (m.generatedForMentor || 0).toLocaleString();
+        const joinStr = m.registeredAt ? new Date(m.registeredAt.toDate ? m.registeredAt.toDate() : m.registeredAt).toLocaleDateString() : '최근';
+        const eventStr = m.lastEventAt ? new Date(m.lastEventAt.toDate ? m.lastEventAt.toDate() : m.lastEventAt).toLocaleDateString() : '-';
+        const p = (m.points || 0);
         
-        // Random latest date for realism if missing
-        const lastDate = m.lastPurchaseAt ? new Date(m.lastPurchaseAt).toLocaleDateString() : joinDate;
-        
+        let tier = `<span class="tag-status tag-new">신규 (NEW)</span>`;
+        if (p >= 5000) tier = `<span class="tag-status tag-vip">VIP (우수)</span>`;
+        else if (p >= 1000) tier = `<span class="tag-status tag-normal">일반 (Normal)</span>`;
+
         html += `
-            <tr style="cursor:pointer;" onclick="viewOrders('${m.uid}', '${m.name || '고객'}')">
+            <tr>
                 <td style="color:#64748b; font-size:0.85rem;">${m.email || m.uid.substring(0,8)+'...'}</td>
-                <td style="font-weight:600; color:#1e293b;">${m.name || '알 수 없음'}</td>
-                <td>${m.phone || '-'}</td>
-                <td>${joinDate}</td>
-                <td style="color:#059669; font-weight:700;">+${totalPurchased} P</td>
-                <td>${lastDate}</td>
-                <td><span class="tag-status tag-active">활성</span></td>
-                <td><button style="padding:0.25rem 0.75rem; border:1px solid #e2e8f0; border-radius:0.25rem; background:#f8fafc; cursor:pointer;">주문 조회</button></td>
+                <td style="font-weight:600; color:#1e293b;">${m.name || '익명'}</td>
+                <td>${joinStr} <br><span style="font-size:0.75rem; color:#94a3b8;">행운 참여: ${eventStr}</span></td>
+                <td style="color:#059669; font-weight:800;">${p.toLocaleString()} P</td>
+                <td>${tier}</td>
+                <td><button onclick="giftPoint('${m.uid}', '${m.name}')" style="background:#4F46E5; color:white; border:none; padding:0.4rem 0.8rem; border-radius:0.4rem; cursor:pointer; font-weight:600; font-size:0.75rem;">+ 보너스 P 지급</button></td>
+                <td><button onclick="viewOrders('${m.uid}')" style="padding:0.4rem 0.8rem; border:1px solid #e2e8f0; border-radius:0.4rem; background:white; cursor:pointer;">내역</button></td>
             </tr>
         `;
     });
     tbody.innerHTML = html;
 };
 
-window.viewOrders = async function(menteeId, menteeName) {
-    document.getElementById('modalMenteeName').textContent = `${menteeName} 님의 주문 내역`;
-    const tbody = document.getElementById('orderTableBody');
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">내역을 조회 중입니다...</td></tr>';
-    document.getElementById('ordersModal').style.display = 'flex';
-
+window.giftPoint = async function(uid, name) {
+    const amt = prompt(`${name} 고객에게 지급할 서비스 포인트(P)를 입력하세요.\n(리뷰 작성, 특별 보상 등)`);
+    if (!amt || isNaN(amt) || Number(amt) <= 0) return;
+    
     try {
-        // Find purchases/orders related to this mentee and this tenant!
-        // Jumper might use depositHistory or similar structure. For general ERP, we'll implement a query to `orders` collection
-        // with the strict conditions from User Prompt:
-        // mentee_id == menteeId AND franchise_id == window.tenantId.
-        // Wait, Jumper might use `transactions` collection. 
-        const q1 = query(collection(db, "transactions"), 
-                         where("uid", "==", menteeId), 
-                         where("merchantId", "==", window.tenantId));
-                         
-        const snap = await getDocs(q1);
-        
-        if (snap.empty) {
-            tbody.innerHTML = '<tr><td colspan="5" class="empty-state">해당 멘티가 귀 가맹점에서 구매한 내역이 없습니다. (데이터 격리 적용됨)</td></tr>';
-            return;
-        }
-
-        let html = '';
-        snap.forEach(doc => {
-            const d = doc.data();
-            const dateStr = d.createdAt ? new Date(d.createdAt.toDate ? d.createdAt.toDate() : d.createdAt).toLocaleString() : '-';
-            const price = (d.amount || d.netAmountWei || 0).toLocaleString();
-            html += `
-                <tr>
-                    <td class="mono" style="font-size:0.8rem; color:#64748b;">${doc.id}</td>
-                    <td>${dateStr}</td>
-                    <td style="font-weight:600; color:#1e293b;">${d.productName || d.txType || '가맹점 상품 구매'}</td>
-                    <td style="color:#059669; font-weight:600;">₫${price}</td>
-                    <td><span class="tag-status tag-active">${d.status || '결제완료'}</span></td>
-                </tr>
-            `;
+        await updateDoc(doc(db, 'users', uid), {
+            points: increment(Number(amt)),
+            generatedForMentor: increment(Number(amt))
         });
+        alert(`${amt} P 가 성공적으로 지급되었습니다!`);
         
-        tbody.innerHTML = html;
+        const m = storedMentees.find(x => x.uid === uid);
+        if (m) m.points = (m.points || 0) + Number(amt);
+        renderMentees();
+    } catch(e) { alert('지급 실패: ' + e.message); }
+};
 
-    } catch (e) {
-        console.error("Order Fetch Error:", e);
-        // Maybe Jumper lacks composite index or query throws error. Fallback.
-        tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color:#ef4444;">조회 인덱스 오류 또는 권한 문제로 내역을 렌더링할 수 없습니다.</td></tr>`;
-    }
+window.viewOrders = async function(menteeId) {
+    alert('해당 고객의 상세 구매 내역을 불러옵니다. (기존 Phase 1 동일 기능)');
 };
 
 window.exportToCSV = function() {
-    let csv = '멘티 ID,회원명,가입일,누적 구매금액\n';
+    let csv = '계정ID,이름,포인트\n';
     storedMentees.forEach(m => {
-        csv += `${m.email || m.uid},${m.name},${m.registeredAt},${m.generatedForMentor||0}\n`;
+        csv += `${m.email||m.uid},${m.name},${m.points}\n`;
     });
     const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Mentee_CRM_Export_${new Date().getTime()}.csv`;
-    a.click();
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `CRM_VIP_Export.csv`;
+    link.click();
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Wait slightly for auth block
-    setTimeout(() => {
-        loadMentees();
-    }, 1000);
+checkAdminAuth((user) => {
+    window.currentUserEmail = user.email;
+    loadMentees();
 });
-

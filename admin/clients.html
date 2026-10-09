@@ -3,87 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>가맹점 멘티/고객 CRM - AI-ERM</title>
+    <title>가맹점 멘티/고객 CRM - AI M-SaaS</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/index.css">
     <link rel="stylesheet" href="../assets/css/admin.css">
     <style>
-        .crm-container {
-            background: white; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); padding: 2rem; margin-top: 1.5rem; border: 1px solid #e2e8f0;
-        }
-        .search-bar {
-            display: flex; gap: 1rem; margin-bottom: 2rem;
-        }
-        .search-bar input, .search-bar select {
-            padding: 0.75rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.95rem; outline: none; transition: border-color 0.2s;
-        }
-        .search-bar input:focus, .search-bar select:focus {
-            border-color: #4F46E5;
-        }
+        .crm-container { background: white; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); padding: 2rem; margin-top: 1.5rem; border: 1px solid #e2e8f0; }
+        .search-bar { display: flex; gap: 1rem; margin-bottom: 2rem; }
+        .search-bar input, .search-bar select { padding: 0.75rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.95rem; outline: none; }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 0.95rem; }
         th { background: #f8fafc; font-weight: 600; color: #475569; }
-        .tag-status { padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
-        .tag-active { background: #dcfce7; color: #166534; }
-        .tag-idle { background: #f1f5f9; color: #475569; }
+        
+        .tag-status { padding: 0.25rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+        .tag-vip { background: #fee2e2; color: #b91c1c; } /* VIP */
+        .tag-normal { background: #e0e7ff; color: #3730a3; } /* 일반 */
+        .tag-new { background: #dcfce7; color: #166534; } /* 신규 */
 
-        /* Modal Styles */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
-        .modal-content { background: white; padding: 2rem; border-radius: 1rem; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 1rem; }
-        .modal-header h2 { margin: 0; font-size: 1.5rem; font-weight: 700; color: #1e293b; }
-        .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748B; }
-        
-        .order-table th { background: #f1f5f9; }
-        .empty-state { text-align: center; padding: 3rem; color: #64748B; font-style: italic; }
-        
-        /* Dropdown Nav fixes */
         .dropdown { position: relative; display: inline-block; margin-top:2px; }
-        .dropdown-content { display: none; position: absolute; background-color: white; min-width: 180px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 0.5rem; border: 1px solid #e2e8f0; z-index: 1000; overflow: hidden; top:100%; left:0; }
-        .dropdown-content a { color: #334155 !important; padding: 0.8rem 1rem !important; text-decoration: none; display: block; font-size: 0.95rem; font-weight: 500; border-bottom: 1px solid #f1f5f9; transition: all 0.2s; white-space: nowrap; }
+        .dropdown-content { display: none; position: absolute; background-color: white; min-width: 180px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 0.5rem; border: 1px solid #e2e8f0; z-index: 1000; top:100%; left:0; }
+        .dropdown-content a { color: #334155 !important; padding: 0.8rem 1rem !important; text-decoration: none; display: block; font-size: 0.95rem; font-weight: 500; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
         .dropdown-content a:hover { background-color: #f8fafc; color: #4F46E5 !important; padding-left: 1.25rem !important; }
-        .dropdown:hover .dropdown-content { display: block; animation: fadeInUp 0.2s ease-out; }
-        .dropbtn { padding: 0.5rem 0.75rem; color: #475569; font-weight: 600; cursor: pointer; border-radius: 0.5rem; transition: background 0.2s; display:inline-block; }
-        .dropdown:hover .dropbtn { color: #4F46E5; background: rgba(79, 70, 229, 0.05); }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .top-nav { display: flex; align-items: center; justify-content: space-between; position: relative; }
+        .dropdown:hover .dropdown-content { display: block; }
+        .dropbtn { padding: 0.5rem 0.75rem; color: #475569; font-weight: 600; cursor: pointer; border-radius: 0.5rem; display:inline-block; }
         .top-nav ul { display: flex; align-items: center; gap: 1rem; list-style: none; margin: 0; padding: 0; }
     </style>
 </head>
 <body class="admin-body">
-    <nav class="top-nav" style="background:#fff; padding: 1rem 2rem; border-bottom:1px solid #e2e8f0;">
+    <nav class="top-nav" style="background:#fff; padding: 1rem 2rem; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
         <div style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;" onclick="location.href='dashboard.html'">
-            <img src="../images/logo/logo.png" style="height: 28px;" onerror="this.style.display='none';">
-            <h1 style="color:var(--ai-primary); margin:0; font-size:1.5rem; font-weight:800; display:flex; gap:0.5rem;">
-                <span id="brandLogoText" style="color:#ef4444;">BEST</span> <span id="brandMainText">AI경영관리</span>
-            </h1>
+            <h1 style="color:var(--ai-primary); margin:0; font-size:1.5rem; font-weight:800;"><span style="color:#ef4444;">BEST</span> M-SaaS</h1>
         </div>
         <ul>
-            <li><a href="dashboard.html">대시보드</a></li>
-            <li class="dropdown">
-                <span class="dropbtn">내부운영(HR) ▾</span>
-                <div class="dropdown-content">
-                    <a href="tasks.html">업무지시/보고</a>
-                    <a href="finance.html">재무/회계</a>
-                    <a href="employees.html">직원목록</a>
-                </div>
+            <li><a href="dashboard.html">CEO 대시보드</a></li>
+            <li class="dropdown"><span class="dropbtn">매장 관리(F&B) ▾</span>
+                <div class="dropdown-content"><a href="menus.html">스마트 메뉴 관리</a></div>
             </li>
-            <li class="dropdown">
-                <span class="dropbtn">영업/프로젝트 ▾</span>
-                <div class="dropdown-content">
-                    <a href="projects.html">프로젝트 보드</a>
-                    <a href="materials.html">자재관리</a>
-                    <a href="suppliers.html">협력업체</a>
-                </div>
-            </li>
-            <li class="dropdown">
-                <span class="dropbtn" style="color:#4F46E5; background:rgba(79,70,229,0.05);">고객/회원관리 ▾</span>
-                <div class="dropdown-content">
-                    <a href="clients.html" style="color:#4F46E5!important;">멘티(고객) CRM</a>
-                    <a href="contacts.html">인맥(명함)</a>
-                    <a href="users.html">SaaS 회원관리</a>
-                </div>
+            <li class="dropdown"><span class="dropbtn" style="color:#4F46E5; background:rgba(79,70,229,0.05);">고객/회원관리 ▾</span>
+                <div class="dropdown-content"><a href="clients.html" style="color:#4F46E5!important;">멘티(고객) CRM</a><a href="users.html">SaaS 회원관리</a></div>
             </li>
         </ul>
         <div id="navUserEmail" style="display:none;"></div>
@@ -91,19 +48,23 @@
 
     <div class="admin-container" style="max-width: 1400px; margin: 2rem auto; padding: 0 1.5rem;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h2 style="font-size: 1.8rem; font-weight: 800; color: #1e293b; margin:0;">👥 가맹점 전용 CRM (멘티/고객 관리)</h2>
-            <button class="btn-primary" onclick="exportToCSV()" style="background:#10b981; border:none; padding: 0.75rem 1.5rem; border-radius: 0.5rem; color:white; font-weight:600; cursor:pointer;">엑셀 다운로드</button>
+            <div>
+                <h2 style="font-size: 1.8rem; font-weight: 800; color: #1e293b; margin:0;">👥 CRM 멤버십 및 게이미피케이션 (Phase 2)</h2>
+                <p style="color: #64748b; margin-top: 0.5rem;">가맹점 QR 이벤트를 통해 가입한 회원들의 누적 방문 및 잭팟 룰렛 P를 분석합니다.</p>
+            </div>
+            <div>
+                <button class="btn-primary" onclick="copyQRLink()" style="background:#f59e0b; border:none; padding: 0.75rem 1.5rem; border-radius: 0.5rem; color:white; font-weight:600; cursor:pointer; margin-right: 0.5rem;">QR 이벤트 주소 복사</button>
+                <button class="btn-primary" onclick="exportToCSV()" style="background:#10b981; border:none; padding: 0.75rem 1.5rem; border-radius: 0.5rem; color:white; font-weight:600; cursor:pointer;">엑셀 다운로드</button>
+            </div>
         </div>
-        <p style="color: #64748b; margin-top: 0.5rem;">가맹점에 귀속된 고객(멘티) 현황 및 상품 구매 내역을 실시간으로 분석합니다.</p>
 
         <div class="crm-container">
             <div class="search-bar">
                 <input type="text" id="CRM_search" placeholder="이름, 이메일 검색..." style="flex: 1;">
                 <select id="CRM_filterAmount">
-                    <option value="all">누적 구매금액 전체</option>
-                    <option value="100000">10만 이상</option>
-                    <option value="500000">50만 이상</option>
-                    <option value="1000000">100만 이상</option>
+                    <option value="all">누적 P 포인트 전체</option>
+                    <option value="5000">VIP (5,000 P 이상)</option>
+                    <option value="1000">일반 (1,000 P 이상)</option>
                 </select>
                 <button class="btn-primary" style="padding: 0.75rem 2rem; border:none; border-radius:0.5rem; background:#4F46E5; color:white; cursor:pointer;" onclick="renderMentees()">검색</button>
             </div>
@@ -111,56 +72,29 @@
             <table>
                 <thead>
                     <tr>
-                        <th>멘티 ID (이메일)</th>
-                        <th>회원명</th>
-                        <th>연락처</th>
-                        <th>가입일</th>
-                        <th>누적 구매금액</th>
-                        <th>최근 구매일</th>
-                        <th>상태</th>
-                        <th>상세</th>
+                        <th>회원 계정</th>
+                        <th>이름</th>
+                        <th>가입일/마지막 참여</th>
+                        <th>누적 획득 P💸</th>
+                        <th>회원 등급</th>
+                        <th>포인트 액션</th>
+                        <th>상세 구매</th>
                     </tr>
                 </thead>
                 <tbody id="menteeTableBody">
-                    <tr><td colspan="8" class="empty-state">데이터를 불러오는 중입니다...</td></tr>
+                    <tr><td colspan="7" style="text-align:center; padding:3rem; color:#64748b;">데이터를 불러오는 중입니다...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
-
-    <!-- Purchase Details Modal -->
-    <div class="modal" id="ordersModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div>
-                    <h2>🛒 멘티 구매 내역 상세</h2>
-                    <p id="modalMenteeName" style="color:#64748b; margin: 0.25rem 0 0 0; font-size:0.95rem;"></p>
-                </div>
-                <button class="close-btn" onclick="document.getElementById('ordersModal').style.display='none'">×</button>
-            </div>
-            <table class="order-table">
-                <thead>
-                    <tr>
-                        <th>주문 번호</th>
-                        <th>주문 일시</th>
-                        <th>구매 상품명</th>
-                        <th>결제 금액</th>
-                        <th>주문 상태</th>
-                    </tr>
-                </thead>
-                <tbody id="orderTableBody">
-                    <!-- Orders injected here -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <script type="module" src="../assets/js/admin-crm.js"></script>
-    <script type="module">
-        import { checkAdminAuth } from '../assets/js/auth.js';
-        checkAdminAuth(user => {
-            window.currentUserEmail = user.email;
-        });
+    
+    <script>
+        function copyQRLink() {
+            const link = window.location.origin + '/qr-event.html?storeId=' + (window.tenantId || '');
+            navigator.clipboard.writeText(link);
+            alert('테이블/배너 삽입용 QR 이벤트 접속 링크가 복사되었습니다:\n' + link);
+        }
     </script>
+    <script type="module" src="../assets/js/admin-crm.js"></script>
 </body>
 </html>
