@@ -1,0 +1,129 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스마트 메뉴 관리 - AI M-SaaS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/index.css">
+    <link rel="stylesheet" href="../assets/css/admin.css">
+    <style>
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
+        .menu-card { background: white; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; overflow: hidden; position: relative; transition: all 0.2s; }
+        .menu-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .menu-img { width: 100%; height: 160px; object-fit: cover; background:#f1f5f9; display:flex; align-items:center; justify-content:center; color:#94a3b8; font-weight:600; font-size:1.5rem; }
+        .menu-body { padding: 1.25rem; }
+        .menu-title { font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0 0 0.5rem 0; }
+        .menu-price { font-size: 1.2rem; font-weight: 800; color: #4F46E5; margin: 0 0 1rem 0; }
+        .menu-desc { font-size: 0.85rem; color: #64748b; margin-bottom: 1rem; line-height:1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        .tag-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+        .smart-tag { padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+        .tag-hit { background: #fee2e2; color: #b91c1c; }
+        .tag-rec { background: #dcfce7; color: #166534; }
+        .tag-new { background: #e0e7ff; color: #3730a3; }
+        .tag-origin { border: 1px solid #e2e8f0; color: #64748b; }
+        
+        .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+        input:checked + .slider { background-color: #4F46E5; }
+        input:checked + .slider:before { transform: translateX(20px); }
+        
+        .top-nav ul { display: flex; align-items: center; gap: 1rem; list-style: none; margin: 0; padding: 0; }
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-content { display: none; position: absolute; background-color: white; min-width: 180px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 0.5rem; border: 1px solid #e2e8f0; z-index: 1000; top:100%; left:0; }
+        .dropdown-content a { color: #334155 !important; padding: 0.8rem 1rem !important; text-decoration: none; display: block; font-size: 0.95rem; font-weight: 500; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
+        .dropdown-content a:hover { background-color: #f8fafc; color: #4F46E5 !important; padding-left: 1.25rem !important; }
+        .dropdown:hover .dropdown-content { display: block; }
+        .dropbtn { padding: 0.5rem 0.75rem; color: #475569; font-weight: 600; cursor: pointer; border-radius: 0.5rem; display:inline-block; }
+    </style>
+</head>
+<body class="admin-body">
+    <nav class="top-nav" style="background:#fff; padding: 1rem 2rem; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;" onclick="location.href='dashboard.html'">
+            <h1 style="color:var(--ai-primary); margin:0; font-size:1.5rem; font-weight:800;"><span style="color:#ef4444;">BEST</span> M-SaaS</h1>
+        </div>
+        <ul>
+            <li><a href="dashboard.html">CEO 대시보드</a></li>
+            <li class="dropdown"><span class="dropbtn" style="color:#4F46E5; background:rgba(79,70,229,0.05);">매장 관리(F&B) ▾</span>
+                <div class="dropdown-content"><a href="menus.html" style="color:#4F46E5!important;">스마트 메뉴 관리</a><a href="#">주문 현황 (준비중)</a></div>
+            </li>
+            <li class="dropdown"><span class="dropbtn">고객/회원관리 ▾</span>
+                <div class="dropdown-content"><a href="clients.html">멘티(고객) CRM</a><a href="users.html">SaaS 회원관리</a></div>
+            </li>
+        </ul>
+        <div id="navUserEmail" style="display:none;"></div>
+    </nav>
+
+    <div class="admin-container" style="max-width: 1400px; margin: 2rem auto; padding: 0 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h2 style="font-size: 1.8rem; font-weight: 800; color: #1e293b; margin:0;">🍽️ 스마트 메뉴 관리 (Phase 1)</h2>
+                <p style="color: #64748b; margin-top: 0.5rem;">가맹점(Tenant)의 프론트 웹사이트와 모바일 오더 앱에 실시간으로 연동되는 메뉴 데이터베이스입니다.</p>
+            </div>
+            <button class="btn-primary" onclick="openMenuModal()" style="background:#4F46E5; border:none; padding:0.75rem 1.5rem; border-radius:0.5rem; color:white; font-weight:600; cursor:pointer;">+ 신규 메뉴 등록</button>
+        </div>
+
+        <!-- Filter -->
+        <div style="margin-top:2rem; display:flex; gap:1rem; align-items:center;">
+            <select id="filterCategory" style="padding:0.75rem; border-radius:0.5rem; border:1px solid #e2e8f0; outline:none;" onchange="loadMenus()">
+                <option value="ALL">전체 카테고리</option>
+                <option value="소고기">🥩 소고기</option>
+                <option value="돼지고기">🥓 돼지고기</option>
+                <option value="식사/전골">🍲 식사/전골</option>
+                <option value="음료/주류">🍺 음료/주류</option>
+            </select>
+            <input type="text" id="filterSearch" placeholder="메뉴명 검색..." style="padding:0.75rem 1rem; border:1px solid #e2e8f0; border-radius:0.5rem; outline:none; flex:1; max-width:300px;" oninput="loadMenus()">
+        </div>
+
+        <div class="menu-grid" id="menuGrid">
+            <!-- Menus injected here -->
+        </div>
+    </div>
+    
+    <!-- Modal -->
+    <div class="modal" id="menuModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+        <div class="modal-content" style="background:white; padding:2rem; border-radius:1rem; width:100%; max-width:500px;">
+            <h2 id="modalTitle" style="margin:0 0 1.5rem 0;">신규 메뉴 등록</h2>
+            
+            <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#334155;">메뉴명 <span style="color:red">*</span></label>
+            <input type="text" id="mName" style="width:100%; padding:0.75rem; border:1px solid #e2e8f0; border-radius:0.5rem; margin-bottom:1rem; outline:none;" placeholder="예: 무쇠 짚불 삼겹살 (2인분)">
+
+            <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#334155;">메뉴 설명</label>
+            <textarea id="mDesc" style="width:100%; padding:0.75rem; border:1px solid #e2e8f0; border-radius:0.5rem; margin-bottom:1rem; outline:none; height:80px;"></textarea>
+
+            <div style="display:flex; gap:1rem; margin-bottom:1rem;">
+                <div style="flex:1;">
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#334155;">판매가 (VND/KRW) <span style="color:red">*</span></label>
+                    <input type="number" id="mPrice" style="width:100%; padding:0.75rem; border:1px solid #e2e8f0; border-radius:0.5rem; outline:none;">
+                </div>
+                <div style="flex:1;">
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#334155;">카테고리</label>
+                    <select id="mCategory" style="width:100%; padding:0.75rem; border:1px solid #e2e8f0; border-radius:0.5rem; outline:none;">
+                        <option value="소고기">🥩 소고기</option>
+                        <option value="돼지고기">🥓 돼지고기</option>
+                        <option value="식사/전골">🍲 식사/전골</option>
+                        <option value="음료/주류">🍺 음료/주류</option>
+                    </select>
+                </div>
+            </div>
+
+            <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#334155;">스마트 마케팅 태그 (다중 선택)</label>
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.5rem;" id="mTags">
+                <label><input type="checkbox" value="HIT" class="tag-cb"> 🔥 HIT (인기)</label>
+                <label><input type="checkbox" value="REC" class="tag-cb"> 👍 추천</label>
+                <label><input type="checkbox" value="NEW" class="tag-cb"> ✨ 신메뉴</label>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:1rem;">
+                <button onclick="document.getElementById('menuModal').style.display='none'" style="padding:0.75rem 1.5rem; border:none; background:#f1f5f9; border-radius:0.5rem; font-weight:600; cursor:pointer;">취소</button>
+                <button id="btnSaveMenu" style="padding:0.75rem 1.5rem; border:none; background:#4F46E5; color:white; border-radius:0.5rem; font-weight:600; cursor:pointer;">메뉴 등록</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="../assets/js/admin-menus.js"></script>
+</body>
+</html>
