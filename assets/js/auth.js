@@ -93,6 +93,19 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
 
                     // Store tenant ID globally. Fallback to user email if missing
                     window.tenantId = data.merchantId || data.tenant_id || data.company_id || user.uid;
+                
+                // Fetch dynamic store name for Multi-tenant UI
+                try {
+                    const storeSnap = await getDoc(doc(db, 'stores', window.tenantId));
+                    if (storeSnap.exists() && storeSnap.data().storeName) {
+                        const sName = storeSnap.data().storeName;
+                        window.currentStoreName = sName;
+                        // Attempt to update all possible top-left brand headers
+                        document.querySelectorAll('.dynamic-brand-text, #dynamicStoreName').forEach(el => {
+                            el.textContent = sName;
+                        });
+                    }
+                } catch(err) { console.warn("Failed to load store branding", err); }
                 }
 
                 // Global variables for RBAC
