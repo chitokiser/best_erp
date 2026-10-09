@@ -121,7 +121,7 @@
                                 <h3 class="menu-name">${m.name}</h3>
                                 <p class="menu-price">₫ ${Number(m.price||0).toLocaleString()}</p>
                             </div>
-                            <div class="menu-img">📷</div>
+                            `<div class="menu-img" style="background-image:url('${m.imageUrl||''}'); background-size:cover; background-position:center;">${!m.imageUrl ? '📷' : ''}</div>`
                         </div>
                     `;
                 });

@@ -10,10 +10,18 @@ async function loadMentees() {
         // Query users where this store is their mentor (Using merchantId mapping from Phase 1)
         // Or if they explicitly scanned the QR event (where we could stamp storeId).
         // Since we fall back to global Jumper DB schema, we query where 'mentorEmail' == my email, etc.
-        const q = query(collection(db, 'users'), where('mentorEmail', '==', window.currentUserEmail || auth.currentUser?.email || ''));
-        const snap = await getDocs(q);
         
-        let mentees = snap.docs.map(doc => {
+        const email = window.currentUserEmail || auth.currentUser?.email || '';
+        const q1 = query(collection(db, 'users'), where('mentorAddressInput', '==', email));
+        const q2 = query(collection(db, 'users'), where('mentorEmail', '==', email));
+        
+        const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+        
+        const docMap = new Map();
+        snap1.docs.forEach(d => docMap.set(d.id, d));
+        snap2.docs.forEach(d => docMap.set(d.id, d));
+        
+        let mentees = Array.from(docMap.values()).map(doc => {
             const d = doc.data();
             return {
                 uid: doc.id,
