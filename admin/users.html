@@ -93,6 +93,11 @@
             <h2 style="margin: 0 0 0.5rem 0; color: #1e293b;">ERP 접근 권한 부여</h2>
             <p style="color: #64748b; margin: 0 0 1.5rem 0; font-size:0.9rem;" id="roleModalTarget">대상: </p>
             
+            <div class="role-option" onclick="selectRole('CEO')" id="opt-CEO">
+                <h4>독립 기업/가맹점 대표 (CEO) <span style="font-size:1.2rem;">��</span></h4>
+                <p>본인만의 완벽히 독립된 ERP 인프라(별도 테넌트)를 운영할 수 있는 최고 권한입니다.</p>
+            </div>
+            
             <div class="role-option" onclick="selectRole('ADMIN')" id="opt-ADMIN">
                 <h4>ERP 관리자 (ADMIN) <span style="font-size:1.2rem;">👑</span></h4>
                 <p>시스템에 로그인하여 대시보드 및 모든 기능(결제, 재무 제외)을 열람/수정할 수 있는 전체 접근 권한입니다.</p>
@@ -184,7 +189,7 @@
             document.getElementById('roleModalTarget').textContent = `대상: ${email}`;
             
             // preset selection
-            const initialRole = ['ADMIN', 'STAFF'].includes(currentRole?.toUpperCase()) ? currentRole.toUpperCase() : 'VIEWER';
+            const initialRole = ['CEO', 'ADMIN', 'STAFF'].includes(currentRole?.toUpperCase()) ? currentRole.toUpperCase() : 'VIEWER';
             window.selectRole(initialRole);
             
             document.getElementById('roleModal').style.display = 'flex';
@@ -205,6 +210,8 @@
                 const updateData = { role: selectedRole, status: selectedRole === 'VIEWER' ? '대기중' : '승인' };
                 if (selectedRole === 'ADMIN' || selectedRole === 'STAFF') {
                     updateData.tenant_id = 'system_master'; // Bond them to the Super Admin's workspace!
+                } else if (selectedRole === 'CEO') {
+                    updateData.tenant_id = currentlyEditingUserId; // Isolate them to their own personal workspace!
                 }
                 
                 await updateDoc(doc(db, 'users', currentlyEditingUserId), updateData);
