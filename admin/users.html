@@ -124,7 +124,7 @@
     <script type="module">
         import { checkAdminAuth } from '../assets/js/auth.js';
         import { db } from '../assets/js/firebase-config.js';
-        import { collection, getDocs, updateDoc, doc, deleteDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+        import { collection, getDocs, updateDoc, doc, deleteDoc, serverTimestamp, setDoc, query, where } from 'firebase/firestore';
 
         let allUsers = [];
         let currentlyEditingUserId = null;
@@ -141,7 +141,12 @@
         async function loadUsers() {
             const tbody = document.getElementById('usersTableBody');
             try {
-                const snap = await getDocs(collection(db, 'users'));
+                let snap;
+                if (window.currentUserEmail === 'daguri75@gmail.com' || window.tenantId === 'system_master') {
+                    snap = await getDocs(collection(db, 'users'));
+                } else {
+                    snap = await getDocs(query(collection(db, 'users'), where('tenant_id', '==', window.tenantId)));
+                }
                 allUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 renderUsers();
             } catch (e) {
@@ -209,7 +214,7 @@
                 // If they are granted ERP access, we sync them to the Master Tenant so they become an admin of this instance.
                 const updateData = { role: selectedRole, status: selectedRole === 'VIEWER' ? '대기중' : '승인' };
                 if (selectedRole === 'ADMIN' || selectedRole === 'STAFF') {
-                    updateData.tenant_id = 'system_master'; // Bond them to the Super Admin's workspace!
+                    updateData.tenant_id = window.tenantId; // Bond them to the CURRENT logged-in CEO's workspace!
                 } else if (selectedRole === 'CEO') {
                     updateData.tenant_id = currentlyEditingUserId; // Isolate them to their own personal workspace!
                 }
@@ -231,7 +236,7 @@
             const dummyUid = 'ext_' + new Date().getTime();
             try {
                 await setDoc(doc(db, 'users', dummyUid), {
-                    email: email, name: email.split('@')[0], role: 'ADMIN', status: '승인', tenant_id: 'system_master', createdAt: serverTimestamp()
+                    email: email, name: email.split('@')[0], role: 'ADMIN', status: '승인', tenant_id: window.tenantId, createdAt: serverTimestamp()
                 });
                 alert('승인 완료! 사용자가 해당 구글 계정으로 로그인 시 즉시 ERP에 접속할 수 있습니다.');
                 loadUsers();
@@ -240,7 +245,7 @@
 
         document.getElementById('searchInput').addEventListener('input', renderUsers);
 
-        checkAdminAuth(() => loadUsers());
+        checkAdminAuth((user) => { window.currentUserEmail = user.email; loadUsers(); });
     </script>
 </body>
 </html>
