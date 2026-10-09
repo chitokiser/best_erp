@@ -17,6 +17,7 @@ module.exports = defineConfig({
         "admin_insert-shopee-it": resolve(__dirname, 'admin/insert-shopee-it.html'),
         "admin_material-form": resolve(__dirname, 'admin/material-form.html'),
         "admin_materials": resolve(__dirname, 'admin/materials.html'),
+        "admin_marketing": resolve(__dirname, 'admin/marketing.html'),
         "admin_menus": resolve(__dirname, 'admin/menus.html'),
         "admin_project-detail": resolve(__dirname, 'admin/project-detail.html'),
         "admin_projects": resolve(__dirname, 'admin/projects.html'),

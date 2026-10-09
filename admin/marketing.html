@@ -1,0 +1,169 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마케팅 자동화 트리거 - AI M-SaaS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/index.css">
+    <link rel="stylesheet" href="../assets/css/admin.css">
+    <style>
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1.5rem; }
+        .trigger-card { background: white; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); padding: 2rem; border: 1px solid #e2e8f0; position: relative; overflow: hidden; }
+        .trigger-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #cbd5e1; transition: background 0.3s; }
+        .trigger-card.active::before { background: #4F46E5; }
+        
+        .trigger-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+        .trigger-title { font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0; }
+        .trigger-desc { font-size: 0.9rem; color: #64748b; margin-top: 0.4rem; line-height: 1.5; }
+        
+        .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+        input:checked + .slider { background-color: #4F46E5; }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .btn-run { background: #10b981; color: white; padding: 0.6rem 1rem; border-radius: 0.5rem; border: none; font-weight: 600; cursor: pointer; width: 100%; transition: all 0.2s; }
+        .btn-run:hover { background: #059669; }
+        
+        .log-box { background: #0f172a; color: #a7f3d0; padding: 1rem; border-radius: 0.5rem; font-family: monospace; font-size: 0.85rem; height: 120px; overflow-y: auto; margin-top: 1rem; }
+        
+        .top-nav ul { display: flex; align-items: center; gap: 1rem; list-style: none; margin: 0; padding: 0; }
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-content { display: none; position: absolute; background-color: white; min-width: 180px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 0.5rem; border: 1px solid #e2e8f0; z-index: 1000; top:100%; left:0; }
+        .dropdown-content a { color: #334155 !important; padding: 0.8rem 1rem !important; text-decoration: none; display: block; font-size: 0.95rem; font-weight: 500; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
+        .dropdown-content a:hover { background-color: #f8fafc; color: #4F46E5 !important; padding-left: 1.25rem !important; }
+        .dropdown:hover .dropdown-content { display: block; }
+        .dropbtn { padding: 0.5rem 0.75rem; color: #475569; font-weight: 600; cursor: pointer; border-radius: 0.5rem; display:inline-block; }
+    </style>
+</head>
+<body class="admin-body">
+    <nav class="top-nav" style="background:#fff; padding: 1rem 2rem; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;" onclick="location.href='dashboard.html'">
+            <h1 style="color:var(--ai-primary); margin:0; font-size:1.5rem; font-weight:800;"><span style="color:#ef4444;">BEST</span> M-SaaS</h1>
+        </div>
+        <ul>
+            <li><a href="dashboard.html">CEO 대시보드</a></li>
+            <li class="dropdown"><span class="dropbtn">매장 관리(F&B) ▾</span>
+                <div class="dropdown-content"><a href="menus.html">스마트 메뉴 관리</a></div>
+            </li>
+            <li class="dropdown"><span class="dropbtn" style="color:#4F46E5; background:rgba(79,70,229,0.05);">고객/회원관리 ▾</span>
+                <div class="dropdown-content"><a href="clients.html">멘티(고객) CRM</a><a href="users.html">SaaS 회원관리</a><a href="marketing.html" style="color:#4F46E5!important;">자동 마케팅(트리거)</a></div>
+            </li>
+        </ul>
+        <div id="navUserEmail" style="display:none;"></div>
+    </nav>
+
+    <div class="admin-container" style="max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem;">
+        <h2 style="font-size: 1.8rem; font-weight: 800; color: #1e293b; margin:0;">🚀 마케팅 자동화 엔진 (Phase 3)</h2>
+        <p style="color: #64748b; margin-top: 0.5rem;">조건에 맞는(Trigger) 고객을 24시간 필터링하여 자동으로 쿠폰이나 혜택을 푸시합니다.</p>
+
+        <div class="grid-2">
+            <!-- Trigger 1 -->
+            <div class="trigger-card active" id="cardA">
+                <div class="trigger-header">
+                    <div>
+                        <h3 class="trigger-title">① 웰컴백(Welcome Back) 트리거</h3>
+                        <p class="trigger-desc">30일 이상 미방문&미결제 고객을 휴면고객으로 분류하고 복귀 유도 10% 쿠폰을 자동 발송합니다.</p>
+                    </div>
+                    <label class="toggle-switch"><input type="checkbox" checked onchange="toggleCard('cardA', this.checked)"><span class="slider"></span></label>
+                </div>
+                <button class="btn-run" onclick="runTrigger('sleepers')">▶ 수동 즉시 실행 (클라우드 스케줄러 시뮬레이션)</button>
+                <div class="log-box" id="logSleepers">... 대기 중 ...</div>
+            </div>
+
+            <!-- Trigger 2 -->
+            <div class="trigger-card active" id="cardB">
+                <div class="trigger-header">
+                    <div>
+                        <h3 class="trigger-title">② VIP 승급 시스템 타겟팅</h3>
+                        <p class="trigger-desc">누적 방문 5회 이상 또는 5,000P 도달 시 즉시 VIP 특전(사이드 무료 제공권)을 지급합니다.</p>
+                    </div>
+                    <label class="toggle-switch"><input type="checkbox" checked onchange="toggleCard('cardB', this.checked)"><span class="slider"></span></label>
+                </div>
+                <button class="btn-run" onclick="runTrigger('vip')">▶ 수동 즉시 실행 (클라우드 스케줄러 시뮬레이션)</button>
+                <div class="log-box" id="logVip">... 대기 중 ...</div>
+            </div>
+            
+            <!-- External API Promo -->
+            <div class="trigger-card active" id="cardC" style="grid-column: 1 / -1;">
+                <div class="trigger-header">
+                    <div>
+                        <h3 class="trigger-title">③ 실시간 날씨 연동 프로모션 (외부 API)</h3>
+                        <p class="trigger-desc">OpenWeatherMap API 기반으로 강수/폭염 조건을 실시간 모니터링하여 프론트엔드 모바일 메뉴판에 맞춤형 특가 배너를 노출 및 변경합니다. (우천 시 파전 할인 배너 등)</p>
+                    </div>
+                    <button class="btn-primary" onclick="window.open('../customer-menu.html?storeId='+window.tenantId, '_blank')" style="background:#f59e0b; border:none; padding: 0.5rem 1rem; border-radius: 0.5rem; color:white; font-weight:600; cursor:pointer;">모바일 메뉴판 시뮬레이터 열기</button>
+                </div>
+                <p style="font-size:0.9rem; color:#475569; background:#f1f5f9; padding:1rem; border-radius:0.5rem; margin:0;">* Frontend 메뉴판에 서버리스 API(HTTP Fetch)로 이미 완벽하게 탑재되었습니다!</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="../assets/js/firebase-config.js"></script>
+    <script type="module">
+        import { db, auth } from '../assets/js/firebase-config.js';
+        import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
+        import { checkAdminAuth } from '../assets/js/auth.js';
+
+        window.toggleCard = (id, state) => {
+            if (state) document.getElementById(id).classList.add('active');
+            else document.getElementById(id).classList.remove('active');
+        };
+        
+        function appendLog(id, msg) {
+            const el = document.getElementById(id);
+            if (el.textContent.includes('대기 중')) el.textContent = '';
+            el.innerHTML += `> [${new Date().toLocaleTimeString()}] ${msg}<br>`;
+            el.scrollTop = el.scrollHeight;
+        }
+
+        window.runTrigger = async (type) => {
+            const logId = type === 'sleepers' ? 'logSleepers' : 'logVip';
+            appendLog(logId, '스케줄러 작업 시작: CRM 데이터 스캔 중...');
+            
+            try {
+                // My mentees
+                const q = query(collection(db, 'users'), where('mentorEmail', '==', window.currentUserEmail || auth.currentUser?.email || ''));
+                const snap = await getDocs(q);
+                
+                let updated = 0;
+                
+                snap.forEach(async (d) => {
+                    const ud = d.data();
+                    
+                    if (type === 'sleepers') {
+                        // Check if lastEventAt is older than 30 days
+                        if (ud.lastEventAt) {
+                            const diffT = new Date().getTime() - (ud.lastEventAt.toDate ? ud.lastEventAt.toDate() : ud.lastEventAt).getTime();
+                            const diffDays = diffT / (1000 * 3600 * 24);
+                            if (diffDays >= 30) {
+                                await updateDoc(doc(db, 'users', d.id), { marketing_welcomeback: true });
+                                appendLog(logId, `휴면 포착: ${ud.email || d.id} - 10% 복귀 쿠폰 발송 완료!`);
+                                updated++;
+                            }
+                        }
+                    } else if (type === 'vip') {
+                        // Check if points >= 5000 and not yet issued
+                        if ((ud.points || 0) >= 5000 && !ud.marketing_vip) {
+                            await updateDoc(doc(db, 'users', d.id), { marketing_vip: true });
+                            appendLog(logId, `VIP 진입 포착: ${ud.email || d.id} - 무료 사이드 쿠폰 발송 완료!`);
+                            updated++;
+                        }
+                    }
+                });
+                
+                setTimeout(() => {
+                    if (updated === 0) appendLog(logId, '트리거 처리 완료 - 발송 대상이 없습니다.');
+                    else appendLog(logId, `처리 완료 - 총 ${updated}명에게 혜택 발송됨.`);
+                }, 1500);
+                
+            } catch (e) {
+                appendLog(logId, '오류 발생: ' + e.message);
+            }
+        };
+
+        checkAdminAuth((user) => { window.currentUserEmail = user.email; });
+    </script>
+</body>
+</html>

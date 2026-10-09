@@ -1,0 +1,78 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마케팅 자동화 트리거 - AI M-SaaS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/index.css">
+    <style>.grid-2{grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:1.5rem;display:grid}.trigger-card{background:#fff;border:1px solid #e2e8f0;border-radius:1rem;padding:2rem;position:relative;overflow:hidden;box-shadow:0 4px 6px -1px #0000000d}.trigger-card:before{content:"";background:#cbd5e1;width:4px;transition:background .3s;position:absolute;top:0;bottom:0;left:0}.trigger-card.active:before{background:#4f46e5}.trigger-header{justify-content:space-between;align-items:flex-start;margin-bottom:1rem;display:flex}.trigger-title{color:#1e293b;margin:0;font-size:1.25rem;font-weight:700}.trigger-desc{color:#64748b;margin-top:.4rem;font-size:.9rem;line-height:1.5}.toggle-switch{width:44px;height:24px;display:inline-block;position:relative}.toggle-switch input{opacity:0;width:0;height:0}.slider{cursor:pointer;background-color:#cbd5e1;border-radius:24px;transition:all .3s;position:absolute;inset:0}.slider:before{content:"";background-color:#fff;border-radius:50%;width:18px;height:18px;transition:all .3s;position:absolute;bottom:3px;left:3px}input:checked+.slider{background-color:#4f46e5}input:checked+.slider:before{transform:translate(20px)}.btn-run{color:#fff;cursor:pointer;background:#10b981;border:none;border-radius:.5rem;width:100%;padding:.6rem 1rem;font-weight:600;transition:all .2s}.btn-run:hover{background:#059669}.log-box{color:#a7f3d0;background:#0f172a;border-radius:.5rem;height:120px;margin-top:1rem;padding:1rem;font-family:monospace;font-size:.85rem;overflow-y:auto}.top-nav ul{align-items:center;gap:1rem;margin:0;padding:0;list-style:none;display:flex}.dropdown{display:inline-block;position:relative}.dropdown-content{z-index:1000;background-color:#fff;border:1px solid #e2e8f0;border-radius:.5rem;min-width:180px;display:none;position:absolute;top:100%;left:0;box-shadow:0 10px 25px #0000001a}.dropdown-content a{white-space:nowrap;border-bottom:1px solid #f1f5f9;font-size:.95rem;font-weight:500;text-decoration:none;display:block;color:#334155!important;padding:.8rem 1rem!important}.dropdown-content a:hover{background-color:#f8fafc;color:#4f46e5!important;padding-left:1.25rem!important}.dropdown:hover .dropdown-content{display:block}.dropbtn{color:#475569;cursor:pointer;border-radius:.5rem;padding:.5rem .75rem;font-weight:600;display:inline-block}</style>
+  <script type="module" crossorigin src="/assets/admin_marketing-AqcfipCF.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/firebase-config-BYplozKK.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-CRbH8qNP.js">
+  <link rel="stylesheet" crossorigin href="/assets/admin-x1XGuNl0.css">
+</head>
+<body class="admin-body">
+    <nav class="top-nav" style="background:#fff; padding: 1rem 2rem; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;" onclick="location.href='dashboard.html'">
+            <h1 style="color:var(--ai-primary); margin:0; font-size:1.5rem; font-weight:800;"><span style="color:#ef4444;">BEST</span> M-SaaS</h1>
+        </div>
+        <ul>
+            <li><a href="dashboard.html">CEO 대시보드</a></li>
+            <li class="dropdown"><span class="dropbtn">매장 관리(F&B) ▾</span>
+                <div class="dropdown-content"><a href="menus.html">스마트 메뉴 관리</a></div>
+            </li>
+            <li class="dropdown"><span class="dropbtn" style="color:#4F46E5; background:rgba(79,70,229,0.05);">고객/회원관리 ▾</span>
+                <div class="dropdown-content"><a href="clients.html">멘티(고객) CRM</a><a href="users.html">SaaS 회원관리</a><a href="marketing.html" style="color:#4F46E5!important;">자동 마케팅(트리거)</a></div>
+            </li>
+        </ul>
+        <div id="navUserEmail" style="display:none;"></div>
+    </nav>
+
+    <div class="admin-container" style="max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem;">
+        <h2 style="font-size: 1.8rem; font-weight: 800; color: #1e293b; margin:0;">🚀 마케팅 자동화 엔진 (Phase 3)</h2>
+        <p style="color: #64748b; margin-top: 0.5rem;">조건에 맞는(Trigger) 고객을 24시간 필터링하여 자동으로 쿠폰이나 혜택을 푸시합니다.</p>
+
+        <div class="grid-2">
+            <!-- Trigger 1 -->
+            <div class="trigger-card active" id="cardA">
+                <div class="trigger-header">
+                    <div>
+                        <h3 class="trigger-title">① 웰컴백(Welcome Back) 트리거</h3>
+                        <p class="trigger-desc">30일 이상 미방문&미결제 고객을 휴면고객으로 분류하고 복귀 유도 10% 쿠폰을 자동 발송합니다.</p>
+                    </div>
+                    <label class="toggle-switch"><input type="checkbox" checked onchange="toggleCard('cardA', this.checked)"><span class="slider"></span></label>
+                </div>
+                <button class="btn-run" onclick="runTrigger('sleepers')">▶ 수동 즉시 실행 (클라우드 스케줄러 시뮬레이션)</button>
+                <div class="log-box" id="logSleepers">... 대기 중 ...</div>
+            </div>
+
+            <!-- Trigger 2 -->
+            <div class="trigger-card active" id="cardB">
+                <div class="trigger-header">
+                    <div>
+                        <h3 class="trigger-title">② VIP 승급 시스템 타겟팅</h3>
+                        <p class="trigger-desc">누적 방문 5회 이상 또는 5,000P 도달 시 즉시 VIP 특전(사이드 무료 제공권)을 지급합니다.</p>
+                    </div>
+                    <label class="toggle-switch"><input type="checkbox" checked onchange="toggleCard('cardB', this.checked)"><span class="slider"></span></label>
+                </div>
+                <button class="btn-run" onclick="runTrigger('vip')">▶ 수동 즉시 실행 (클라우드 스케줄러 시뮬레이션)</button>
+                <div class="log-box" id="logVip">... 대기 중 ...</div>
+            </div>
+            
+            <!-- External API Promo -->
+            <div class="trigger-card active" id="cardC" style="grid-column: 1 / -1;">
+                <div class="trigger-header">
+                    <div>
+                        <h3 class="trigger-title">③ 실시간 날씨 연동 프로모션 (외부 API)</h3>
+                        <p class="trigger-desc">OpenWeatherMap API 기반으로 강수/폭염 조건을 실시간 모니터링하여 프론트엔드 모바일 메뉴판에 맞춤형 특가 배너를 노출 및 변경합니다. (우천 시 파전 할인 배너 등)</p>
+                    </div>
+                    <button class="btn-primary" onclick="window.open('../customer-menu.html?storeId='+window.tenantId, '_blank')" style="background:#f59e0b; border:none; padding: 0.5rem 1rem; border-radius: 0.5rem; color:white; font-weight:600; cursor:pointer;">모바일 메뉴판 시뮬레이터 열기</button>
+                </div>
+                <p style="font-size:0.9rem; color:#475569; background:#f1f5f9; padding:1rem; border-radius:0.5rem; margin:0;">* Frontend 메뉴판에 서버리스 API(HTTP Fetch)로 이미 완벽하게 탑재되었습니다!</p>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
