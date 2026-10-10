@@ -71,9 +71,9 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                     status = '승인';
                     window.tenantId = 'system_master';
                 }
-                
+
                 let isMerchant = false;
-                
+
                 if (snap.exists()) {
                     const data = snap.data();
                     role = data.role || data.tier || 'GUEST';
@@ -82,9 +82,9 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
 
                     // Jumper Auth DB often uses role='ceo' (lowercase) or 'CEO'
                     if (role === 'ceo') role = 'CEO';
-                    
+
                     isMerchant = !!data.merchantId;
-                    
+
                     if (isMerchant) {
                         role = 'CEO';
                         position = '가맹점 대표';
@@ -93,19 +93,21 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
 
                     // Store tenant ID globally. Fallback to user email if missing
                     window.tenantId = data.merchantId || data.tenant_id || data.company_id || user.uid;
-                
-                // Fetch dynamic store name for Multi-tenant UI
-                try {
-                    const storeSnap = await getDoc(doc(db, 'stores', window.tenantId));
-                    if (storeSnap.exists() && storeSnap.data().storeName) {
-                        const sName = storeSnap.data().storeName;
+
+                    // Fetch dynamic store name for Multi-tenant UI
+                    let sName = data.merchantName || data.brandName || data.company_name || data.companyName || data.storeName || data.company || data.name || '미등록 가맹점';
+                    if (sName) {
                         window.currentStoreName = sName;
-                        // Attempt to update all possible top-left brand headers
-                        document.querySelectorAll('.dynamic-brand-text, #dynamicStoreName').forEach(el => {
-                            el.textContent = sName;
-                        });
+                        document.querySelectorAll('.dynamic-brand-text, #dynamicStoreName').forEach(el => el.textContent = sName);
                     }
-                } catch(err) { console.warn("Failed to load store branding", err); }
+                    try {
+                        const storeSnap = await getDoc(doc(db, 'stores', window.tenantId));
+                        if (storeSnap.exists() && storeSnap.data().storeName) {
+                            sName = storeSnap.data().storeName;
+                            window.currentStoreName = sName;
+                            document.querySelectorAll('.dynamic-brand-text, #dynamicStoreName').forEach(el => el.textContent = sName);
+                        }
+                    } catch (err) { console.warn("Failed to load store branding", err); }
                 }
 
                 // Global variables for RBAC

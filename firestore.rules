@@ -1,4 +1,4 @@
-﻿rules_version = '2';
+rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -10,6 +10,13 @@ service cloud.firestore {
     function getUserData() {
       let docPath = /databases/$(database)/documents/users/$(request.auth.uid);
       return exists(docPath) ? get(docPath).data : {"role": "EMPLOYEE"};
+    }
+
+    function isSuperAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email == 'daguri75@gmail.com' ||
+        getUserData().role == 'SUPER_ADMIN'
+      );
     }
 
     // CEO ?먮뒗 理쒓퀬愿由ъ옄 ?뺤씤 (daguri75@gmail.com? 臾댁“嫄??곸슜)
@@ -29,8 +36,9 @@ service cloud.firestore {
       );
     }
 
-    // 湲곕낯?곸쑝濡?CEO??紐⑤뱺 而щ젆?섏뿉???쎄린/?곌린/??젣 ?꾨꼍??沅뚰븳??媛吏?    match /{document=**} {
-      allow read, write: if isCEO();
+    // 湲곕낯?곸쑝濡?CEO??紐⑤뱺 而щ젆?섏뿉???쎄린/?곌린/??젣 ?꾨꼍??沅뚰븳??媛吏?    
+    match /{document=**} {
+      allow read, write: if isSuperAdmin();
     }
 
     // ?쇰컲 吏곸썝(Staff) ?댁긽??沅뚰븳
@@ -42,7 +50,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isAuthenticated();
       // ?먯떊 ?뺣낫 ?섏젙 ?덉슜 ?먮뒗 CEO
-      allow write: if request.auth.uid == userId || isCEO();
+      allow write: if request.auth.uid == userId || isSuperAdmin();
     }
     
     match /projects/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
