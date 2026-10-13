@@ -1,5 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,18 +13,25 @@
   <link rel="modulepreload" crossorigin href="/assets/auth-CRByYh-6.js">
   <link rel="stylesheet" crossorigin href="/assets/admin-x1XGuNl0.css">
 </head>
+
 <body class="admin-body">
-    <nav class="top-nav" style="position:relative; z-index:1000; overflow:visible; background:#fff; padding: 1rem 2rem; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
-        <div style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;" onclick="location.href='dashboard.html'">
-            <h1 style="color:var(--ai-primary); margin:0; font-size:1.5rem; font-weight:800;"><span style="color:#ef4444;">BEST</span> M-SaaS</h1>
+    <nav class="top-nav"
+        style="position:relative; z-index:1000; overflow:visible; background:#fff; padding: 1rem 2rem; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;"
+            onclick="location.href='dashboard.html'">
+            <h1 style="color:var(--ai-primary); margin:0; font-size:1.5rem; font-weight:800;"><span
+                    style="color:#ef4444;">BEST</span> M-SaaS</h1>
         </div>
         <ul>
             <li><a href="dashboard.html">CEO 대시보드</a></li>
-            <li class="dropdown"><span class="dropbtn" style="color:#4F46E5; background:rgba(79,70,229,0.05);">매장 관리(F&B) ▾</span>
-                <div class="dropdown-content"><a href="menus.html" style="color:#4F46E5!important;">스마트 메뉴 관리</a><a href="#">주문 현황 (준비중)</a></div>
+            <li class="dropdown"><span class="dropbtn" style="color:#4F46E5; background:rgba(79,70,229,0.05);"
+                    onclick="location.href='menus.html'">매장 관리(F&B) ▾</span>
+                <div class="dropdown-content"><a href="menus.html" style="color:#4F46E5!important;">스마트 메뉴 관리</a><a
+                        href="#">주문 현황 (준비중)</a></div>
             </li>
-            <li class="dropdown"><span class="dropbtn">고객/회원관리 ▾</span>
-                <div class="dropdown-content"><a href="clients.html">멘티(고객) CRM</a><a href="marketing.html">자동 마케팅(트리거)</a></div>
+            <li class="dropdown"><span class="dropbtn" onclick="location.href='clients.html'">고객/회원관리 ▾</span>
+                <div class="dropdown-content"><a href="clients.html">멘티(고객) CRM</a><a href="marketing.html">자동
+                        마케팅(트리거)</a></div>
             </li>
         </ul>
         <div id="navUserEmail" style="display:none;"></div>
@@ -33,50 +41,66 @@
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
                 <h2 style="font-size: 1.8rem; font-weight: 800; color: #1e293b; margin:0;">🍽️ 스마트 메뉴 관리 (Phase 1)</h2>
-                <p style="color: #64748b; margin-top: 0.5rem;">가맹점(Tenant)의 프론트 웹사이트와 모바일 오더 앱에 실시간으로 연동되는 메뉴 데이터베이스입니다.</p>
+                <p style="color: #64748b; margin-top: 0.5rem;">가맹점(Tenant)의 프론트 웹사이트와 모바일 오더 앱에 실시간으로 연동되는 메뉴 데이터베이스입니다.
+                </p>
             </div>
-            <button class="btn-primary" onclick="openMenuModal()" style="background:#4F46E5; border:none; padding:0.75rem 1.5rem; border-radius:0.5rem; color:white; font-weight:600; cursor:pointer;">+ 신규 메뉴 등록</button>
+            <button class="btn-primary" onclick="openMenuModal()"
+                style="background:#4F46E5; border:none; padding:0.75rem 1.5rem; border-radius:0.5rem; color:white; font-weight:600; cursor:pointer;">+
+                신규 메뉴 등록</button>
         </div>
 
         <!-- Filter -->
         <div style="margin-top:2rem; display:flex; gap:1rem; align-items:center;">
-            <select id="filterCategory" style="padding:0.75rem; border-radius:0.5rem; border:1px solid #e2e8f0; outline:none;" onchange="loadMenus()">
+            <select id="filterCategory"
+                style="padding:0.75rem; border-radius:0.5rem; border:1px solid #e2e8f0; outline:none;"
+                onchange="loadMenus()">
                 <option value="ALL">전체 카테고리</option>
                 <option value="소고기">🥩 소고기</option>
                 <option value="돼지고기">🥓 돼지고기</option>
                 <option value="식사/전골">🍲 식사/전골</option>
                 <option value="음료/주류">🍺 음료/주류</option>
             </select>
-            <input type="text" id="filterSearch" placeholder="메뉴명 검색..." style="padding:0.75rem 1rem; border:1px solid #e2e8f0; border-radius:0.5rem; outline:none; flex:1; max-width:300px;" oninput="loadMenus()">
+            <input type="text" id="filterSearch" placeholder="메뉴명 검색..."
+                style="padding:0.75rem 1rem; border:1px solid #e2e8f0; border-radius:0.5rem; outline:none; flex:1; max-width:300px;"
+                oninput="loadMenus()">
         </div>
 
         <div class="menu-grid" id="menuGrid">
             <!-- Menus injected here -->
         </div>
     </div>
-    
+
     <!-- Modal -->
-    <div class="modal" id="menuModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
-        <div class="modal-content" style="background:white; padding:2rem; border-radius:1rem; width:100%; max-width:500px;">
+    <div class="modal" id="menuModal"
+        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+        <div class="modal-content"
+            style="background:white; padding:2rem; border-radius:1rem; width:100%; max-width:500px;">
             <h2 id="modalTitle" style="margin:0 0 1.5rem 0;">신규 메뉴 등록</h2>
-            
+
             <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#334155;">메뉴 사진 (옵션)</label>
             <input type="file" id="mImageFile" accept="image/*" style="margin-bottom:1rem; width:100%;">
-            
-            <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#334155;">메뉴명 <span style="color:red">*</span></label>
-            <input type="text" id="mName" style="width:100%; padding:0.75rem; border:1px solid #e2e8f0; border-radius:0.5rem; margin-bottom:1rem; outline:none;" placeholder="예: 무쇠 짚불 삼겹살 (2인분)">
+
+            <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#334155;">메뉴명 <span
+                    style="color:red">*</span></label>
+            <input type="text" id="mName"
+                style="width:100%; padding:0.75rem; border:1px solid #e2e8f0; border-radius:0.5rem; margin-bottom:1rem; outline:none;"
+                placeholder="예: 무쇠 짚불 삼겹살 (2인분)">
 
             <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#334155;">메뉴 설명</label>
-            <textarea id="mDesc" style="width:100%; padding:0.75rem; border:1px solid #e2e8f0; border-radius:0.5rem; margin-bottom:1rem; outline:none; height:80px;"></textarea>
+            <textarea id="mDesc"
+                style="width:100%; padding:0.75rem; border:1px solid #e2e8f0; border-radius:0.5rem; margin-bottom:1rem; outline:none; height:80px;"></textarea>
 
             <div style="display:flex; gap:1rem; margin-bottom:1rem;">
                 <div style="flex:1;">
-                    <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#334155;">판매가 (VND/KRW) <span style="color:red">*</span></label>
-                    <input type="number" id="mPrice" style="width:100%; padding:0.75rem; border:1px solid #e2e8f0; border-radius:0.5rem; outline:none;">
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#334155;">판매가 (VND/KRW)
+                        <span style="color:red">*</span></label>
+                    <input type="number" id="mPrice"
+                        style="width:100%; padding:0.75rem; border:1px solid #e2e8f0; border-radius:0.5rem; outline:none;">
                 </div>
                 <div style="flex:1;">
                     <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#334155;">카테고리</label>
-                    <select id="mCategory" style="width:100%; padding:0.75rem; border:1px solid #e2e8f0; border-radius:0.5rem; outline:none;">
+                    <select id="mCategory"
+                        style="width:100%; padding:0.75rem; border:1px solid #e2e8f0; border-radius:0.5rem; outline:none;">
                         <option value="소고기">🥩 소고기</option>
                         <option value="돼지고기">🥓 돼지고기</option>
                         <option value="식사/전골">🍲 식사/전골</option>
@@ -85,7 +109,8 @@
                 </div>
             </div>
 
-            <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#334155;">스마트 마케팅 태그 (다중 선택)</label>
+            <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#334155;">스마트 마케팅 태그 (다중
+                선택)</label>
             <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.5rem;" id="mTags">
                 <label><input type="checkbox" value="HIT" class="tag-cb"> 🔥 HIT (인기)</label>
                 <label><input type="checkbox" value="REC" class="tag-cb"> 👍 추천</label>
@@ -93,11 +118,15 @@
             </div>
 
             <div style="display:flex; justify-content:flex-end; gap:1rem;">
-                <button onclick="document.getElementById('menuModal').style.display='none'" style="padding:0.75rem 1.5rem; border:none; background:#f1f5f9; border-radius:0.5rem; font-weight:600; cursor:pointer;">취소</button>
-                <button id="btnSaveMenu" style="padding:0.75rem 1.5rem; border:none; background:#4F46E5; color:white; border-radius:0.5rem; font-weight:600; cursor:pointer;">메뉴 등록</button>
+                <button onclick="document.getElementById('menuModal').style.display='none'"
+                    style="padding:0.75rem 1.5rem; border:none; background:#f1f5f9; border-radius:0.5rem; font-weight:600; cursor:pointer;">취소</button>
+                <button id="btnSaveMenu"
+                    style="padding:0.75rem 1.5rem; border:none; background:#4F46E5; color:white; border-radius:0.5rem; font-weight:600; cursor:pointer;">메뉴
+                    등록</button>
             </div>
         </div>
     </div>
 
 </body>
+
 </html>

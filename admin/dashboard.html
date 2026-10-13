@@ -1,5 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,50 +10,220 @@
     <link rel="stylesheet" href="../assets/css/admin.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
-        .stat-card { background: white; padding: 1.5rem; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-        .stat-card h3 { color: #64748b; font-size: 0.95rem; margin: 0 0 0.5rem 0; font-weight: 600; }
-        .stat-card .value { font-size: 1.8rem; font-weight: 800; color: #1e293b; margin: 0; }
-        .stat-card .trend { font-size: 0.85rem; font-weight: 600; margin-top: 0.5rem; display: inline-block; padding: 0.2rem 0.5rem; border-radius: 999px; }
-        .trend-up { background: #dcfce7; color: #166534; }
-        .trend-down { background: #fee2e2; color: #b91c1c; }
-        .trend-neutral { background: #f1f5f9; color: #475569; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
 
-        .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
-        .panel { background: white; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; padding: 1.5rem; }
-        .panel h2 { font-size: 1.2rem; font-weight: 800; color: #1e293b; margin: 0 0 1rem 0; }
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
 
-        .quick-menu-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #f1f5f9; }
-        .quick-menu-item:last-child { border-bottom: none; }
-        
-        .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
-        .toggle-switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 24px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
-        input:checked + .slider { background-color: #4F46E5; }
-        input:checked + .slider:before { transform: translateX(20px); }
+        .stat-card h3 {
+            color: #64748b;
+            font-size: 0.95rem;
+            margin: 0 0 0.5rem 0;
+            font-weight: 600;
+        }
 
-        .top-nav ul { display: flex; align-items: center; gap: 1rem; list-style: none; margin: 0; padding: 0; }
-        .dropdown { position: relative; display: inline-block; }
-        .dropdown-content { display: none; position: absolute; z-index: 9999; background-color: white; min-width: 180px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 0.5rem; border: 1px solid #e2e8f0; z-index: 1000; top:100%; left:0; }
-        .dropdown-content a { color: #334155 !important; padding: 0.8rem 1rem !important; text-decoration: none; display: block; font-size: 0.95rem; font-weight: 500; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
-        
-        div[onclick="changeStoreName()"] { opacity: 0.5; transition: opacity 0.2s; }
-        div[onclick="changeStoreName()"]:hover { opacity: 1; }
+        .stat-card .value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 0;
+        }
+
+        .stat-card .trend {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 999px;
+        }
+
+        .trend-up {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .trend-down {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .trend-neutral {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            padding: 1.5rem;
+        }
+
+        .panel h2 {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 0 0 1rem 0;
+        }
+
+        .quick-menu-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .quick-menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: .3s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: #4F46E5;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(20px);
+        }
+
+        .top-nav ul {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            z-index: 9999;
+            background-color: white;
+            min-width: 180px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0;
+            top: 100%;
+            left: 0;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .dropbtn {
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .dropdown-content a {
+            color: #334155 !important;
+            padding: 0.8rem 1rem !important;
+            text-decoration: none;
+            display: block;
+            font-size: 0.95rem;
+            font-weight: 500;
+            border-bottom: 1px solid #f1f5f9;
+            white-space: nowrap;
+        }
+
+        div[onclick="changeStoreName()"] {
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+
+        div[onclick="changeStoreName()"]:hover {
+            opacity: 1;
+        }
     </style>
 </head>
+
 <body class="admin-body">
-    <nav class="top-nav" style="position:relative; z-index:1000; overflow:visible; background:#fff; padding: 1rem 2rem; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+    <nav class="top-nav"
+        style="position:relative; z-index:1000; overflow:visible; background:#fff; padding: 1rem 2rem; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
         <div style="display:flex; align-items:center; gap:0.5rem;">
-            <h1 style="color:var(--ai-primary); margin:0; font-size:1.5rem; font-weight:800; cursor:pointer;" onclick="changeStoreName()" title="클릭하여 상호명 변경">
+            <h1 style="color:var(--ai-primary); margin:0; font-size:1.5rem; font-weight:800; cursor:pointer;"
+                onclick="changeStoreName()" title="클릭하여 상호명 변경">
                 <span style="color:#ef4444;" class="dynamic-brand-text" id="dynamicStoreName">가맹점(로딩중)</span>
-                <svg style="width:16px;height:16px;color:#94a3b8;display:inline;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                <svg style="width:16px;height:16px;color:#94a3b8;display:inline;" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
+                    </path>
+                </svg>
             </h1>
         </div>
         <ul>
             <li><a href="dashboard.html" style="color:#4F46E5!important; font-weight:700;">CEO 대시보드</a></li>
-            <li class="dropdown"><span class="dropbtn">매장 관리(F&B) ▾</span><div class="dropdown-content"><a href="menus.html">스마트 메뉴 관리</a></div></li>
-            <li class="dropdown"><span class="dropbtn">고객/회원관리 ▾</span><div class="dropdown-content"><a href="clients.html">멘티(고객) CRM</a><a href="marketing.html">자동 마케팅(트리거)</a></div></li>
+            <li class="dropdown"><span class="dropbtn" onclick="location.href='menus.html'">매장 관리(F&B) ▾</span>
+                <div class="dropdown-content"><a href="menus.html">스마트 메뉴 관리</a></div>
+            </li>
+            <li class="dropdown"><span class="dropbtn" onclick="location.href='clients.html'">고객/회원관리 ▾</span>
+                <div class="dropdown-content"><a href="clients.html">멘티(고객) CRM</a><a href="marketing.html">자동
+                        마케팅(트리거)</a></div>
+            </li>
         </ul>
         <div id="navUserEmail" style="display:none;"></div>
     </nav>
@@ -60,17 +231,35 @@
     <div class="admin-container" style="max-width: 1400px; margin: 2rem auto; padding: 0 1.5rem;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
             <h2 style="font-size: 1.8rem; font-weight: 800; color: #1e293b; margin:0;">📊 CEO 실시간 대시보드</h2>
-            <button onclick="cleanTestData()" style="background:#f1f5f9; border:1px solid #cbd5e1; color:#ef4444; padding:0.5rem 1rem; border-radius:0.5rem; font-weight:700; cursor:pointer; font-size:0.85rem;">테스트 데이터 전체 초기화</button>
+            <button onclick="cleanTestData()"
+                style="background:#f1f5f9; border:1px solid #cbd5e1; color:#ef4444; padding:0.5rem 1rem; border-radius:0.5rem; font-weight:700; cursor:pointer; font-size:0.85rem;">테스트
+                데이터 전체 초기화</button>
         </div>
 
         <div class="stats-grid">
-            <div class="stat-card"><h3>오늘 매출 (Real-time)</h3><p class="value" id="kpiSales">₫ 0</p><div class="trend trend-neutral">데이터 수집 대기중</div></div>
-            <div class="stat-card"><h3>총 메뉴 개수</h3><p class="value" id="kpiOrders">0 개</p><div class="trend trend-neutral">등록 대기중</div></div>
-            <div class="stat-card"><h3>관리 고객 수</h3><p class="value" id="kpiNewCustomers">0 명</p><div class="trend trend-neutral">이벤트 생성 대기중</div></div>
-            <div class="stat-card"><h3>확보된 리뷰/액션 포인트</h3><p class="value" id="kpiChurn" style="color:#10b981;">0 P</p><div style="font-size:0.8rem; color:#64748b; margin-top:0.5rem;">가맹점 리워드 풀</div></div>
+            <div class="stat-card">
+                <h3>오늘 매출 (Real-time)</h3>
+                <p class="value" id="kpiSales">₫ 0</p>
+                <div class="trend trend-neutral">데이터 수집 대기중</div>
+            </div>
+            <div class="stat-card">
+                <h3>총 메뉴 개수</h3>
+                <p class="value" id="kpiOrders">0 개</p>
+                <div class="trend trend-neutral">등록 대기중</div>
+            </div>
+            <div class="stat-card">
+                <h3>관리 고객 수</h3>
+                <p class="value" id="kpiNewCustomers">0 명</p>
+                <div class="trend trend-neutral">이벤트 생성 대기중</div>
+            </div>
+            <div class="stat-card">
+                <h3>확보된 리뷰/액션 포인트</h3>
+                <p class="value" id="kpiChurn" style="color:#10b981;">0 P</p>
+                <div style="font-size:0.8rem; color:#64748b; margin-top:0.5rem;">가맹점 리워드 풀</div>
+            </div>
         </div>
 
-        <div class="dashboard-grid">
+        <div class="dashboard-grid" style="grid-template-columns: repeat(3, 1fr);">
             <div class="panel">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
                     <h2>📈 고객 활동 추이 (실데이터 기반)</h2>
@@ -80,17 +269,34 @@
 
             <div class="panel">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
-                    <h2>🔥 등록 메뉴 즉시 통제</h2>
-                    <a href="menus.html" style="font-size:0.85rem; font-weight:700; color:#4F46E5; text-decoration:none;">메뉴 등록 →</a>
+                    <h2>🔥 등록 메뉴 (매장관리)</h2>
+                    <a href="menus.html"
+                        style="font-size:0.85rem; font-weight:700; color:#4F46E5; text-decoration:none;">메뉴 관리 전체보기
+                        →</a>
                 </div>
-                <div id="quickMenuControl"><p style="text-align:center; color:#94a3b8; font-size:0.9rem; padding:1rem;">아직 등록된 메뉴가 없습니다.</p></div>
+                <div id="quickMenuControl" style="max-height: 250px; overflow-y: auto;">
+                    <p style="text-align:center; color:#94a3b8; font-size:0.9rem; padding:1rem;">아직 등록된 메뉴가 없습니다.</p>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+                    <h2>👥 내 멘티 (고객관리)</h2>
+                    <a href="clients.html"
+                        style="font-size:0.85rem; font-weight:700; color:#4F46E5; text-decoration:none;">고객 관리 전체보기
+                        →</a>
+                </div>
+                <div id="quickClientControl" style="max-height: 250px; overflow-y: auto;">
+                    <p style="text-align:center; color:#94a3b8; font-size:0.9rem; padding:1rem;">아직 등록된 고객이 없습니다.</p>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- AI Chat (Same as Before but clean defaults) -->
     <!-- (truncated for brevity but retaining structure) -->
-    <div style="position:fixed; bottom:30px; right:30px; background:#4F46E5; color:white; width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.8rem; cursor:pointer; z-index:9999;" onclick="alert('AI 참모 활성화: 데이터가 충분히 쌓인 후 자동 분석이 지원됩니다.')">💡</div>
+    <div style="position:fixed; bottom:30px; right:30px; background:#4F46E5; color:white; width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.8rem; cursor:pointer; z-index:9999;"
+        onclick="alert('AI 참모 활성화: 데이터가 충분히 쌓인 후 자동 분석이 지원됩니다.')">💡</div>
 
     <script type="module" src="../assets/js/firebase-config.js"></script>
     <script type="module">
@@ -111,16 +317,47 @@
         async function loadDashboardData() {
             // Fetch real DB stats instead of hardcoded numbers
             try {
+                // Total Sales (Real-time) from merchant_orders
+                try {
+                    // Usually storeId or tenantId is used. 
+                    let oSnap = await getDocs(query(collection(db, 'merchant_orders'), where('tenantId', '==', window.tenantId)));
+                    if (oSnap.empty) {
+                        // Fallback check if it was saved under storeId
+                        oSnap = await getDocs(query(collection(db, 'merchant_orders'), where('storeId', '==', window.tenantId)));
+                    }
+
+                    let totalSales = 0;
+                    oSnap.forEach(docSnap => {
+                        const o = docSnap.data();
+                        // Ignore cancelled orders if status exists
+                        if (o.status !== '취소' && o.status !== 'cancelled') {
+                            totalSales += (Number(o.totalAmount || o.amount || 0));
+                        }
+                    });
+
+                    document.getElementById('kpiSales').textContent = `₫ ${totalSales.toLocaleString()}`;
+                    const trend = document.getElementById('kpiSales').nextElementSibling;
+                    if (trend && totalSales > 0) {
+                        trend.textContent = `${oSnap.size} 건 결제완료`;
+                        trend.className = 'trend trend-up';
+                    } else if (trend) {
+                        trend.textContent = `결제 내역 없음`;
+                        trend.className = 'trend trend-neutral';
+                    }
+                } catch (err) {
+                    console.warn("매출 데이터 로딩 에러:", err);
+                }
+
                 // Total Menus
                 const mSnap = await getDocs(query(collection(db, 'menus'), where('tenantId', '==', window.tenantId)));
                 document.getElementById('kpiOrders').textContent = `${mSnap.size} 개`;
-                
+
                 let menuHtml = '';
                 mSnap.forEach(docSnap => {
                     const m = docSnap.data();
                     const checked = m.status === '판매중' ? 'checked' : '';
                     menuHtml += `<div class="quick-menu-item">
-                        <div style="font-weight:700; color:#334155;">${m.name} <span style="font-size:0.8rem; color:#94a3b8;">(₫${Number(m.price||0).toLocaleString()})</span></div>
+                        <div style="font-weight:700; color:#334155;">${m.name} <span style="font-size:0.8rem; color:#94a3b8;">(₫${Number(m.price || 0).toLocaleString()})</span></div>
                         <div style="display:flex; align-items:center; gap:0.5rem;">
                             <span style="font-size:0.75rem; font-weight:700; color:${checked ? '#166534' : '#b91c1c'}">${checked ? '판매중' : '품절'}</span>
                             <label class="toggle-switch">
@@ -130,21 +367,37 @@
                         </div>
                     </div>`;
                 });
-                if(mSnap.size > 0) document.getElementById('quickMenuControl').innerHTML = menuHtml;
+                if (mSnap.size > 0) document.getElementById('quickMenuControl').innerHTML = menuHtml;
 
                 // Total Managed Customers (Where mentor is ME)
                 const cSnap = await getDocs(query(collection(db, 'users'), where('mentorEmail', '==', window.currentUserEmail)));
                 document.getElementById('kpiNewCustomers').textContent = `${cSnap.size} 명`;
-                
+
                 let totalP = 0;
-                cSnap.forEach(d => totalP += (d.data().points || 0));
+                let clientHtml = '';
+                cSnap.forEach(d => {
+                    const data = d.data();
+                    totalP += (data.points || 0);
+
+                    clientHtml += `<div class="quick-menu-item">
+                        <div style="font-weight:700; color:#334155;">${data.name || '미인증 회원'} <span style="font-size:0.8rem; color:#94a3b8;">(${data.email})</span></div>
+                        <div style="display:flex; align-items:center; gap:0.5rem;">
+                            <span style="font-size:0.75rem; font-weight:700; color:#10b981;">${(data.points || 0).toLocaleString()} P</span>
+                        </div>
+                    </div>`;
+                });
+
+                if (cSnap.size > 0) {
+                    document.getElementById('quickClientControl').innerHTML = clientHtml;
+                }
+
                 document.getElementById('kpiChurn').textContent = `${totalP.toLocaleString()} P`;
 
                 // Set Real Dynamic Brand Title
-                if(window.currentStoreName) {
+                if (window.currentStoreName) {
                     document.getElementById('dynamicStoreName').textContent = window.currentStoreName;
                 }
-            } catch(e) { console.error(e); }
+            } catch (e) { console.error(e); }
         }
 
         window.quickMenuToggle = async (id, isChecked) => {
@@ -171,7 +424,7 @@
         };
 
         window.cleanTestData = async () => {
-            if(!confirm('정말 현재 가맹점의 모든 데모 메뉴 데이터를 삭제하고 처음부터 시작하시겠습니까?')) return;
+            if (!confirm('정말 현재 가맹점의 모든 데모 메뉴 데이터를 삭제하고 처음부터 시작하시겠습니까?')) return;
             try {
                 const snap = await getDocs(query(collection(db, 'menus'), where('tenantId', '==', window.tenantId)));
                 const deletes = [];
@@ -179,10 +432,11 @@
                 await Promise.all(deletes);
                 alert('모든 가라(초기화) 데이터가 삭제되었습니다! 클린 상태에서 가이드를 따라주세요.');
                 window.location.reload();
-            } catch(e) { alert(e.message); }
+            } catch (e) { alert(e.message); }
         }
 
         checkAdminAuth((user) => { window.currentUserEmail = user.email; loadDashboardData(); });
     </script>
 </body>
+
 </html>

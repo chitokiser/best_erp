@@ -1,5 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,18 +13,24 @@
   <link rel="modulepreload" crossorigin href="/assets/auth-CRByYh-6.js">
   <link rel="stylesheet" crossorigin href="/assets/admin-x1XGuNl0.css">
 </head>
+
 <body class="admin-body">
-    <nav class="top-nav" style="position:relative; z-index:1000; overflow:visible; background:#fff; padding: 1rem 2rem; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
-        <div style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;" onclick="location.href='dashboard.html'">
-            <h1 style="color:var(--ai-primary); margin:0; font-size:1.5rem; font-weight:800;"><span style="color:#ef4444;">BEST</span> M-SaaS</h1>
+    <nav class="top-nav"
+        style="position:relative; z-index:1000; overflow:visible; background:#fff; padding: 1rem 2rem; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;"
+            onclick="location.href='dashboard.html'">
+            <h1 style="color:var(--ai-primary); margin:0; font-size:1.5rem; font-weight:800;"><span
+                    style="color:#ef4444;">BEST</span> M-SaaS</h1>
         </div>
         <ul>
             <li><a href="dashboard.html">CEO 대시보드</a></li>
-            <li class="dropdown"><span class="dropbtn">매장 관리(F&B) ▾</span>
+            <li class="dropdown"><span class="dropbtn" onclick="location.href='menus.html'">매장 관리(F&B) ▾</span>
                 <div class="dropdown-content"><a href="menus.html">스마트 메뉴 관리</a></div>
             </li>
-            <li class="dropdown"><span class="dropbtn" style="color:#4F46E5; background:rgba(79,70,229,0.05);">고객/회원관리 ▾</span>
-                <div class="dropdown-content"><a href="clients.html" style="color:#4F46E5!important;">멘티(고객) CRM</a><a href="marketing.html">자동 마케팅(트리거)</a></div>
+            <li class="dropdown"><span class="dropbtn" style="color:#4F46E5; background:rgba(79,70,229,0.05);"
+                    onclick="location.href='clients.html'">고객/회원관리 ▾</span>
+                <div class="dropdown-content"><a href="clients.html" style="color:#4F46E5!important;">멘티(고객) CRM</a><a
+                        href="marketing.html">자동 마케팅(트리거)</a></div>
             </li>
         </ul>
         <div id="navUserEmail" style="display:none;"></div>
@@ -32,12 +39,17 @@
     <div class="admin-container" style="max-width: 1400px; margin: 2rem auto; padding: 0 1.5rem;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-                <h2 style="font-size: 1.8rem; font-weight: 800; color: #1e293b; margin:0;">👥 CRM 멤버십 및 게이미피케이션 (Phase 2)</h2>
+                <h2 style="font-size: 1.8rem; font-weight: 800; color: #1e293b; margin:0;">👥 CRM 멤버십 및 게이미피케이션 (Phase
+                    2)</h2>
                 <p style="color: #64748b; margin-top: 0.5rem;">가맹점 QR 이벤트를 통해 가입한 회원들의 누적 방문 및 잭팟 룰렛 P를 분석합니다.</p>
             </div>
             <div>
-                <button class="btn-primary" onclick="copyQRLink()" style="background:#f59e0b; border:none; padding: 0.75rem 1.5rem; border-radius: 0.5rem; color:white; font-weight:600; cursor:pointer; margin-right: 0.5rem;">QR 이벤트 주소 복사</button>
-                <button class="btn-primary" onclick="exportToCSV()" style="background:#10b981; border:none; padding: 0.75rem 1.5rem; border-radius: 0.5rem; color:white; font-weight:600; cursor:pointer;">엑셀 다운로드</button>
+                <button class="btn-primary" onclick="copyQRLink()"
+                    style="background:#f59e0b; border:none; padding: 0.75rem 1.5rem; border-radius: 0.5rem; color:white; font-weight:600; cursor:pointer; margin-right: 0.5rem;">QR
+                    이벤트 주소 복사</button>
+                <button class="btn-primary" onclick="exportToCSV()"
+                    style="background:#10b981; border:none; padding: 0.75rem 1.5rem; border-radius: 0.5rem; color:white; font-weight:600; cursor:pointer;">엑셀
+                    다운로드</button>
             </div>
         </div>
 
@@ -49,7 +61,9 @@
                     <option value="5000">VIP (5,000 P 이상)</option>
                     <option value="1000">일반 (1,000 P 이상)</option>
                 </select>
-                <button class="btn-primary" style="padding: 0.75rem 2rem; border:none; border-radius:0.5rem; background:#4F46E5; color:white; cursor:pointer;" onclick="renderMentees()">검색</button>
+                <button class="btn-primary"
+                    style="padding: 0.75rem 2rem; border:none; border-radius:0.5rem; background:#4F46E5; color:white; cursor:pointer;"
+                    onclick="renderMentees()">검색</button>
             </div>
 
             <table>
@@ -65,12 +79,14 @@
                     </tr>
                 </thead>
                 <tbody id="menteeTableBody">
-                    <tr><td colspan="7" style="text-align:center; padding:3rem; color:#64748b;">데이터를 불러오는 중입니다...</td></tr>
+                    <tr>
+                        <td colspan="7" style="text-align:center; padding:3rem; color:#64748b;">데이터를 불러오는 중입니다...</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
     </div>
-    
+
     <script>
         function copyQRLink() {
             const link = window.location.origin + '/qr-event.html?storeId=' + (window.tenantId || '');
@@ -79,4 +95,5 @@
         }
     </script>
 </body>
+
 </html>
