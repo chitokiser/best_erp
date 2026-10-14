@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 
 <head>
@@ -140,33 +140,63 @@
 </head>
 
 <body class="admin-body">
-    <nav class="top-nav"
-        style="position:relative; z-index:1000; overflow:visible; background:#fff; padding: 1rem 2rem; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
-        <div style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;"
-            onclick="location.href='dashboard.html'">
-            <h1 style="color:var(--ai-primary); margin:0; font-size:1.5rem; font-weight:800;"><span
-                    style="color:#ef4444;">BEST</span> M-SaaS</h1>
+        <nav class="top-nav">
+        <div class="nav-header-bar">
+            <div class="nav-brand">
+                <h1 class="brand-edit-badge" onclick="location.href='dashboard.html'" title="대시보드로 이동">
+                    <span style="color:#ef4444;" class="dynamic-brand-text" id="dynamicStoreName">가맹점(로딩중)</span>
+                    <span style="color:var(--text-primary); font-size:1.15rem; font-weight:700;">M-SaaS</span>
+                </h1>
+            </div>
+            <button class="mobile-nav-toggle" onclick="toggleNavMenu()" aria-label="메뉴 열기">
+                <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+                    <path d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
         </div>
-        <ul>
+
+        <ul id="navMenuList">
             <li><a href="dashboard.html">CEO 대시보드</a></li>
-            <li class="dropdown"><span class="dropbtn" onclick="location.href='menus.html'">매장 관리(F&B) ▾</span>
-                <div class="dropdown-content"><a href="menus.html">스마트 메뉴 관리</a></div>
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
+                <span class="dropbtn">매장 관리(F&B) ▾</span>
+                <div class="dropdown-content">
+                    <a href="menus.html">스마트 메뉴 관리</a>
+                </div>
             </li>
-            <li class="dropdown"><span class="dropbtn" style="color:#4F46E5; background:rgba(79,70,229,0.05);"
-                    onclick="location.href='clients.html'">고객/회원관리 ▾</span>
-                <div class="dropdown-content"><a href="clients.html" style="color:#4F46E5!important;">멘티(고객) CRM</a><a
-                        href="marketing.html">자동 마케팅(트리거)</a></div>
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
+                <span class="dropbtn">영업/프로젝트 ▾</span>
+                <div class="dropdown-content">
+                    <a href="projects.html">프로젝트 보드</a>
+                    <a href="materials.html">자재관리</a>
+                    <a href="suppliers.html">협력업체</a>
+                </div>
+            </li>
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
+                <span class="dropbtn">내부운영(HR) ▾</span>
+                <div class="dropdown-content">
+                    <a href="tasks.html">업무지시/보고</a>
+                    <a href="finance.html">재무/회계</a>
+                    <a href="employees.html">직원목록</a>
+                </div>
+            </li>
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
+                <span class="dropbtn">고객/회원관리 ▾</span>
+                <div class="dropdown-content">
+                    <a href="clients.html">멘티(고객) CRM</a>
+                    <a href="contacts.html">인맥(명함)</a>
+                    <a href="marketing.html">자동 마케팅(트리거)</a>
+                    <a href="users.html">SaaS 회원관리</a>
+                </div>
             </li>
         </ul>
         <div id="navUserEmail" style="display:none;"></div>
     </nav>
 
     <div class="admin-container" style="max-width: 1400px; margin: 2rem auto; padding: 0 1.5rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap:wrap; gap:1rem;">
             <div>
-                <h2 style="font-size: 1.8rem; font-weight: 800; color: #1e293b; margin:0;">👥 CRM 멤버십 및 게이미피케이션 (Phase
-                    2)</h2>
-                <p style="color: #64748b; margin-top: 0.5rem;">가맹점 QR 이벤트를 통해 가입한 회원들의 누적 방문 및 잭팟 룰렛 P를 분석합니다.</p>
+                <h2 style="font-size: 1.8rem; font-weight: 800; color: #1e293b; margin:0;">👥 통합 고객 & 멘티 CRM (Master Clients)</h2>
+                <p style="color: #64748b; margin-top: 0.5rem;">내 가맹점의 <strong>추천 멘티</strong>와 쇼핑몰에서 <strong>내 상품을 구매한 고객</strong>의 통합 실적 및 멤버십을 관리합니다.</p>
             </div>
             <div>
                 <button class="btn-primary" onclick="copyQRLink()"
@@ -179,36 +209,72 @@
         </div>
 
         <div class="crm-container">
-            <div class="search-bar">
-                <input type="text" id="CRM_search" placeholder="이름, 이메일 검색..." style="flex: 1;">
-                <select id="CRM_filterAmount">
-                    <option value="all">누적 P 포인트 전체</option>
+            <div class="search-bar" style="flex-wrap:wrap; gap:0.75rem;">
+                <select id="CRM_filterMerchant" style="font-weight:600; border:1px solid #cbd5e1; display:none;" onchange="renderMentees()">
+                    <option value="ALL">== 전체 가맹점 ==</option>
+                    <option value="1791605366">베스트위너 (1791605366)</option>
+                    <option value="1791002036">대한김치 (1791002036)</option>
+                </select>
+                <select id="CRM_filterRelation" onchange="renderMentees()" style="font-weight:500;">
+                    <option value="all">전체 고객 (멘티 + 구매고객)</option>
+                    <option value="buyer">🛍️ 내 상품 구매 고객만</option>
+                    <option value="mentee">👥 추천 멘티 회원만</option>
+                    <option value="both">🌟 멘티 & 구매고객 동시 (VIP)</option>
+                </select>
+                <select id="CRM_filterAmount" onchange="renderMentees()" style="font-weight:500;">
+                    <option value="all">포인트/실적 전체</option>
+                    <option value="purchased">상품 구매 이력 보유</option>
                     <option value="5000">VIP (5,000 P 이상)</option>
                     <option value="1000">일반 (1,000 P 이상)</option>
                 </select>
+                <input type="text" id="CRM_search" placeholder="이름, 이메일, 전화번호, 구매상품 검색..." style="flex:1; min-width:220px;" oninput="renderMentees()">
                 <button class="btn-primary"
-                    style="padding: 0.75rem 2rem; border:none; border-radius:0.5rem; background:#4F46E5; color:white; cursor:pointer;"
+                    style="padding: 0.75rem 2rem; border:none; border-radius:0.5rem; background:#4F46E5; color:white; cursor:pointer; font-weight:600;"
                     onclick="renderMentees()">검색</button>
             </div>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>회원 계정</th>
-                        <th>이름</th>
-                        <th>가입일/마지막 참여</th>
-                        <th>누적 획득 P💸</th>
-                        <th>회원 등급</th>
-                        <th>포인트 액션</th>
-                        <th>상세 구매</th>
-                    </tr>
-                </thead>
-                <tbody id="menteeTableBody">
-                    <tr>
-                        <td colspan="7" style="text-align:center; padding:3rem; color:#64748b;">데이터를 불러오는 중입니다...</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="min-width:130px;">회원 구분</th>
+                            <th style="min-width:190px;">회원 계정 (이메일/연락처)</th>
+                            <th style="min-width:110px;">이름</th>
+                            <th style="min-width:180px;">내 상품 구매 실적</th>
+                            <th style="min-width:110px;">누적 P💸</th>
+                            <th style="min-width:130px;">구매상세 내역</th>
+                        </tr>
+                    </thead>
+                    <tbody id="menteeTableBody">
+                        <tr>
+                            <td colspan="7" style="text-align:center; padding:3rem; color:#64748b;">데이터를 불러오는 중입니다...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 상세 구매 내역 모달 -->
+    <div id="orderDetailModal" class="modal"
+        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+        <div class="modal-content"
+            style="background:white; border-radius:1rem; padding:2rem; width:90%; max-width:650px; max-height:85vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:1rem; margin-bottom:1rem;">
+                <h3 id="orderModalTitle" style="margin:0; font-size:1.25rem; font-weight:700; color:#1e293b;">🛍️ 고객 상세 구매 내역</h3>
+                <button type="button" onclick="document.getElementById('orderDetailModal').style.display='none'"
+                    style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#94a3b8;">&times;</button>
+            </div>
+            <div id="orderModalCustomerInfo" style="margin-bottom:1.5rem; padding:1rem; background:#f8fafc; border-radius:0.5rem; font-size:0.9rem; color:#475569;">
+                <!-- 고객 요약 정보 -->
+            </div>
+            <div id="orderModalContent">
+                <!-- 주문 내역 목록 -->
+            </div>
+            <div style="display:flex; justify-content:flex-end; margin-top:1.5rem;">
+                <button type="button" onclick="document.getElementById('orderDetailModal').style.display='none'"
+                    style="padding:0.6rem 1.5rem; background:#e2e8f0; color:#334155; border:none; border-radius:0.5rem; font-weight:600; cursor:pointer;">닫기</button>
+            </div>
         </div>
     </div>
 

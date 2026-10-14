@@ -21,7 +21,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         if (userDoc.exists()) {
             currentUserInfo = { uid: user.uid, ...userDoc.data() };
-            document.getElementById('userInfo').innerText = `${currentUserInfo.name} (${currentUserInfo.role})`;
+            const uInfoEl = document.getElementById('userInfo');
+            if (uInfoEl) {
+                uInfoEl.innerText = `${currentUserInfo.name || user.email} (${currentUserInfo.role || 'CEO'})`;
+            }
 
             initTaskBoard();
         } else {

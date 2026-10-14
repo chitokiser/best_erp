@@ -280,31 +280,35 @@
         }
     }
 </style>
-    </head>
+        <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
     
 
 <body style="display: none;">
-    <nav class="top-nav">
-        <div class="logo-container" style="display:flex; align-items:center; justify-content:space-between; width:100%; margin-bottom:0;">
-    <div style="display:flex; align-items:center; gap:0.5rem; flex-shrink:0; cursor:pointer;" onclick="location.href='dashboard.html'">
-        <img src="../images/logo/logo.png" style="height: 28px;" onerror="this.style.display='none';">
-        <h1 style="margin:0; font-size: 1.3rem; color: #4F46E5; font-weight: 800; white-space:nowrap;">AI경영관리</h1>
-    </div>
-    <div class="mobile-only-btn" style="display:none; cursor:pointer;" onclick="document.querySelector('.top-nav').classList.toggle('menu-open')">
-        <svg viewBox="0 0 24 24" width="28" height="28" stroke="#4F46E5" stroke-width="2" fill="none"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
-    </div>
-</div>
-        <ul>
-            <li><a href="dashboard.html">대시보드</a></li>
-            <li class="dropdown">
-                <span class="dropbtn">내부운영(HR) ▾</span>
+        <nav class="top-nav">
+        <div class="nav-header-bar">
+            <div class="nav-brand">
+                <h1 class="brand-edit-badge" onclick="location.href='dashboard.html'" title="대시보드로 이동">
+                    <span style="color:#ef4444;" class="dynamic-brand-text" id="dynamicStoreName">가맹점(로딩중)</span>
+                    <span style="color:var(--text-primary); font-size:1.15rem; font-weight:700;">M-SaaS</span>
+                </h1>
+            </div>
+            <button class="mobile-nav-toggle" onclick="toggleNavMenu()" aria-label="메뉴 열기">
+                <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+                    <path d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+
+        <ul id="navMenuList">
+            <li><a href="dashboard.html">CEO 대시보드</a></li>
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
+                <span class="dropbtn">매장 관리(F&B) ▾</span>
                 <div class="dropdown-content">
-                    <a href="tasks.html">업무지시/보고</a>
-                    <a href="finance.html">재무/회계</a>
-                    <a href="employees.html">직원목록</a>
+                    <a href="menus.html">스마트 메뉴 관리</a>
                 </div>
             </li>
-            <li class="dropdown">
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
                 <span class="dropbtn">영업/프로젝트 ▾</span>
                 <div class="dropdown-content">
                     <a href="projects.html">프로젝트 보드</a>
@@ -312,19 +316,25 @@
                     <a href="suppliers.html">협력업체</a>
                 </div>
             </li>
-            <li class="dropdown">
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
+                <span class="dropbtn">내부운영(HR) ▾</span>
+                <div class="dropdown-content">
+                    <a href="tasks.html">업무지시/보고</a>
+                    <a href="finance.html">재무/회계</a>
+                    <a href="employees.html">직원목록</a>
+                </div>
+            </li>
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
                 <span class="dropbtn">고객/회원관리 ▾</span>
                 <div class="dropdown-content">
-                    <a href="clients.html">고객 리스트</a>
+                    <a href="clients.html">멘티(고객) CRM</a>
                     <a href="contacts.html">인맥(명함)</a>
+                    <a href="marketing.html">자동 마케팅(트리거)</a>
                     <a href="users.html">SaaS 회원관리</a>
                 </div>
             </li>
         </ul>
-        <div style="font-size: 0.85rem; text-align: right;">
-            <strong style="color:var(--ai-primary);" id="navUserEmailSpan">SUPER_ADMIN</strong><br>
-            최고 관리자 <a href="#" onclick="window.logoutAndRedirect()" style="color:#2563eb;">[로그아웃]</a>
-        </div>
+        <div id="navUserEmail" style="display:none;"></div>
     </nav>
 
     <div class="main-container">

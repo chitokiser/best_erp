@@ -178,101 +178,406 @@
             color: #92400e;
         }
 
-        /* Modal Styles */
+        /* Modal & Form Styles */
         .modal-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
+            inset: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(8px);
             display: none;
             justify-content: center;
             align-items: center;
-            z-index: 100;
+            z-index: 1000;
+            padding: 1rem;
+            box-sizing: border-box;
         }
 
         .modal-content {
-            background: white;
-            border-radius: 1rem;
-            padding: 2.5rem;
-            width: 600px;
-            max-width: 95%;
+            background: #ffffff;
+            border-radius: 1.25rem;
+            width: 720px;
+            max-width: 100%;
+            max-height: 92vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(226, 232, 240, 0.8);
+            animation: modalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow: hidden;
+        }
+
+        @keyframes modalPop {
+            from {
+                opacity: 0;
+                transform: scale(0.96) translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
 
         .modal-header {
+            padding: 1.5rem 2rem 1.25rem;
+            border-bottom: 1px solid #f1f5f9;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
+            align-items: flex-start;
+            background: #ffffff;
         }
 
-        .modal-header h3 {
+        .modal-header-titles h3 {
             margin: 0;
-            font-size: 1.4rem;
+            font-size: 1.35rem;
             font-weight: 800;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .modal-header-titles p {
+            margin: 0.25rem 0 0 0;
+            font-size: 0.875rem;
+            color: #64748b;
         }
 
         .close-btn {
-            background: none;
+            background: #f1f5f9;
             border: none;
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             cursor: pointer;
-            color: var(--text-muted);
+            color: #64748b;
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        .modal-body {
+            padding: 1.5rem 2rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* Type Segmented Cards */
+        .type-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .type-selector-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .type-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 0.85rem 0.6rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            background: #ffffff;
+            user-select: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+            position: relative;
+        }
+
+        .type-card:hover {
+            border-color: #cbd5e1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .type-card .icon {
+            font-size: 1.4rem;
+            margin-bottom: 0.15rem;
+        }
+
+        .type-card .title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .type-card .desc {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        /* Type Card Active States */
+        .type-card[data-type="INCOME"].active {
+            border-color: #10B981;
+            background: #ecfdf5;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+        }
+        .type-card[data-type="INCOME"].active .title {
+            color: #065f46;
+        }
+
+        .type-card[data-type="EXPENSE"].active {
+            border-color: #EF4444;
+            background: #fef2f2;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+        }
+        .type-card[data-type="EXPENSE"].active .title {
+            color: #991b1b;
+        }
+
+        .type-card[data-type="RECEIVABLE"].active {
+            border-color: #3B82F6;
+            background: #eff6ff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+        .type-card[data-type="RECEIVABLE"].active .title {
+            color: #1e40af;
+        }
+
+        .type-card[data-type="PAYABLE"].active {
+            border-color: #F59E0B;
+            background: #fffbeb;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+        }
+        .type-card[data-type="PAYABLE"].active .title {
+            color: #92400e;
+        }
+
+        /* Form Grid Layout */
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+            margin-bottom: 1.25rem;
         }
 
         .form-group {
             margin-bottom: 1.25rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-grid-2 .form-group {
+            margin-bottom: 0;
         }
 
         .form-group label {
-            display: block;
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: var(--text-dark);
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 0.45rem;
+            color: #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-group label .required-mark {
+            color: #ef4444;
+            font-weight: 800;
+            margin-left: 0.2rem;
         }
 
         .form-group input,
         .form-group select,
         .form-group textarea {
             width: 100%;
-            padding: 0.8rem;
-            border: 1px solid #cbd5e1;
-            border-radius: 0.5rem;
+            padding: 0.75rem 0.9rem;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 0.6rem;
             font-family: inherit;
-            font-size: 1rem;
+            font-size: 0.95rem;
             box-sizing: border-box;
+            background: #ffffff;
+            color: #0f172a;
+            transition: all 0.2s;
         }
 
-        .form-row {
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #4F46E5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+            outline: none;
+            background: #ffffff;
+        }
+
+        /* Amount Input & Quick Buttons */
+        .amount-input-wrapper {
+            position: relative;
+        }
+
+        .amount-input-wrapper input {
+            padding-right: 3.5rem;
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: #0f172a;
+        }
+
+        .amount-currency-tag {
+            position: absolute;
+            right: 0.85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #64748b;
+            pointer-events: none;
+        }
+
+        .amount-preview-badge {
+            display: none;
+            margin-top: 0.45rem;
+            padding: 0.35rem 0.65rem;
+            background: #eef2ff;
+            color: #4338ca;
+            border-radius: 0.4rem;
+            font-size: 0.825rem;
+            font-weight: 700;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .quick-amounts {
             display: flex;
-            gap: 1rem;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-top: 0.5rem;
         }
 
-        .form-row .form-group {
-            flex: 1;
-            margin-bottom: 1rem;
+        .btn-chip {
+            padding: 0.3rem 0.6rem;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.4rem;
+            font-size: 0.775rem;
+            font-weight: 600;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.15s;
+            user-select: none;
+        }
+
+        .btn-chip:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+            border-color: #cbd5e1;
+        }
+
+        .btn-chip.chip-reset {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+        .btn-chip.chip-reset:hover {
+            background: #fecaca;
+        }
+
+        /* Modal Footer */
+        .modal-footer {
+            padding: 1.25rem 2rem;
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            background: #f8fafc;
+        }
+
+        .btn-cancel {
+            background: #ffffff;
+            color: #64748b;
+            border: 1.5px solid #cbd5e1;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.6rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel:hover {
+            background: #f1f5f9;
+            color: #1e293b;
         }
 
         .submit-btn {
-            background: var(--text-dark);
+            background: var(--ai-gradient, linear-gradient(135deg, #4F46E5, #7C3AED));
             color: white;
-            width: 100%;
-            padding: 1rem;
+            padding: 0.75rem 2rem;
             border: none;
-            border-radius: 0.5rem;
+            border-radius: 0.6rem;
             font-weight: 700;
-            font-size: 1.1rem;
-            margin-top: 1rem;
+            font-size: 1rem;
             cursor: pointer;
-            transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
         .submit-btn:hover {
-            background: var(--ai-primary);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
         }
 
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Mobile Responsive Adjustments */
+        @media screen and (max-width: 640px) {
+            .modal-content {
+                width: 100%;
+                border-radius: 1rem;
+            }
+            .modal-header {
+                padding: 1.25rem 1.25rem 1rem;
+            }
+            .modal-body {
+                padding: 1.25rem;
+            }
+            .modal-footer {
+                padding: 1rem 1.25rem;
+            }
+            .type-selector-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.5rem;
+            }
+            .form-grid-2 {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            .modal-footer {
+                flex-direction: column-reverse;
+            }
+            .btn-cancel, .submit-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        
         .top-nav {
             background: white;
             padding: 1rem 2rem;
@@ -356,31 +661,35 @@
         }
     }
 </style>
-    </head>
+        <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
     
 
 <body style="display: none;">
-    <nav class="top-nav">
-        <div class="logo-container" style="display:flex; align-items:center; justify-content:space-between; width:100%; margin-bottom:0;">
-    <div style="display:flex; align-items:center; gap:0.5rem; flex-shrink:0; cursor:pointer;" onclick="location.href='dashboard.html'">
-        <img src="../images/logo/logo.png" style="height: 28px;" onerror="this.style.display='none';">
-        <h1 style="margin:0; font-size: 1.3rem; color: #4F46E5; font-weight: 800; white-space:nowrap;">AI경영관리</h1>
-    </div>
-    <div class="mobile-only-btn" style="display:none; cursor:pointer;" onclick="document.querySelector('.top-nav').classList.toggle('menu-open')">
-        <svg viewBox="0 0 24 24" width="28" height="28" stroke="#4F46E5" stroke-width="2" fill="none"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
-    </div>
-</div>
-        <ul>
-            <li><a href="dashboard.html">대시보드</a></li>
-            <li class="dropdown">
-                <span class="dropbtn">내부운영(HR) ▾</span>
+        <nav class="top-nav">
+        <div class="nav-header-bar">
+            <div class="nav-brand">
+                <h1 class="brand-edit-badge" onclick="location.href='dashboard.html'" title="대시보드로 이동">
+                    <span style="color:#ef4444;" class="dynamic-brand-text" id="dynamicStoreName">가맹점(로딩중)</span>
+                    <span style="color:var(--text-primary); font-size:1.15rem; font-weight:700;">M-SaaS</span>
+                </h1>
+            </div>
+            <button class="mobile-nav-toggle" onclick="toggleNavMenu()" aria-label="메뉴 열기">
+                <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+                    <path d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+
+        <ul id="navMenuList">
+            <li><a href="dashboard.html">CEO 대시보드</a></li>
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
+                <span class="dropbtn">매장 관리(F&B) ▾</span>
                 <div class="dropdown-content">
-                    <a href="tasks.html">업무지시/보고</a>
-                    <a href="finance.html">재무/회계</a>
-                    <a href="employees.html">직원목록</a>
+                    <a href="menus.html">스마트 메뉴 관리</a>
                 </div>
             </li>
-            <li class="dropdown">
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
                 <span class="dropbtn">영업/프로젝트 ▾</span>
                 <div class="dropdown-content">
                     <a href="projects.html">프로젝트 보드</a>
@@ -388,19 +697,25 @@
                     <a href="suppliers.html">협력업체</a>
                 </div>
             </li>
-            <li class="dropdown">
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
+                <span class="dropbtn">내부운영(HR) ▾</span>
+                <div class="dropdown-content">
+                    <a href="tasks.html">업무지시/보고</a>
+                    <a href="finance.html">재무/회계</a>
+                    <a href="employees.html">직원목록</a>
+                </div>
+            </li>
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
                 <span class="dropbtn">고객/회원관리 ▾</span>
                 <div class="dropdown-content">
-                    <a href="clients.html">고객 리스트</a>
+                    <a href="clients.html">멘티(고객) CRM</a>
                     <a href="contacts.html">인맥(명함)</a>
+                    <a href="marketing.html">자동 마케팅(트리거)</a>
                     <a href="users.html">SaaS 회원관리</a>
                 </div>
             </li>
         </ul>
-        <div style="font-size: 0.85rem; text-align: right;">
-            <strong style="color:var(--ai-primary, #4F46E5);" id="navUserEmailSpan">SUPER_ADMIN</strong><br>
-            최고 관리자 <a href="#" onclick="window.logoutAndRedirect()" style="color:#2563eb;">[로그아웃]</a>
-        </div>
+        <div id="navUserEmail" style="display:none;"></div>
     </nav>
 
     <div class="main-container">
@@ -450,66 +765,122 @@
     </div>
 
     <!-- Add Finance Modal -->
-    <div class="modal-overlay" id="financeModal">
+    <div class="modal-overlay" id="financeModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>재무 기록 추가</h3>
-                <button class="close-btn" id="closeModalBtn">&times;</button>
+                <div class="modal-header-titles">
+                    <h3 id="modalTitle">💳 재무 거래 내역 등록</h3>
+                    <p>수입, 지출 및 미수/미지급 내역을 체계적으로 기록합니다.</p>
+                </div>
+                <button type="button" class="close-btn" id="closeModalBtn" title="닫기 (ESC)">&times;</button>
             </div>
             <form id="financeForm">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>돈의 성격 (유형)</label>
-                        <select id="finType" required>
-                            <option value="INCOME">📈 수입 (입금 완료)</option>
-                            <option value="EXPENSE">📉 지출 (출금 완료)</option>
-                            <option value="RECEIVABLE">📥 받을 돈 (수입 예정/미수금)</option>
-                            <option value="PAYABLE">📤 줄 돈 (지출 예정/미지급금)</option>
+                <div class="modal-body">
+                    <!-- Type Selection Segmented Cards -->
+                    <div>
+                        <label class="type-label">거래 성격 (유형)<span class="required-mark" style="color:#ef4444;"> *</span></label>
+                        <select id="finType" required style="display:none;">
+                            <option value="INCOME">수입</option>
+                            <option value="EXPENSE">지출</option>
+                            <option value="RECEIVABLE">받을 돈</option>
+                            <option value="PAYABLE">줄 돈</option>
                         </select>
+                        <div class="type-selector-grid" id="typeSelectorGrid">
+                            <div class="type-card active" data-type="INCOME">
+                                <span class="icon">📈</span>
+                                <span class="title">수입</span>
+                                <span class="desc">입금 완료</span>
+                            </div>
+                            <div class="type-card" data-type="EXPENSE">
+                                <span class="icon">📉</span>
+                                <span class="title">지출</span>
+                                <span class="desc">출금 완료</span>
+                            </div>
+                            <div class="type-card" data-type="RECEIVABLE">
+                                <span class="icon">📥</span>
+                                <span class="title">받을 돈</span>
+                                <span class="desc">미수금/예정</span>
+                            </div>
+                            <div class="type-card" data-type="PAYABLE">
+                                <span class="icon">📤</span>
+                                <span class="title">줄 돈</span>
+                                <span class="desc">미지급금/예정</span>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- Row 1: Date & Amount -->
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="finDate">발생/예정 일자 <span class="required-mark">*</span></label>
+                            <input type="date" id="finDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="finAmount">금액 <span class="required-mark">*</span></label>
+                            <div class="amount-input-wrapper">
+                                <input type="number" id="finAmount" required placeholder="0" min="0" step="1000">
+                                <span class="amount-currency-tag">VND</span>
+                            </div>
+                            <div id="amountPreviewBadge" class="amount-preview-badge">
+                                <span>💰</span>
+                                <span id="amountPreviewText">0 VND</span>
+                            </div>
+                            <div class="quick-amounts">
+                                <button type="button" class="btn-chip" data-add="100000">+10만</button>
+                                <button type="button" class="btn-chip" data-add="500000">+50만</button>
+                                <button type="button" class="btn-chip" data-add="1000000">+100만</button>
+                                <button type="button" class="btn-chip" data-add="5000000">+500만</button>
+                                <button type="button" class="btn-chip" data-add="10000000">+1,000만</button>
+                                <button type="button" class="btn-chip" data-add="50000000">+5,000만</button>
+                                <button type="button" class="btn-chip chip-reset" id="btnResetAmount">초기화</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Category & Partner -->
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="finCategory">항목 분류 <span class="required-mark">*</span></label>
+                            <input type="text" id="finCategory" placeholder="예: 인건비, 임대료, 외상대금, 자재비" required list="catList">
+                            <datalist id="catList">
+                                <option value="자재비/원가"></option>
+                                <option value="인건비/급여"></option>
+                                <option value="임대료/공과금"></option>
+                                <option value="외주/용역비"></option>
+                                <option value="장비대여료"></option>
+                                <option value="영업/운영경비"></option>
+                                <option value="외상대금상환"></option>
+                                <option value="식자재/원부자재"></option>
+                                <option value="매장 매출(F&B)"></option>
+                                <option value="공사/프로젝트 수금"></option>
+                            </datalist>
+                        </div>
+                        <div class="form-group">
+                            <label for="finPartner">관련 거래처 (고객 / 협력사)</label>
+                            <input type="text" id="finPartner" placeholder="예: 베스트인테리어, 홍길동 고객">
+                        </div>
+                    </div>
+
+                    <!-- Row 3: Project -->
                     <div class="form-group">
-                        <label>발생/예정 일자</label>
-                        <input type="date" id="finDate" required>
+                        <label for="finProject">관련 프로젝트 (선택)</label>
+                        <input type="text" id="finProject" placeholder="예: 강남점 인테리어 공사, 1호점 오픈">
+                    </div>
+
+                    <!-- Row 4: Memo -->
+                    <div class="form-group">
+                        <label for="finMemo">적요 (상세 내용)</label>
+                        <textarea id="finMemo" rows="2" placeholder="예: 1차 중도금 수령, 바닥 타일 자재 대금 지급 등"></textarea>
                     </div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>항목 분류</label>
-                        <input type="text" id="finCategory" placeholder="예: 인건비, 임대료, 외상대금, 자재비" required
-                            list="catList">
-                        <datalist id="catList">
-                            <option value="자재비/원가"></option>
-                            <option value="인건비/급여"></option>
-                            <option value="임대료/공과금"></option>
-                            <option value="외주/용역비"></option>
-                            <option value="장비대여료"></option>
-                            <option value="영업/운영경비"></option>
-                            <option value="외상대금상환"></option>
-                        </datalist>
-                    </div>
-                    <div class="form-group">
-                        <label>금액 (VND)</label>
-                        <input type="number" id="finAmount" required placeholder="예: 5000000">
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>관련 거래처 (고객/협력사)</label>
-                            <input type="text" id="finPartner" placeholder="예: 삼성물산">
-                        </div>
-                        <div class="form-group">
-                            <label>관련 프로젝트</label>
-                            <input type="text" id="finProject" placeholder="예: A구역 인테리어">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>적요 (상세 내용)</label>
-                        <textarea id="finMemo" rows="2" placeholder="예: 1차 중도금 수령, 자재 대금 지급 등"></textarea>
-                    </div>
-
-                    <button type="submit" class="submit-btn" id="btnSubmit">저장하기</button>
+                <!-- Footer Action Buttons -->
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" id="btnCancelModal">취소</button>
+                    <button type="submit" class="submit-btn" id="btnSubmit">
+                        <span>저장하기</span>
+                    </button>
+                </div>
             </form>
         </div>
     </div>

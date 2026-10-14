@@ -19,86 +19,89 @@ service cloud.firestore {
       );
     }
 
-    // CEO ?먮뒗 理쒓퀬愿由ъ옄 ?뺤씤 (daguri75@gmail.com? 臾댁“嫄??곸슜)
+    // CEO 또는 최고관리자 확인 (daguri75@gmail.com, hexttokenopbnb@gmail.com, 가맹점주 포함)
     function isCEO() {
       return isAuthenticated() && (
-        request.auth.token.email == 'daguri75@gmail.com' ||
-        getUserData().role == 'SUPER_ADMIN' || 
-        getUserData().role == 'CEO'
+        request.auth.token.email in ['daguri75@gmail.com', 'hexttokenopbnb@gmail.com'] ||
+        getUserData().role in ['SUPER_ADMIN', 'CEO', 'ceo', 'FRANCHISE', 'franchise', 'MERCHANT', 'merchant'] ||
+        getUserData().merchantId != null ||
+        getUserData().is_merchant_applicant == true
       );
     }
     
-    // ?쇰컲 吏곸썝/愿由ъ옄 ?댁긽 (?곌린 沅뚰븳??
+    // 일반 직원/관리자 이상 (쓰기 권한)
     function isStaff() {
       return isAuthenticated() && (
-        request.auth.token.email == 'daguri75@gmail.com' ||
-        getUserData().role in ['SUPER_ADMIN', 'CEO', 'ADMIN', 'STAFF']
+        request.auth.token.email in ['daguri75@gmail.com', 'hexttokenopbnb@gmail.com'] ||
+        getUserData().role in ['SUPER_ADMIN', 'CEO', 'ceo', 'ADMIN', 'admin', 'STAFF', 'staff', 'FRANCHISE', 'franchise', 'MERCHANT', 'merchant'] ||
+        getUserData().merchantId != null ||
+        getUserData().is_merchant_applicant == true
       );
     }
 
-    // 湲곕낯?곸쑝濡?CEO??紐⑤뱺 而щ젆?섏뿉???쎄린/?곌린/??젣 ?꾨꼍??沅뚰븳??媛吏?    
+    // 기본적으로 최고관리자는 모든 컬렉션에서 읽기/쓰기/삭제 전능한 권한을 가짐    
     match /{document=**} {
       allow read, write: if isSuperAdmin();
     }
 
-    // ?쇰컲 吏곸썝(Staff) ?댁긽??沅뚰븳
-    match /materials/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
-    match /suppliers/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
-    match /priceHistory/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
-    match /externalPrices/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+    // Stores / Brands (Multi-tenant 상점 정보)
+    match /stores/{storeId} {
+      allow read: if true;
+      allow write: if isCEO() || isStaff();
+    }
+
+    // 일반 직원(Staff) 이상의 권한
+    match /materials/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff() || isCEO(); }
+    match /suppliers/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff() || isCEO(); }
+    match /priceHistory/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff() || isCEO(); }
+    match /externalPrices/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff() || isCEO(); }
+
+    // 가맹점 상품 카탈로그 마스터 및 상점 데이터 (BestClubVN & BestERP 공통 Single Source of Truth)
+    match /merchant_products/{document=**} { allow read: if true; allow write: if isAuthenticated(); }
+    match /merchants/{document=**} { allow read: if true; allow write: if isStaff() || isCEO(); }
+    match /merchant_members/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff() || isCEO(); }
+    match /menus/{document=**} { allow read: if true; allow write: if isAuthenticated(); }
+    match /merchant_orders/{document=**} { allow read, write: if isAuthenticated(); }
+    match /orders/{document=**} { allow read, write: if isAuthenticated(); }
     
     match /users/{userId} {
       allow read: if isAuthenticated();
-      // ?먯떊 ?뺣낫 ?섏젙 ?덉슜 ?먮뒗 CEO
-      allow write: if request.auth.uid == userId || isSuperAdmin();
+      allow write: if request.auth.uid == userId || isSuperAdmin() || isCEO();
     }
     
-    match /projects/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
-    match /purchaseRequests/{document=**} { allow read: if isAuthenticated(); allow write: if isAuthenticated(); }
+    match /projects/{document=**} { allow read, write: if isAuthenticated(); }
+    match /purchaseRequests/{document=**} { allow read, write: if isAuthenticated(); }
+    match /purchase_requests/{document=**} { allow read, write: if isAuthenticated(); }
+    match /access_requests/{document=**} { allow read, write: if isAuthenticated(); allow create: if true; }
     
-    // ?덈줈 ?ㅺ퀎??AI 寃쎌쁺李몃え???듯빀 DB Rules
-    match /employees/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
-    match /clients/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
-    match /contacts/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
-    match /siteLogs/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
-    match /aiInsights/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+    // 신규 설계된 AI 경영참모·통합 DB Rules (내부운영 HR, 재무, 직원 등 가맹점 모드 완전 지원)
+    match /financeRecords/{document=**} { allow read, write: if isAuthenticated(); }
+    match /employees/{document=**} { allow read, write: if isAuthenticated(); }
+    match /clients/{document=**} { allow read, write: if isAuthenticated(); }
+    match /contacts/{document=**} { allow read, write: if isAuthenticated(); }
+    match /siteLogs/{document=**} { allow read, write: if isAuthenticated(); }
+    match /aiInsights/{document=**} { allow read, write: if isAuthenticated(); }
 
-    // ?낅Т 諛?蹂닿퀬 ?쒖뒪??(Task Management System)
+    // 업무 및 보고 시스템 (Task Management System)
     match /system_branding/{tenantId} {
       allow read: if isAuthenticated();
       allow write: if isCEO();
     }
 
     match /tasks/{taskId} {
-      allow read: if isCEO() 
-        || (isAuthenticated() && getUserData().role == 'TEAM_LEADER' && resource.data.teamId == getUserData().teamId)
-        || (isAuthenticated() && resource.data.assignedTo == request.auth.token.email);
-      allow write: if isCEO() 
-        || (isAuthenticated() && getUserData().role == 'TEAM_LEADER' && resource.data.teamId == getUserData().teamId)
-        || (isAuthenticated() && resource.data.assignedTo == request.auth.token.email);
+      allow read, write: if isAuthenticated();
     }
 
     match /task_reports/{reportId} {
-      allow read: if isCEO() 
-        || (isAuthenticated() && getUserData().role == 'TEAM_LEADER')
-        || (isAuthenticated() && resource.data.submittedBy == request.auth.uid);
-      allow write: if isCEO() 
-        || (isAuthenticated() && getUserData().role == 'TEAM_LEADER')
-        || (isAuthenticated() && request.resource.data.submittedBy == request.auth.uid);
+      allow read, write: if isAuthenticated();
     }
 
     match /task_comments/{commentId} {
-      allow read: if isCEO() 
-        || (isAuthenticated() && getUserData().role == 'TEAM_LEADER')
-        || (isAuthenticated());
-      allow write: if isCEO() 
-        || (isAuthenticated() && getUserData().role == 'TEAM_LEADER')
-        || (isAuthenticated() && request.resource.data.userId == request.auth.uid);
+      allow read, write: if isAuthenticated();
     }
 
     match /task_attachments/{attachmentId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow read, write: if isAuthenticated();
     }
 
     match /task_logs/{logId} {
@@ -106,5 +109,4 @@ service cloud.firestore {
     }
   }
 }
-
 
