@@ -17,6 +17,9 @@ let currentUser = null;
 let isSuperAdmin = false;
 let activeMerchantId = null;
 
+// BEST ERP는 베스트위너 전용 — 다른 가맹점(대한김치 등) 상품은 최고관리자에게도 노출하지 않음
+const ERP_MERCHANT_ID = '1791605366';
+
 // 가맹점 ID/영문별칭 상호 호환 매핑 테이블 (BestClubVN 표준)
 const KNOWN_MERCHANT_ALIASES = {
     "daehan_kimchi": ["1791002036", "daehan_kimchi"],
@@ -60,18 +63,13 @@ async function fetchProducts() {
             (currentUser && currentUser.email && currentUser.email.toLowerCase() === 'daguri75@gmail.com');
 
         // 가맹점 식별
-        activeMerchantId = window.tenantId || window.currentMerchantId || (isSuperAdmin ? 'ALL' : '1791605366');
+        activeMerchantId = ERP_MERCHANT_ID;
 
         // 최고관리자일 경우 가맹점 필터 및 모달 가맹점 선택창 노출
         const filterMerchantEl = document.getElementById('filterMerchant');
         const modalMerchantRow = document.getElementById('modalMerchantRow');
-        if (isSuperAdmin) {
-            if (filterMerchantEl) filterMerchantEl.style.display = 'inline-block';
-            if (modalMerchantRow) modalMerchantRow.style.display = 'block';
-        } else {
-            if (filterMerchantEl) filterMerchantEl.style.display = 'none';
-            if (modalMerchantRow) modalMerchantRow.style.display = 'none';
-        }
+        if (filterMerchantEl) filterMerchantEl.style.display = 'none';
+        if (modalMerchantRow) modalMerchantRow.style.display = 'none';
 
         allProducts = [];
 
@@ -141,22 +139,14 @@ window.loadMenus = () => {
     const grid = document.getElementById('menuGrid');
     if (!grid) return;
 
-    const filterMerchantVal = document.getElementById('filterMerchant')?.value || 'ALL';
     const filterTypeVal = document.getElementById('filterType')?.value || 'ALL';
     const filterStatusVal = document.getElementById('filterStatus')?.value || 'ALL';
     const searchVal = (document.getElementById('filterSearch')?.value || '').trim().toLowerCase();
 
     const filtered = allProducts.filter(item => {
         // 1. 가맹점 격리 필터
-        if (isSuperAdmin) {
-            if (filterMerchantVal !== 'ALL' && !matchesMerchant(item.merchantId, filterMerchantVal)) {
-                return false;
-            }
-        } else {
-            // 점주 모드에서는 자신의 가맹점 상품만 노출
-            if (!matchesMerchant(item.merchantId, activeMerchantId)) {
-                return false;
-            }
+        if (!matchesMerchant(item.merchantId, ERP_MERCHANT_ID)) {
+            return false;
         }
 
         // 2. 상품 타입 필터
@@ -319,12 +309,7 @@ document.getElementById('btnSaveMenu')?.addEventListener('click', async () => {
     const status = document.getElementById('mStatus').value;
     const imageUrl = document.getElementById('mImageUrl').value.trim();
 
-    let merchantId = '1791605366';
-    if (isSuperAdmin && document.getElementById('mMerchantId')) {
-        merchantId = document.getElementById('mMerchantId').value || '1791605366';
-    } else if (activeMerchantId && activeMerchantId !== 'ALL') {
-        merchantId = activeMerchantId;
-    }
+    const merchantId = ERP_MERCHANT_ID;
 
     const saveBtn = document.getElementById('btnSaveMenu');
     saveBtn.disabled = true;
