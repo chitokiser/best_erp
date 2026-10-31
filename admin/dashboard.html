@@ -229,8 +229,6 @@
     <div class="ai-floating-btn"
         onclick="alert('AI 참모 활성화: 데이터가 충분히 쌓인 후 자동 분석이 지원됩니다.')" title="AI 참모">💡</div>
 
-
-
     <script type="module" src="../assets/js/firebase-config.js"></script>
     <script type="module">
         import { db, auth } from '../assets/js/firebase-config.js';
@@ -258,115 +256,221 @@
         });
 
         async function loadDashboardData() {
-            try {
-                // Total Sales (Real-time) from merchant_orders
-                try {
-                    let oSnap = await getDocs(query(collection(db, 'merchant_orders'), where('tenantId', '==', window.tenantId)));
-                    if (oSnap.empty) {
-                        oSnap = await getDocs(query(collection(db, 'merchant_orders'), where('storeId', '==', window.tenantId)));
-                    }
+            const tenantId = (window.tenantId && window.tenantId !== 'undefined' && window.tenantId !== 'null' && window.tenantId !== 'system_master')
+                ? String(window.tenantId)
+                : '1791605366';
+            const isSuperAdmin = window.currentUserRole === 'SUPER_ADMIN' || window.tenantId === 'system_master';
+            const userEmail = (window.currentUserEmail || auth.currentUser?.email || '').toLowerCase().trim();
+            const userUid = window.currentUserUid || auth.currentUser?.uid || '';
 
-                    let totalSales = 0;
-                    oSnap.forEach(docSnap => {
-                        const o = docSnap.data();
-                        if (o.status !== '취소' && o.status !== 'cancelled') {
-                            totalSales += (Number(o.totalAmount || o.amount || 0));
+            // 0. Set Real Dynamic Brand Title immediately so it never stays '가맹점(로딩중)'
+            const storeTitle = window.currentStoreName || (tenantId === '1791002036' ? '대한김치' : 'BEST WINNER');
+            const storeEl = document.getElementById('dynamicStoreName');
+            if (storeEl) storeEl.textContent = storeTitle;
+
+            // 1. 영업 / 프로젝트 & 현장 인프라 통계 로드 (최우선 병렬 처리하여 '조회 중...' 즉시 해소)
+            try {
+                const [projSnap, matSnap, supSnap] = await Promise.all([
+                    getDocs(collection(db, 'projects')).catch(e => { console.warn('projects 조회 스킵:', e); return { size: 0 }; }),
+                    getDocs(collection(db, 'materials')).catch(e => { console.warn('materials 조회 스킵:', e); return { size: 0 }; }),
+                    getDocs(collection(db, 'suppliers')).catch(e => { console.warn('suppliers 조회 스킵:', e); return { size: 0 }; })
+                ]);
+
+                const elProj = document.getElementById('kpiProjects');
+                if (elProj) elProj.textContent = `${projSnap.size || 0} 개 프로젝트`;
+
+                const elMat = document.getElementById('kpiMaterials');
+                if (elMat) elMat.textContent = `${matSnap.size || 0} 개 등록자재`;
+
+                const elSup = document.getElementById('kpiSuppliers');
+                if (elSup) elSup.textContent = `${supSnap.size || 0} 개 협력사`;
+            } catch (infraErr) {
+                console.warn("영업/프로젝트 인프라 데이터 로딩 에러:", infraErr);
+            } finally {
+                const elProj = document.getElementById('kpiProjects');
+                if (elProj && elProj.textContent.includes('조회 중')) elProj.textContent = '0 개 프로젝트';
+                const elMat = document.getElementById('kpiMaterials');
+                if (elMat && elMat.textContent.includes('조회 중')) elMat.textContent = '0 개 등록자재';
+                const elSup = document.getElementById('kpiSuppliers');
+                if (elSup && elSup.textContent.includes('조회 중')) elSup.textContent = '0 개 협력사';
+            }
+
+            // 2. Total Sales (Real-time) from merchant_orders
+            try {
+                const ordersSnap = await getDocs(collection(db, 'merchant_orders'));
+                let totalSales = 0;
+                let validOrderCount = 0;
+
+                ordersSnap.forEach(docSnap => {
+                    const o = docSnap.data();
+                    const mId = String(o.merchant_id || o.merchantId || o.tenantId || o.storeId || '').trim();
+                    const matchMerchant = isSuperAdmin || mId === tenantId || (tenantId === '1791605366' && (mId === 'bestwinner' || mId === 'best_winner'));
+                    if (!matchMerchant) return;
+
+                    if (o.status !== '취소' && o.status !== 'cancelled') {
+                        totalSales += Number(o.total_amount || o.totalAmount || o.amount || 0);
+                        validOrderCount += 1;
+                    }
+                });
+
+                document.getElementById('kpiSales').textContent = `₫ ${totalSales.toLocaleString()}`;
+                const trend = document.getElementById('kpiSales').nextElementSibling;
+                if (trend && totalSales > 0) {
+                    trend.textContent = `${validOrderCount} 건 결제완료`;
+                    trend.className = 'trend trend-up';
+                } else if (trend) {
+                    trend.textContent = `결제 내역 없음`;
+                    trend.className = 'trend trend-neutral';
+                }
+            } catch (err) {
+                console.warn("매출 데이터 로딩 에러:", err);
+            }
+
+            // 3. Total Menus (merchant_products + menus 통합 로드)
+            try {
+                const menuItems = [];
+                const seenIds = new Set();
+
+                try {
+                    const mpSnap = await getDocs(collection(db, 'merchant_products'));
+                    mpSnap.forEach(docSnap => {
+                        const d = docSnap.data();
+                        const mId = String(d.merchant_id || d.tenantId || '').trim();
+                        if (mId === tenantId || (tenantId === '1791605366' && (mId === 'bestwinner' || mId === 'best_winner'))) {
+                            seenIds.add(docSnap.id);
+                            menuItems.push({
+                                id: docSnap.id,
+                                source: 'merchant_products',
+                                name: d.product_name || d.name || '무제 상품',
+                                price: Number(d.price || 0),
+                                isLive: (d.sale_status || d.status || 'published') === 'published' || d.status === '판매중'
+                            });
                         }
                     });
-
-                    document.getElementById('kpiSales').textContent = `₫ ${totalSales.toLocaleString()}`;
-                    const trend = document.getElementById('kpiSales').nextElementSibling;
-                    if (trend && totalSales > 0) {
-                        trend.textContent = `${oSnap.size} 건 결제완료`;
-                        trend.className = 'trend trend-up';
-                    } else if (trend) {
-                        trend.textContent = `결제 내역 없음`;
-                        trend.className = 'trend trend-neutral';
-                    }
-                } catch (err) {
-                    console.warn("매출 데이터 로딩 에러:", err);
+                } catch (mpErr) {
+                    console.warn("merchant_products 로딩 스킵:", mpErr);
                 }
 
-                // Total Menus
-                const mSnap = await getDocs(query(collection(db, 'menus'), where('tenantId', '==', window.tenantId)));
-                document.getElementById('kpiOrders').textContent = `${mSnap.size} 개`;
+                try {
+                    const mSnap = await getDocs(query(collection(db, 'menus'), where('tenantId', '==', tenantId)));
+                    mSnap.forEach(docSnap => {
+                        if (!seenIds.has(docSnap.id)) {
+                            const m = docSnap.data();
+                            seenIds.add(docSnap.id);
+                            menuItems.push({
+                                id: docSnap.id,
+                                source: 'menus',
+                                name: m.name || '무제 메뉴',
+                                price: Number(m.price || 0),
+                                isLive: m.status === '판매중' || m.sale_status === 'published'
+                            });
+                        }
+                    });
+                } catch (mErr) {
+                    console.warn("menus 로딩 스킵:", mErr);
+                }
 
-                let menuHtml = '';
-                mSnap.forEach(docSnap => {
-                    const m = docSnap.data();
-                    const checked = m.status === '판매중' ? 'checked' : '';
-                    menuHtml += `<div class="quick-menu-item">
-                        <div style="font-weight:700; color:#334155;">${m.name} <span style="font-size:0.8rem; color:#94a3b8;">(₫${Number(m.price || 0).toLocaleString()})</span></div>
-                        <div style="display:flex; align-items:center; gap:0.5rem;">
-                            <span style="font-size:0.75rem; font-weight:700; color:${checked ? '#166534' : '#b91c1c'}">${checked ? '판매중' : '품절'}</span>
-                            <label class="toggle-switch">
-                                <input type="checkbox" ${checked} onchange="window.quickMenuToggle('${docSnap.id}', this.checked)">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                    </div>`;
+                document.getElementById('kpiOrders').textContent = `${menuItems.length} 개`;
+                const menuTrend = document.getElementById('kpiOrders').nextElementSibling;
+                if (menuTrend) {
+                    menuTrend.textContent = menuItems.length > 0 ? '실시간 연동 완료' : '등록 대기중';
+                }
+
+                if (menuItems.length > 0) {
+                    let menuHtml = '';
+                    menuItems.forEach(m => {
+                        const checked = m.isLive ? 'checked' : '';
+                        menuHtml += `<div class="quick-menu-item">
+                            <div style="font-weight:700; color:#334155;">${m.name} <span style="font-size:0.8rem; color:#94a3b8;">(₫${Number(m.price || 0).toLocaleString()})</span></div>
+                            <div style="display:flex; align-items:center; gap:0.5rem;">
+                                <span style="font-size:0.75rem; font-weight:700; color:${checked ? '#166534' : '#b91c1c'}">${checked ? '판매중' : '품절'}</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" ${checked} onchange="window.quickMenuToggle('${m.id}', this.checked, '${m.source}', this)">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>`;
+                    });
+                    document.getElementById('quickMenuControl').innerHTML = menuHtml;
+                }
+            } catch (menuErr) {
+                console.warn("메뉴 데이터 로딩 에러:", menuErr);
+            }
+
+            // 4. Total Managed Customers (내 가맹점 직속 멘티)
+            try {
+                const menteeQueries = [];
+                if (userEmail) {
+                    menteeQueries.push(getDocs(query(collection(db, 'users'), where('mentorEmail', '==', userEmail))).catch(() => ({ docs: [] })));
+                    menteeQueries.push(getDocs(query(collection(db, 'users'), where('mentorAddressInput', '==', userEmail))).catch(() => ({ docs: [] })));
+                }
+                if (tenantId) {
+                    menteeQueries.push(getDocs(query(collection(db, 'users'), where('registeredMerchantId', '==', tenantId))).catch(() => ({ docs: [] })));
+                    menteeQueries.push(getDocs(query(collection(db, 'users'), where('merchantId', '==', tenantId))).catch(() => ({ docs: [] })));
+                }
+
+                const snaps = await Promise.all(menteeQueries);
+                const seenUids = new Set();
+                const mentees = [];
+
+                snaps.forEach(s => {
+                    (s.docs || []).forEach(d => {
+                        if (seenUids.has(d.id)) return;
+                        const data = d.data();
+                        const dEmail = (data.email || '').toLowerCase().trim();
+                        if (d.id === userUid || (userEmail && dEmail === userEmail)) return;
+                        seenUids.add(d.id);
+                        mentees.push({ id: d.id, ...data });
+                    });
                 });
-                if (mSnap.size > 0) document.getElementById('quickMenuControl').innerHTML = menuHtml;
 
-                // Total Managed Customers (Where mentor is ME)
-                const cSnap = await getDocs(query(collection(db, 'users'), where('mentorEmail', '==', window.currentUserEmail)));
-                document.getElementById('kpiNewCustomers').textContent = `${cSnap.size} 명`;
+                document.getElementById('kpiNewCustomers').textContent = `${mentees.length} 명`;
+                const custTrend = document.getElementById('kpiNewCustomers').nextElementSibling;
+                if (custTrend) {
+                    custTrend.textContent = mentees.length > 0 ? '내 직속 멘티 회원' : '이벤트 생성 대기중';
+                }
 
                 let totalP = 0;
                 let clientHtml = '';
-                cSnap.forEach(d => {
-                    const data = d.data();
-                    totalP += (data.points || 0);
+                mentees.forEach(data => {
+                    const pts = Number(data.points || data.pointBalance || 0);
+                    totalP += pts;
 
                     clientHtml += `<div class="quick-menu-item">
-                        <div style="font-weight:700; color:#334155;">${data.name || '미인증 회원'} <span style="font-size:0.8rem; color:#94a3b8;">(${data.email})</span></div>
+                        <div style="font-weight:700; color:#334155;">${data.name || '멘티 회원'} <span style="font-size:0.8rem; color:#94a3b8;">(${data.email || data.id.substring(0, 8)})</span></div>
                         <div style="display:flex; align-items:center; gap:0.5rem;">
-                            <span style="font-size:0.75rem; font-weight:700; color:#10b981;">${(data.points || 0).toLocaleString()} P</span>
+                            <span style="font-size:0.75rem; font-weight:700; color:#10b981;">${pts.toLocaleString()} P</span>
                         </div>
                     </div>`;
                 });
 
-                if (cSnap.size > 0) {
+                if (mentees.length > 0) {
                     document.getElementById('quickClientControl').innerHTML = clientHtml;
                 }
-
                 document.getElementById('kpiChurn').textContent = `${totalP.toLocaleString()} P`;
-
-                // 영업 / 프로젝트 & 현장 인프라 통계 로드
-                try {
-                    const [projSnap, matSnap, supSnap] = await Promise.all([
-                        getDocs(collection(db, 'projects')).catch(e => { console.warn(e); return { size: 0 }; }),
-                        getDocs(collection(db, 'materials')).catch(e => { console.warn(e); return { size: 0 }; }),
-                        getDocs(collection(db, 'suppliers')).catch(e => { console.warn(e); return { size: 0 }; })
-                    ]);
-                    
-                    const elProj = document.getElementById('kpiProjects');
-                    if (elProj) elProj.textContent = `${projSnap.size || 0} 개 프로젝트`;
-
-                    const elMat = document.getElementById('kpiMaterials');
-                    if (elMat) elMat.textContent = `${matSnap.size || 0} 개 등록자재`;
-
-                    const elSup = document.getElementById('kpiSuppliers');
-                    if (elSup) elSup.textContent = `${supSnap.size || 0} 개 협력사`;
-                } catch (infraErr) {
-                    console.warn("영업/프로젝트 인프라 데이터 로딩 에러:", infraErr);
-                }
-
-                // Set Real Dynamic Brand Title
-                if (window.currentStoreName) {
-                    document.getElementById('dynamicStoreName').textContent = window.currentStoreName;
-                }
-            } catch (e) { console.error(e); }
+            } catch (custErr) {
+                console.warn("고객/멘티 데이터 로딩 에러:", custErr);
+            }
         }
 
-        window.quickMenuToggle = async (id, isChecked) => {
+        window.quickMenuToggle = async (id, isChecked, source = 'menus', inputEl = null) => {
             const newStatus = isChecked ? '판매중' : '품절';
+            const targetColl = source === 'merchant_products' ? 'merchant_products' : 'menus';
             try {
-                await updateDoc(doc(db, 'menus', id), { status: newStatus });
-                const txt = event.target.closest('.quick-menu-item').querySelector('span');
-                txt.textContent = newStatus;
-                txt.style.color = isChecked ? '#166534' : '#b91c1c';
-            } catch (e) { alert('업데이트 실패: ' + e.message); event.target.checked = !isChecked; }
+                await updateDoc(doc(db, targetColl, id), {
+                    status: newStatus,
+                    sale_status: isChecked ? 'published' : 'sold_out'
+                });
+                const row = inputEl ? inputEl.closest('.quick-menu-item') : null;
+                const txt = row ? row.querySelector('span') : null;
+                if (txt) {
+                    txt.textContent = newStatus;
+                    txt.style.color = isChecked ? '#166534' : '#b91c1c';
+                }
+            } catch (e) {
+                alert('업데이트 실패: ' + e.message);
+                if (inputEl) inputEl.checked = !isChecked;
+            }
         };
 
         window.changeStoreName = async () => {
@@ -385,16 +489,26 @@
         window.cleanTestData = async () => {
             if (!confirm('정말 현재 가맹점의 모든 데모 메뉴 데이터를 삭제하고 처음부터 시작하시겠습니까?')) return;
             try {
-                const snap = await getDocs(query(collection(db, 'menus'), where('tenantId', '==', window.tenantId)));
+                const tenantId = window.tenantId || '1791605366';
+                const snap = await getDocs(query(collection(db, 'menus'), where('tenantId', '==', tenantId)));
                 const deletes = [];
                 snap.forEach(d => deletes.push(deleteDoc(d.ref)));
                 await Promise.all(deletes);
                 alert('모든 가라(초기화) 데이터가 삭제되었습니다! 클린 상태에서 가이드를 따라주세요.');
                 window.location.reload();
             } catch (e) { alert(e.message); }
-        }
+        };
 
-        checkAdminAuth((user) => { window.currentUserEmail = user.email; loadDashboardData(); });
+        checkAdminAuth(
+            (user) => {
+                window.currentUserEmail = user.email;
+                loadDashboardData();
+            },
+            () => {
+                const currentUrl = window.location.pathname + window.location.search;
+                window.location.href = '../login.html?redirect=' + encodeURIComponent(currentUrl);
+            }
+        );
     </script>
 </body>
 

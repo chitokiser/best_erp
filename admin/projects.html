@@ -305,14 +305,15 @@
         checkAdminAuth(
             async (user) => {
                 document.body.style.display = 'block';
-                document.getElementById('currentUserEmail').textContent = user.email;
+                const elEmail = document.getElementById('currentUserEmail') || document.getElementById('navUserEmailSpan');
+                if (elEmail) elEmail.textContent = user.email;
 
                 const tbody = document.getElementById('projectsTableBody');
 
                 // Load Projects
                 try {
                     // Fetch Users to map email -> name
-                    const usersSnap = await getDocs(collection(db, 'users'));
+                    const usersSnap = await getDocs(collection(db, 'users')).catch(() => ({ forEach: () => {} }));
                     const emailToName = {};
                     usersSnap.forEach(uDoc => {
                         const ud = uDoc.data();

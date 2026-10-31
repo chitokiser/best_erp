@@ -52,14 +52,16 @@ function escapeHtml(str) {
 async function loadClients() {
     const tbody = document.getElementById('menteeTableBody');
     if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:3rem; color:#64748b;">멘티 및 상품 구매 고객 데이터를 통합 조회하는 중입니다...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:3rem; color:#64748b;">멘티 및 제휴 구매 고객 데이터를 통합 조회하는 중입니다...</td></tr>';
     }
 
     try {
         isSuperAdmin = window.currentUserRole === 'SUPER_ADMIN' ||
             (currentUser && currentUser.email && currentUser.email.toLowerCase() === 'daguri75@gmail.com');
 
-        activeMerchantId = window.tenantId || window.currentMerchantId || (isSuperAdmin ? 'ALL' : '1791605366');
+        activeMerchantId = (window.tenantId && window.tenantId !== 'system_master')
+            ? window.tenantId
+            : (window.currentMerchantId || (isSuperAdmin ? 'ALL' : '1791605366'));
 
         const filterMerchantEl = document.getElementById('CRM_filterMerchant');
         if (filterMerchantEl) {
@@ -67,34 +69,42 @@ async function loadClients() {
         }
 
         const clientMap = new Map(); // key -> Client Object
-        const myEmail = (currentUser?.email || auth.currentUser?.email || window.currentUserEmail || '').toLowerCase();
+        const myEmail = (currentUser?.email || auth.currentUser?.email || window.currentUserEmail || '').toLowerCase().trim();
+        const myUid = currentUser?.uid || auth.currentUser?.uid || window.currentUserUid || '';
 
         // ----------------------------------------------------
-        // 1. 추천 멘티(Mentees) 회원 수집
+        // 1. 내 직속 멘티(Mentees) 회원 수집
         // ----------------------------------------------------
         try {
             const userQueries = [];
             if (myEmail) {
-                userQueries.push(getDocs(query(collection(db, 'users'), where('mentorAddressInput', '==', myEmail))));
-                userQueries.push(getDocs(query(collection(db, 'users'), where('mentorEmail', '==', myEmail))));
+                userQueries.push(getDocs(query(collection(db, 'users'), where('mentorAddressInput', '==', myEmail))).catch(() => ({ docs: [] })));
+                userQueries.push(getDocs(query(collection(db, 'users'), where('mentorEmail', '==', myEmail))).catch(() => ({ docs: [] })));
+            }
+            if (myUid) {
+                userQueries.push(getDocs(query(collection(db, 'users'), where('mentorUid', '==', myUid))).catch(() => ({ docs: [] })));
             }
 
             if (isSuperAdmin) {
-                userQueries.push(getDocs(collection(db, 'users')));
+                userQueries.push(getDocs(collection(db, 'users')).catch(() => ({ docs: [] })));
             } else if (activeMerchantId && activeMerchantId !== 'ALL') {
-                userQueries.push(getDocs(query(collection(db, 'users'), where('merchantId', '==', activeMerchantId))));
+                userQueries.push(getDocs(query(collection(db, 'users'), where('registeredMerchantId', '==', activeMerchantId))).catch(() => ({ docs: [] })));
+                userQueries.push(getDocs(query(collection(db, 'users'), where('merchantId', '==', activeMerchantId))).catch(() => ({ docs: [] })));
             }
 
             const querySnaps = await Promise.all(userQueries);
             const userDocsSeen = new Set();
 
             querySnaps.forEach(snap => {
-                snap.docs.forEach(docSnap => {
+                (snap.docs || []).forEach(docSnap => {
                     if (userDocsSeen.has(docSnap.id)) return;
                     userDocsSeen.add(docSnap.id);
 
                     const ud = docSnap.data();
                     const email = (ud.email || '').toLowerCase().trim();
+                    // 가맹점주 본인 계정은 멘티 목록에서 제외
+                    if (!isSuperAdmin && (docSnap.id === myUid || (myEmail && email === myEmail))) return;
+
                     const key = email || docSnap.id;
 
                     const client = {
@@ -103,12 +113,12 @@ async function loadClients() {
                         email: ud.email || '',
                         name: ud.name || '멘티 고객',
                         phone: ud.phone || '',
-                        merchantId: ud.merchantId || ud.registeredStoreId || activeMerchantId,
+                        merchantId: ud.registeredMerchantId || ud.merchantId || ud.registeredStoreId || activeMerchantId,
                         isMentee: true,
                         isBuyer: false,
                         registeredAt: ud.createdAt || ud.registeredAt || null,
                         lastEventAt: ud.lastEventAt || null,
-                        points: Number(ud.points || ud.generatedForMentor || 0),
+                        points: Number(ud.points || ud.pointBalance || ud.generatedForMentor || 0),
                         purchaseCount: 0,
                         totalSpend: 0,
                         orders: []
@@ -122,6 +132,7 @@ async function loadClients() {
 
         // ----------------------------------------------------
         // 2. 내 상품 구매 고객(Buyers from merchant_orders) 수집
+        //    - 내 멘티가 아니면 '제휴 회원(affiliate)'으로 자동 분류
         // ----------------------------------------------------
         try {
             const ordersSnap = await getDocs(collection(db, 'merchant_orders'));
@@ -145,15 +156,26 @@ async function loadClients() {
                 const buyerPhone = ord.buyer_phone || ord.phone || ord.contact || '';
                 const amount = Number(ord.total_amount || ord.amount || 0);
 
+                // 이메일 또는 UID로 기존 멘티 매칭 확인
+                let client = (buyerEmail && clientMap.get(buyerEmail)) || (buyerUid && clientMap.get(buyerUid)) || null;
+                if (!client && buyerUid) {
+                    for (const existing of clientMap.values()) {
+                        if (existing.uid === buyerUid) {
+                            client = existing;
+                            break;
+                        }
+                    }
+                }
+
                 const key = buyerEmail || buyerUid || ('buyer_order_' + d.id);
 
-                let client = clientMap.get(key);
                 if (!client) {
+                    // 다른 가맹점/경로를 통해 가입한 회원이 내 가맹점에서 구매한 경우 -> 제휴 회원 (affiliate)
                     client = {
                         id: buyerUid || d.id,
                         uid: buyerUid,
                         email: buyerEmail,
-                        name: buyerName || '구매 고객',
+                        name: buyerName || '제휴 구매고객',
                         phone: buyerPhone,
                         merchantId: ordMerchantId || activeMerchantId,
                         isMentee: false,
@@ -167,7 +189,7 @@ async function loadClients() {
                     };
                     clientMap.set(key, client);
                 } else {
-                    // 이미 멘티로 등록된 회원이 상품도 구매한 경우 (멘티 + 구매고객)
+                    // 이미 내 멘티로 등록된 회원이 상품도 구매한 경우 (멘티 + 구매고객)
                     client.isBuyer = true;
                     if ((!client.name || client.name === '멘티 고객') && buyerName) {
                         client.name = buyerName;
@@ -202,11 +224,11 @@ async function loadClients() {
                 return tB - tA;
             });
 
-            // 고객 유형 판별
+            // 고객 유형 판별 (mentee / both / affiliate)
             if (c.isMentee && c.isBuyer) {
                 c.relationType = 'both';
             } else if (c.isBuyer) {
-                c.relationType = 'buyer';
+                c.relationType = 'affiliate';
             } else {
                 c.relationType = 'mentee';
             }
@@ -245,10 +267,10 @@ window.renderMentees = function() {
             if (!matchesMerchant(c.merchantId, filterMerchantVal)) return false;
         }
 
-        // 2. 고객 관계 필터 (전체 / 멘티만 / 구매고객만 / 멘티+구매)
+        // 2. 고객 관계 필터 (전체 / 내 멘티만 / 멘티+구매 / 제휴 회원만)
         if (filterRelationVal !== 'all') {
             if (filterRelationVal === 'both' && c.relationType !== 'both') return false;
-            if (filterRelationVal === 'buyer' && !c.isBuyer) return false;
+            if ((filterRelationVal === 'affiliate' || filterRelationVal === 'buyer') && c.relationType !== 'affiliate') return false;
             if (filterRelationVal === 'mentee' && !c.isMentee) return false;
         }
 
@@ -284,11 +306,11 @@ window.renderMentees = function() {
         // 회원 구분 뱃지
         let relBadge = '';
         if (c.relationType === 'both') {
-            relBadge = '<span class="tag-status" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; font-weight:700;">🌟 멘티 + 구매</span>';
-        } else if (c.relationType === 'buyer') {
-            relBadge = '<span class="tag-status" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-weight:700;">🛍️ 상품 구매</span>';
+            relBadge = '<span class="tag-status" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; font-weight:700;">🌟 내 멘티 + 구매</span>';
+        } else if (c.relationType === 'affiliate') {
+            relBadge = '<span class="tag-status" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-weight:700;">🤝 제휴 회원</span>';
         } else {
-            relBadge = '<span class="tag-status" style="background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; font-weight:600;">👥 추천 멘티</span>';
+            relBadge = '<span class="tag-status" style="background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; font-weight:600;">👥 내 멘티 회원</span>';
         }
 
         // 계정 & 연락처
@@ -347,9 +369,9 @@ window.viewOrders = function(clientId) {
     titleEl.textContent = `🛍️ [${client.name}] 고객 상세 구매 및 회원 내역`;
 
     // 회원 관계 표시명
-    let relLabel = '추천 멘티 회원';
-    if (client.relationType === 'both') relLabel = '멘티 & 상품 구매 고객 (VIP)';
-    else if (client.relationType === 'buyer') relLabel = '쇼핑몰 상품 구매 고객';
+    let relLabel = '내 가맹점 직속 멘티 회원';
+    if (client.relationType === 'both') relLabel = '내 멘티 & 상품 구매 고객 (VIP)';
+    else if (client.relationType === 'affiliate') relLabel = '🤝 제휴 회원 (타 가맹점 가입 · 내 가맹점 구매고객)';
 
     custInfoEl.innerHTML = `
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:0.5rem; line-height:1.6;">
@@ -366,7 +388,7 @@ window.viewOrders = function(clientId) {
         contentEl.innerHTML = `
             <div style="text-align:center; padding:2.5rem; color:#64748b; background:#f8fafc; border-radius:0.5rem; border:1px dashed #cbd5e1;">
                 <p style="font-size:1.1rem; margin:0 0 0.5rem 0; font-weight:600; color:#475569;">📦 등록된 상품 구매 이력이 없습니다.</p>
-                <p style="font-size:0.85rem; margin:0;">가맹점 매장 QR 코드 이벤트 또는 초대를 통해 가입한 <strong>추천 멘티</strong> 회원입니다.</p>
+                <p style="font-size:0.85rem; margin:0;">가맹점 웹, 매장 QR 코드 이벤트 또는 초대를 통해 가입한 <strong>내 직속 멘티</strong> 회원입니다.</p>
             </div>
         `;
     } else {
@@ -414,7 +436,7 @@ window.viewOrders = function(clientId) {
 window.exportToCSV = function() {
     let csv = '회원구분,계정ID,이메일,이름,연락처,구매건수,총구매액(VND),누적포인트(P)\n';
     storedClients.forEach(c => {
-        const relStr = c.relationType === 'both' ? '멘티+구매' : (c.relationType === 'buyer' ? '구매고객' : '멘티');
+        const relStr = c.relationType === 'both' ? '내멘티+구매' : (c.relationType === 'affiliate' ? '제휴회원(구매고객)' : '내멘티');
         csv += `"${relStr}","${c.id}","${c.email}","${c.name}","${c.phone}",${c.purchaseCount},${c.totalSpend},${c.points}\n`;
     });
     const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: 'text/csv;charset=utf-8;' });
@@ -425,8 +447,14 @@ window.exportToCSV = function() {
 };
 
 // 권한 확인 후 로드
-checkAdminAuth((user) => {
-    currentUser = user;
-    window.currentUserEmail = user.email;
-    loadClients();
-});
+checkAdminAuth(
+    (user) => {
+        currentUser = user;
+        window.currentUserEmail = user.email;
+        loadClients();
+    },
+    () => {
+        const currentUrl = window.location.pathname + window.location.search;
+        window.location.href = '../login.html?redirect=' + encodeURIComponent(currentUrl);
+    }
+);

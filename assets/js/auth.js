@@ -7,10 +7,10 @@ const googleProvider = new GoogleAuthProvider();
 export const registerUser = async (email, password, name) => {
     try {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
-        await setDoc(doc(db, 'users', user.uid), {
+        await setDoc(doc(db, 'users', cred.user.uid), {
             email: email, name: name || email.split('@')[0], position: '시스템 가입자',
             role: 'VIEWER', status: '대기중', createdAt: serverTimestamp()
-        });
+        }, { merge: true });
         return cred.user;
     } catch (err) { throw err; }
 };
@@ -38,7 +38,8 @@ export const loginWithGoogle = async () => {
 export const logoutAdmin = async () => {
     try {
         await signOut(auth);
-        window.location.href = '../index.html';
+        const isInAdminDir = window.location.pathname.includes('/admin/');
+        window.location.href = isInAdminDir ? '../login.html' : 'login.html';
     } catch (error) {
         console.error("Logout Error:", error);
     }
@@ -49,23 +50,33 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             try {
-                const snap = await getDoc(doc(db, 'users', user.uid));
+                window.currentUserEmail = user.email || '';
+                window.currentUserUid = user.uid || '';
+
+                let snap = null;
+                try {
+                    snap = await getDoc(doc(db, 'users', user.uid));
+                } catch (docErr) {
+                    console.warn('users doc fetch warning:', docErr);
+                }
 
                 let role = 'GUEST';
                 let position = '방문자';
                 let status = '대기중';
 
-                if (!snap.exists() && user.email === 'daguri75@gmail.com') {
+                if ((!snap || !snap.exists()) && user.email === 'daguri75@gmail.com') {
                     // First time auto-provisioning for Super Admin
-                    await addDoc(collection(db, 'users'), {
-                        email: user.email,
-                        name: 'CEO',
-                        position: '최고 관리자',
-                        role: 'SUPER_ADMIN',
-                        status: '승인',
-                        tenantId: 'system_master',
-                        createdAt: serverTimestamp()
-                    });
+                    try {
+                        await setDoc(doc(db, 'users', user.uid), {
+                            email: user.email,
+                            name: 'CEO',
+                            position: '최고 관리자',
+                            role: 'SUPER_ADMIN',
+                            status: '승인',
+                            tenantId: 'system_master',
+                            createdAt: serverTimestamp()
+                        }, { merge: true });
+                    } catch (e) {}
                     role = 'SUPER_ADMIN';
                     position = '최고 관리자';
                     status = '승인';
@@ -74,7 +85,7 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
 
                 let isMerchant = false;
 
-                if (snap.exists()) {
+                if (snap && snap.exists()) {
                     const data = snap.data();
                     const rawRole = (data.role || data.tier || 'GUEST').toUpperCase();
                     role = rawRole;
@@ -82,23 +93,23 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                     status = data.status || '대기중';
 
                     const isStaffRole = ['STAFF', 'EMPLOYEE'].includes(rawRole);
-                    isMerchant = !!data.merchantId;
+                    isMerchant = !!(data.merchantId || data.merchant_id);
 
                     if (isStaffRole) {
                         role = 'STAFF';
                         position = data.position || '가맹점 직원';
                         status = '승인완료';
-                    } else if (isMerchant || ['FRANCHISE', 'CEO'].includes(rawRole)) {
+                    } else if (isMerchant || ['FRANCHISE', 'CEO', 'MERCHANT'].includes(rawRole)) {
                         role = 'CEO';
                         position = '가맹점 대표';
                         status = '승인완료';
                     }
 
                     // Store tenant ID globally as String to prevent doc() path errors
-                    window.tenantId = String(data.merchantId || data.tenantId || data.tenant_id || data.company_id || user.uid || '');
+                    window.tenantId = String(data.merchantId || data.merchant_id || data.tenantId || data.tenant_id || data.company_id || '1791605366');
 
                     // Fetch dynamic store name for Multi-tenant UI
-                    let sName = data.merchantName || data.brandName || data.company_name || data.companyName || data.storeName || data.company || data.name || '미등록 가맹점';
+                    let sName = data.merchantName || data.brandName || data.company_name || data.companyName || data.storeName || data.company || data.name || 'BEST WINNER';
                     if (sName) {
                         window.currentStoreName = sName;
                         document.querySelectorAll('.dynamic-brand-text, #dynamicStoreName').forEach(el => el.textContent = sName);
@@ -181,6 +192,17 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                     }
                 }
 
+                // Default fallback for tenantId & currentStoreName so UI never stays on 가맹점(로딩중)
+                if (!window.tenantId || window.tenantId === 'undefined' || window.tenantId === 'null') {
+                    window.tenantId = '1791605366';
+                }
+                if (!window.currentStoreName || window.currentStoreName === '미등록 가맹점') {
+                    window.currentStoreName = window.tenantId === '1791002036' ? '대한김치' : 'BEST WINNER';
+                }
+                document.querySelectorAll('.dynamic-brand-text, #dynamicStoreName').forEach(el => {
+                    el.textContent = window.currentStoreName;
+                });
+
                 // Global variables for RBAC
                 window.currentUserRole = role;
                 window.currentUserPosition = position;
@@ -189,12 +211,17 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                 // Stop unapproved users
                 if (!isMerchant && !allowedRoles.includes(role) && userEmailLower !== 'daguri75@gmail.com') {
                     await signOut(auth);
-                    const d = snap.exists() ? snap.data() : {};
+                    const d = (snap && snap.exists()) ? snap.data() : {};
                     let errMsg = 'ERP 시스템 접근 권한이 없습니다. (가맹 승인 또는 직원 등록 필요)';
                     if (d.status === 'pending' || d.status === '대기중' || d.role === 'FRANCHISE' || d.role === 'franchise' || d.is_merchant_applicant) {
                         errMsg = '승인 대기 중인 계정입니다. 심사 후 이용 가능합니다.';
                     }
-                    if (onAuthFail) onAuthFail(errMsg);
+                    if (onAuthFail) {
+                        onAuthFail(errMsg);
+                    } else if (window.location.pathname.includes('/admin/')) {
+                        alert(errMsg);
+                        window.location.href = '../login.html';
+                    }
                     return;
                 }
 
@@ -212,14 +239,14 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                                 <span style="font-size:0.8rem; font-weight:bold; color:var(--primary-color, #4F46E5);">${role}</span>
                                 <span style="font-size:0.75rem; color:var(--text-secondary, #64748b);">${position} (${user.email})</span>
                             </div>
-                            <button onclick="window.logoutAndRedirect ? window.logoutAndRedirect() : (window.location.href='../index.html')" style="margin-left:0.5rem; background:none; border:none; cursor:pointer; color:var(--primary-color, #2563eb); font-weight:bold; white-space:nowrap;">[로그아웃]</button>
+                            <button onclick="window.logoutAndRedirect ? window.logoutAndRedirect() : (window.location.href='../login.html')" style="margin-left:0.5rem; background:none; border:none; cursor:pointer; color:var(--primary-color, #2563eb); font-weight:bold; white-space:nowrap;">[로그아웃]</button>
                         `;
                         navEmail.style.display = 'flex';
                         navEmail.style.alignItems = 'center';
                     }
 
                     // 헤더 브랜드 동적 연동 (가맹점명 표출)
-                    if (window.currentStoreName && window.currentStoreName !== '미등록 가맹점') {
+                    if (window.currentStoreName) {
                         document.querySelectorAll('.dynamic-brand-text, #dynamicStoreName').forEach(el => el.textContent = window.currentStoreName);
                         document.querySelectorAll('.top-nav h1').forEach(h1 => {
                             h1.innerHTML = `<span style="color:#ef4444;" class="dynamic-brand-text">${window.currentStoreName}</span> <span style="color:var(--text-primary, #1e293b); font-size:1.15rem; font-weight:700;">M-SaaS</span>`;
@@ -258,9 +285,29 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
 
             } catch (e) {
                 console.error('Auth verification error:', e);
+                if (onAuthSuccess) onAuthSuccess(user);
             }
         } else {
-            if (onAuthFail) onAuthFail();
+            // 비로그인 상태일 때 '가맹점(로딩중)' 또는 '조회 중...' 무한 대기 방지
+            document.querySelectorAll('.dynamic-brand-text, #dynamicStoreName').forEach(el => {
+                if (el.textContent.includes('로딩중')) el.textContent = 'BEST M-SaaS';
+            });
+            const navEmail = document.getElementById('navUserEmail');
+            const isInAdminDir = window.location.pathname.includes('/admin/');
+            const loginPath = isInAdminDir ? '../login.html' : 'login.html';
+            const currentUrl = window.location.pathname + window.location.search;
+
+            if (navEmail) {
+                navEmail.innerHTML = `<button onclick="window.location.href='${loginPath}?redirect=${encodeURIComponent(currentUrl)}'" style="margin-left:1rem; padding:0.45rem 0.9rem; background:#4F46E5; color:white; border:none; border-radius:0.4rem; cursor:pointer; font-weight:700; white-space:nowrap;">🔐 로그인</button>`;
+                navEmail.style.display = 'flex';
+                navEmail.style.alignItems = 'center';
+            }
+
+            if (onAuthFail) {
+                onAuthFail('로그인이 필요한 화면입니다.');
+            } else if (isInAdminDir && !window.location.pathname.endsWith('login.html')) {
+                window.location.href = `${loginPath}?redirect=${encodeURIComponent(currentUrl)}`;
+            }
         }
     });
 };
@@ -341,5 +388,3 @@ if (document.readyState === 'loading') {
 } else {
     setupMobileNav();
 }
-
-

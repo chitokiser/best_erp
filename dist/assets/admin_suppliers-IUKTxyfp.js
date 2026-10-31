@@ -1,0 +1,25 @@
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/supplierApi-CZob6vWH.js","assets/firebase-config-CRr6M8Nr.js"])))=>i.map(i=>d[i]);
+import"./firebase-config-CRr6M8Nr.js";/* empty css              */import{i as e,t}from"./auth-Chok8jKQ.js";/* empty css              */import{t as n}from"./preload-helper-BZ1Pz5am.js";import"./ai-chat-CVmljB13.js";import{n as r,t as i}from"./supplierApi-CZob6vWH.js";window.saveNewSupplier=async()=>{let e=document.getElementById(`supName`).value.trim(),t=document.getElementById(`supCategories`).value.split(`,`).map(e=>e.trim()).filter(e=>e),n=document.getElementById(`supContact`).value.trim(),r=document.getElementById(`supPhone`).value.trim();if(!e||!n||!r){alert(`업체명, 담당자명, 연락처는 필수 항목입니다.`);return}let o=document.getElementById(`btnSaveSupplier`);o.disabled=!0,o.textContent=`등록 중...`;try{await i({companyName:e,categories:t,contactPerson:n,phone:r}),alert(`협력업체가 성공적으로 등록되었습니다!`),document.getElementById(`supplierModal`).close(),document.getElementById(`supName`).value=``,document.getElementById(`supCategories`).value=``,document.getElementById(`supContact`).value=``,document.getElementById(`supPhone`).value=``,a()}catch(e){console.error(e),alert(`에러 발생: `+e.message)}finally{o.disabled=!1,o.textContent=`등록하기`}};var a=async()=>{let e=document.getElementById(`suppliersTableBody`);try{let t=await r();if(t.length===0){e.innerHTML=`
+                        <tr>
+                            <td colspan="6" style="padding: 1rem; text-align: center;">
+                                <p style="margin-bottom:1rem; color:var(--text-secondary);">등록된 공급업체(협력사)가 없습니다.</p>
+                                <button id="btnInitSuppliers" class="btn-primary" style="background:var(--success, #10B981);">초기 샘플 데이터 생성하기</button>
+                            </td>
+                        </tr>
+                    `,document.getElementById(`btnInitSuppliers`).addEventListener(`click`,async()=>{let e=document.getElementById(`btnInitSuppliers`);e.disabled=!0,e.textContent=`데이터 생성 중...`;try{let{createSupplier:e}=await n(async()=>{let{createSupplier:e}=await import(`./supplierApi-CZob6vWH.js`).then(e=>e.r);return{createSupplier:e}},__vite__mapDeps([0,1]));for(let t of[{companyName:`LG하우시스 (베트남법인)`,categories:[`인테리어`,`마감재`],contactPerson:`김태진 법인장`,phone:`090-123-4567`},{companyName:`KONE 엘리베이터`,categories:[`엘리베이터`,`기계 설비`],contactPerson:`Nguyen Van A`,phone:`091-234-5678`},{companyName:`호아팟 철강 (Hoa Phat)`,categories:[`건축자재`,`철강`],contactPerson:`Le Thi B`,phone:`093-456-7890`},{companyName:`삼성 SDS (스마트홈)`,categories:[`스마트주차장`,`IT/네트워크`],contactPerson:`박성호 팀장`,phone:`094-567-8901`},{companyName:`베트남 소방설비(VinaFire)`,categories:[`소방`,`안전장비`],contactPerson:`Tran Van C`,phone:`096-789-0123`}])await e(t);alert(`샘플 협력업체 데이터 5건이 초기화되었습니다!`),a()}catch(t){console.error(t),alert(`오류 발생: `+t.message),e.disabled=!1}});return}e.innerHTML=``,t.forEach((t,n)=>{let r=(Math.floor(Math.random()*80)+10)*1e8,i=r/1e10*100,a={label:`보통`,color:`#1f2937`,bg:`#f3f4f6`};n%3==0&&(a={label:`우수`,color:`#065f46`,bg:`#d1fae5`}),n===4&&(a={label:`주의 (클레임)`,color:`#991b1b`,bg:`#fee2e2`});let o=document.createElement(`tr`);o.style.borderBottom=`1px solid var(--border-color)`,o.innerHTML=`
+                        <td style="padding: 1rem; font-weight: 500;">${t.companyName||`-`}</td>
+                        <td style="padding: 1rem;">
+                            <span style="background:${a.bg}; color:${a.color}; padding:0.25rem 0.5rem; border-radius:4px; font-size:0.8rem; font-weight:bold;">${a.label}</span>
+                        </td>
+                        <td style="padding: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div style="width: 100px; background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden;">
+                                    <div style="background: var(--primary-color); width: ${i}%; height: 100%;"></div>
+                                </div>
+                                <span style="font-size: 0.85rem; font-weight: 600;">${r.toLocaleString()} ₫</span>
+                            </div>
+                        </td>
+                        <td style="padding: 1rem;">${(t.categories||[]).join(`, `)||`-`}</td>
+                        <td style="padding: 1rem; font-size:0.875rem;">${t.contactPerson||`-`} (${t.phone||`-`})</td>
+                        <td style="padding: 1rem;"><button class="btn-primary" style="padding:0.25rem 0.5rem; background:#64748b; font-size:0.8rem;" onclick="alert('평가 히스토리 보기 팝업 띄우기')">평가/리뷰 조회</button></td>
+                    `,e.appendChild(o)})}catch(t){console.error(t),e.innerHTML=`<tr><td colspan="5" style="padding: 1rem; text-align: center; color: red;">오류 발생: ${t.message}</td></tr>`}};a(),t(e=>{document.body.style.display=`block`;let t=document.getElementById(`navUserEmailSpan`);t&&(t.textContent=e.email)},()=>{let e=window.location.pathname+window.location.search;window.location.href=`../login.html?redirect=`+encodeURIComponent(e)}),window.logoutAndRedirect=()=>{e(),window.location.href=`../login.html`};
