@@ -1,10 +1,20 @@
+// Unified Firestore Security Rules for jump-15472
+// Shared Single Source of Truth across:
+//   1. BestClubVN (C:\Users\Asus\Desktop\project\jumper\jumper_v10)
+//   2. BestERP (C:\Users\Asus\Desktop\project\BEST\BEST_ERP)
+//   3. 대한김치 (C:\Users\Asus\Desktop\project\대한김치-2\web)
+//   4. BEST WINNER (C:\Users\Asus\Desktop\project\BESTwinnner_web)
+// ⚠️ 주의: 이 파일은 BestClubVN과 BestERP 양쪽 저장소에 항상 100% 동일하게 유지되어야 합니다.
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isAuthenticated() { 
-      return request.auth != null; 
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAuthenticated() {
+      return request.auth != null;
     }
 
     function getUserData() {
@@ -12,77 +22,848 @@ service cloud.firestore {
       return exists(docPath) ? get(docPath).data : {"role": "EMPLOYEE"};
     }
 
+    function isOperatorEmail() {
+      return signedIn()
+        && (request.auth.token.email is string)
+        && (request.auth.token.email == "daguri75@gmail.com");
+    }
+
     function isSuperAdmin() {
-      return isAuthenticated() && (
+      return signedIn() && (
         request.auth.token.email == 'daguri75@gmail.com' ||
         getUserData().role == 'SUPER_ADMIN'
       );
     }
 
-    // CEO 또는 최고관리자 확인 (daguri75@gmail.com, hexttokenopbnb@gmail.com, 가맹점주 포함)
     function isCEO() {
-      return isAuthenticated() && (
+      return signedIn() && (
         request.auth.token.email in ['daguri75@gmail.com', 'hexttokenopbnb@gmail.com'] ||
         getUserData().role in ['SUPER_ADMIN', 'CEO', 'ceo', 'FRANCHISE', 'franchise', 'MERCHANT', 'merchant'] ||
         getUserData().merchantId != null ||
         getUserData().is_merchant_applicant == true
       );
     }
-    
-    // 일반 직원/관리자 이상 (쓰기 권한)
+
     function isStaff() {
-      return isAuthenticated() && (
+      return signedIn() && (
         request.auth.token.email in ['daguri75@gmail.com', 'hexttokenopbnb@gmail.com'] ||
-        getUserData().role in ['SUPER_ADMIN', 'CEO', 'ceo', 'ADMIN', 'admin', 'STAFF', 'staff', 'FRANCHISE', 'franchise', 'MERCHANT', 'merchant'] ||
+        getUserData().role in ['SUPER_ADMIN', 'CEO', 'ceo', 'ADMIN', 'admin', 'STAFF', 'staff', 'EMPLOYEE', 'FRANCHISE', 'franchise', 'MERCHANT', 'merchant'] ||
         getUserData().merchantId != null ||
         getUserData().is_merchant_applicant == true
       );
     }
 
-    // 기본적으로 최고관리자는 모든 컬렉션에서 읽기/쓰기/삭제 전능한 권한을 가짐    
+    function isAdmin() {
+      return signedIn()
+        && (
+          exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+          || isOperatorEmail()
+          || isSuperAdmin()
+          || isCEO()
+          || (exists(/databases/$(database)/documents/users/$(request.auth.uid))
+              && (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+                  || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['SUPER_ADMIN', 'CEO', 'ADMIN', 'admin']))
+        );
+    }
+
+    function belongsToTenant(tenantId) {
+      return signedIn() && (
+        isSuperAdmin() ||
+        isCEO() ||
+        getUserData().tenant_id == tenantId ||
+        getUserData().tenantId == tenantId ||
+        getUserData().merchantId == tenantId ||
+        request.auth.uid == tenantId
+      );
+    }
+
+    function isOrderBuyer() {
+      return signedIn()
+        && (resource.data.buyerUid is string)
+        && resource.data.buyerUid == request.auth.uid;
+    }
+
+    function isOrderGuide() {
+      return signedIn()
+        && (resource.data.guideUid is string)
+        && resource.data.guideUid == request.auth.uid;
+    }
+
+    function buyerPayProofUpdateOnly() {
+      let changed = request.resource.data.diff(resource.data).affectedKeys();
+      return changed.hasOnly(["proof","paymentStatus","payProofUpdatedAt"]);
+    }
+
+    // 최고관리자는 모든 컬렉션에서 읽기/쓰기 권한 보유
     match /{document=**} {
       allow read, write: if isSuperAdmin();
     }
 
-    // Stores / Brands (Multi-tenant 상점 정보)
+    // ── BestClubVN Core Collections ───────────────────────────────────────────
+
+    match /admins/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /notices/{noticeId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /guideApplications/{uid} {
+      allow get: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow list: if isAdmin();
+      allow create: if signedIn() && request.auth.uid == uid;
+      allow update: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow delete: if isAdmin();
+    }
+
+    match /guides/{uid} {
+      allow get: if isAdmin()
+                || (signedIn() && request.auth.uid == uid)
+                || (resource.data.approved == true);
+      allow list: if isAdmin() || signedIn();
+      allow create: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow update: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow delete: if isAdmin();
+    }
+
+    match /items/{itemId} {
+      function isOwner() {
+        return signedIn() && (
+          (resource.data.ownerUid is string && resource.data.ownerUid == request.auth.uid)
+          || (resource.data.guideUid is string && resource.data.guideUid == request.auth.uid)
+        );
+      }
+
+      function isPublicItem() {
+        return (resource.data.status in ["published", "approved"]);
+      }
+
+      allow get: if isAdmin() || isOwner() || isPublicItem();
+      allow list: if true;
+      allow create: if signedIn()
+        && (request.resource.data.ownerUid is string)
+        && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if isAdmin() || isOwner();
+      allow delete: if isAdmin()
+        || (signedIn() && (resource.data.ownerUid is string) && resource.data.ownerUid == request.auth.uid);
+
+      match /reviews/{uid} {
+        allow get, list: if isAdmin() || isPublicItem() || isOwner();
+        allow create, update: if signedIn() && request.auth.uid == uid;
+        allow delete: if isAdmin();
+      }
+    }
+
+    match /reviews/{orderId} {
+      function orderExistsAndMine() {
+        return signedIn()
+          && exists(/databases/$(database)/documents/orders/$(orderId))
+          && get(/databases/$(database)/documents/orders/$(orderId)).data.buyerUid == request.auth.uid
+          && (
+            get(/databases/$(database)/documents/orders/$(orderId)).data.paymentStatus in ["confirmed","settled","completed"]
+            || get(/databases/$(database)/documents/orders/$(orderId)).data.status in ["confirmed","settled","completed"]
+          );
+      }
+
+      function isReviewAuthor() {
+        return signedIn()
+          && (resource.data.authorUid is string)
+          && resource.data.authorUid == request.auth.uid;
+      }
+
+      function isReviewGuide() {
+        return signedIn()
+          && (resource.data.guideUid is string)
+          && resource.data.guideUid == request.auth.uid;
+      }
+
+      function authorUpdateOnly() {
+        let changed = request.resource.data.diff(resource.data).affectedKeys();
+        return changed.hasOnly(["rating","text","updatedAt"]);
+      }
+
+      function guideReplyOnly() {
+        let changed = request.resource.data.diff(resource.data).affectedKeys();
+        return changed.hasOnly(["guideReply","updatedAt"]);
+      }
+
+      allow get, list: if true;
+      allow create: if orderExistsAndMine()
+        && (request.resource.data.authorUid is string)
+        && request.resource.data.authorUid == request.auth.uid
+        && (request.resource.data.orderId == orderId);
+      allow update: if isAdmin()
+        || (isReviewAuthor() && authorUpdateOnly())
+        || (isReviewGuide() && guideReplyOnly());
+      allow delete: if isAdmin();
+    }
+
+    match /orders/{orderId} {
+      allow get, list: if signedIn();
+      allow create: if signedIn();
+      allow update: if isAdmin()
+        || isStaff()
+        || (isOrderBuyer() && buyerPayProofUpdateOnly())
+        || belongsToTenant(resource.data.tenantId);
+      allow delete: if isAdmin();
+    }
+
+    match /slots/{slotId} {
+      allow get, list: if true;
+      allow create: if signedIn()
+        && (request.resource.data.itemId is string)
+        && (request.resource.data.date is string)
+        && (request.resource.data.capacity is number)
+        && (request.resource.data.booked is number)
+        && request.resource.data.booked >= 0
+        && request.resource.data.capacity >= 0;
+      allow update: if signedIn()
+        && (resource.data.booked is number)
+        && (request.resource.data.booked is number)
+        && request.resource.data.booked >= resource.data.booked;
+      allow delete: if isAdmin();
+    }
+
+    // users/{uid} (BestClubVN + BestERP + 가맹점 웹 통합)
+    match /users/{uid} {
+      allow get, list: if signedIn();
+      allow create: if isAdmin()
+        || isStaff()
+        || (signedIn() && request.auth.uid == uid
+            && !request.resource.data.keys().hasAny(['isAdmin', 'merchantId', 'merchant_id', 'teamId', 'tenant_id']));
+      allow update: if isAdmin()
+        || isStaff()
+        || (signedIn() && request.auth.uid == uid
+            && !request.resource.data.diff(resource.data).affectedKeys()
+                 .hasAny(['isAdmin', 'merchantId', 'merchant_id', 'teamId', 'tenant_id']));
+      allow delete: if isAdmin();
+
+      match /myMap/{docId} {
+        allow read, write: if signedIn() && request.auth.uid == uid;
+      }
+    }
+
+    match /settlements/{ym} {
+      allow get: if isAdmin() || signedIn();
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+
+      match /guides/{uid} {
+        allow get: if isAdmin() || (signedIn() && request.auth.uid == uid);
+        allow list: if isAdmin();
+        allow create, update, delete: if isAdmin();
+      }
+    }
+
+    match /settlementRuns/{ym} {
+      allow get: if isAdmin() || signedIn();
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+
+      match /guides/{uid} {
+        allow get: if isAdmin() || (signedIn() && request.auth.uid == uid);
+        allow list: if isAdmin();
+        allow create, update, delete: if isAdmin();
+      }
+    }
+
+    match /guideOrders/{guideUid} {
+      allow get: if isAdmin() || (signedIn() && request.auth.uid == guideUid);
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+
+      match /orders/{orderId} {
+        allow get, list: if isAdmin() || (signedIn() && request.auth.uid == guideUid);
+        allow create, update, delete: if isAdmin();
+      }
+    }
+
+    match /settings/{docId} {
+      allow get: if true;
+      allow list: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // deposits (VND / KRW 충전 요청 및 내역 조회)
+    match /deposits/{refCode} {
+      allow get, list: if isAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.uid is string
+        && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    match /hexDeposits/{refCode} {
+      allow get, list: if isAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    match /mentors/{email} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /mentorRequests/{uid} {
+      allow get: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow list: if isAdmin();
+      allow create, update: if signedIn() && request.auth.uid == uid;
+      allow delete: if isAdmin();
+    }
+
+    match /transactions/{docId} {
+      allow get, list: if isAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid);
+      allow create: if signedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    match /kca_webzine/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // merchants (BestClubVN & BestERP 공통 가맹점 마스터)
+    match /merchants/{merchantId} {
+      allow get, list: if true;
+      allow create: if isAdmin()
+        || isStaff()
+        || (signedIn()
+            && request.resource.data.ownerUid == request.auth.uid
+            && request.resource.data.active == false
+            && request.resource.data.status == 'pending');
+      allow delete: if isAdmin();
+      allow update: if isAdmin()
+        || isStaff()
+        || (signedIn()
+            && !request.resource.data.diff(resource.data).affectedKeys()
+                 .hasAny(['active', 'status', 'approvedAt', 'approvedBy', 'feeBps', 'ownerUid', 'apiKey'])
+            && (
+              (resource.data.ownerUid is string && resource.data.ownerUid == request.auth.uid)
+              || request.auth.uid == merchantId
+              || (exists(/databases/$(database)/documents/users/$(request.auth.uid))
+                  && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.merchantId == merchantId)
+            ));
+    }
+
+    match /places/{placeId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /coopConfig/{docId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /coopProducts/{productId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /coopOrders/{orderId} {
+      allow get, list: if isAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid);
+      allow create: if signedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    match /sponsorBanners/{bannerId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /jackpot_rounds/{roundId} {
+      allow read: if true;
+      allow create, update: if signedIn();
+      allow delete: if isAdmin();
+    }
+
+    match /jackpot_wins/{docId} {
+      allow read: if true;
+      allow create, update: if signedIn();
+      allow delete: if isAdmin();
+    }
+
+    match /jackpot_config/{docId} {
+      allow get, list: if true;
+      allow create, update: if signedIn();
+      allow delete: if isAdmin();
+    }
+
+    match /jackpot_stats/{docId} {
+      allow get, list: if true;
+      allow create, update: if signedIn();
+      allow delete: if isAdmin();
+    }
+
+    match /usedMarketPosts/{postId} {
+      allow get, list: if true;
+      allow create: if signedIn()
+        && request.resource.data.sellerUid is string
+        && request.resource.data.sellerUid == request.auth.uid;
+      allow update, delete: if isAdmin()
+        || (signedIn()
+            && resource.data.sellerUid is string
+            && resource.data.sellerUid == request.auth.uid);
+    }
+
+    match /ohlc/{docId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
+    }
+
+    // ── 보물찾기 & 배틀 시스템 ────────────────────────────────────────────────
+    match /treasure_items/{docId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
+    match /treasure_keys/{docId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
+    match /treasure_boxes/{docId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
+    match /treasure_inventory/{docId} {
+      allow get, list: if signedIn()
+        && resource.data.uid == request.auth.uid;
+      allow write: if signedIn();
+    }
+    match /treasure_logs/{docId} {
+      allow get: if signedIn()
+        && docId.matches(request.auth.uid + '_.*');
+      allow list: if isAdmin();
+      allow write: if false;
+    }
+    match /treasure_stats/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /treasure_vouchers/{docId} {
+      allow get, list: if true;
+      allow write: if false;
+    }
+    match /stats/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /treasure_voucher_logs/{docId} {
+      allow get, list: if signedIn()
+        && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+    match /treasure_inventory_boxes/{docId} {
+      allow get, list: if signedIn()
+        && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+    match /treasure_voucher_purchases/{docId} {
+      allow get, list: if signedIn()
+        && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+    match /dropped_items/{docId} {
+      allow get, list: if signedIn();
+      allow write: if false;
+    }
+
+    match /battle_monsters/{docId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+    match /battle_towers/{docId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+    match /map_decorations/{docId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+    match /battle_players/{uid} {
+      allow get, list: if true;
+      allow create: if signedIn() && request.auth.uid == uid
+        && !request.resource.data.keys().hasAny(['gold']);
+      allow update: if signedIn() && request.auth.uid == uid
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['gold']);
+      allow delete: if isAdmin();
+    }
+
+    // ── 커뮤니티 / 이벤트 / 버기카 / DAO / 게임 상점 ─────────────────────────
+    match /community_posts/{postId} {
+      allow read: if true;
+      allow create: if signedIn()
+        && request.resource.data.authorId is string
+        && request.resource.data.authorId == request.auth.uid;
+      allow update, delete: if isAdmin()
+        || (signedIn() && resource.data.authorId == request.auth.uid);
+    }
+
+    match /community_events/{eventId} {
+      allow get, list: if true;
+      allow create: if isAdmin();
+      allow update, delete: if isAdmin()
+        || (signedIn() && resource.data.authorUid == request.auth.uid);
+
+      match /reviews/{reviewId} {
+        allow get, list: if true;
+        allow create: if isAdmin()
+          || (signedIn()
+              && reviewId == request.auth.uid
+              && !exists(/databases/$(database)/documents/community_events/$(eventId)/reviews/$(request.auth.uid)));
+        allow update, delete: if isAdmin();
+      }
+
+      match /comments/{commentId} {
+        allow get, list: if true;
+        allow create: if signedIn();
+        allow update, delete: if isAdmin()
+          || (signedIn() && resource.data.uid == request.auth.uid);
+      }
+    }
+
+    match /community_event_vouchers/{docId} {
+      allow get, list: if signedIn()
+        && (resource.data.uid == request.auth.uid || isAdmin());
+      allow write: if false;
+    }
+
+    match /community_voucher_settlements/{docId} {
+      allow get, list: if isAdmin()
+        || (signedIn() && resource.data.sellerUid == request.auth.uid);
+      allow write: if false;
+    }
+
+    function isRegisteredDriver() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/buggy_drivers/$(request.auth.uid));
+    }
+
+    match /buggy_config/{docId} {
+      allow get, list: if true;
+      allow write: if false;
+    }
+    match /buggy_rides/{rideId} {
+      allow get, list: if isAdmin()
+        || isRegisteredDriver()
+        || (signedIn() && (resource.data.userId == request.auth.uid || resource.data.driverId == request.auth.uid));
+      allow write: if false;
+    }
+    match /buggy_drivers/{driverUid} {
+      allow get: if isAdmin() || (signedIn() && request.auth.uid == driverUid);
+      allow list: if isAdmin();
+      allow write: if false;
+    }
+    match /buggy_driver_locations/{driverUid} {
+      allow get, list: if signedIn();
+      allow write: if signedIn() && request.auth.uid == driverUid;
+    }
+    match /buggy_transactions/{docId} {
+      allow get, list: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid);
+      allow write: if false;
+    }
+    match /ride_audit_logs/{docId} {
+      allow get, list: if isAdmin();
+      allow write: if false;
+    }
+    match /payment_attempt_logs/{docId} {
+      allow get, list: if isAdmin();
+      allow write: if false;
+    }
+    match /buggy_driver_earnings/{docId} {
+      allow get, list: if isAdmin() || (signedIn() && resource.data.driverId == request.auth.uid);
+      allow write: if false;
+    }
+
+    match /dao_proposals/{proposalId} {
+      allow get, list: if true;
+      allow write: if false;
+
+      match /supporters/{uid} {
+        allow get: if signedIn() && request.auth.uid == uid;
+        allow list: if isAdmin();
+        allow write: if false;
+      }
+      match /votes/{uid} {
+        allow get: if signedIn() && request.auth.uid == uid;
+        allow list: if isAdmin();
+        allow write: if false;
+      }
+      match /comments/{commentId} {
+        allow get, list: if true;
+        allow write: if false;
+      }
+    }
+
+    match /game_shops/{shopId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /shop_sales_logs/{docId} {
+      allow get, list: if isAdmin()
+        || (signedIn() && resource.data.ownerUid == request.auth.uid);
+      allow write: if false;
+    }
+
+    match /user_sessions/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow create, update: if signedIn() && request.auth.uid == uid;
+      allow delete: if isAdmin();
+      allow list: if false;
+    }
+
+    match /user_locations/{uid} {
+      allow read: if signedIn();
+      allow write: if signedIn() && request.auth.uid == uid;
+    }
+
+    match /battle_hp/{docId} {
+      allow read: if signedIn();
+      allow write: if signedIn();
+    }
+
+    match /admin_status/{docId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /support_chats/{uid} {
+      allow get, list: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow create: if signedIn() && request.auth.uid == uid;
+      allow update: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow delete: if false;
+
+      match /messages/{msgId} {
+        allow get, list: if isAdmin() || (signedIn() && request.auth.uid == uid);
+        allow create: if isAdmin() || (signedIn() && request.auth.uid == uid);
+        allow update: if isAdmin()
+          || (signedIn() && request.auth.uid == uid
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["readByUser"]));
+        allow delete: if false;
+      }
+    }
+
+    match /device_accounts/{deviceId} {
+      allow get: if true;
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    match /nfc_tags/{tagId} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow write: if false;
+    }
+
+    match /nfc_claims/{docId} {
+      allow get, list: if isAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid);
+      allow write: if false;
+    }
+
+    match /tutorial_boxes/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list: if isAdmin();
+      allow write: if false;
+    }
+
+    match /slot_config/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /user_treasures/{docId} {
+      allow read: if signedIn() && (
+        resource.data.ownerId == request.auth.uid || isAdmin()
+      );
+      allow write: if false;
+    }
+
+    match /user_treasure_npcs/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /coopTreasurePackages/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /packageComments/{docId} {
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow delete: if signedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow update: if false;
+    }
+
+    match /stockOptionVouchers/{docId} {
+      allow get, list: if signedIn();
+      allow write: if false;
+    }
+    match /voucherTransfers/{docId} {
+      allow get, list: if isAdmin();
+      allow write: if false;
+    }
+    match /optionExecutions/{docId} {
+      allow get, list: if isAdmin();
+      allow write: if false;
+    }
+
+    match /membership_config/{docId} {
+      allow get, list: if signedIn();
+      allow write: if false;
+    }
+
+    match /membership_payments/{docId} {
+      allow get, list: if isAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid);
+      allow write: if false;
+    }
+
+    match /membership_referrals/{docId} {
+      allow get, list: if isAdmin()
+        || (signedIn() && (
+          resource.data.referrerUid == request.auth.uid
+          || resource.data.newUserUid == request.auth.uid
+        ));
+      allow write: if false;
+    }
+
+    match /pending_referrals/{docId} {
+      allow get: if signedIn() && request.auth.uid == docId;
+      allow list: if isAdmin();
+      allow write: if false;
+    }
+
+    match /npc_characters/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /system/{docId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    match /webzine_articles/{articleId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /coupon_campaigns/{campaignId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /user_coupons/{userCouponId} {
+      allow get, list: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow create, update: if isAdmin() || (signedIn() && request.resource.data.uid == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    match /coupon_redemptions/{redemptionId} {
+      allow get, list: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow create, update: if isAdmin() || signedIn();
+      allow delete: if isAdmin();
+    }
+
+    // ── BestERP & 가맹점 SaaS 통합 컬렉션 ────────────────────────────────────
+
     match /stores/{storeId} {
       allow read: if true;
-      allow write: if isCEO() || isStaff();
+      allow write: if isCEO() || isStaff() || belongsToTenant(storeId);
     }
 
-    // 일반 직원(Staff) 이상의 권한
-    match /materials/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff() || isCEO(); }
-    match /suppliers/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff() || isCEO(); }
-    match /priceHistory/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff() || isCEO(); }
-    match /externalPrices/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff() || isCEO(); }
-
-    // 가맹점 상품 카탈로그 마스터 및 상점 데이터 (BestClubVN & BestERP 공통 Single Source of Truth)
-    match /merchant_products/{document=**} { allow read: if true; allow write: if isAuthenticated(); }
-    match /merchants/{document=**} { allow read: if true; allow write: if isStaff() || isCEO(); }
-    match /merchant_members/{document=**} { allow read: if isAuthenticated(); allow write: if isStaff() || isCEO(); }
-    match /menus/{document=**} { allow read: if true; allow write: if isAuthenticated(); }
-    match /merchant_orders/{document=**} { allow read, write: if isAuthenticated(); }
-    match /orders/{document=**} { allow read, write: if isAuthenticated(); }
-    
-    match /users/{userId} {
+    match /materials/{document=**} {
       allow read: if isAuthenticated();
-      allow write: if request.auth.uid == userId || isSuperAdmin() || isCEO();
+      allow write: if isStaff() || isCEO();
     }
-    
-    match /projects/{document=**} { allow read, write: if isAuthenticated(); }
-    match /purchaseRequests/{document=**} { allow read, write: if isAuthenticated(); }
-    match /purchase_requests/{document=**} { allow read, write: if isAuthenticated(); }
-    match /access_requests/{document=**} { allow read, write: if isAuthenticated(); allow create: if true; }
-    
-    // 신규 설계된 AI 경영참모·통합 DB Rules (내부운영 HR, 재무, 직원 등 가맹점 모드 완전 지원)
-    match /financeRecords/{document=**} { allow read, write: if isAuthenticated(); }
-    match /employees/{document=**} { allow read, write: if isAuthenticated(); }
-    match /clients/{document=**} { allow read, write: if isAuthenticated(); }
-    match /contacts/{document=**} { allow read, write: if isAuthenticated(); }
-    match /siteLogs/{document=**} { allow read, write: if isAuthenticated(); }
-    match /aiInsights/{document=**} { allow read, write: if isAuthenticated(); }
 
-    // 업무 및 보고 시스템 (Task Management System)
+    match /suppliers/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isStaff() || isCEO();
+    }
+
+    match /priceHistory/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isStaff() || isCEO();
+    }
+
+    match /externalPrices/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isStaff() || isCEO();
+    }
+
+    match /merchant_products/{productId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    match /merchant_members/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isStaff() || isCEO() || isAuthenticated();
+    }
+
+    match /menus/{menuId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    match /merchant_orders/{orderId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /projects/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /purchaseRequests/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /purchase_requests/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /access_requests/{document=**} {
+      allow read, write: if isAuthenticated();
+      allow create: if true;
+    }
+
+    match /financeRecords/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /employees/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /clients/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /contacts/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /siteLogs/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /aiInsights/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+
     match /system_branding/{tenantId} {
       allow read: if isAuthenticated();
       allow write: if isCEO();
@@ -107,6 +888,6 @@ service cloud.firestore {
     match /task_logs/{logId} {
       allow read, write: if isAuthenticated();
     }
+
   }
 }
-
