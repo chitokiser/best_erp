@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>:root{--crm-primary:#4f46e5;--crm-primary-dark:#3730a3;--zalo-blue:#0068ff;--crm-success:#10b981;--crm-warning:#f59e0b;--crm-danger:#ef4444;--crm-dark:#0f172a;--crm-bg:#f8fafc}body{background:#f1f5f9;font-family:Plus Jakarta Sans,Noto Sans KR,sans-serif}.cam-viewport-wrap{background:#090d16;border:2px solid #1e293b;border-radius:1rem;justify-content:center;align-items:center;width:100%;height:380px;display:flex;position:relative;overflow:hidden;box-shadow:0 15px 30px -5px #0000004d}#webcamVideo{object-fit:cover;width:100%;height:100%}.radar-scan-line{pointer-events:none;background:linear-gradient(90deg,#0000,#10b981,#0000);width:100%;height:3px;animation:2.5s linear infinite radarScan;position:absolute;top:0;left:0;box-shadow:0 0 15px #10b981}@keyframes radarScan{0%{opacity:.8;top:0%}50%{opacity:1;top:98%}to{opacity:.8;top:0%}}.ai-target-box{pointer-events:none;background:#10b98126;border:2px solid #10b981;border-radius:6px;transition:all .3s;position:absolute}.ai-target-tag{color:#000;white-space:nowrap;background:#10b981;border-radius:4px;padding:.15rem .45rem;font-size:.68rem;font-weight:800;position:absolute;top:-26px;left:-2px}.crm-tab-bar{border-bottom:2px solid #e2e8f0;gap:.4rem;margin-bottom:1rem;padding-bottom:.25rem;display:flex;overflow-x:auto}.crm-tab-btn{color:#64748b;cursor:pointer;white-space:nowrap;background:0 0;border:none;border-radius:.5rem .5rem 0 0;align-items:center;gap:.35rem;padding:.6rem 1rem;font-size:.875rem;font-weight:700;transition:all .2s;display:flex}.crm-tab-btn.active{color:var(--crm-primary);border-bottom:3px solid var(--crm-primary);background:#eef2ff}.tier-filter-pill{color:#475569;cursor:pointer;background:#fff;border:1px solid #cbd5e1;border-radius:999px;padding:.35rem .75rem;font-size:.75rem;font-weight:700;transition:all .15s}.tier-filter-pill.active{background:var(--crm-primary);color:#fff;border-color:var(--crm-primary)}.customer-card-item{cursor:pointer;background:#fff;border:1.5px solid #e2e8f0;border-radius:.85rem;justify-content:space-between;align-items:center;gap:.75rem;margin-bottom:.75rem;padding:1rem;transition:all .2s;display:flex}.customer-card-item:hover{border-color:var(--crm-primary);transform:translateY(-2px);box-shadow:0 6px 15px -3px #4f46e51f}.modal-overlay{backdrop-filter:blur(4px);z-index:99999;background:#0f172abf;justify-content:center;align-items:center;padding:1rem;display:none;position:fixed;inset:0}.modal-box{background:#fff;border:1px solid #e2e8f0;border-radius:1.25rem;width:100%;max-width:680px;max-height:90vh;padding:1.75rem;position:relative;overflow-y:auto;box-shadow:0 25px 50px -12px #00000040}.timeline-item{border-left:2px solid #e2e8f0;margin-bottom:.85rem;padding-left:1.5rem;position:relative}.timeline-item:before{content:"";background:var(--crm-primary);border-radius:50%;width:8px;height:8px;position:absolute;top:4px;left:-5px}.table-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.75rem;display:grid}.table-seat-box{text-align:center;cursor:pointer;background:#fff;border:1.5px solid #e2e8f0;border-radius:.75rem;padding:.85rem .6rem;transition:all .2s}.table-seat-box.occupied{background:#eef2ff;border-color:#6366f1}.table-seat-box.empty{opacity:.75;background:#f8fafc;border-color:#cbd5e1}</style>
-  <script type="module" crossorigin src="/assets/admin_vision-crm-Bbmr8MwI.js"></script>
+  <script type="module" crossorigin src="/assets/admin_vision-crm-U53lHiel.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/firebase-config-CRr6M8Nr.js">
   <link rel="modulepreload" crossorigin href="/assets/auth-Chok8jKQ.js">
   <link rel="modulepreload" crossorigin href="/assets/notification-hub-ChDr8WD_.js">
@@ -206,15 +206,23 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
                     <div style="display:flex; gap:0.4rem;">
                         <button onclick="captureAndAnalyzeCurrentFace()" style="background:var(--ai-gradient); color:white; border:none; padding:0.45rem 0.9rem; border-radius:0.4rem; font-size:0.8rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 4px 10px rgba(79,70,229,0.3);">
-                            <span>⚡</span> 비식별 방문객 즉시 스캔
+                            <span>⚡</span> 관제 카메라 3대 정보 자동 업그레이드 실행
                         </button>
                         <button onclick="switchCameraFacing()" id="btnSwitchCam" style="background:#f1f5f9; border:1px solid #cbd5e1; padding:0.45rem 0.75rem; border-radius:0.4rem; font-size:0.8rem; cursor:pointer; font-weight:700;">
                             🔄 전/후면 전환
                         </button>
                     </div>
                     <span style="font-size:0.75rem; color:#10b981; font-weight:700;">
-                        ● 개인 얼굴/생체정보 미저장 (법령 준수)
+                        ● 안면 매칭 & 3대 정보 실시간 자동 갱신
                     </span>
+                </div>
+
+                <!-- 3대 자동 업그레이드 안내 배너 -->
+                <div style="background:#EFF6FF; border:1px solid #BFDBFE; border-radius:0.6rem; padding:0.65rem 0.85rem; font-size:0.75rem; color:#1E40AF; line-height:1.5; margin-top:0.5rem;">
+                    <strong>🤖 관제 카메라 3대 자동 업그레이드 시스템:</strong><br>
+                    • <strong>언제 방문했는지</strong>: 카메라 인식 시 방문 일시 타임스탬프 & 횟수 자동 누적<br>
+                    • <strong>만족도는 어땠는지</strong>: 식사 중 안면 표정(Smile/만족 감정) AI가 실시간 분석하여 자동 측정<br>
+                    • <strong>뭘 시켜서 먹었는지</strong>: 테이블 POS 주문 내역을 고객 프로필 타임라인에 자동 연동
                 </div>
 
                 <!-- Chart: 시간대별 유입량 추이 -->
@@ -410,19 +418,48 @@
                 </div>
             </div>
 
-            <!-- Profile Attributes -->
-            <div style="background:#F1F5F9; border-radius:0.75rem; padding:0.9rem; margin-bottom:1.25rem; font-size:0.825rem; color:#334155; line-height:1.6;">
+            <!-- Photo & Matching Status Strip -->
+            <div style="display:flex; align-items:center; gap:1rem; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:0.75rem; padding:0.85rem; margin-bottom:1.1rem;">
+                <div style="width:60px; height:60px; border-radius:50%; background:#E0E7FF; border:2px solid #6366F1; overflow:hidden; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <img id="modalCustomerPhoto" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80" style="width:100%; height:100%; object-fit:cover;">
+                </div>
+                <div style="flex:1;">
+                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                        <strong style="font-size:0.95rem; color:#1E293B;" id="modalCustomerName">김민수</strong>
+                        <span id="modalFaceMatchBadge" style="background:#D1FAE5; color:#065F46; font-size:0.725rem; font-weight:800; padding:0.2rem 0.5rem; border-radius:0.35rem;">
+                            📸 CCTV 안면 매칭 연동 완료 (일치율 98.4%)
+                        </span>
+                    </div>
+                    <p style="margin:0.2rem 0 0 0; font-size:0.75rem; color:#64748B;">
+                        고객이 테이블 QR에서 본인 사진을 등록/업데이트하여 관제 카메라와 자동 매칭됩니다.
+                    </p>
+                </div>
+            </div>
+
+            <!-- 1. 👤 회원 자진 입력 정보 (Google 이메일, 생년월일, 직업 등) -->
+            <div style="background:#F1F5F9; border-radius:0.75rem; padding:0.9rem; margin-bottom:1rem; font-size:0.825rem; color:#334155; line-height:1.6;">
+                <strong style="display:block; color:#1E293B; font-size:0.85rem; margin-bottom:0.35rem;">👤 회원 자진 입력 정보</strong>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
-                    <div>• <strong>성함/호칭</strong>: <span id="modalCustomerName">김민수</span></div>
-                    <div>• <strong>이메일</strong>: <span id="modalCustomerEmail">minsu.kim@gmail.com</span></div>
+                    <div>• <strong>Google 계정</strong>: <span id="modalCustomerEmail">minsu.kim@gmail.com</span></div>
                     <div>• <strong>생년월일</strong>: <span id="modalCustomerBirth">1992-11-24 (생일 알림 대상)</span></div>
-                    <div>• <strong>성별/국적/직업</strong>: <span id="modalCustomerMeta">남성 / 대한민국 / 전문직</span></div>
+                    <div>• <strong>직업군</strong>: <span id="modalCustomerJob">전문직 / IT 비즈니스</span></div>
+                    <div>• <strong>성별/국적</strong>: <span id="modalCustomerMeta">남성 / 대한민국</span></div>
+                </div>
+            </div>
+
+            <!-- 2. 🤖 관제 카메라 & POS 자동 업그레이드 내역 -->
+            <div style="background:#EFF6FF; border:1px solid #BFDBFE; border-radius:0.75rem; padding:0.9rem; margin-bottom:1.1rem; font-size:0.825rem; color:#1E40AF; line-height:1.6;">
+                <strong style="display:block; color:#1E40AF; font-size:0.85rem; margin-bottom:0.35rem;">🤖 관제 카메라 & POS 자동 업그레이드 정보</strong>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+                    <div>• <strong>① 언제 방문했는지</strong>: <span id="modalAutoVisitTime" style="font-weight:700;">오늘 18:40 (체류 38분 측정)</span></div>
+                    <div>• <strong>② 만족도는 어땠는지</strong>: <span id="modalAutoSatisfaction" style="font-weight:800; color:#047857;">★ 4.9 / 5.0 (AI 미소 96% 감지)</span></div>
+                    <div style="grid-column:span 2;">• <strong>③ 뭘 시켜서 먹었는지</strong>: <span id="modalAutoOrderedMenu" style="font-weight:700;">안심 스테이크 2인 세트 + 칠레산 와인 (Table 04 POS 자동 연동)</span></div>
                 </div>
             </div>
 
             <!-- Service Notes (기획서 §3-B) -->
             <div style="margin-bottom:1.25rem;">
-                <h4 style="margin:0 0 0.5rem 0; font-size:0.9rem; color:#1E293B;">📝 서비스 참고사항 (고객 요청 및 선호 특성)</h4>
+                <h4 style="margin:0 0 0.5rem 0; font-size:0.9rem; color:#1E293B;">📝 서비스 참고사항 (고객 자진 선택 및 직원 객관적 메모)</h4>
                 <div id="modalServiceNotes" style="background:#FFFBEB; border:1px solid #FDE68A; border-radius:0.6rem; padding:0.75rem; font-size:0.825rem; color:#92400E; line-height:1.6;">
                     • 창가 자리 선호<br>
                     • 생일 혜택 안내 동의<br>
