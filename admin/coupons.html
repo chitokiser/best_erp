@@ -238,6 +238,10 @@
         import { db, auth } from '../assets/js/firebase-config.js';
         import { collection, query, where, getDocs, updateDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
         import { checkAdminAuth } from '../assets/js/auth.js';
+        import { initNotificationHub } from '../assets/js/notification-hub.js';
+
+        // 알림 센터 자동 마운트
+        initNotificationHub();
 
         let currentTenantId = '1791605366';
         let html5QrCode = null;

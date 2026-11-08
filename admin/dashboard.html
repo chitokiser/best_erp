@@ -414,6 +414,10 @@
         import { db, auth } from '../assets/js/firebase-config.js';
         import { collection, query, where, getDocs, updateDoc, doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
         import { checkAdminAuth } from '../assets/js/auth.js';
+        import { initNotificationHub } from '../assets/js/notification-hub.js';
+
+        // 알림 센터 자동 마운트
+        initNotificationHub();
 
         const ctx = document.getElementById('ratioChart').getContext('2d');
         new Chart(ctx, {
