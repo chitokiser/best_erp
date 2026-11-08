@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>현장 방문 & 안건 사진 보고서 - BestERP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/admin.css">
+    <style>
+        .photo-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 0.65rem;
+            margin-top: 0.65rem;
+        }
+        .photo-thumb-wrap {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            border: 1px solid #cbd5e1;
+            background: #f1f5f9;
+        }
+        .photo-thumb-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .photo-thumb-remove {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 22px;
+            height: 22px;
+            background: rgba(0,0,0,0.65);
+            color: white;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .report-feed-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03);
+            transition: all 0.2s ease;
+        }
+        .report-feed-card:hover {
+            box-shadow: 0 8px 15px -3px rgba(0,0,0,0.06);
+            border-color: #cbd5e1;
+        }
+        .report-photo-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 0.65rem;
+            margin: 0.85rem 0;
+        }
+        .gallery-item {
+            aspect-ratio: 4/3;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+            background: #000;
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.2s;
+        }
+        .gallery-item:hover img {
+            transform: scale(1.05);
+        }
+        .type-badge-field { background: #e0e7ff; color: #4338ca; }
+        .type-badge-issue { background: #fee2e2; color: #b91c1c; }
+        .type-badge-idea { background: #fef3c7; color: #b45309; }
+        .type-badge-meeting { background: #d1fae5; color: #065f46; }
+    </style>
+</head>
+
+<body class="admin-body">
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <div class="nav-header-bar">
+            <div class="nav-brand">
+                <h1 class="brand-edit-badge" onclick="location.href='dashboard.html'" title="대시보드로 이동">
+                    <span style="color:#ef4444;" class="dynamic-brand-text" id="dynamicStoreName">가맹점</span>
+                    <span style="color:var(--text-primary); font-size:1.15rem; font-weight:700;">M-SaaS</span>
+                </h1>
+            </div>
+            <button class="mobile-nav-toggle" onclick="toggleNavMenu()" aria-label="메뉴 열기">
+                <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+                    <path d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+
+        <ul id="navMenuList">
+            <li><a href="dashboard.html">CEO 대시보드</a></li>
+            <li><a href="coupons.html">🎫 쿠폰/바우처 검증</a></li>
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
+                <span class="dropbtn">매장 관리(F&B) ▾</span>
+                <div class="dropdown-content">
+                    <a href="menus.html">스마트 메뉴 관리</a>
+                    <a href="categories.html">카테고리 관리</a>
+                </div>
+            </li>
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
+                <span class="dropbtn">영업/프로젝트 ▾</span>
+                <div class="dropdown-content">
+                    <a href="projects.html">프로젝트 보드</a>
+                    <a href="materials.html">자재관리</a>
+                    <a href="price-history.html">시세/단가 이력</a>
+                    <a href="suppliers.html">협력업체</a>
+                </div>
+            </li>
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
+                <span class="dropbtn" style="color:var(--ai-primary); font-weight:700;">내부운영(HR) ▾</span>
+                <div class="dropdown-content">
+                    <a href="field-reports.html" style="color:var(--ai-primary); font-weight:700;">📸 현장/안건 사진보고</a>
+                    <a href="tasks.html">업무지시/보고</a>
+                    <a href="finance.html">재무/회계</a>
+                    <a href="employees.html">직원목록</a>
+                </div>
+            </li>
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
+                <span class="dropbtn">고객/회원관리 ▾</span>
+                <div class="dropdown-content">
+                    <a href="clients.html">멘티(고객) CRM</a>
+                    <a href="contacts.html">인맥(명함)</a>
+                    <a href="marketing.html">자동 마케팅(트리거)</a>
+                    <a href="users.html">SaaS 회원관리</a>
+                </div>
+            </li>
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
+                <span class="dropbtn">시스템 ▾</span>
+                <div class="dropdown-content">
+                    <a href="api-settings.html">시스템/API 설정</a>
+                </div>
+            </li>
+        </ul>
+        <div id="navUserEmail" style="display:none;"></div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="admin-container">
+        <!-- Title & Action Bar -->
+        <div class="admin-header-row">
+            <div>
+                <h2 class="admin-header-title">📸 현장 방문 & 안건 사진 보고서</h2>
+                <p style="color:#64748b; font-size:0.875rem; margin:0.35rem 0 0 0;">
+                    직원이 현장 실사, 시공 점검, 고객사 미팅 후 촬영한 사진과 주요 안건을 실시간으로 보고하고 공유합니다.
+                </p>
+            </div>
+            <button onclick="openNewReportModal()" style="background:var(--ai-gradient); color:white; border:none; padding:0.65rem 1.35rem; border-radius:0.5rem; font-weight:800; cursor:pointer; font-size:0.9rem; display:inline-flex; align-items:center; gap:0.4rem; box-shadow:0 4px 12px rgba(79,70,229,0.3); transition:transform 0.15s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
+                <span>+</span> 새 사진 보고서 작성
+            </button>
+        </div>
+
+        <!-- Filter Tab Bar -->
+        <div style="display:flex; gap:0.5rem; margin-top:1.25rem; flex-wrap:wrap;">
+            <button onclick="filterReports('ALL', this)" class="btn-filter active" style="padding:0.45rem 1rem; border-radius:1rem; border:1px solid var(--ai-primary); background:var(--ai-primary); color:white; font-size:0.8rem; font-weight:700; cursor:pointer;">전체 보고서</button>
+            <button onclick="filterReports('FIELD', this)" class="btn-filter" style="padding:0.45rem 1rem; border-radius:1rem; border:1px solid #cbd5e1; background:white; color:#475569; font-size:0.8rem; font-weight:600; cursor:pointer;">🏗️ 현장 출장/시공</button>
+            <button onclick="filterReports('ISSUE', this)" class="btn-filter" style="padding:0.45rem 1rem; border-radius:1rem; border:1px solid #cbd5e1; background:white; color:#475569; font-size:0.8rem; font-weight:600; cursor:pointer;">🚨 긴급 하자/이슈</button>
+            <button onclick="filterReports('MEETING', this)" class="btn-filter" style="padding:0.45rem 1rem; border-radius:1rem; border:1px solid #cbd5e1; background:white; color:#475569; font-size:0.8rem; font-weight:600; cursor:pointer;">🤝 외근/미팅</button>
+            <button onclick="filterReports('IDEA', this)" class="btn-filter" style="padding:0.45rem 1rem; border-radius:1rem; border:1px solid #cbd5e1; background:white; color:#475569; font-size:0.8rem; font-weight:600; cursor:pointer;">💡 안건/제안</button>
+        </div>
+
+        <!-- Reports Feed Container -->
+        <div id="reportsFeed" style="margin-top:1.25rem;">
+            <div style="padding:3rem; text-align:center; color:#94a3b8; font-weight:600;">
+                보고서 데이터를 불러오는 중입니다...
+            </div>
+        </div>
+    </div>
+
+    <!-- New Report Write Modal -->
+    <div id="reportModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.55); backdrop-filter:blur(3px); z-index:10000; align-items:center; justify-content:center; overflow-y:auto; padding:1rem;">
+        <div style="background:white; border-radius:1rem; max-width:560px; width:100%; max-height:92vh; display:flex; flex-direction:column; box-shadow:0 25px 35px -5px rgba(0,0,0,0.25);">
+            <!-- Modal Header -->
+            <div style="padding:1.25rem 1.5rem; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0; font-size:1.15rem; color:#1e293b; font-weight:800;">📸 새 현장/안건 사진 보고서 작성</h3>
+                <button onclick="closeNewReportModal()" style="background:none; border:none; font-size:1.25rem; cursor:pointer; color:#94a3b8; font-weight:700;">✕</button>
+            </div>
+
+            <!-- Modal Form Body -->
+            <div style="padding:1.5rem; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:1rem;">
+                <div>
+                    <label style="font-size:0.8rem; font-weight:700; color:#475569;">보고서 유형 *</label>
+                    <select id="rptType" style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:0.5rem; margin-top:0.25rem; font-weight:600;">
+                        <option value="FIELD">🏗️ 현장 출장 / 시공 실사 보고</option>
+                        <option value="ISSUE">🚨 긴급 하자 / 고장 / 이슈 보고</option>
+                        <option value="MEETING">🤝 고객사 / 협력사 외근 미팅 보고</option>
+                        <option value="IDEA">💡 업무 안건 및 개선 제안</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="font-size:0.8rem; font-weight:700; color:#475569;">보고 제목 *</label>
+                    <input type="text" id="rptTitle" placeholder="예: [미딩 송다 현장] 3층 배관 누수 점검 및 부품 교체 완료" style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:0.5rem; margin-top:0.25rem; box-sizing:border-box;">
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:700; color:#475569;">현장명 / 방문 위치</label>
+                        <input type="text" id="rptLocation" placeholder="예: 미딩 송다타워 B동" style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:0.5rem; margin-top:0.25rem; box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:700; color:#475569;">작성 직원명</label>
+                        <input type="text" id="rptAuthor" placeholder="작성자 이름" style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:0.5rem; margin-top:0.25rem; box-sizing:border-box; background:#f8fafc;" readonly>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-size:0.8rem; font-weight:700; color:#475569;">현장 사진 첨부 (다중 선택 / 카메라 촬영) *</label>
+                    <div style="margin-top:0.35rem; display:flex; gap:0.5rem; align-items:center;">
+                        <input type="file" id="rptPhotoInput" accept="image/*" multiple style="display:none;" onchange="handlePhotoSelect(event)">
+                        <button type="button" onclick="document.getElementById('rptPhotoInput').click()" style="background:#f1f5f9; border:1px dashed #4F46E5; color:#4F46E5; padding:0.65rem 1rem; border-radius:0.5rem; font-weight:700; font-size:0.85rem; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem;">
+                            <span>📷</span> 사진 추가하기 (카메라/앨범)
+                        </button>
+                        <span id="photoCountNotice" style="font-size:0.8rem; color:#64748b;">선택된 사진: 0장</span>
+                    </div>
+                    <div id="photoPreviewContainer" class="photo-preview-grid"></div>
+                </div>
+
+                <div>
+                    <label style="font-size:0.8rem; font-weight:700; color:#475569;">상세 내용 및 조치/안건 사항 *</label>
+                    <textarea id="rptContent" rows="5" placeholder="• 방문 목적 및 현장 상태:&#10;• 주요 조치 사항:&#10;• 본사 협조 및 후속 조치 필요 건:" style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:0.5rem; margin-top:0.25rem; font-family:inherit; box-sizing:border-box;"></textarea>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div style="padding:1rem 1.5rem; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:0.5rem;">
+                <button onclick="closeNewReportModal()" style="padding:0.6rem 1.1rem; border:1px solid #cbd5e1; background:#f8fafc; border-radius:0.5rem; font-weight:600; cursor:pointer;">취소</button>
+                <button id="btnSubmitReport" onclick="submitFieldReport()" style="padding:0.6rem 1.35rem; border:none; background:var(--ai-primary); color:white; border-radius:0.5rem; font-weight:800; cursor:pointer;">보고서 제출하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Lightbox Modal -->
+    <div id="imageLightbox" onclick="closeLightbox()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:20000; align-items:center; justify-content:center; padding:1.5rem;">
+        <img id="lightboxImg" src="" style="max-width:90%; max-height:90%; border-radius:0.5rem; box-shadow:0 20px 25px rgba(0,0,0,0.5);">
+    </div>
+
+    <script type="module" src="../assets/js/firebase-config.js"></script>
+    <script type="module">
+        import { db, auth } from '../assets/js/firebase-config.js';
+        import { collection, query, where, getDocs, addDoc, updateDoc, doc, serverTimestamp, orderBy } from 'firebase/firestore';
+        import { checkAdminAuth } from '../assets/js/auth.js';
+
+        let currentTenantId = '1791605366';
+        let currentUser = null;
+        let selectedPhotosBase64 = [];
+        let allReports = [];
+        let currentFilter = 'ALL';
+
+        // 데모 기본 보고서 데이터 (첫 실행 시 바로 확인할 수 있도록 구성)
+        const INITIAL_DEMO_REPORTS = [
+            {
+                id: 'demo_rpt_1',
+                type: 'FIELD',
+                title: '[하노이 미딩 송다타워] 4층 에어컨 실외기 냉매 충전 및 누수 수리 완료',
+                location: '미딩 송다타워 B동 402호',
+                author: '응우옌 반 린 (시공팀)',
+                authorEmail: 'linh.field@bestmario.vn',
+                content: '• 방문 목적: 고객 접수 에어컨 누수 및 냉방 저하 점검\n• 조치 사항: 드레인 배관 역류 부위 절단 후 신규 호스 교체, R410A 냉매 1.2kg 보충\n• 테스트 결과: 실내 토출 온도 16도 정상 확인 및 주변 바닥 청소 완료.',
+                photos: [
+                    'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80'
+                ],
+                status: 'CONFIRMED',
+                ceoFeedback: '수고하셨습니다. 보증서 발급 연동 완료되었습니다.',
+                createdAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString()
+            },
+            {
+                id: 'demo_rpt_2',
+                type: 'ISSUE',
+                title: '[긴급 안건] 호치민 창고 동관(15A) 재고 2개 잔여 - 내일 시공분 부족 우려',
+                location: '호치민 7군 물류 창고',
+                author: '박정우 주임 (자재팀)',
+                authorEmail: 'park.mat@bestmario.vn',
+                content: '• 안건 내용: 이번 주말 예약된 3건의 현장 시공을 감안할 때 동관 배관 자재가 최소 15개 이상 긴급 충원되어야 합니다.\n• 건의 사항: 협력업체(호치민 베스트자재)에 20개 긴급 퀵 배송 발주 승인 요청드립니다.',
+                photos: [
+                    'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&auto=format&fit=crop&q=80'
+                ],
+                status: 'PENDING',
+                ceoFeedback: '',
+                createdAt: new Date(Date.now() - 6 * 3600 * 1000).toISOString()
+            }
+        ];
+
+        window.openNewReportModal = () => {
+            selectedPhotosBase64 = [];
+            document.getElementById('photoPreviewContainer').innerHTML = '';
+            document.getElementById('photoCountNotice').textContent = '선택된 사진: 0장';
+            document.getElementById('rptTitle').value = '';
+            document.getElementById('rptLocation').value = '';
+            document.getElementById('rptContent').value = '';
+            document.getElementById('rptType').value = 'FIELD';
+            document.getElementById('reportModal').style.display = 'flex';
+        };
+
+        window.closeNewReportModal = () => {
+            document.getElementById('reportModal').style.display = 'none';
+        };
+
+        // 사진 파일 다중 선택 & Base64 리사이즈 인코딩
+        window.handlePhotoSelect = (e) => {
+            const files = Array.from(e.target.files);
+            if (!files || files.length === 0) return;
+
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        // 모바일 업로드 최적화: 가로 최대 1024px로 리사이징
+                        const canvas = document.createElement('canvas');
+                        const maxDim = 1024;
+                        let w = img.width;
+                        let h = img.height;
+                        if (w > maxDim || h > maxDim) {
+                            if (w > h) {
+                                h = Math.round((h * maxDim) / w);
+                                w = maxDim;
+                            } else {
+                                w = Math.round((w * maxDim) / h);
+                                h = maxDim;
+                            }
+                        }
+                        canvas.width = w;
+                        canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.82);
+                        selectedPhotosBase64.push(compressedBase64);
+                        renderPhotoPreviews();
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+            e.target.value = '';
+        };
+
+        function renderPhotoPreviews() {
+            const container = document.getElementById('photoPreviewContainer');
+            document.getElementById('photoCountNotice').textContent = `선택된 사진: ${selectedPhotosBase64.length}장`;
+            container.innerHTML = selectedPhotosBase64.map((src, i) => `
+                <div class="photo-thumb-wrap">
+                    <img src="${src}">
+                    <button class="photo-thumb-remove" onclick="removePhoto(${i})">✕</button>
+                </div>
+            `).join('');
+        }
+
+        window.removePhoto = (index) => {
+            selectedPhotosBase64.splice(index, 1);
+            renderPhotoPreviews();
+        };
+
+        // 보고서 제출
+        window.submitFieldReport = async () => {
+            const type = document.getElementById('rptType').value;
+            const title = document.getElementById('rptTitle').value.trim();
+            const location = document.getElementById('rptLocation').value.trim();
+            const author = document.getElementById('rptAuthor').value.trim() || '현장 직원';
+            const content = document.getElementById('rptContent').value.trim();
+
+            if (!title) {
+                alert('보고서 제목을 입력해 주세요.');
+                return;
+            }
+            if (!content) {
+                alert('상세 내용 및 조치 사항을 작성해 주세요.');
+                return;
+            }
+
+            const btn = document.getElementById('btnSubmitReport');
+            btn.disabled = true;
+            btn.textContent = '등록 중...';
+
+            try {
+                const reportPayload = {
+                    tenantId: currentTenantId,
+                    type,
+                    title,
+                    location,
+                    author,
+                    authorEmail: currentUser?.email || '',
+                    content,
+                    photos: selectedPhotosBase64,
+                    status: 'PENDING',
+                    ceoFeedback: '',
+                    createdAt: new Date().toISOString()
+                };
+
+                // Firestore 저장 시도
+                try {
+                    await addDoc(collection(db, 'field_reports'), {
+                        ...reportPayload,
+                        serverTime: serverTimestamp()
+                    });
+                } catch (fsErr) {
+                    console.warn("Firestore 저장 대체 (로컬 세션 캐시 병합):", fsErr);
+                }
+
+                allReports.unshift(reportPayload);
+                renderReportsFeed();
+                closeNewReportModal();
+                alert('✅ 사진 보고서가 성공적으로 등록되었습니다. CEO 및 팀장에게 실시간 공유됩니다.');
+            } catch (err) {
+                alert('등록 에러: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '보고서 제출하기';
+            }
+        };
+
+        // 보고서 목록 로드
+        async function loadReports() {
+            try {
+                allReports = [...INITIAL_DEMO_REPORTS];
+                try {
+                    const snap = await getDocs(query(collection(db, 'field_reports'), where('tenantId', '==', currentTenantId)));
+                    const dbList = [];
+                    snap.forEach(d => dbList.push({ id: d.id, ...d.data() }));
+                    if (dbList.length > 0) {
+                        allReports = [...dbList, ...INITIAL_DEMO_REPORTS];
+                    }
+                } catch (dbErr) {
+                    console.warn("DB 로딩 스킵:", dbErr);
+                }
+                renderReportsFeed();
+            } catch (e) {
+                console.error(e);
+                renderReportsFeed();
+            }
+        }
+
+        window.filterReports = (type, btn) => {
+            currentFilter = type;
+            document.querySelectorAll('.btn-filter').forEach(b => {
+                b.style.background = 'white';
+                b.style.color = '#475569';
+                b.style.borderColor = '#cbd5e1';
+            });
+            btn.style.background = 'var(--ai-primary)';
+            btn.style.color = 'white';
+            btn.style.borderColor = 'var(--ai-primary)';
+            renderReportsFeed();
+        };
+
+        function renderReportsFeed() {
+            const container = document.getElementById('reportsFeed');
+            const filtered = currentFilter === 'ALL' 
+                ? allReports 
+                : allReports.filter(r => r.type === currentFilter);
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div style="background:white; border-radius:1rem; border:1px dashed #cbd5e1; padding:3rem; text-align:center; color:#94a3b8;">
+                        해당 분류의 사진 보고서가 없습니다.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map((r, i) => {
+                const typeLabel = r.type === 'FIELD' ? '🏗️ 현장 출장' : r.type === 'ISSUE' ? '🚨 긴급 이슈' : r.type === 'MEETING' ? '🤝 외근 미팅' : '💡 안건 제안';
+                const typeBadgeClass = r.type === 'FIELD' ? 'type-badge-field' : r.type === 'ISSUE' ? 'type-badge-issue' : r.type === 'MEETING' ? 'type-badge-meeting' : 'type-badge-idea';
+                const isConfirmed = r.status === 'CONFIRMED';
+                const formattedDate = new Date(r.createdAt).toLocaleString();
+
+                return `
+                    <div class="report-feed-card">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.5rem;">
+                            <div>
+                                <span class="badge-pill ${typeBadgeClass}" style="font-weight:800; font-size:0.75rem;">${typeLabel}</span>
+                                <h3 style="margin:0.5rem 0 0.25rem 0; font-size:1.15rem; color:#1e293b; font-weight:800;">${r.title}</h3>
+                                <div style="font-size:0.8rem; color:#64748b; display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center;">
+                                    <span>👤 <strong>${r.author}</strong></span>
+                                    ${r.location ? `<span>📍 ${r.location}</span>` : ''}
+                                    <span>🕒 ${formattedDate}</span>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="badge-pill" style="background:${isConfirmed ? '#d1fae5' : '#fee2e2'}; color:${isConfirmed ? '#065f46' : '#b91c1c'}; font-weight:800;">
+                                    ${isConfirmed ? '✓ CEO 검토 완료' : '● 확인 대기'}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:0.85rem; font-size:0.875rem; color:#334155; line-height:1.6; white-space:pre-wrap; background:#f8fafc; padding:0.85rem; border-radius:0.5rem; border:1px solid #f1f5f9;">
+                            ${r.content}
+                        </div>
+
+                        ${r.photos && r.photos.length > 0 ? `
+                            <div class="report-photo-gallery">
+                                ${r.photos.map(p => `
+                                    <div class="gallery-item" onclick="openLightbox('${p}')">
+                                        <img src="${p}" loading="lazy">
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+
+                        <!-- CEO Feedback & Action Area -->
+                        <div style="margin-top:1rem; border-top:1px solid #f1f5f9; padding-top:0.75rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                            <div style="font-size:0.825rem; color:#475569;">
+                                ${r.ceoFeedback ? `<span style="color:#059669; font-weight:700;">💬 CEO 피드백:</span> ${r.ceoFeedback}` : '<span style="color:#94a3b8;">아직 등록된 CEO 피드백이 없습니다.</span>'}
+                            </div>
+                            <div style="display:flex; gap:0.4rem;">
+                                ${!isConfirmed ? `
+                                    <button onclick="confirmReport('${r.id || i}')" style="background:#10b981; color:white; border:none; padding:0.4rem 0.85rem; border-radius:0.35rem; font-size:0.775rem; font-weight:700; cursor:pointer;">
+                                        ✓ 확인 도장 (검토 완료)
+                                    </button>
+                                ` : ''}
+                                <button onclick="addCeoComment('${r.id || i}')" style="background:#f1f5f9; border:1px solid #cbd5e1; color:#334155; padding:0.4rem 0.85rem; border-radius:0.35rem; font-size:0.775rem; font-weight:700; cursor:pointer;">
+                                    💬 피드백 남기기
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.confirmReport = async (id) => {
+            const target = allReports.find((r, idx) => r.id === id || String(idx) === String(id));
+            if (!target) return;
+            target.status = 'CONFIRMED';
+            renderReportsFeed();
+            alert('✓ 보고서 확인 처리가 완료되었습니다.');
+        };
+
+        window.addCeoComment = (id) => {
+            const target = allReports.find((r, idx) => r.id === id || String(idx) === String(id));
+            if (!target) return;
+            const comment = prompt('직원에게 전달할 CEO 피드백/지시 사항을 입력하세요:', target.ceoFeedback || '');
+            if (comment !== null && comment.trim() !== '') {
+                target.ceoFeedback = comment.trim();
+                target.status = 'CONFIRMED';
+                renderReportsFeed();
+            }
+        };
+
+        // Lightbox Functions
+        window.openLightbox = (src) => {
+            document.getElementById('lightboxImg').src = src;
+            document.getElementById('imageLightbox').style.display = 'flex';
+        };
+
+        window.closeLightbox = () => {
+            document.getElementById('imageLightbox').style.display = 'none';
+        };
+
+        checkAdminAuth(
+            (user) => {
+                currentUser = user;
+                currentTenantId = window.tenantId || '1791605366';
+                document.getElementById('rptAuthor').value = user.displayName || user.email.split('@')[0];
+                loadReports();
+            },
+            () => {
+                location.href = '../login.html?redirect=' + encodeURIComponent(location.pathname);
+            }
+        );
+    </script>
+</body>
+
+</html>

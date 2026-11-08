@@ -12,6 +12,7 @@ module.exports = defineConfig({
         "admin_contacts": resolve(__dirname, 'admin/contacts.html'),
         "admin_dashboard": resolve(__dirname, 'admin/dashboard.html'),
         "admin_employees": resolve(__dirname, 'admin/employees.html'),
+        "admin_field-reports": resolve(__dirname, 'admin/field-reports.html'),
         "admin_finance": resolve(__dirname, 'admin/finance.html'),
         "admin_insert-samples": resolve(__dirname, 'admin/insert-samples.html'),
         "admin_insert-shopee-it": resolve(__dirname, 'admin/insert-shopee-it.html'),
