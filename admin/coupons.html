@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>1초 오프라인 바우처 & QR 쿠폰 검증 센터 - BestERP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/admin.css">
+    <!-- html5-qrcode 경량 카메라 QR 스캐너 라이브러리 -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        .scanner-container {
+            width: 100%;
+            max-width: 420px;
+            margin: 0 auto;
+            border-radius: 1rem;
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        #qrReader video {
+            width: 100% !important;
+            height: auto !important;
+            border-radius: 1rem;
+            object-fit: cover;
+        }
+        .code-input-box {
+            font-family: monospace;
+            font-size: 1.35rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-weight: 800;
+            text-align: center;
+        }
+        .coupon-valid-card {
+            border: 2px solid #10b981;
+            background: #f0fdf4;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            animation: popIn 0.25s ease-out;
+        }
+        .coupon-invalid-card {
+            border: 2px solid #ef4444;
+            background: #fef2f2;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            animation: popIn 0.25s ease-out;
+        }
+        @keyframes popIn {
+            from { transform: scale(0.96); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+
+<body class="admin-body">
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <div class="nav-header-bar">
+            <div class="nav-brand">
+                <h1 class="brand-edit-badge" onclick="location.href='dashboard.html'" title="대시보드로 이동">
+                    <span style="color:#ef4444;" class="dynamic-brand-text" id="dynamicStoreName">가맹점</span>
+                    <span style="color:var(--text-primary); font-size:1.15rem; font-weight:700;">M-SaaS</span>
+                </h1>
+            </div>
+            <button class="mobile-nav-toggle" onclick="toggleNavMenu()" aria-label="메뉴 열기">
+                <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+                    <path d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+
+        <ul id="navMenuList">
+            <li><a href="dashboard.html">CEO 대시보드</a></li>
+            <li><a href="coupons.html" style="color:var(--ai-primary); font-weight:700; background:var(--ai-primary-light);">🎫 쿠폰/바우처 검증</a></li>
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
+                <span class="dropbtn">매장 관리(F&B) ▾</span>
+                <div class="dropdown-content">
+                    <a href="menus.html">스마트 메뉴 관리</a>
+                    <a href="categories.html">카테고리 관리</a>
+                </div>
+            </li>
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
+                <span class="dropbtn">영업/프로젝트 ▾</span>
+                <div class="dropdown-content">
+                    <a href="projects.html">프로젝트 보드</a>
+                    <a href="materials.html">자재관리</a>
+                    <a href="price-history.html">시세/단가 이력</a>
+                    <a href="suppliers.html">협력업체</a>
+                </div>
+            </li>
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
+                <span class="dropbtn">내부운영(HR) ▾</span>
+                <div class="dropdown-content">
+                    <a href="tasks.html">업무지시/보고</a>
+                    <a href="finance.html">재무/회계</a>
+                    <a href="employees.html">직원목록</a>
+                </div>
+            </li>
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
+                <span class="dropbtn">고객/회원관리 ▾</span>
+                <div class="dropdown-content">
+                    <a href="clients.html">멘티(고객) CRM</a>
+                    <a href="contacts.html">인맥(명함)</a>
+                    <a href="marketing.html">자동 마케팅(트리거)</a>
+                    <a href="users.html">SaaS 회원관리</a>
+                </div>
+            </li>
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
+                <span class="dropbtn">시스템 ▾</span>
+                <div class="dropdown-content">
+                    <a href="api-settings.html">시스템/API 설정</a>
+                </div>
+            </li>
+        </ul>
+        <div id="navUserEmail" style="display:none;"></div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="admin-container">
+        <!-- Title & Action Bar -->
+        <div class="admin-header-row">
+            <div>
+                <h2 class="admin-header-title">🎫 1초 오프라인 바우처 & QR 쿠폰 검증 센터</h2>
+                <p style="color:#64748b; font-size:0.875rem; margin:0.35rem 0 0 0;">
+                    BestClubVN 고객이 제시한 스마트폰 QR 코드 또는 12자리 바우처 코드를 실시간 검증하고 현장 승인합니다.
+                </p>
+            </div>
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+                <span class="badge-pill" style="background:#e0e7ff; color:#4338ca; font-weight:800;">
+                    가맹점 ID: <span id="currentMerchantDisplay">1791605366</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- 2-Column Grid: Scanner & Manual Verification -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:1.5rem; margin-top:1.5rem;">
+            
+            <!-- Left Panel: QR Camera Scanner -->
+            <div class="panel" style="text-align:center;">
+                <h3 style="margin-top:0; font-size:1.1rem; color:#1e293b; display:flex; align-items:center; justify-content:center; gap:0.5rem;">
+                    <span>📷</span> 카메라 QR 자동 스캐너
+                </h3>
+                <p style="font-size:0.825rem; color:#64748b; margin:0.25rem 0 1rem 0;">
+                    고객의 스마트폰 화면(마이페이지 쿠폰 QR)을 카메라에 비춰주세요.
+                </p>
+
+                <!-- Scanner Viewport -->
+                <div class="scanner-container" id="scannerWrapper">
+                    <div id="qrReader" style="width:100%; min-height:260px;"></div>
+                </div>
+
+                <div style="display:flex; justify-content:center; gap:0.5rem; margin-top:1rem;">
+                    <button id="btnStartScan" onclick="startQrScanner()" style="background:var(--ai-primary); color:white; border:none; padding:0.6rem 1.25rem; border-radius:0.5rem; font-weight:700; cursor:pointer; font-size:0.85rem; display:inline-flex; align-items:center; gap:0.35rem;">
+                        <span>▶</span> 카메라 스캔 시작
+                    </button>
+                    <button id="btnStopScan" onclick="stopQrScanner()" style="display:none; background:#64748b; color:white; border:none; padding:0.6rem 1.25rem; border-radius:0.5rem; font-weight:700; cursor:pointer; font-size:0.85rem;">
+                        ⏹ 스캐너 일시정지
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Panel: Manual Code Input & Verification Result -->
+            <div class="panel">
+                <h3 style="margin-top:0; font-size:1.1rem; color:#1e293b; display:flex; align-items:center; gap:0.5rem;">
+                    <span>⌨️</span> 12자리 바우처 코드 직접 입력
+                </h3>
+                <p style="font-size:0.825rem; color:#64748b; margin:0.25rem 0 1rem 0;">
+                    QR 인식이 어렵거나 코드로 불러줄 경우 12자리 코드를 입력하세요.
+                </p>
+
+                <div style="display:flex; gap:0.5rem; margin-bottom:0.75rem;">
+                    <input type="text" id="couponCodeInput" class="code-input-box" placeholder="BC-XXXX-XXXX-XXXX" maxlength="19" style="flex:1; padding:0.75rem; border:2px solid #cbd5e1; border-radius:0.5rem;" onkeypress="if(event.key==='Enter') lookupCoupon()">
+                    <button onclick="lookupCoupon()" style="background:#1e293b; color:white; border:none; padding:0 1.25rem; border-radius:0.5rem; font-weight:700; cursor:pointer; font-size:0.9rem;">
+                        조회
+                    </button>
+                </div>
+
+                <!-- Quick Test Preset Buttons -->
+                <div style="margin-bottom:1.25rem;">
+                    <span style="font-size:0.75rem; color:#64748b; font-weight:600;">체험용 테스트 쿠폰:</span>
+                    <div style="display:flex; gap:0.35rem; margin-top:0.35rem; flex-wrap:wrap;">
+                        <button onclick="fillPresetCode('BC-TEST-2026-BEST')" style="font-size:0.75rem; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:0.35rem; padding:0.25rem 0.5rem; cursor:pointer; font-weight:600;">5만동 할인권</button>
+                        <button onclick="fillPresetCode('BC-LUCKY-7777-VND')" style="font-size:0.75rem; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:0.35rem; padding:0.25rem 0.5rem; cursor:pointer; font-weight:600;">10만동 세트할인</button>
+                        <button onclick="fillPresetCode('BC-FREE-DRINK-CAN')" style="font-size:0.75rem; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:0.35rem; padding:0.25rem 0.5rem; cursor:pointer; font-weight:600;">음료 1캔 무료</button>
+                    </div>
+                </div>
+
+                <!-- Verification Result Card Area -->
+                <div id="couponResultBox">
+                    <div style="border:1px dashed #cbd5e1; border-radius:0.75rem; padding:2rem; text-align:center; color:#94a3b8;">
+                        QR을 스캔하거나 상단에 쿠폰 코드를 입력하시면<br>실시간 유효성 및 혜택 내역이 이곳에 표시됩니다.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today Redemption History Table -->
+        <div class="panel" style="margin-top:1.5rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+                <div>
+                    <h3 style="margin:0; font-size:1.1rem; color:#1e293b;">📋 오늘 현장 승인 내역</h3>
+                    <p style="margin:0.25rem 0 0 0; font-size:0.8rem; color:#64748b;">현재 매장에서 실시간으로 사용 완료된 바우처 이력입니다.</p>
+                </div>
+                <span class="badge-pill" style="background:#d1fae5; color:#065f46; font-weight:800;">
+                    오늘 총 승인: <span id="todayRedeemCount">0</span>건
+                </span>
+            </div>
+
+            <div class="table-responsive">
+                <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.875rem;">
+                    <thead>
+                        <tr style="border-bottom:2px solid #e2e8f0; color:#64748b; font-weight:700;">
+                            <th style="padding:0.75rem 1rem;">승인 시간</th>
+                            <th style="padding:0.75rem 1rem;">쿠폰 코드</th>
+                            <th style="padding:0.75rem 1rem;">혜택 내용</th>
+                            <th style="padding:0.75rem 1rem;">고객 정보</th>
+                            <th style="padding:0.75rem 1rem;">처리 상태</th>
+                        </tr>
+                    </thead>
+                    <tbody id="redeemHistoryBody">
+                        <tr>
+                            <td colspan="5" style="padding:2rem; text-align:center; color:#94a3b8;">
+                                아직 오늘 승인된 쿠폰 내역이 없습니다.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="../assets/js/firebase-config.js"></script>
+    <script type="module">
+        import { db, auth } from '../assets/js/firebase-config.js';
+        import { collection, query, where, getDocs, updateDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+        import { checkAdminAuth } from '../assets/js/auth.js';
+
+        let currentTenantId = '1791605366';
+        let html5QrCode = null;
+        let isScanning = false;
+        let recentRedemptions = [];
+
+        // 데모 프리셋 쿠폰 DB
+        const DEMO_PRESETS = {
+            'BC-TEST-2026-BEST': {
+                id: 'demo_1',
+                code: 'BC-TEST-2026-BEST',
+                title: '베스트클럽 오프라인 50,000 VND 식사 할인권',
+                benefit: '50,000 VND 즉시 할인',
+                customerName: '김민수 (VIP 회원)',
+                expiresAt: '2026-12-31',
+                status: 'available',
+                applicableMerchantIds: ['1791605366', '1791002036']
+            },
+            'BC-LUCKY-7777-VND': {
+                id: 'demo_2',
+                code: 'BC-LUCKY-7777-VND',
+                title: '잭팟 룰렛 당첨 100,000 VND 세트메뉴 할인 바우처',
+                benefit: '100,000 VND 할인 (세트 전용)',
+                customerName: 'Nguyen Van A (일반)',
+                expiresAt: '2026-11-30',
+                status: 'available',
+                applicableMerchantIds: ['1791605366']
+            },
+            'BC-FREE-DRINK-CAN': {
+                id: 'demo_3',
+                code: 'BC-FREE-DRINK-CAN',
+                title: '방문 감사 웰컴 탄산음료 1캔 무료 증정권',
+                benefit: '콜라/사이다 1캔 무료 교환',
+                customerName: '박지원 (단골)',
+                expiresAt: '2026-11-15',
+                status: 'available',
+                applicableMerchantIds: ['1791605366']
+            }
+        };
+
+        window.fillPresetCode = (code) => {
+            document.getElementById('couponCodeInput').value = code;
+            window.lookupCoupon();
+        };
+
+        // QR 카메라 스캐너 시작
+        window.startQrScanner = async () => {
+            const btnStart = document.getElementById('btnStartScan');
+            const btnStop = document.getElementById('btnStopScan');
+
+            try {
+                if (!html5QrCode) {
+                    html5QrCode = new Html5Qrcode("qrReader");
+                }
+
+                await html5QrCode.start(
+                    { facingMode: "environment" },
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    (decodedText) => {
+                        // QR 인식 성공 시
+                        console.log("QR 스캔 성공:", decodedText);
+                        // URL이거나 BC- 코드가 포함된 경우 추출
+                        let cleanCode = decodedText.trim();
+                        if (cleanCode.includes('code=')) {
+                            cleanCode = cleanCode.split('code=')[1].split('&')[0];
+                        }
+                        document.getElementById('couponCodeInput').value = cleanCode;
+                        stopQrScanner();
+                        window.lookupCoupon(cleanCode);
+                    },
+                    (errorMessage) => {
+                        // 스캔 프레임 탐색 중 에러 (무시)
+                    }
+                );
+
+                isScanning = true;
+                btnStart.style.display = 'none';
+                btnStop.style.display = 'inline-flex';
+            } catch (err) {
+                alert('카메라 실행 실패: ' + err.message + '\n카메라 접근 권한을 확인해 주세요.');
+            }
+        };
+
+        // QR 카메라 스캐너 정지
+        window.stopQrScanner = async () => {
+            if (html5QrCode && isScanning) {
+                try {
+                    await html5QrCode.stop();
+                } catch (e) {}
+                isScanning = false;
+                document.getElementById('btnStartScan').style.display = 'inline-flex';
+                document.getElementById('btnStopScan').style.display = 'none';
+            }
+        };
+
+        // 쿠폰 코드 자동 포맷팅
+        document.getElementById('couponCodeInput').addEventListener('input', (e) => {
+            let val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (!val.startsWith('BC') && val.length >= 2) {
+                val = 'BC' + val;
+            }
+            let formatted = '';
+            for (let i = 0; i < val.length; i++) {
+                if (i === 2 || i === 6 || i === 10) formatted += '-';
+                formatted += val[i];
+            }
+            e.target.value = formatted.slice(0, 19);
+        });
+
+        // 쿠폰 조회 로직
+        window.lookupCoupon = async (codeOverride = null) => {
+            const code = (codeOverride || document.getElementById('couponCodeInput').value).trim().toUpperCase();
+            const resultBox = document.getElementById('couponResultBox');
+
+            if (!code || code.length < 5) {
+                alert('유효한 12자리 바우처 코드를 입력하세요.');
+                return;
+            }
+
+            resultBox.innerHTML = `
+                <div style="padding:1.5rem; text-align:center; color:var(--ai-primary); font-weight:700;">
+                    ⏳ 원장에서 쿠폰 유효성을 검증하는 중입니다...
+                </div>
+            `;
+
+            try {
+                let couponData = null;
+
+                // 1. 실제 Firestore 원장 (user_coupons) 조회
+                try {
+                    const snap = await getDocs(query(collection(db, 'user_coupons'), where('code', '==', code)));
+                    if (!snap.empty) {
+                        couponData = { id: snap.docs[0].id, ...snap.docs[0].data() };
+                    }
+                } catch (dbErr) {
+                    console.warn("Firestore 조회 대체:", dbErr);
+                }
+
+                // 2. 데모 프리셋 확인
+                if (!couponData && DEMO_PRESETS[code]) {
+                    couponData = DEMO_PRESETS[code];
+                }
+
+                if (!couponData) {
+                    resultBox.innerHTML = `
+                        <div class="coupon-invalid-card">
+                            <div style="display:flex; align-items:center; gap:0.5rem; color:#b91c1c; font-weight:800;">
+                                <span style="font-size:1.3rem;">✕</span>
+                                <span>존재하지 않는 바우처 코드입니다</span>
+                            </div>
+                            <p style="font-size:0.85rem; color:#7f1d1d; margin:0.4rem 0 0 0;">
+                                입력하신 코드 <strong>${code}</strong>는 발급 내역이 확인되지 않습니다. 코드를 다시 확인해 주세요.
+                            </p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // 3. 유효성 검증 판별
+                const isAvailable = couponData.status === 'available' || couponData.status === 'VALID';
+                const isExpired = couponData.expiresAt && new Date(couponData.expiresAt) < new Date();
+                const matchMerchant = !couponData.applicableMerchantIds || couponData.applicableMerchantIds.includes(currentTenantId);
+
+                if (!isAvailable) {
+                    resultBox.innerHTML = `
+                        <div class="coupon-invalid-card">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-weight:800; color:#b91c1c; font-size:1rem;">⚠️ 이미 사용 완료된 쿠폰입니다</span>
+                                <span class="badge-pill" style="background:#fee2e2; color:#b91c1c;">사용 불가</span>
+                            </div>
+                            <h4 style="margin:0.5rem 0 0.2rem 0; font-size:1.05rem; color:#1e293b;">${couponData.title || couponData.name || '베스트클럽 바우처'}</h4>
+                            <p style="font-size:0.8rem; color:#64748b; margin:0;">고객: ${couponData.customerName || couponData.user_email || '회원'}</p>
+                            <p style="font-size:0.8rem; color:#dc2626; margin:0.4rem 0 0 0;">이 쿠폰은 이미 매장에서 사용 처리되었습니다.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                if (isExpired) {
+                    resultBox.innerHTML = `
+                        <div class="coupon-invalid-card">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-weight:800; color:#b91c1c; font-size:1rem;">⌛ 유효기간이 만료된 쿠폰입니다</span>
+                                <span class="badge-pill" style="background:#fee2e2; color:#b91c1c;">기간 만료</span>
+                            </div>
+                            <h4 style="margin:0.5rem 0 0.2rem 0; font-size:1.05rem; color:#1e293b;">${couponData.title || couponData.name}</h4>
+                            <p style="font-size:0.8rem; color:#dc2626; margin:0.4rem 0 0 0;">만료일: ${couponData.expiresAt}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                if (!matchMerchant) {
+                    resultBox.innerHTML = `
+                        <div class="coupon-invalid-card">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-weight:800; color:#b91c1c; font-size:1rem;">🚫 타 가맹점 전용 바우처입니다</span>
+                                <span class="badge-pill" style="background:#fee2e2; color:#b91c1c;">가맹점 불일치</span>
+                            </div>
+                            <p style="font-size:0.8rem; color:#dc2626; margin:0.4rem 0 0 0;">현재 매장(${currentTenantId})에서는 사용할 수 없는 타 가맹점 전용 바우처입니다.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // 정상 유효 쿠폰 표시
+                window.currentValidatedCoupon = couponData;
+                resultBox.innerHTML = `
+                    <div class="coupon-valid-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-weight:800; color:#166534; font-size:1.05rem;">✅ 사용 가능한 정품 바우처입니다!</span>
+                            <span class="badge-pill" style="background:#d1fae5; color:#065f46; font-weight:800;">승인 대기</span>
+                        </div>
+                        <h4 style="margin:0.6rem 0 0.3rem 0; font-size:1.15rem; color:#1e293b; font-weight:800;">
+                            ${couponData.title || couponData.name || '베스트클럽 바우처'}
+                        </h4>
+                        <div style="background:white; border-radius:0.5rem; padding:0.75rem; margin:0.6rem 0; font-size:0.85rem; line-height:1.6; border:1px solid #bbf7d0;">
+                            <div><strong>적용 혜택:</strong> <span style="color:#059669; font-weight:800; font-size:1rem;">${couponData.benefit || '할인'}</span></div>
+                            <div><strong>고객 정보:</strong> ${couponData.customerName || couponData.user_email || 'BestClub 회원'}</div>
+                            <div><strong>유효 기간:</strong> ~ ${couponData.expiresAt || '2026-12-31'}</div>
+                            <div><strong>바우처 번호:</strong> <code style="font-weight:700;">${code}</code></div>
+                        </div>
+
+                        <button id="btnRedeemAction" onclick="confirmRedeemCoupon()" style="width:100%; background:#10b981; color:white; border:none; padding:0.85rem; border-radius:0.65rem; font-size:1rem; font-weight:800; cursor:pointer; box-shadow:0 4px 12px rgba(16,185,129,0.3); transition:all 0.2s;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
+                            ✓ 지금 현장 사용 승인 (쿠폰 소진)
+                        </button>
+                    </div>
+                `;
+
+            } catch (err) {
+                resultBox.innerHTML = `<div class="coupon-invalid-card">조회 에러: ${err.message}</div>`;
+            }
+        };
+
+        // 현장 사용 승인 (소진) 처리
+        window.confirmRedeemCoupon = async () => {
+            const btn = document.getElementById('btnRedeemAction');
+            if (!window.currentValidatedCoupon) return;
+
+            btn.disabled = true;
+            btn.textContent = '처리 중...';
+            btn.style.opacity = '0.7';
+
+            const c = window.currentValidatedCoupon;
+            const now = new Date();
+            const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+
+            try {
+                // 1. 실제 Firestore 업데이트 시도
+                if (c.id && !c.id.startsWith('demo_')) {
+                    await updateDoc(doc(db, 'user_coupons', c.id), {
+                        status: 'used',
+                        redeemedAt: serverTimestamp(),
+                        redeemedMerchantId: currentTenantId
+                    });
+                } else {
+                    // 데모 프리셋 상태 갱신
+                    c.status = 'used';
+                }
+
+                // 2. 오늘 승인 내역에 추가
+                recentRedemptions.unshift({
+                    time: timeStr,
+                    code: c.code,
+                    title: c.title,
+                    customer: c.customerName,
+                    status: '승인완료'
+                });
+
+                renderRedeemHistory();
+
+                alert(`🎉 [현장 승인 성공]\n\n• 쿠폰명: ${c.title}\n• 혜택: ${c.benefit}\n• 상태: 사용 완료(소진)\n\n고객 결제 시 해당 할인을 적용해 주세요!`);
+
+                // 3. 결과창 초기화
+                document.getElementById('couponCodeInput').value = '';
+                document.getElementById('couponResultBox').innerHTML = `
+                    <div style="border:2px solid #10b981; background:#ecfdf5; border-radius:0.75rem; padding:1.5rem; text-align:center; color:#065f46; font-weight:700;">
+                        ✓ 방금 <strong>${c.code}</strong> 승인이 완료되었습니다.<br>다음 손님의 쿠폰을 스캔하거나 입력해 주세요.
+                    </div>
+                `;
+                window.currentValidatedCoupon = null;
+
+            } catch (err) {
+                alert('승인 처리 실패: ' + err.message);
+                btn.disabled = false;
+                btn.textContent = '✓ 지금 현장 사용 승인 (쿠폰 소진)';
+                btn.style.opacity = '1';
+            }
+        };
+
+        function renderRedeemHistory() {
+            const tbody = document.getElementById('redeemHistoryBody');
+            document.getElementById('todayRedeemCount').textContent = recentRedemptions.length;
+
+            if (recentRedemptions.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="padding:2rem; text-align:center; color:#94a3b8;">아직 오늘 승인된 쿠폰 내역이 없습니다.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = recentRedemptions.map(r => `
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                    <td style="padding:0.75rem 1rem; color:#64748b; font-family:monospace;">${r.time}</td>
+                    <td style="padding:0.75rem 1rem; font-weight:700; color:#1e293b; font-family:monospace;">${r.code}</td>
+                    <td style="padding:0.75rem 1rem; font-weight:600; color:#4F46E5;">${r.title}</td>
+                    <td style="padding:0.75rem 1rem; color:#475569;">${r.customer}</td>
+                    <td style="padding:0.75rem 1rem;">
+                        <span class="badge-pill" style="background:#d1fae5; color:#065f46; font-weight:800;">✓ ${r.status}</span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        checkAdminAuth(
+            (user) => {
+                currentTenantId = window.tenantId || (user.email === 'hexttokenopbnb@gmail.com' ? '1791605366' : '1791605366');
+                document.getElementById('currentMerchantDisplay').textContent = currentTenantId;
+            },
+            () => {
+                location.href = '../login.html?redirect=' + encodeURIComponent(location.pathname);
+            }
+        );
+    </script>
+</body>
+
+</html>

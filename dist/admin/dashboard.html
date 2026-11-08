@@ -34,6 +34,7 @@
 
         <ul id="navMenuList">
             <li><a href="dashboard.html">CEO 대시보드</a></li>
+            <li><a href="coupons.html" style="color:var(--ai-primary); font-weight:700;">🎫 쿠폰/바우처 검증</a></li>
             <li class="dropdown" onclick="toggleDropdown(this, event)">
                 <span class="dropbtn">매장 관리(F&B) ▾</span>
                 <div class="dropdown-content">
@@ -83,6 +84,12 @@
         <div class="admin-header-row">
             <h2 class="admin-header-title">📊 CEO 실시간 대시보드</h2>
             <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                <a href="coupons.html"
+                    style="background:#10b981; color:white; padding:0.55rem 1rem; border-radius:0.5rem; font-weight:800; text-decoration:none; font-size:0.875rem; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 4px 10px rgba(16,185,129,0.3); transition:all 0.2s;"
+                    onmouseover="this.style.background='#059669'"
+                    onmouseout="this.style.background='#10b981'">
+                    <span>🎫</span> 1초 쿠폰 검증
+                </a>
                 <button onclick="openAiCopilotDrawer()"
                     style="background:var(--ai-gradient); color:white; border:none; padding:0.55rem 1.1rem; border-radius:0.5rem; font-weight:700; cursor:pointer; font-size:0.875rem; display:inline-flex; align-items:center; gap:0.4rem; box-shadow:0 4px 12px rgba(79,70,229,0.25); transition:all 0.2s;"
                     onmouseover="this.style.opacity='0.92'; this.style.transform='translateY(-1px)'"

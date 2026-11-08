@@ -28,6 +28,7 @@ module.exports = defineConfig({
         "admin_users": resolve(__dirname, 'admin/users.html'),
         "admin_api-settings": resolve(__dirname, 'admin/api-settings.html'),
         "admin_categories": resolve(__dirname, 'admin/categories.html'),
+        "admin_coupons": resolve(__dirname, 'admin/coupons.html'),
         "admin_price-history": resolve(__dirname, 'admin/price-history.html'),
         "categories": resolve(__dirname, 'categories.html'),
         "estimates": resolve(__dirname, 'estimates.html'),
