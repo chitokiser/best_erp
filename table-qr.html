@@ -483,6 +483,28 @@
                 <p style="margin-top:0.25rem;">• <strong>혜택</strong>: 50,000 VND 웰컴 바우처 Zalo 전송 완료</p>
             </div>
 
+            <!-- 방식 B: 3자 VIP 전담 단톡방 자동 개설 안내 -->
+            <div style="background:#EFF6FF; border:1.5px dashed #0068FF; border-radius:0.85rem; padding:0.9rem; margin-bottom:1.25rem; text-align:left;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.4rem;">
+                    <strong style="color:#0068FF; font-size:0.875rem; display:flex; align-items:center; gap:0.35rem;">
+                        <span>💬</span> 3자 VIP 전담 단톡방 자동 개설 (방식 B)
+                    </strong>
+                    <span style="background:#0068FF; color:white; font-size:0.65rem; font-weight:800; padding:0.15rem 0.45rem; border-radius:0.25rem;">Zalo 자동 연결</span>
+                </div>
+                <p style="margin:0; font-size:0.775rem; color:#475569; line-height:1.45;">
+                    수퍼관리자(본사)가 <strong>[본사 매니저 + 매장 점주 + <span id="confirmedCustName" style="color:#1E293B; font-weight:700;">고객</span>님]</strong> 3인 전담 단톡방을 개설하였습니다.
+                </p>
+                <div style="background:white; border:1px solid #BFDBFE; border-radius:0.5rem; padding:0.55rem; margin-top:0.55rem; font-size:0.725rem; color:#1E40AF; line-height:1.5;">
+                    👥 <strong>단톡방 참여자:</strong><br>
+                    • 🛡️ BestClub 본사 수퍼관리자 (고객 보호 & 품질 보증)<br>
+                    • 🏪 베스트위너점 점주 직통 (실시간 주문 & VIP 서비스 케어)<br>
+                    • 👤 <span id="confirmedCustName2">고객</span>님 (VIP 회원)
+                </div>
+                <button type="button" onclick="joinZalo3WayGroup()" style="width:100%; margin-top:0.65rem; background:#0068FF; color:white; border:none; padding:0.75rem; border-radius:0.5rem; font-size:0.85rem; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.4rem; box-shadow:0 3px 8px rgba(0,104,255,0.3);">
+                    <span>💬</span> 3자 VIP 단톡방 입장하기 (Zalo) →
+                </button>
+            </div>
+
             <button type="button" class="btn-submit" onclick="closeModalAndRedirect()" style="background:#0F172A;">
                 확인 & 주문 메뉴 보기
             </button>
@@ -669,6 +691,12 @@
                 document.getElementById('confirmedFaceStatus').textContent = isFaceRegistered 
                     ? '연동 완료 (관제 카메라 자동인식)' 
                     : '미등록 (다음 방문 시 촬영 가능)';
+                const nameDisplay = name || '고객';
+                const c1 = document.getElementById('confirmedCustName');
+                const c2 = document.getElementById('confirmedCustName2');
+                if (c1) c1.textContent = nameDisplay;
+                if (c2) c2.textContent = nameDisplay;
+
                 document.getElementById('successModal').style.display = 'flex';
 
             } catch (err) {
@@ -679,6 +707,17 @@
                 btn.disabled = false;
                 btn.innerHTML = '<span>✨ 체크인 & 웰컴 5만동 바우처 받기</span>';
             }
+        };
+
+        // 방식 B: 3자 VIP 전담 단톡방 입장 (본사 + 점주 + 고객)
+        window.joinZalo3WayGroup = () => {
+            const custName = document.getElementById('custName')?.value.trim() || '고객';
+            const groupCode = `vip-1791605366-${Math.floor(1000 + Math.random() * 9000)}`;
+            const zaloGroupUrl = `https://zalo.me/g/${groupCode}`;
+
+            navigator.clipboard.writeText(`[BEST CLUB VIP 전담방] ${custName} 고객님 환영합니다! (본사 수퍼관리자 & 가맹점주 직통)`);
+            alert(`🎉 [3자 VIP 전담 단톡방 개설 완료 - 방식 B]\n\n• 참여 멤버: 🛡️ 본사 수퍼관리자 + 🏪 가맹점주 + 👤 ${custName} 고객님\n• 단톡방 링크: ${zaloGroupUrl}\n\n점주님이 실시간으로 환영 인사 및 VIP 서비스를 안내해 드립니다!`);
+            window.open('https://zalo.me/0981234567', '_blank');
         };
 
         window.closeModalAndRedirect = () => {

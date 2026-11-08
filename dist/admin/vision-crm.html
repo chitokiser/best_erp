@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>:root{--crm-primary:#4f46e5;--crm-primary-dark:#3730a3;--zalo-blue:#0068ff;--crm-success:#10b981;--crm-warning:#f59e0b;--crm-danger:#ef4444;--crm-dark:#0f172a;--crm-bg:#f8fafc}body{background:#f1f5f9;font-family:Plus Jakarta Sans,Noto Sans KR,sans-serif}.cam-viewport-wrap{background:#090d16;border:2px solid #1e293b;border-radius:1rem;justify-content:center;align-items:center;width:100%;height:380px;display:flex;position:relative;overflow:hidden;box-shadow:0 15px 30px -5px #0000004d}#webcamVideo{object-fit:cover;width:100%;height:100%}.radar-scan-line{pointer-events:none;background:linear-gradient(90deg,#0000,#10b981,#0000);width:100%;height:3px;animation:2.5s linear infinite radarScan;position:absolute;top:0;left:0;box-shadow:0 0 15px #10b981}@keyframes radarScan{0%{opacity:.8;top:0%}50%{opacity:1;top:98%}to{opacity:.8;top:0%}}.ai-target-box{pointer-events:none;background:#10b98126;border:2px solid #10b981;border-radius:6px;transition:all .3s;position:absolute}.ai-target-tag{color:#000;white-space:nowrap;background:#10b981;border-radius:4px;padding:.15rem .45rem;font-size:.68rem;font-weight:800;position:absolute;top:-26px;left:-2px}.crm-tab-bar{border-bottom:2px solid #e2e8f0;gap:.4rem;margin-bottom:1rem;padding-bottom:.25rem;display:flex;overflow-x:auto}.crm-tab-btn{color:#64748b;cursor:pointer;white-space:nowrap;background:0 0;border:none;border-radius:.5rem .5rem 0 0;align-items:center;gap:.35rem;padding:.6rem 1rem;font-size:.875rem;font-weight:700;transition:all .2s;display:flex}.crm-tab-btn.active{color:var(--crm-primary);border-bottom:3px solid var(--crm-primary);background:#eef2ff}.tier-filter-pill{color:#475569;cursor:pointer;background:#fff;border:1px solid #cbd5e1;border-radius:999px;padding:.35rem .75rem;font-size:.75rem;font-weight:700;transition:all .15s}.tier-filter-pill.active{background:var(--crm-primary);color:#fff;border-color:var(--crm-primary)}.customer-card-item{cursor:pointer;background:#fff;border:1.5px solid #e2e8f0;border-radius:.85rem;justify-content:space-between;align-items:center;gap:.75rem;margin-bottom:.75rem;padding:1rem;transition:all .2s;display:flex}.customer-card-item:hover{border-color:var(--crm-primary);transform:translateY(-2px);box-shadow:0 6px 15px -3px #4f46e51f}.modal-overlay{backdrop-filter:blur(4px);z-index:99999;background:#0f172abf;justify-content:center;align-items:center;padding:1rem;display:none;position:fixed;inset:0}.modal-box{background:#fff;border:1px solid #e2e8f0;border-radius:1.25rem;width:100%;max-width:680px;max-height:90vh;padding:1.75rem;position:relative;overflow-y:auto;box-shadow:0 25px 50px -12px #00000040}.timeline-item{border-left:2px solid #e2e8f0;margin-bottom:.85rem;padding-left:1.5rem;position:relative}.timeline-item:before{content:"";background:var(--crm-primary);border-radius:50%;width:8px;height:8px;position:absolute;top:4px;left:-5px}.table-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.75rem;display:grid}.table-seat-box{text-align:center;cursor:pointer;background:#fff;border:1.5px solid #e2e8f0;border-radius:.75rem;padding:.85rem .6rem;transition:all .2s}.table-seat-box.occupied{background:#eef2ff;border-color:#6366f1}.table-seat-box.empty{opacity:.75;background:#f8fafc;border-color:#cbd5e1}</style>
-  <script type="module" crossorigin src="/assets/admin_vision-crm-U53lHiel.js"></script>
+  <script type="module" crossorigin src="/assets/admin_vision-crm-CwcJi50j.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/firebase-config-CRr6M8Nr.js">
   <link rel="modulepreload" crossorigin href="/assets/auth-Chok8jKQ.js">
   <link rel="modulepreload" crossorigin href="/assets/notification-hub-ChDr8WD_.js">
@@ -353,6 +353,24 @@
                                 </button>
                             </div>
                         </div>
+
+                        <!-- Trigger 5: 방식 B 3자 VIP 전담 단톡방 자동 초대 -->
+                        <div style="background:#EFF6FF; border:1.5px dashed #0068FF; border-radius:0.65rem; padding:0.85rem;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div>
+                                    <div style="display:flex; align-items:center; gap:0.4rem;">
+                                        <strong style="font-size:0.85rem; color:#0068FF;">💬 5. [방식 B] 3자 VIP 전담 단톡방 자동 생성 & 점주 연결</strong>
+                                        <span style="background:#0068FF; color:white; font-size:0.65rem; font-weight:800; padding:0.15rem 0.4rem; border-radius:0.25rem;">HQ 통제</span>
+                                    </div>
+                                    <p style="margin:0.2rem 0 0 0; font-size:0.75rem; color:#475569;">
+                                        신규 고객 방문 시 [본사 수퍼관리자 + 가맹점주 + 고객] 3자 단톡방 자동 생성 및 점주 1초 환영 인사 연결
+                                    </p>
+                                </div>
+                                <button onclick="openZalo3WayGroupChat()" style="background:#0068FF; color:white; border:none; padding:0.35rem 0.75rem; border-radius:0.35rem; font-size:0.75rem; font-weight:700; cursor:pointer;">
+                                    단톡방 시뮬레이션
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -482,10 +500,33 @@
                         <strong>3차 방문</strong>: VIP 등급 승급 및 웰컴 쿠폰 사용
                     </div>
                 </div>
+            <!-- 방식 B: 3자 VIP 전담 단톡방 (수퍼관리자 + 점주 + 고객) -->
+            <div style="background:#EFF6FF; border:1.5px dashed #0068FF; border-radius:0.75rem; padding:0.9rem; margin-bottom:1.1rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong style="color:#0068FF; font-size:0.875rem; display:flex; align-items:center; gap:0.35rem;">
+                            <span>💬</span> 3자 VIP 전담 단톡방 (방식 B)
+                        </strong>
+                        <p style="margin:0.2rem 0 0 0; font-size:0.75rem; color:#475569;">
+                            참여자: 🛡️ 본사 수퍼관리자 + 🏪 베스트위너점 점주 + 👤 <span id="modalGroupCustName">김민수</span> 고객님
+                        </p>
+                    </div>
+                    <span style="background:#10B981; color:white; font-size:0.7rem; font-weight:800; padding:0.2rem 0.5rem; border-radius:0.35rem;">
+                        단톡방 활성
+                    </span>
+                </div>
+                <div style="display:flex; gap:0.4rem; margin-top:0.6rem;">
+                    <button onclick="openZalo3WayGroupChat()" style="background:#0068FF; color:white; border:none; padding:0.45rem 0.85rem; border-radius:0.4rem; font-size:0.8rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:0.3rem;">
+                        <span>💬</span> 3자 단톡방 열기
+                    </button>
+                    <button onclick="sendOwnerWelcomeGreeting()" style="background:#F1F5F9; border:1px solid #CBD5E1; color:#1E293B; padding:0.45rem 0.85rem; border-radius:0.4rem; font-size:0.8rem; font-weight:700; cursor:pointer;">
+                        👋 점주 환영 인사 1초 발송
+                    </button>
+                </div>
             </div>
 
             <!-- Staff Action & Zalo Outreach Bar -->
-            <div style="border-top:1px solid #E2E8F0; padding-top:1rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+            <div style="border-top:1px solid #E2E8F0; padding-top:1rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:gap; gap:0.5rem;">
                 <div style="display:flex; gap:0.4rem;">
                     <button onclick="triggerProfileZalo('VIP 디저트 감사 쿠폰')" style="background:#10B981; color:white; border:none; padding:0.5rem 0.85rem; border-radius:0.4rem; font-size:0.8rem; font-weight:700; cursor:pointer;">
                         🎁 VIP 디저트 쿠폰

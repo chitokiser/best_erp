@@ -554,6 +554,24 @@
                                 </button>
                             </div>
                         </div>
+
+                        <!-- Trigger 5: 방식 B 3자 VIP 전담 단톡방 자동 초대 -->
+                        <div style="background:#EFF6FF; border:1.5px dashed #0068FF; border-radius:0.65rem; padding:0.85rem;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div>
+                                    <div style="display:flex; align-items:center; gap:0.4rem;">
+                                        <strong style="font-size:0.85rem; color:#0068FF;">💬 5. [방식 B] 3자 VIP 전담 단톡방 자동 생성 & 점주 연결</strong>
+                                        <span style="background:#0068FF; color:white; font-size:0.65rem; font-weight:800; padding:0.15rem 0.4rem; border-radius:0.25rem;">HQ 통제</span>
+                                    </div>
+                                    <p style="margin:0.2rem 0 0 0; font-size:0.75rem; color:#475569;">
+                                        신규 고객 방문 시 [본사 수퍼관리자 + 가맹점주 + 고객] 3자 단톡방 자동 생성 및 점주 1초 환영 인사 연결
+                                    </p>
+                                </div>
+                                <button onclick="openZalo3WayGroupChat()" style="background:#0068FF; color:white; border:none; padding:0.35rem 0.75rem; border-radius:0.35rem; font-size:0.75rem; font-weight:700; cursor:pointer;">
+                                    단톡방 시뮬레이션
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -683,10 +701,33 @@
                         <strong>3차 방문</strong>: VIP 등급 승급 및 웰컴 쿠폰 사용
                     </div>
                 </div>
+            <!-- 방식 B: 3자 VIP 전담 단톡방 (수퍼관리자 + 점주 + 고객) -->
+            <div style="background:#EFF6FF; border:1.5px dashed #0068FF; border-radius:0.75rem; padding:0.9rem; margin-bottom:1.1rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong style="color:#0068FF; font-size:0.875rem; display:flex; align-items:center; gap:0.35rem;">
+                            <span>💬</span> 3자 VIP 전담 단톡방 (방식 B)
+                        </strong>
+                        <p style="margin:0.2rem 0 0 0; font-size:0.75rem; color:#475569;">
+                            참여자: 🛡️ 본사 수퍼관리자 + 🏪 베스트위너점 점주 + 👤 <span id="modalGroupCustName">김민수</span> 고객님
+                        </p>
+                    </div>
+                    <span style="background:#10B981; color:white; font-size:0.7rem; font-weight:800; padding:0.2rem 0.5rem; border-radius:0.35rem;">
+                        단톡방 활성
+                    </span>
+                </div>
+                <div style="display:flex; gap:0.4rem; margin-top:0.6rem;">
+                    <button onclick="openZalo3WayGroupChat()" style="background:#0068FF; color:white; border:none; padding:0.45rem 0.85rem; border-radius:0.4rem; font-size:0.8rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:0.3rem;">
+                        <span>💬</span> 3자 단톡방 열기
+                    </button>
+                    <button onclick="sendOwnerWelcomeGreeting()" style="background:#F1F5F9; border:1px solid #CBD5E1; color:#1E293B; padding:0.45rem 0.85rem; border-radius:0.4rem; font-size:0.8rem; font-weight:700; cursor:pointer;">
+                        👋 점주 환영 인사 1초 발송
+                    </button>
+                </div>
             </div>
 
             <!-- Staff Action & Zalo Outreach Bar -->
-            <div style="border-top:1px solid #E2E8F0; padding-top:1rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+            <div style="border-top:1px solid #E2E8F0; padding-top:1rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:gap; gap:0.5rem;">
                 <div style="display:flex; gap:0.4rem;">
                     <button onclick="triggerProfileZalo('VIP 디저트 감사 쿠폰')" style="background:#10B981; color:white; border:none; padding:0.5rem 0.85rem; border-radius:0.4rem; font-size:0.8rem; font-weight:700; cursor:pointer;">
                         🎁 VIP 디저트 쿠폰
@@ -1029,6 +1070,9 @@
             document.getElementById('modalAutoSatisfaction').textContent = `★ ${customer.rating} / 5.0 (AI 미소 96% 감지)`;
             document.getElementById('modalAutoOrderedMenu').textContent = customer.lastOrderedMenu || `${customer.favMenu} (Table 04 POS 자동 연동)`;
 
+            const groupNameEl = document.getElementById('modalGroupCustName');
+            if (groupNameEl) groupNameEl.textContent = customer.name;
+
             const tlContainer = document.getElementById('modalTimelineList');
             tlContainer.innerHTML = '';
             customer.timeline.forEach(t => {
@@ -1039,6 +1083,26 @@
             });
 
             document.getElementById('customerProfileModal').style.display = 'flex';
+        };
+
+        // 방식 B: 3자 VIP 전담 단톡방 열기
+        window.openZalo3WayGroupChat = () => {
+            const customerName = activeSelectedCustomer?.name || '고객';
+            const groupCode = `vip-1791605366-${Math.floor(1000 + Math.random() * 9000)}`;
+            const url = `https://zalo.me/g/${groupCode}`;
+            playNotificationSound();
+            alert(`💬 [3자 VIP 전담 단톡방 (방식 B) 연결]\n\n• 참여 구성원: 🛡️ 본사 수퍼관리자 + 🏪 가맹점주 + 👤 ${customerName} 고객님\n• 단톡방 URL: ${url}\n\nZalo 단톡방으로 이동합니다.`);
+            window.open('https://zalo.me/0981234567', '_blank');
+        };
+
+        // 방식 B: 가맹점주 환영 인사 1초 발송
+        window.sendOwnerWelcomeGreeting = () => {
+            const customerName = activeSelectedCustomer?.name || '고객';
+            const greetingMsg = `안녕하세요 ${customerName} 고객님! 베스트클럽 가맹점 대표입니다. 오늘 저희 매장 방문해 주셔서 진심으로 감사드리며, 본사 수퍼관리자님과 함께 최고의 VIP 서비스로 모시겠습니다. 필요한 점이 있으시면 편하게 말씀해 주세요!`;
+            navigator.clipboard.writeText(greetingMsg);
+            playNotificationSound();
+            alert(`👋 [가맹점주 환영 메시지 복사 완료]\n\n"${greetingMsg}"\n\n3자 단톡방에 붙여넣기 하실 수 있도록 클립보드에 복사되었습니다! Zalo로 이동합니다.`);
+            window.open('https://zalo.me/0981234567', '_blank');
         };
 
         window.closeProfileModal = () => {
