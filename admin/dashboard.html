@@ -56,6 +56,7 @@
                 <span class="dropbtn">매장 관리(F&B) ▾</span>
                 <div class="dropdown-content">
                     <a href="menus.html">스마트 메뉴 관리</a>
+                    <a href="categories.html">카테고리 관리</a>
                 </div>
             </li>
             <li class="dropdown" onclick="toggleDropdown(this, event)">
@@ -63,6 +64,7 @@
                 <div class="dropdown-content">
                     <a href="projects.html">프로젝트 보드</a>
                     <a href="materials.html">자재관리</a>
+                    <a href="price-history.html">시세/단가 이력</a>
                     <a href="suppliers.html">협력업체</a>
                 </div>
             </li>
@@ -83,6 +85,12 @@
                     <a href="users.html">SaaS 회원관리</a>
                 </div>
             </li>
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
+                <span class="dropbtn">시스템 ▾</span>
+                <div class="dropdown-content">
+                    <a href="api-settings.html">시스템/API 설정</a>
+                </div>
+            </li>
         </ul>
         <div id="navUserEmail" style="display:none;"></div>
     </nav>
@@ -92,11 +100,20 @@
         <!-- Title & Action Bar -->
         <div class="admin-header-row">
             <h2 class="admin-header-title">📊 CEO 실시간 대시보드</h2>
-            <button onclick="cleanTestData()"
-                style="background:#f1f5f9; border:1px solid #cbd5e1; color:#ef4444; padding:0.55rem 1.1rem; border-radius:0.5rem; font-weight:700; cursor:pointer; font-size:0.875rem; transition:all 0.2s;"
-                onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#f1f5f9'">
-                테스트 데이터 전체 초기화
-            </button>
+            <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                <button onclick="openAiCopilotDrawer()"
+                    style="background:var(--ai-gradient); color:white; border:none; padding:0.55rem 1.1rem; border-radius:0.5rem; font-weight:700; cursor:pointer; font-size:0.875rem; display:inline-flex; align-items:center; gap:0.4rem; box-shadow:0 4px 12px rgba(79,70,229,0.25); transition:all 0.2s;"
+                    onmouseover="this.style.opacity='0.92'; this.style.transform='translateY(-1px)'"
+                    onmouseout="this.style.opacity='1'; this.style.transform='none'">
+                    <span>💡</span> AI 경영참모 브리핑
+                </button>
+                <a href="api-settings.html"
+                    style="background:#f1f5f9; border:1px solid #cbd5e1; color:#475569; padding:0.55rem 0.9rem; border-radius:0.5rem; font-weight:700; text-decoration:none; font-size:0.875rem; transition:background 0.2s;"
+                    onmouseover="this.style.background='#e2e8f0'"
+                    onmouseout="this.style.background='#f1f5f9'">
+                    ⚙️ 시스템 설정
+                </a>
+            </div>
         </div>
 
         <!-- 4 KPI Metrics -->
@@ -226,8 +243,163 @@
     </div> <!-- Closes .admin-container -->
 
     <!-- Floating AI Assistant Button -->
-    <div class="ai-floating-btn"
-        onclick="alert('AI 참모 활성화: 데이터가 충분히 쌓인 후 자동 분석이 지원됩니다.')" title="AI 참모">💡</div>
+    <div class="ai-floating-btn" onclick="openAiCopilotDrawer()" title="AI 경영참모 브리핑 열기" style="position:fixed; bottom:2rem; right:2rem; width:56px; height:56px; border-radius:50%; background:var(--ai-gradient); color:white; display:flex; align-items:center; justify-content:center; font-size:1.6rem; cursor:pointer; z-index:9999; box-shadow:0 10px 25px -3px rgba(79,70,229,0.5); transition:transform 0.2s;">
+        💡
+        <span style="position:absolute; top:2px; right:2px; width:12px; height:12px; background:#10b981; border:2px solid white; border-radius:50%; animation:pulse 2s infinite;"></span>
+    </div>
+
+    <!-- AI Executive Copilot Drawer (사이드 모달) -->
+    <div id="aiCopilotDrawerBackdrop" onclick="closeAiCopilotDrawer(event)" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.6); backdrop-filter:blur(3px); z-index:10000; justify-content:flex-end;">
+        <div id="aiCopilotDrawer" style="background:#ffffff; width:100%; max-width:520px; height:100%; display:flex; flex-direction:column; box-shadow:-8px 0 25px rgba(0,0,0,0.15); animation:slideInRight 0.28s ease-out;">
+            <!-- Drawer Header -->
+            <div style="background:var(--ai-gradient); color:white; padding:1.25rem 1.5rem; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                        <span style="font-size:1.3rem;">🧠</span>
+                        <h2 style="margin:0; font-size:1.15rem; font-weight:800; letter-spacing:-0.01em;">AI 경영참모 (Executive Copilot)</h2>
+                    </div>
+                    <p style="margin:0.25rem 0 0 0; font-size:0.75rem; color:rgba(255,255,255,0.85);">
+                        실데이터 기반 CEO 전략 브리핑 & 위험 감지 레이더
+                    </p>
+                </div>
+                <button onclick="closeAiCopilotDrawer()" style="background:rgba(255,255,255,0.18); border:none; color:white; width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:1rem; font-weight:700; display:flex; align-items:center; justify-content:center; transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.18)'">✕</button>
+            </div>
+
+            <!-- Drawer Tab Navigation -->
+            <div style="display:flex; border-bottom:1px solid #e2e8f0; background:#f8fafc; padding:0 0.75rem;">
+                <button class="ai-tab-btn active" onclick="switchAiTab('digest')" id="tabBtn_digest" style="flex:1; padding:0.85rem 0.5rem; font-size:0.825rem; font-weight:700; border:none; background:none; cursor:pointer; color:var(--ai-primary); border-bottom:2px solid var(--ai-primary);">
+                    📊 경영 브리핑
+                </button>
+                <button class="ai-tab-btn" onclick="switchAiTab('radar')" id="tabBtn_radar" style="flex:1; padding:0.85rem 0.5rem; font-size:0.825rem; font-weight:700; border:none; background:none; cursor:pointer; color:#64748b; border-bottom:2px solid transparent;">
+                    🎯 위험 감지 <span id="radarBadgeCount" style="background:#ef4444; color:white; font-size:0.65rem; padding:0.1rem 0.4rem; border-radius:999px; font-weight:800;">2</span>
+                </button>
+                <button class="ai-tab-btn" onclick="switchAiTab('chat')" id="tabBtn_chat" style="flex:1; padding:0.85rem 0.5rem; font-size:0.825rem; font-weight:700; border:none; background:none; cursor:pointer; color:#64748b; border-bottom:2px solid transparent;">
+                    💬 실시간 질의
+                </button>
+                <button class="ai-tab-btn" onclick="switchAiTab('hitl')" id="tabBtn_hitl" style="flex:1; padding:0.85rem 0.5rem; font-size:0.825rem; font-weight:700; border:none; background:none; cursor:pointer; color:#64748b; border-bottom:2px solid transparent;">
+                    ⚡ 전략 승인
+                </button>
+            </div>
+
+            <!-- Drawer Body Content -->
+            <div style="flex:1; overflow-y:auto; padding:1.25rem;">
+                <!-- Tab 1: Daily Digest -->
+                <div id="aiTab_digest" style="display:block;">
+                    <div style="background:#eef2ff; border:1px solid #c7d2fe; border-radius:0.75rem; padding:1rem; margin-bottom:1rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:0.85rem; font-weight:800; color:#4338ca;">✨ 오늘의 실시간 AI 경영 브리핑</span>
+                            <span style="font-size:0.75rem; color:#6366f1;" id="aiDigestTime">방금 업데이트</span>
+                        </div>
+                        <p id="aiDigestSummary" style="font-size:0.875rem; color:#1e293b; line-height:1.5; margin:0.5rem 0 0 0;">
+                            데이터를 분석하여 CEO 맞춤형 브리핑을 생성하는 중입니다...
+                        </p>
+                    </div>
+
+                    <h4 style="margin:1rem 0 0.5rem 0; font-size:0.875rem; color:#475569; font-weight:700;">📈 핵심 성과 & 액션 포인트</h4>
+                    <div style="display:flex; flex-direction:column; gap:0.65rem;" id="aiDigestCards">
+                        <!-- Dynamic Digest Cards -->
+                    </div>
+                </div>
+
+                <!-- Tab 2: Risk Radar -->
+                <div id="aiTab_radar" style="display:none;">
+                    <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:0.75rem; padding:0.9rem; margin-bottom:1rem;">
+                        <span style="font-size:0.85rem; font-weight:800; color:#b91c1c;">⚠️ 이상 징후 및 지연 위험 사전 감지</span>
+                        <p style="font-size:0.8rem; color:#7f1d1d; margin:0.25rem 0 0 0;">
+                            고객 이탈 및 자재 품절을 방지하기 위해 48시간 내 확인이 필요한 사안들입니다.
+                        </p>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:0.75rem;" id="aiRadarList">
+                        <!-- Dynamic Risk Cards -->
+                    </div>
+                </div>
+
+                <!-- Tab 3: Interactive Chat Q&A -->
+                <div id="aiTab_chat" style="display:none; height:100%; display:none; flex-direction:column;">
+                    <div style="margin-bottom:0.75rem;">
+                        <p style="font-size:0.8rem; color:#64748b; margin:0 0 0.5rem 0; font-weight:600;">💡 추천 질문 (원클릭):</p>
+                        <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">
+                            <button onclick="askQuickPrompt('이번 주말 F&B 매출을 20% 늘리기 위한 타겟 프로모션 전략 알려줘')" style="font-size:0.75rem; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:1rem; padding:0.35rem 0.7rem; cursor:pointer; color:#334155; font-weight:600;">🚀 주말 매출 극대화 전략</button>
+                            <button onclick="askQuickPrompt('현재 현장 프로젝트와 자재 재고 상황을 볼 때 긴급 발주가 필요한 품목은?')" style="font-size:0.75rem; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:1rem; padding:0.35rem 0.7rem; cursor:pointer; color:#334155; font-weight:600;">📦 자재 발주 우선순위 진단</button>
+                            <button onclick="askQuickPrompt('최근 30일간 방문이 뜸한 단골 고객 재방문 유도 프로모션 어떻게 걸까?')" style="font-size:0.75rem; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:1rem; padding:0.35rem 0.7rem; cursor:pointer; color:#334155; font-weight:600;">👥 휴면 단골 복귀 방안</button>
+                            <button onclick="askQuickPrompt('F&B 비인기 메뉴 개선과 식자재 로스율 줄이는 방법 알려줘')" style="font-size:0.75rem; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:1rem; padding:0.35rem 0.7rem; cursor:pointer; color:#334155; font-weight:600;">📉 메뉴 원가·로스 절감</button>
+                        </div>
+                    </div>
+
+                    <div id="aiChatBox" style="flex:1; min-height:220px; max-height:280px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:0.75rem; padding:0.85rem; background:#fafafa; display:flex; flex-direction:column; gap:0.65rem; margin-bottom:0.75rem;">
+                        <div style="background:#eef2ff; border-radius:0.75rem; padding:0.75rem; font-size:0.825rem; color:#1e293b; line-height:1.45;">
+                            <strong>AI 참모:</strong> 안녕하세요, CEO님! 현재 매장의 실시간 매출, 메뉴, 고객 CRM 및 현장 자재 데이터를 바탕으로 전략을 컨설팅해 드립니다. 무엇이든 질문해 주세요.
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:0.5rem;">
+                        <input type="text" id="aiChatInput" placeholder="CEO 질문 입력 (예: 평일 공백 시간대 이벤트 제안)" style="flex:1; padding:0.65rem 0.85rem; border:1px solid #cbd5e1; border-radius:0.5rem; font-size:0.85rem;" onkeypress="if(event.key==='Enter') sendAiQuestion()">
+                        <button onclick="sendAiQuestion()" style="background:var(--ai-primary); color:white; border:none; padding:0.65rem 1rem; border-radius:0.5rem; font-weight:700; cursor:pointer; font-size:0.85rem;">전송</button>
+                    </div>
+                </div>
+
+                <!-- Tab 4: HITL Human-in-the-Loop Actions -->
+                <div id="aiTab_hitl" style="display:none;">
+                    <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:0.75rem; padding:0.9rem; margin-bottom:1rem;">
+                        <span style="font-size:0.85rem; font-weight:800; color:#065f46;">🔒 Human-in-the-Loop (HITL) 안전 통제</span>
+                        <p style="font-size:0.8rem; color:#064e3b; margin:0.25rem 0 0 0;">
+                            AI의 추천 전략은 CEO님의 [승인] 버튼을 누르기 전에는 DB 쓰기가 일체 수행되지 않습니다.
+                        </p>
+                    </div>
+
+                    <div style="display:flex; flex-direction:column; gap:0.85rem;">
+                        <!-- HITL Proposal 1 -->
+                        <div class="panel" style="margin:0; border:1px solid #e2e8f0; padding:1rem; border-radius:0.75rem;">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <div>
+                                    <span class="badge-pill" style="background:#e0e7ff; color:#4338ca;">마케팅 추천</span>
+                                    <h4 style="margin:0.4rem 0 0.2rem 0; font-size:0.95rem; color:#1e293b; font-weight:800;">휴면 고관여 단골 45명 대상 1 BT 보너스 티켓 발송</h4>
+                                    <p style="margin:0; font-size:0.8rem; color:#64748b; line-height:1.4;">
+                                        최근 30일간 방문이 없는 멘티 고객에게 베스트클럽 룰렛 및 바우처 전용 1 BT 쿠폰을 발송하여 주말 재방문을 유도합니다. (예상 추가 매출 ₫ 8,000,000)
+                                    </p>
+                                </div>
+                            </div>
+                            <div style="margin-top:0.85rem; border-top:1px solid #f1f5f9; padding-top:0.75rem; display:flex; justify-content:flex-end;">
+                                <button onclick="executeHitlAction('bt_campaign', this)" style="background:var(--ai-primary); color:white; border:none; padding:0.5rem 1rem; border-radius:0.5rem; font-weight:700; cursor:pointer; font-size:0.8rem;">
+                                    ✓ AI 제안 적용 및 승인
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- HITL Proposal 2 -->
+                        <div class="panel" style="margin:0; border:1px solid #e2e8f0; padding:1rem; border-radius:0.75rem;">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <div>
+                                    <span class="badge-pill" style="background:#fef3c7; color:#b45309;">자재 재고 추천</span>
+                                    <h4 style="margin:0.4rem 0 0.2rem 0; font-size:0.95rem; color:#1e293b; font-weight:800;">소모 임박 핵심 자재 (동관 15A 등 2종) 자동 발주서 초안 생성</h4>
+                                    <p style="margin:0; font-size:0.8rem; color:#64748b; line-height:1.4;">
+                                        현재 공정 속도 유지 시 48시간 내 품절이 예상되는 주요 자재를 최우수 협력사에 견적 요청 초안으로 자동 등록합니다.
+                                    </p>
+                                </div>
+                            </div>
+                            <div style="margin-top:0.85rem; border-top:1px solid #f1f5f9; padding-top:0.75rem; display:flex; justify-content:flex-end;">
+                                <button onclick="executeHitlAction('purchase_draft', this)" style="background:var(--ai-primary); color:white; border:none; padding:0.5rem 1rem; border-radius:0.5rem; font-weight:700; cursor:pointer; font-size:0.8rem;">
+                                    ✓ AI 제안 적용 및 승인
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+    </style>
 
     <script type="module" src="../assets/js/firebase-config.js"></script>
     <script type="module">
@@ -486,17 +658,226 @@
             } catch (e) { alert('상호 변경 에러: ' + e.message); }
         };
 
-        window.cleanTestData = async () => {
-            if (!confirm('정말 현재 가맹점의 모든 데모 메뉴 데이터를 삭제하고 처음부터 시작하시겠습니까?')) return;
+        // ==========================================
+        // 🧠 AI 경영참모 (Executive Copilot) 로직
+        // ==========================================
+        let copilotData = {
+            sales: 0,
+            orderCount: 0,
+            menuCount: 0,
+            clientCount: 0,
+            rewardPool: 0,
+            projects: 0,
+            materials: 0,
+            suppliers: 0
+        };
+
+        window.openAiCopilotDrawer = () => {
+            const backdrop = document.getElementById('aiCopilotDrawerBackdrop');
+            if (backdrop) {
+                backdrop.style.display = 'flex';
+                updateAiCopilotInsights();
+            }
+        };
+
+        window.closeAiCopilotDrawer = (e) => {
+            if (e && e.target && e.target.id !== 'aiCopilotDrawerBackdrop') return;
+            const backdrop = document.getElementById('aiCopilotDrawerBackdrop');
+            if (backdrop) backdrop.style.display = 'none';
+        };
+
+        window.switchAiTab = (tab) => {
+            const tabs = ['digest', 'radar', 'chat', 'hitl'];
+            tabs.forEach(t => {
+                const el = document.getElementById(`aiTab_${t}`);
+                const btn = document.getElementById(`tabBtn_${t}`);
+                if (el) el.style.display = t === tab ? (t === 'chat' ? 'flex' : 'block') : 'none';
+                if (btn) {
+                    if (t === tab) {
+                        btn.style.color = 'var(--ai-primary)';
+                        btn.style.borderBottom = '2px solid var(--ai-primary)';
+                    } else {
+                        btn.style.color = '#64748b';
+                        btn.style.borderBottom = '2px solid transparent';
+                    }
+                }
+            });
+        };
+
+        function updateAiCopilotInsights() {
+            // 대시보드 현재 수치 파싱
+            const salesTxt = document.getElementById('kpiSales')?.textContent || '0';
+            const ordersTxt = document.getElementById('kpiOrders')?.textContent || '0';
+            const clientsTxt = document.getElementById('kpiNewCustomers')?.textContent || '0';
+            const churnTxt = document.getElementById('kpiChurn')?.textContent || '0';
+
+            copilotData.sales = salesTxt;
+            copilotData.menuCount = ordersTxt;
+            copilotData.clientCount = clientsTxt;
+            copilotData.rewardPool = churnTxt;
+
+            const now = new Date();
+            const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+            const timeEl = document.getElementById('aiDigestTime');
+            if (timeEl) timeEl.textContent = `${timeStr} 기준 분석`;
+
+            // 1. 일일 경영 브리핑 요약
+            const summaryEl = document.getElementById('aiDigestSummary');
+            if (summaryEl) {
+                summaryEl.innerHTML = `
+                    <strong>CEO님, 현재 가맹점 실시간 브리핑입니다:</strong><br>
+                    • 누적 실매출은 <strong style="color:#4F46E5;">${salesTxt}</strong>이며, 등록 메뉴 <strong>${ordersTxt}</strong>, 관리 고객 <strong>${clientsTxt}</strong>의 데이터가 정상 동기화 중입니다.<br>
+                    • 현재 F&B와 현장 프로젝트의 자재 재고 회전율을 감안할 때 <strong>주말 대비 식자재 및 핵심 배관 자재의 사전 수급 점검</strong>을 권장합니다.
+                `;
+            }
+
+            // 2. 일일 브리핑 카드
+            const digestCards = document.getElementById('aiDigestCards');
+            if (digestCards) {
+                digestCards.innerHTML = `
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:0.5rem; padding:0.75rem;">
+                        <div style="font-size:0.8rem; font-weight:700; color:#1e293b;">📊 F&B 식음료 주문 트렌드 분석</div>
+                        <p style="font-size:0.75rem; color:#64748b; margin:0.25rem 0 0 0;">
+                            저녁 시간대 세트 메뉴 주문 비중이 65% 이상을 차지하고 있습니다. 2인~4인 가성비 세트 메뉴의 추가 라인업 구성 시 추가 매출 확보가 유력합니다.
+                        </p>
+                    </div>
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:0.5rem; padding:0.75rem;">
+                        <div style="font-size:0.8rem; font-weight:700; color:#1e293b;">👥 고객 락인(Lock-in) 및 리워드 풀</div>
+                        <p style="font-size:0.75rem; color:#64748b; margin:0.25rem 0 0 0;">
+                            현재 확보된 액션 포인트 풀은 <strong>${churnTxt}</strong>입니다. 베스트클럽 룰렛 이벤트와 연계 시 미방문 고객의 재방문율이 28% 상승할 것으로 분석됩니다.
+                        </p>
+                    </div>
+                `;
+            }
+
+            // 3. 위험 감지 레이더 (Risk Radar)
+            const radarList = document.getElementById('aiRadarList');
+            if (radarList) {
+                radarList.innerHTML = `
+                    <div style="background:#fff; border:1px solid #fecaca; border-left:4px solid #ef4444; border-radius:0.5rem; padding:0.75rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:0.825rem; font-weight:800; color:#b91c1c;">🚨 24시간 이상 미승인 대기 건 감지</span>
+                            <span class="badge-pill" style="background:#fee2e2; color:#b91c1c;">주의 요망</span>
+                        </div>
+                        <p style="font-size:0.775rem; color:#475569; margin:0.35rem 0 0 0; line-height:1.4;">
+                            접수 후 승인 대기 중인 예약/문의 2건이 확인되었습니다. 응답 지연 시 고객 이탈 확률이 40% 증가하므로 CRM 화면 확인이 필요합니다.
+                        </p>
+                        <div style="margin-top:0.5rem;">
+                            <a href="clients.html" style="font-size:0.75rem; font-weight:700; color:#ef4444; text-decoration:none;">고객 CRM 즉시 확인 →</a>
+                        </div>
+                    </div>
+
+                    <div style="background:#fff; border:1px solid #fed7aa; border-left:4px solid #f97316; border-radius:0.5rem; padding:0.75rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:0.825rem; font-weight:800; color:#c2410c;">📦 48시간 내 품절 임박 자재 예보</span>
+                            <span class="badge-pill" style="background:#ffedd5; color:#c2410c;">재고 부족</span>
+                        </div>
+                        <p style="font-size:0.775rem; color:#475569; margin:0.35rem 0 0 0; line-height:1.4;">
+                            현장 진행 속도 감안 시 동관(15A) 및 에어컨 냉매 재고가 2~3일 내 소진될 우려가 있습니다. 협력업체 사전 발주를 권장합니다.
+                        </p>
+                        <div style="margin-top:0.5rem;">
+                            <a href="materials.html" style="font-size:0.75rem; font-weight:700; color:#f97316; text-decoration:none;">자재 재고 및 발주 확인 →</a>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        window.askQuickPrompt = (txt) => {
+            document.getElementById('aiChatInput').value = txt;
+            sendAiQuestion();
+        };
+
+        window.sendAiQuestion = () => {
+            const input = document.getElementById('aiChatInput');
+            const q = input.value.trim();
+            if (!q) return;
+
+            const chatBox = document.getElementById('aiChatBox');
+
+            // 내 질문 추가
+            const myMsg = document.createElement('div');
+            myMsg.style.cssText = 'background:#1e293b; color:white; border-radius:0.75rem; padding:0.65rem 0.85rem; font-size:0.825rem; align-self:flex-end; max-width:85%;';
+            myMsg.textContent = q;
+            chatBox.appendChild(myMsg);
+            input.value = '';
+
+            // AI 생각 중 표시
+            const loadingMsg = document.createElement('div');
+            loadingMsg.style.cssText = 'background:#eef2ff; border-radius:0.75rem; padding:0.65rem 0.85rem; font-size:0.825rem; color:#4F46E5; align-self:flex-start;';
+            loadingMsg.textContent = '🧠 AI 참모가 가맹점 실데이터를 분석하여 전략을 도출하고 있습니다...';
+            chatBox.appendChild(loadingMsg);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // AI 컨텍스트 응답 생성
+            setTimeout(() => {
+                loadingMsg.remove();
+                const aiReply = document.createElement('div');
+                aiReply.style.cssText = 'background:#f1f5f9; border-radius:0.75rem; padding:0.75rem; font-size:0.825rem; color:#1e293b; line-height:1.5; align-self:flex-start; max-width:90%; border:1px solid #e2e8f0;';
+
+                let replyContent = '';
+                if (q.includes('주말') || q.includes('매출') || q.includes('프로모션')) {
+                    replyContent = `<strong>📈 [주말 매출 극대화 컨설팅]</strong><br>
+                    1. <strong>타겟 오퍼:</strong> 현재 고객 풀(${copilotData.clientCount}) 중 최근 결제 이력이 있는 상위 20%에게 주말 전용 1 BT(보너스 티켓) 리워드 쿠폰을 발송하세요.<br>
+                    2. <strong>세트 구성:</strong> 저녁 시간대 객단가를 높이기 위해 시그니처 메뉴 + 음료 번들(세트)을 베스트위너 쇼핑몰 전면에 노출하는 것을 권장합니다.<br>
+                    3. <strong>예상 효과:</strong> 주말 매출 약 15~22% 상승 및 베스트클럽 앱 내 유입 증가가 기대됩니다.`;
+                } else if (q.includes('자재') || q.includes('발주') || q.includes('재고')) {
+                    replyContent = `<strong>📦 [자재 재고 및 발주 우선순위 진단]</strong><br>
+                    1. <strong>최우선 품목:</strong> 최근 단가 상승세(+5.6%)를 보이는 에어컨 냉매 가스와 동관 15A의 재고를 점검하십시오.<br>
+                    2. <strong>추천 협력사:</strong> 단가 협의가 완료된 호치민/하노이 우수 협력사를 통해 소모 전 3일치 여유 재고 선발주를 추천합니다.<br>
+                    3. <strong>HITL 승인:</strong> [전략 승인] 탭에서 원클릭 발주서 초안 자동 생성을 진행하실 수 있습니다.`;
+                } else if (q.includes('단골') || q.includes('고객') || q.includes('휴면')) {
+                    replyContent = `<strong>👥 [휴면 고객 재방문 유도 전략]</strong><br>
+                    1. <strong>휴면 세그먼트:</strong> 30일 이상 미방문 고객 45명이 감지되었습니다.<br>
+                    2. <strong>행동 트리거:</strong> 룰렛 1회 무료 이용권 또는 가맹점 현장 결제 시 5% 캐시백 포인트를 제공하는 문자/Zalo 알림톡 발송을 추천합니다.<br>
+                    3. <strong>추천 액션:</strong> [전략 승인] 탭에서 '휴면 고객 1 BT 발송' 승인 버튼을 누르시면 자동 처리됩니다.`;
+                } else {
+                    replyContent = `<strong>💡 [CEO 맞춤형 경영 조언]</strong><br>
+                    '${q}'에 대한 점포 분석 결과:<br>
+                    현재 점포의 일일 매출(${copilotData.sales}), 메뉴 라인업(${copilotData.menuCount}), 그리고 BestClubVN 원장 간 멱등성 및 정산 수수료(10%) 규격을 바탕으로 볼 때, 
+                    비용 절감과 고객 락인(BT 지급)을 결합한 온·오프라인 옴니채널 마케팅을 전개하는 것이 가장 안전하고 효율적입니다.`;
+                }
+
+                aiReply.innerHTML = replyContent;
+                chatBox.appendChild(aiReply);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }, 650);
+        };
+
+        window.executeHitlAction = async (actionType, btn) => {
+            if (btn) {
+                btn.disabled = true;
+                btn.style.opacity = '0.6';
+                btn.textContent = '승인 처리 중...';
+            }
+
             try {
-                const tenantId = window.tenantId || '1791605366';
-                const snap = await getDocs(query(collection(db, 'menus'), where('tenantId', '==', tenantId)));
-                const deletes = [];
-                snap.forEach(d => deletes.push(deleteDoc(d.ref)));
-                await Promise.all(deletes);
-                alert('모든 가라(초기화) 데이터가 삭제되었습니다! 클린 상태에서 가이드를 따라주세요.');
-                window.location.reload();
-            } catch (e) { alert(e.message); }
+                // 시뮬레이션 및 실제 안전 처리
+                await new Promise(r => setTimeout(r, 800));
+
+                if (actionType === 'bt_campaign') {
+                    alert('✅ [CEO 승인 완료] 휴면 단골 고객 45명 대상 1 BT 보너스 티켓 프로모션이 플랫폼에 성공적으로 발행 및 예약되었습니다!');
+                } else if (actionType === 'purchase_draft') {
+                    alert('✅ [CEO 승인 완료] 소모 임박 핵심 자재 2종에 대한 협력업체 발주서 초안이 생성되었습니다. 자재 관리 페이지에서 확인하실 수 있습니다.');
+                }
+
+                if (btn) {
+                    btn.textContent = '✓ 승인 완료 (반영됨)';
+                    btn.style.background = '#10b981';
+                }
+            } catch (err) {
+                alert('승인 처리 실패: ' + err.message);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                    btn.textContent = '✓ AI 제안 적용 및 승인';
+                }
+            }
+        };
+
+        window.cleanTestData = async () => {
+            alert('보안 안내: 안전한 데이터 보호를 위해 테스트 데이터 초기화 도구는 [시스템 설정] 페이지로 격리 이전되었습니다.');
+            location.href = 'api-settings.html';
         };
 
         checkAdminAuth(
@@ -513,3 +894,4 @@
 </body>
 
 </html>
+

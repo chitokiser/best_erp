@@ -252,7 +252,7 @@ async function loadClients() {
     }
 }
 
-window.renderMentees = function() {
+window.renderMentees = function () {
     const tbody = document.getElementById('menteeTableBody');
     if (!tbody) return;
 
@@ -357,7 +357,7 @@ window.renderMentees = function() {
     tbody.innerHTML = html;
 };
 
-window.viewOrders = function(clientId) {
+window.viewOrders = function (clientId) {
     const client = storedClients.find(x => x.id === clientId);
     if (!client) return;
 
@@ -395,7 +395,7 @@ window.viewOrders = function(clientId) {
         let orderCardsHtml = client.orders.map(o => {
             const dateStr = o.created_at?.toDate ? o.created_at.toDate().toLocaleString() : (o.created_at?.seconds ? new Date(o.created_at.seconds * 1000).toLocaleString() : '최근');
             const itemsSummary = (o.items || []).map(it => `${escapeHtml(it.name || it.product_name || '상품')} x ${it.qty || 1}개`).join(', ') || '주문 상품 정보';
-            
+
             // 상태 뱃지
             let statusBadge = '<span style="color:#2563eb; font-weight:bold;">접수됨</span>';
             if (o.status === 'completed') statusBadge = '<span style="color:#10b981; font-weight:bold;">✅ 완료/정산완료</span>';
@@ -433,7 +433,7 @@ window.viewOrders = function(clientId) {
     modal.style.display = 'flex';
 };
 
-window.exportToCSV = function() {
+window.exportToCSV = function () {
     let csv = '회원구분,계정ID,이메일,이름,연락처,구매건수,총구매액(VND),누적포인트(P)\n';
     storedClients.forEach(c => {
         const relStr = c.relationType === 'both' ? '내멘티+구매' : (c.relationType === 'affiliate' ? '제휴회원(구매고객)' : '내멘티');

@@ -1,0 +1,1 @@
+import"./firebase-config-CRr6M8Nr.js";/* empty css              */import{t as e}from"./auth-Chok8jKQ.js";/* empty css              */e(e=>{},()=>{location.href=`../login.html?redirect=`+encodeURIComponent(location.pathname)});
