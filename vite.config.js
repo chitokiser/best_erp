@@ -36,6 +36,7 @@ module.exports = defineConfig({
         "estimates": resolve(__dirname, 'estimates.html'),
         "login": resolve(__dirname, 'login.html'),
         "qr-event": resolve(__dirname, 'qr-event.html'),
+        "table-qr": resolve(__dirname, 'table-qr.html'),
         "main": resolve(__dirname, 'index.html'),
         "material-detail": resolve(__dirname, 'material-detail.html'),
         "materials": resolve(__dirname, 'materials.html'),
