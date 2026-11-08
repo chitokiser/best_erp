@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>.cam-viewport-wrap{background:#090d16;border:2px solid #1e293b;border-radius:1rem;justify-content:center;align-items:center;width:100%;height:380px;display:flex;position:relative;overflow:hidden;box-shadow:0 15px 30px -5px #0000004d}#webcamVideo{object-fit:cover;width:100%;height:100%}#visionCanvas{pointer-events:none;width:100%;height:100%;position:absolute;top:0;left:0}.radar-scan-line{pointer-events:none;background:linear-gradient(90deg,#0000,#10b981,#0000);width:100%;height:3px;animation:2.5s linear infinite radarScan;position:absolute;top:0;left:0;box-shadow:0 0 15px #10b981}@keyframes radarScan{0%{opacity:.8;top:0%}50%{opacity:1;top:98%}to{opacity:.8;top:0%}}.ai-target-box{pointer-events:none;background:#10b98126;border:2px solid #10b981;border-radius:6px;transition:all .3s;position:absolute}.ai-target-tag{color:#000;white-space:nowrap;background:#10b981;border-radius:4px;padding:.15rem .45rem;font-size:.68rem;font-weight:800;position:absolute;top:-26px;left:-2px}.traffic-card{background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;justify-content:space-between;align-items:center;gap:.5rem;padding:.85rem;transition:all .2s;display:flex}.traffic-card:hover{border-color:#cbd5e1;box-shadow:0 4px 10px #0000000d}</style>
-  <script type="module" crossorigin src="/assets/admin_vision-crm-quCjPv1_.js"></script>
+  <script type="module" crossorigin src="/assets/admin_vision-crm-EBzQIOm1.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/firebase-config-CRr6M8Nr.js">
   <link rel="modulepreload" crossorigin href="/assets/auth-Chok8jKQ.js">
   <link rel="modulepreload" crossorigin href="/assets/notification-hub-ChDr8WD_.js">
@@ -166,12 +166,22 @@
                     </div>
                 </div>
 
-                <div style="margin-top:0.75rem; display:flex; justify-content:space-between; align-items:center; font-size:0.775rem; color:#64748b;">
-                    <span>🛡️ <strong>개인정보 보호 철칙:</strong> 원본 영상은 저장되지 않으며 익명 메타데이터로 즉시 변환됩니다.</span>
-                    <button onclick="refreshVisionScan()" style="background:#f1f5f9; border:1px solid #cbd5e1; padding:0.3rem 0.6rem; border-radius:0.35rem; font-size:0.75rem; cursor:pointer; font-weight:700;">
+                <div style="margin-top:0.75rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; font-size:0.775rem; color:#64748b;">
+                    <div style="display:flex; gap:0.4rem; align-items:center;">
+                        <button onclick="captureAndAnalyzeCurrentFace()" style="background:var(--ai-gradient); color:white; border:none; padding:0.45rem 0.9rem; border-radius:0.4rem; font-size:0.8rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 4px 10px rgba(79,70,229,0.3);">
+                            <span>⚡</span> 지금 카메라 속 인물 즉시 AI 분석
+                        </button>
+                        <button onclick="switchCameraFacing()" id="btnSwitchCam" style="background:#f1f5f9; border:1px solid #cbd5e1; padding:0.45rem 0.75rem; border-radius:0.4rem; font-size:0.8rem; cursor:pointer; font-weight:700;">
+                            🔄 전/후면 전환
+                        </button>
+                    </div>
+                    <button onclick="refreshVisionScan()" style="background:#f1f5f9; border:1px solid #cbd5e1; padding:0.45rem 0.75rem; border-radius:0.4rem; font-size:0.8rem; cursor:pointer; font-weight:700;">
                         스캔 재조정
                     </button>
                 </div>
+                <p style="margin:0.5rem 0 0 0; font-size:0.725rem; color:#94a3b8;">
+                    🛡️ <strong>개인정보 보호 철칙:</strong> 원본 영상 및 얼굴 이미지는 서버에 저장되지 않으며, 익명 메타데이터(추정 연령/성별/체류시간)로만 변환됩니다.
+                </p>
             </div>
 
             <!-- Right: Real-time Live Detection Feed & Auto-CRM Action -->

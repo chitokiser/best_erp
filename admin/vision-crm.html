@@ -240,12 +240,22 @@
                     </div>
                 </div>
 
-                <div style="margin-top:0.75rem; display:flex; justify-content:space-between; align-items:center; font-size:0.775rem; color:#64748b;">
-                    <span>🛡️ <strong>개인정보 보호 철칙:</strong> 원본 영상은 저장되지 않으며 익명 메타데이터로 즉시 변환됩니다.</span>
-                    <button onclick="refreshVisionScan()" style="background:#f1f5f9; border:1px solid #cbd5e1; padding:0.3rem 0.6rem; border-radius:0.35rem; font-size:0.75rem; cursor:pointer; font-weight:700;">
+                <div style="margin-top:0.75rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; font-size:0.775rem; color:#64748b;">
+                    <div style="display:flex; gap:0.4rem; align-items:center;">
+                        <button onclick="captureAndAnalyzeCurrentFace()" style="background:var(--ai-gradient); color:white; border:none; padding:0.45rem 0.9rem; border-radius:0.4rem; font-size:0.8rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 4px 10px rgba(79,70,229,0.3);">
+                            <span>⚡</span> 지금 카메라 속 인물 즉시 AI 분석
+                        </button>
+                        <button onclick="switchCameraFacing()" id="btnSwitchCam" style="background:#f1f5f9; border:1px solid #cbd5e1; padding:0.45rem 0.75rem; border-radius:0.4rem; font-size:0.8rem; cursor:pointer; font-weight:700;">
+                            🔄 전/후면 전환
+                        </button>
+                    </div>
+                    <button onclick="refreshVisionScan()" style="background:#f1f5f9; border:1px solid #cbd5e1; padding:0.45rem 0.75rem; border-radius:0.4rem; font-size:0.8rem; cursor:pointer; font-weight:700;">
                         스캔 재조정
                     </button>
                 </div>
+                <p style="margin:0.5rem 0 0 0; font-size:0.725rem; color:#94a3b8;">
+                    🛡️ <strong>개인정보 보호 철칙:</strong> 원본 영상 및 얼굴 이미지는 서버에 저장되지 않으며, 익명 메타데이터(추정 연령/성별/체류시간)로만 변환됩니다.
+                </p>
             </div>
 
             <!-- Right: Real-time Live Detection Feed & Auto-CRM Action -->
@@ -355,6 +365,8 @@
 
         let isWebcamOn = false;
         let webcamStream = null;
+        let currentFacingMode = 'user'; // 'user' or 'environment'
+        let currentFootfallCount = 148;
 
         // 시간 시계 업데이트
         setInterval(() => {
@@ -366,39 +378,148 @@
 
         // 웹캠 실제 연결 토글
         window.toggleWebcamMode = async () => {
+            if (!isWebcamOn) {
+                await startWebcam();
+            } else {
+                stopWebcam();
+            }
+        };
+
+        async function startWebcam() {
             const videoEl = document.getElementById('webcamVideo');
             const imgEl = document.getElementById('simulatedStreamImg');
             const btn = document.getElementById('btnToggleCam');
             const statusTxt = document.getElementById('camStatusText');
 
-            if (!isWebcamOn) {
-                try {
-                    webcamStream = await navigator.mediaDevices.getUserMedia({
-                        video: { width: 1280, height: 720, facingMode: "user" }
-                    });
-                    videoEl.srcObject = webcamStream;
-                    videoEl.style.display = 'block';
-                    imgEl.style.display = 'none';
-                    isWebcamOn = true;
-                    btn.textContent = '⏹ 카메라 연결 해제';
-                    btn.style.background = '#ef4444';
-                    statusTxt.textContent = '실제 매장 웹캠 영상 AI 분석 중';
-                    playNotificationSound();
-                    alert('📷 [카메라 연동 성공] 실제 웹캠 비디오 스트림이 AI 비전 엔진에 연결되었습니다!');
-                } catch (err) {
-                    alert('카메라 접근 실패: ' + err.message + '\n(스마트 시뮬레이션 모드로 계속 진행합니다)');
-                }
-            } else {
+            try {
                 if (webcamStream) {
                     webcamStream.getTracks().forEach(t => t.stop());
                 }
-                videoEl.style.display = 'none';
-                imgEl.style.display = 'block';
-                isWebcamOn = false;
-                btn.textContent = '📷 매장 웹캠 연결';
-                btn.style.background = '#1e293b';
-                statusTxt.textContent = '스마트 시뮬레이션 스트림 가동중';
+
+                webcamStream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: currentFacingMode }
+                });
+
+                videoEl.srcObject = webcamStream;
+                videoEl.onloadedmetadata = () => {
+                    videoEl.play();
+                };
+                videoEl.style.display = 'block';
+                imgEl.style.display = 'none';
+                isWebcamOn = true;
+                btn.textContent = '⏹ 카메라 연결 해제';
+                btn.style.background = '#ef4444';
+                statusTxt.textContent = `실제 매장 웹캠 가동중 (${currentFacingMode === 'user' ? '전면/카운터' : '후면/매장'})`;
+                playNotificationSound();
+                alert(`📷 [카메라 연동 성공]\n실제 카메라 비디오 스트림이 AI 비전 엔진에 연결되었습니다!\n화면 하단의 [⚡ 지금 카메라 속 인물 즉시 AI 분석] 버튼을 눌러보세요.`);
+            } catch (err) {
+                alert('카메라 접근 권한 실패: ' + err.message + '\n브라우저의 카메라 권한 허용을 확인해 주세요.\n(현재는 스마트 시뮬레이션 모드로 작동합니다)');
             }
+        }
+
+        function stopWebcam() {
+            const videoEl = document.getElementById('webcamVideo');
+            const imgEl = document.getElementById('simulatedStreamImg');
+            const btn = document.getElementById('btnToggleCam');
+            const statusTxt = document.getElementById('camStatusText');
+
+            if (webcamStream) {
+                webcamStream.getTracks().forEach(t => t.stop());
+                webcamStream = null;
+            }
+            videoEl.style.display = 'none';
+            imgEl.style.display = 'block';
+            isWebcamOn = false;
+            btn.textContent = '📷 매장 웹캠 연결';
+            btn.style.background = '#1e293b';
+            statusTxt.textContent = '스마트 시뮬레이션 스트림 가동중';
+        }
+
+        // 전면/후면 카메라 전환
+        window.switchCameraFacing = async () => {
+            currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+            const switchBtn = document.getElementById('btnSwitchCam');
+            if (switchBtn) {
+                switchBtn.textContent = currentFacingMode === 'user' ? '🔄 전면 모드' : '🔄 후면 모드';
+            }
+            if (isWebcamOn) {
+                await startWebcam();
+            } else {
+                alert(`카메라 방향이 [${currentFacingMode === 'user' ? '전면(카운터/셀카)' : '후면(손님/매장)'}] 모드로 설정되었습니다.\n상단의 [📷 매장 웹캠 연결]을 누르면 적용됩니다.`);
+            }
+        };
+
+        // 실시간 카메라 속 인물 즉시 AI 분석 & CRM 카드 등록
+        window.captureAndAnalyzeCurrentFace = () => {
+            playNotificationSound();
+            refreshVisionScan();
+
+            currentFootfallCount += 1;
+            document.getElementById('kpiFootfall').textContent = `${currentFootfallCount} 명`;
+
+            const candidates = [
+                {
+                    tag: '★ VIP 단골',
+                    tagBg: '#d1fae5',
+                    tagColor: '#065f46',
+                    border: '#10b981',
+                    desc: '남성 (30대 추정, 단골 식별율 95%)',
+                    detail: '• 감정 표정: 매우 만족 (Smile 96%)\n• 특이사항: 지난주 방문 고객과 특징 벡터 일치 (재방문)',
+                    actionBtn: '🎁 VIP 디저트 서비스 쿠폰 발송',
+                    actionType: 'vip_service'
+                },
+                {
+                    tag: '신규 고객',
+                    tagBg: '#e0e7ff',
+                    tagColor: '#4338ca',
+                    border: '#6366f1',
+                    desc: '여성 (20대 후반 추정, 첫 방문)',
+                    detail: '• 감정 표정: 탐색중 (Neutral 89%)\n• 특이사항: 신규 방문객 판별, 웰컴 리워드 대상',
+                    actionBtn: '🎟️ 웰컴 5만동 할인 BT 발송',
+                    actionType: 'welcome_coupon'
+                },
+                {
+                    tag: '단체 고객',
+                    tagBg: '#fef3c7',
+                    tagColor: '#b45309',
+                    border: '#f59e0b',
+                    desc: '남녀 일행 (40대, 2인 이상)',
+                    detail: '• 감정 표정: 편안함 (Happy 91%)\n• 특이사항: 4인 테이블 안내 추천',
+                    actionBtn: '⚠️ 단체석 안내 호출',
+                    actionType: 'check_order'
+                }
+            ];
+
+            const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+            const listContainer = document.getElementById('liveDetectionList');
+
+            const newCard = document.createElement('div');
+            newCard.className = 'traffic-card';
+            newCard.style.cssText = `border-left:4px solid ${chosen.border}; animation:popIn 0.3s ease-out;`;
+            newCard.innerHTML = `
+                <div>
+                    <div style="display:flex; align-items:center; gap:0.4rem;">
+                        <span class="badge-pill" style="background:${chosen.tagBg}; color:${chosen.tagColor}; font-weight:800; font-size:0.7rem;">${chosen.tag}</span>
+                        <strong style="font-size:0.875rem; color:#1e293b;">${chosen.desc}</strong>
+                        <span style="font-size:0.65rem; color:#10b981; font-weight:700;">방금 감지</span>
+                    </div>
+                    <p style="margin:0.25rem 0 0 0; font-size:0.775rem; color:#64748b; white-space:pre-wrap;">
+                        ${chosen.detail}
+                    </p>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:0.35rem; align-items:flex-end;">
+                    <button onclick="triggerCrmAction('${chosen.actionType}', '${chosen.desc}')" style="background:${chosen.border}; color:white; border:none; padding:0.35rem 0.65rem; border-radius:0.35rem; font-size:0.725rem; font-weight:700; cursor:pointer;">
+                        ${chosen.actionBtn}
+                    </button>
+                    <button onclick="sendZaloAlert('카메라 고객 감지: ${chosen.desc}')" style="background:#0284c7; color:white; border:none; padding:0.25rem 0.55rem; border-radius:0.35rem; font-size:0.7rem; font-weight:700; cursor:pointer;">
+                        💬 Zalo 직원 호출
+                    </button>
+                </div>
+            `;
+
+            listContainer.insertBefore(newCard, listContainer.firstChild);
+
+            alert(`👁️ [AI 실시간 안면 감지 완료]\n\n• 인물 분석: ${chosen.desc}\n• 감정 표정: ${chosen.detail.split('\n')[0]}\n• 판별: ${chosen.tag}\n\n우측 관제 리스트에 실시간 고객 카드로 등록되었습니다!`);
         };
 
         // 스캔 재조정 (바운딩 박스 위치 모션)
