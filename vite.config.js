@@ -31,6 +31,7 @@ module.exports = defineConfig({
         "admin_categories": resolve(__dirname, 'admin/categories.html'),
         "admin_coupons": resolve(__dirname, 'admin/coupons.html'),
         "admin_price-history": resolve(__dirname, 'admin/price-history.html'),
+        "admin_vision-crm": resolve(__dirname, 'admin/vision-crm.html'),
         "categories": resolve(__dirname, 'categories.html'),
         "estimates": resolve(__dirname, 'estimates.html'),
         "login": resolve(__dirname, 'login.html'),
