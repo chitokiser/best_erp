@@ -1174,6 +1174,17 @@
                 <button onclick="closeFaceEnrollModal()" style="background:none; border:none; font-size:1.35rem; color:#94A3B8; cursor:pointer;">✕</button>
             </div>
 
+            <!-- Camera Source Selector & Re-capture Controls -->
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#F1F5F9; border-radius:0.5rem; padding:0.4rem 0.65rem; margin-bottom:0.75rem;">
+                <div style="display:flex; align-items:center; gap:0.4rem;">
+                    <span style="font-size:0.75rem; font-weight:700; color:#334155;">촬영 카메라:</span>
+                    <div id="modalCamSourceTabs" style="display:flex; gap:0.3rem;"></div>
+                </div>
+                <button type="button" onclick="recaptureEnrollFrame()" style="background:#4F46E5; color:white; border:none; padding:0.3rem 0.65rem; border-radius:0.35rem; font-size:0.75rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.25rem;">
+                    <span>🔄</span> 지금 다시 캡처
+                </button>
+            </div>
+
             <!-- Face Snapshot & AI Feature Extraction Info -->
             <div style="display:flex; gap:1rem; align-items:center; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:0.75rem; padding:0.85rem; margin-bottom:1.1rem;">
                 <div style="width:110px; height:110px; border-radius:0.6rem; overflow:hidden; border:2px solid #10B981; flex-shrink:0; background:#000;">
@@ -1188,16 +1199,32 @@
 
             <!-- Registration Mode Toggle (Tab 1 vs Tab 2) -->
             <div style="display:flex; gap:0.5rem; margin-bottom:1rem; border-bottom:1px solid #E2E8F0; padding-bottom:0.5rem;">
-                <button type="button" id="tabEnrollNewBtn" onclick="switchEnrollMode('NEW')" style="flex:1; padding:0.55rem; font-size:0.825rem; font-weight:800; border:none; border-radius:0.4rem; background:#4F46E5; color:white; cursor:pointer;">
-                    ➕ 신규 고객으로 등록
+                <button type="button" id="tabEnrollExistingBtn" onclick="switchEnrollMode('EXISTING')" style="flex:1; padding:0.55rem; font-size:0.825rem; font-weight:800; border:none; border-radius:0.4rem; background:#4F46E5; color:white; cursor:pointer;">
+                    🔄 기존 회원에 내 얼굴 매칭
                 </button>
-                <button type="button" id="tabEnrollExistingBtn" onclick="switchEnrollMode('EXISTING')" style="flex:1; padding:0.55rem; font-size:0.825rem; font-weight:700; border:1px solid #CBD5E1; border-radius:0.4rem; background:#F1F5F9; color:#475569; cursor:pointer;">
-                    🔄 기존 고객에 얼굴 매칭/업데이트
+                <button type="button" id="tabEnrollNewBtn" onclick="switchEnrollMode('NEW')" style="flex:1; padding:0.55rem; font-size:0.825rem; font-weight:700; border:1px solid #CBD5E1; border-radius:0.4rem; background:#F1F5F9; color:#475569; cursor:pointer;">
+                    ➕ 신규 회원으로 추가
                 </button>
             </div>
 
+            <!-- Form B: 기존 고객과 매칭 업데이트 -->
+            <div id="enrollExistingCustomerSection">
+                <div style="background:#ECFDF5; border:1px solid #A7F3D0; border-radius:0.5rem; padding:0.65rem; font-size:0.775rem; color:#065F46; margin-bottom:0.85rem; line-height:1.4;">
+                    💡 <strong>안내:</strong> 가맹점 등록 회원(최진영, William Cater, fu kang 등)을 선택하시면, 현재 캡처된 실제 얼굴을 해당 회원에게 1:1 매칭 등록합니다.
+                </div>
+                <div style="margin-bottom:0.85rem;">
+                    <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.25rem;">매칭 대상 고객 선택 *</label>
+                    <select id="enrollExistingSelect" style="width:100%; padding:0.6rem; border:1px solid #CBD5E1; border-radius:0.4rem; font-size:0.85rem; box-sizing:border-box;">
+                    </select>
+                </div>
+                <div style="margin-bottom:0.85rem;">
+                    <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.25rem;">고객 성함 변경 (선택)</label>
+                    <input type="text" id="enrollExistingNameOverride" placeholder="이름을 실제 성함으로 변경하려면 입력" style="width:100%; padding:0.55rem; border:1px solid #CBD5E1; border-radius:0.4rem; font-size:0.85rem; box-sizing:border-box;">
+                </div>
+            </div>
+
             <!-- Form A: 신규 고객 등록 -->
-            <div id="enrollNewCustomerSection">
+            <div id="enrollNewCustomerSection" style="display:none;">
                 <div style="margin-bottom:0.75rem;">
                     <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.25rem;">실제 고객 성함 *</label>
                     <input type="text" id="enrollNewName" placeholder="예: 홍길동 (실제 매장 방문자 성함)" style="width:100%; padding:0.55rem; border:1px solid #CBD5E1; border-radius:0.4rem; font-size:0.85rem; box-sizing:border-box;">
@@ -1220,22 +1247,6 @@
                         <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.25rem;">선호 메뉴 / 특징</label>
                         <input type="text" id="enrollNewFavMenu" placeholder="예: 아메리카노, 창가석" style="width:100%; padding:0.55rem; border:1px solid #CBD5E1; border-radius:0.4rem; font-size:0.85rem; box-sizing:border-box;">
                     </div>
-                </div>
-            </div>
-
-            <!-- Form B: 기존 고객과 매칭 업데이트 -->
-            <div id="enrollExistingCustomerSection" style="display:none;">
-                <div style="background:#FFFBEB; border:1px solid #FCD34D; border-radius:0.5rem; padding:0.65rem; font-size:0.775rem; color:#92400E; margin-bottom:0.85rem; line-height:1.4;">
-                    💡 <strong>안내:</strong> 가상 샘플(김민수 등) 또는 기존 가입 회원 중 하나를 선택하시면, 현재 카메라에 비친 실제 얼굴 사진과 안면 데이터를 해당 고객에게 1:1 매칭합니다.
-                </div>
-                <div style="margin-bottom:0.85rem;">
-                    <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.25rem;">매칭 대상 고객 선택 *</label>
-                    <select id="enrollExistingSelect" style="width:100%; padding:0.6rem; border:1px solid #CBD5E1; border-radius:0.4rem; font-size:0.85rem; box-sizing:border-box;">
-                    </select>
-                </div>
-                <div style="margin-bottom:0.85rem;">
-                    <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.25rem;">고객 성함 변경 (선택)</label>
-                    <input type="text" id="enrollExistingNameOverride" placeholder="이름을 실제 성함으로 변경하려면 입력" style="width:100%; padding:0.55rem; border:1px solid #CBD5E1; border-radius:0.4rem; font-size:0.85rem; box-sizing:border-box;">
                 </div>
             </div>
 
@@ -2301,7 +2312,7 @@
                             <span class="badge-pill" style="background:${c.tierColor}; color:${c.tierTextColor}; font-weight:800; font-size:0.7rem;">${c.tier}</span>
                             <strong style="font-size:0.95rem; color:#1E293B;">${c.name}</strong>
                             <span style="font-size:0.75rem; color:#64748B; font-family:monospace;">${c.customerId}</span>
-                            ${c.isMock ? `<span style="background:#f1f5f9; border:1px solid #e2e8f0; color:#64748b; font-size:0.65rem; font-weight:700; padding:0.1rem 0.35rem; border-radius:0.25rem;">가상 샘플</span>` : `<span style="background:#dcfce7; border:1px solid #86efac; color:#166534; font-size:0.65rem; font-weight:800; padding:0.1rem 0.35rem; border-radius:0.25rem;">📷 실물 얼굴 등록</span>`}
+                            ${(c.descriptor || c.photoURL) ? `<span style="background:#dcfce7; border:1px solid #86efac; color:#166534; font-size:0.65rem; font-weight:800; padding:0.1rem 0.4rem; border-radius:0.25rem;">📷 실물 얼굴 등록 완료</span>` : `<span style="background:#fef3c7; border:1px solid #fcd34d; color:#b45309; font-size:0.65rem; font-weight:800; padding:0.1rem 0.4rem; border-radius:0.25rem;">⚠️ 얼굴 미등록 (등록 필요)</span>`}
                             ${hasBt ? `<span style="background:#FFFBEB; border:1px solid #FCD34D; color:#B45309; font-size:0.65rem; font-weight:800; padding:0.1rem 0.4rem; border-radius:0.25rem;">🎫 1 BT 발급 (${c.btTicketCode || 'BT-지급'})</span>` : ''}
                         </div>
                         <p style="margin:0; font-size:0.775rem; color:#64748B;">
@@ -2685,8 +2696,8 @@
             const labeledDescriptors = [];
 
             for (const c of masterCustomers) {
-                // Ignore mock entries without real descriptor or real photo
-                if (c.isMock && !c.descriptor && !c.photoURL) continue;
+                // Ignore entries without real descriptor or photo
+                if (!c.descriptor && !c.photoURL) continue;
 
                 try {
                     if (c.descriptor && Array.isArray(c.descriptor)) {
@@ -2694,9 +2705,9 @@
                         const label = `${c.customerId}::${c.name}::${c.tier}`;
                         labeledDescriptors.push(new faceapi.LabeledFaceDescriptors(label, [floatArray]));
                         console.log(`👤 AI 안면 매처 등록 (Descriptor): ${c.name} (${c.customerId})`);
-                    } else if (c.photoURL && !c.isMock) {
+                    } else if (c.photoURL) {
                         const img = await faceapi.fetchImage(c.photoURL);
-                        const detection = await faceapi.detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({ inputSize: 224 })).withFaceLandmarks(true).withFaceDescriptor();
+                        const detection = await faceapi.detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.25 })).withFaceLandmarks(true).withFaceDescriptor();
                         if (detection && detection.descriptor) {
                             const label = `${c.customerId}::${c.name}::${c.tier}`;
                             labeledDescriptors.push(new faceapi.LabeledFaceDescriptors(label, [detection.descriptor]));
@@ -2974,21 +2985,20 @@
                 statusBadge.style.color = '#1E40AF';
             }
 
-            // Find valid video element (single or multiCamGrid)
-            let video = document.getElementById('webcamVideo');
-            if (cameraViewMode !== 'single') {
-                const subVideos = Array.from(document.querySelectorAll('#multiCamGrid video')).filter(v => v.readyState >= 2 && v.videoWidth > 0);
-                if (subVideos.length > 0) {
-                    const activeIndex = storeCameras.findIndex(c => c.id === activeCameraId);
-                    if (activeIndex >= 0 && subVideos[activeIndex]) {
-                        video = subVideos[activeIndex];
-                    } else {
-                        video = subVideos[0];
-                    }
-                }
+            // Collect all candidate video streams
+            let candidateVideos = [];
+            if (cameraViewMode === 'single') {
+                const sv = document.getElementById('webcamVideo');
+                if (sv && sv.readyState >= 2) candidateVideos.push(sv);
+            } else {
+                candidateVideos = Array.from(document.querySelectorAll('#multiCamGrid video')).filter(v => v.readyState >= 2 && v.videoWidth > 0);
+            }
+            if (candidateVideos.length === 0) {
+                const sv = document.getElementById('webcamVideo');
+                if (sv && sv.readyState >= 2) candidateVideos.push(sv);
             }
 
-            if (!video || video.readyState < 2 || video.videoWidth === 0) {
+            if (candidateVideos.length === 0) {
                 if (resEl) {
                     resEl.style.background = '#FEF2F2';
                     resEl.style.border = '1px solid #FECACA';
@@ -3002,32 +3012,27 @@
             let detected = null;
 
             if (isFaceApiLoaded && typeof faceapi !== 'undefined') {
-                try {
-                    detected = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.35 }))
-                        .withFaceLandmarks(true)
-                        .withFaceDescriptor();
-                    if (detected && detected.descriptor) {
-                        descriptor = detected.descriptor;
-                    }
-                } catch (e) {
-                    console.warn("Face detection error:", e);
-                }
+                // Check all candidate videos with static canvas to guarantee reliable face detection
+                for (const vid of candidateVideos) {
+                    try {
+                        const tempC = document.createElement('canvas');
+                        tempC.width = vid.videoWidth || 640;
+                        tempC.height = vid.videoHeight || 480;
+                        tempC.getContext('2d').drawImage(vid, 0, 0, tempC.width, tempC.height);
 
-                // If no face on current video and in multiCamGrid, try other subVideos
-                if (!descriptor && cameraViewMode !== 'single') {
-                    const subVideos = Array.from(document.querySelectorAll('#multiCamGrid video')).filter(v => v !== video && v.readyState >= 2 && v.videoWidth > 0);
-                    for (const otherVid of subVideos) {
-                        try {
-                            const det = await faceapi.detectSingleFace(otherVid, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.35 }))
+                        for (const size of [224, 320, 160]) {
+                            const det = await faceapi.detectSingleFace(tempC, new faceapi.TinyFaceDetectorOptions({ inputSize: size, scoreThreshold: 0.20 }))
                                 .withFaceLandmarks(true)
                                 .withFaceDescriptor();
                             if (det && det.descriptor) {
                                 descriptor = det.descriptor;
                                 detected = det;
-                                video = otherVid;
                                 break;
                             }
-                        } catch (e) {}
+                        }
+                        if (descriptor) break;
+                    } catch (e) {
+                        console.warn("searchCustomer face detection error:", e);
                     }
                 }
             }
@@ -3152,31 +3157,75 @@
         let currentCapturedDescriptor = null;
         let enrollMode = 'NEW';
 
-        window.openFaceEnrollModal = async () => {
-            let video = document.getElementById('webcamVideo');
-            if (cameraViewMode !== 'single') {
-                const subVideos = Array.from(document.querySelectorAll('#multiCamGrid video')).filter(v => v.readyState >= 2 && v.videoWidth > 0);
-                if (subVideos.length > 0) {
-                    video = subVideos[0];
-                    if (isFaceApiLoaded && typeof faceapi !== 'undefined' && subVideos.length > 1) {
-                        for (const sv of subVideos) {
-                            try {
-                                const qDet = await faceapi.detectSingleFace(sv, new faceapi.TinyFaceDetectorOptions({ inputSize: 160, scoreThreshold: 0.35 }));
-                                if (qDet) {
-                                    video = sv;
-                                    break;
-                                }
-                            } catch (e) {}
-                        }
-                    }
-                }
+        let enrollActiveCamIndex = null;
+
+        window.recaptureEnrollFrame = async (camIndex = null) => {
+            if (camIndex !== null) enrollActiveCamIndex = camIndex;
+
+            // Get all candidate video streams
+            let candidateVideos = [];
+            if (cameraViewMode === 'single') {
+                const sv = document.getElementById('webcamVideo');
+                if (sv && sv.readyState >= 2) candidateVideos.push(sv);
+            } else {
+                candidateVideos = Array.from(document.querySelectorAll('#multiCamGrid video')).filter(v => v.readyState >= 2 && v.videoWidth > 0);
             }
-            if (!isWebcamOn || !video || video.videoWidth === 0) {
-                alert('먼저 상단 [📷 카메라 전체 연결] 버튼을 눌러 카메라를 켜주세요.');
+
+            if (candidateVideos.length === 0) {
+                const sv = document.getElementById('webcamVideo');
+                if (sv && sv.readyState >= 2) candidateVideos.push(sv);
+            }
+
+            if (candidateVideos.length === 0) {
+                alert('카메라 영상이 활성화되지 않았습니다. 먼저 상단 [📷 카메라 전체 연결] 버튼을 눌러주세요.');
                 return;
             }
 
-            // Capture current frame to an offscreen canvas
+            // Pick video: if not specified, find camera with best face detection
+            let video = null;
+            if (enrollActiveCamIndex !== null && candidateVideos[enrollActiveCamIndex]) {
+                video = candidateVideos[enrollActiveCamIndex];
+            } else {
+                let bestScore = -1;
+                let bestIdx = 0;
+                for (let i = 0; i < candidateVideos.length; i++) {
+                    const cv = candidateVideos[i];
+                    try {
+                        const tempC = document.createElement('canvas');
+                        tempC.width = cv.videoWidth || 640;
+                        tempC.height = cv.videoHeight || 480;
+                        tempC.getContext('2d').drawImage(cv, 0, 0, tempC.width, tempC.height);
+                        if (isFaceApiLoaded && typeof faceapi !== 'undefined') {
+                            const det = await faceapi.detectSingleFace(tempC, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.20 }));
+                            const score = det ? det.score : 0;
+                            if (score > bestScore) {
+                                bestScore = score;
+                                bestIdx = i;
+                            }
+                        }
+                    } catch (e) {}
+                }
+                enrollActiveCamIndex = bestIdx;
+                video = candidateVideos[bestIdx];
+            }
+
+            // Render camera switch buttons in modal
+            const camTabs = document.getElementById('modalCamSourceTabs');
+            if (camTabs) {
+                camTabs.innerHTML = '';
+                candidateVideos.forEach((cv, idx) => {
+                    const cInfo = storeCameras[idx] || { name: `CCTV #${idx + 1}` };
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.textContent = `📹 ${cInfo.name.split(' (')[0]}`;
+                    const isActive = idx === enrollActiveCamIndex;
+                    btn.style.cssText = `padding:0.25rem 0.55rem; border-radius:0.3rem; font-size:0.72rem; font-weight:800; cursor:pointer; border:1px solid ${isActive ? '#10B981' : '#CBD5E1'}; background:${isActive ? '#10B981' : 'white'}; color:${isActive ? 'white' : '#475569'};`;
+                    btn.onclick = () => recaptureEnrollFrame(idx);
+                    camTabs.appendChild(btn);
+                });
+            }
+
+            // Draw to tempCanvas
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = video.videoWidth || 640;
             tempCanvas.height = video.videoHeight || 480;
@@ -3188,28 +3237,33 @@
 
             if (isFaceApiLoaded && typeof faceapi !== 'undefined') {
                 try {
-                    const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224 }))
-                        .withFaceLandmarks(true)
-                        .withFaceDescriptor();
+                    // Try multiple scales: 224, 320, 160
+                    for (const size of [224, 320, 160]) {
+                        try {
+                            const detection = await faceapi.detectSingleFace(tempCanvas, new faceapi.TinyFaceDetectorOptions({ inputSize: size, scoreThreshold: 0.20 }))
+                                .withFaceLandmarks(true)
+                                .withFaceDescriptor();
 
-                    if (detection) {
-                        descriptor = Array.from(detection.descriptor);
-                        const box = detection.detection.box;
-                        const margin = Math.max(box.width, box.height) * 0.35;
-                        const cropX = Math.max(0, box.x - margin);
-                        const cropY = Math.max(0, box.y - margin);
-                        const cropW = Math.min(tempCanvas.width - cropX, box.width + margin * 2);
-                        const cropH = Math.min(tempCanvas.height - cropY, box.height + margin * 2);
+                            if (detection && detection.descriptor) {
+                                descriptor = Array.from(detection.descriptor);
+                                const box = detection.detection.box;
+                                const margin = Math.max(box.width, box.height) * 0.35;
+                                const cropX = Math.max(0, box.x - margin);
+                                const cropY = Math.max(0, box.y - margin);
+                                const cropW = Math.min(tempCanvas.width - cropX, box.width + margin * 2);
+                                const cropH = Math.min(tempCanvas.height - cropY, box.height + margin * 2);
 
-                        const cropCanvas = document.createElement('canvas');
-                        cropCanvas.width = 200;
-                        cropCanvas.height = 200;
-                        const cropCtx = cropCanvas.getContext('2d');
-                        cropCtx.drawImage(tempCanvas, cropX, cropY, cropW, cropH, 0, 0, 200, 200);
-                        croppedDataUrl = cropCanvas.toDataURL('image/jpeg', 0.85);
+                                const cropCanvas = document.createElement('canvas');
+                                cropCanvas.width = 200;
+                                cropCanvas.height = 200;
+                                cropCanvas.getContext('2d').drawImage(tempCanvas, cropX, cropY, cropW, cropH, 0, 0, 200, 200);
+                                croppedDataUrl = cropCanvas.toDataURL('image/jpeg', 0.85);
+                                break;
+                            }
+                        } catch (err) {}
                     }
                 } catch (e) {
-                    console.warn("Face detection during enroll snapshot:", e);
+                    console.warn("Face detection error:", e);
                 }
             }
 
@@ -3231,13 +3285,21 @@
             const statusSpan = document.getElementById('enrollAiFeatureStatus');
             if (statusSpan) {
                 if (descriptor) {
-                    statusSpan.textContent = '● 128차원 안면 특징 벡터(AI Descriptor) 추출 성공';
-                    statusSpan.style.color = '#10B981';
+                    statusSpan.innerHTML = '✅ <strong style="color:#059669;">128차원 AI 얼굴 특징 벡터 추출 성공!</strong><br><span style="color:#047857;">이 얼굴을 회원에게 즉시 등록 및 매칭할 수 있습니다.</span>';
                 } else {
-                    statusSpan.textContent = '● 인물 사진 캡처 완료 (비전 캔버스 기반 매칭)';
-                    statusSpan.style.color = '#3B82F6';
+                    statusSpan.innerHTML = '⚠️ <strong style="color:#DC2626;">얼굴이 선명히 감지되지 않았습니다.</strong><br><span style="color:#78350F;">카메라를 정면으로 바라본 후 상단 [🔄 다시 캡처]를 눌러주세요.</span>';
                 }
             }
+        };
+
+        window.openFaceEnrollModal = async () => {
+            if (!isWebcamOn) {
+                alert('먼저 상단 [📷 카메라 전체 연결] 버튼을 눌러 카메라를 켜주세요.');
+                return;
+            }
+
+            enrollActiveCamIndex = null;
+            await recaptureEnrollFrame();
 
             // Populate existing customers select
             const selectEl = document.getElementById('enrollExistingSelect');
@@ -3246,12 +3308,14 @@
                 masterCustomers.forEach(c => {
                     const opt = document.createElement('option');
                     opt.value = c.customerId;
-                    opt.textContent = `${c.name} (${c.tier} / ${c.customerId})${c.isMock ? ' [가상 샘플]' : ' [실물 등록]'}`;
+                    const hasFace = !!(c.descriptor || c.photoURL);
+                    opt.textContent = `${c.name} (${c.tier} / ${c.customerId})${hasFace ? ' [얼굴 등록됨]' : ' [얼굴 미등록]'}`;
                     selectEl.appendChild(opt);
                 });
             }
 
-            switchEnrollMode('NEW');
+            // Default to EXISTING mode so user immediately connects to real clients
+            switchEnrollMode('EXISTING');
             document.getElementById('enrollFaceModal').style.display = 'flex';
         };
 
@@ -3284,6 +3348,12 @@
         };
 
         window.saveEnrolledFace = async () => {
+            if (!currentCapturedDescriptor) {
+                if (!confirm('현재 캡처에서 AI 얼굴 특징 벡터가 감지되지 않았습니다. 그래도 이 사진으로 저장하시겠습니까?\n\n(카메라를 정면으로 응시한 후 [🔄 다시 캡처]를 눌러 초록색 성공 메시지를 확인하시는 것을 권장합니다)')) {
+                    return;
+                }
+            }
+
             const merchantId = document.getElementById('merchantIdInput')?.value.trim() || '1791605366';
             let targetCust = null;
 
@@ -3334,8 +3404,8 @@
                 targetCust.photoURL = currentCapturedFaceImgData;
                 targetCust.descriptor = currentCapturedDescriptor;
                 targetCust.isMock = false;
-                targetCust.meta = `${targetCust.meta} (실물 안면 매칭 갱신)`;
-                targetCust.timeline.unshift(`방금: [실물 얼굴 매칭 업데이트] 카메라 안면 데이터 갱신 완료`);
+                targetCust.meta = `${targetCust.meta} (실물 얼굴 등록 완료)`;
+                targetCust.timeline.unshift(`방금: [실물 얼굴 등록 완료] 카메라 안면 벡터 1:1 매칭 완료`);
             }
 
             // Rebuild face matcher with the new face descriptor
@@ -3346,9 +3416,11 @@
             closeFaceEnrollModal();
             playNotificationSound();
 
+            alert(`🎉 [안면 등록 완료!]\n\n• 대상 회원: ${targetCust.name} (${targetCust.tier})\n• 고객 번호: ${targetCust.customerId}\n\n얼굴이 데이터베이스에 등록되었습니다! 이제 [지금 카메라 앞 고객 회원 검색] 시 100% 일치 회원으로 즉시 식별됩니다.`);
+
             setTimeout(() => {
                 if (window.searchCustomerByCameraFace) window.searchCustomerByCameraFace();
-            }, 600);
+            }, 500);
 
             try {
                 if (db) {
@@ -3361,8 +3433,6 @@
             } catch (err) {
                 console.warn('Firestore 등록 에러 (로컬 적용 완료):', err);
             }
-
-            alert(`🎉 [안면 등록 & 매칭 완료!]\n\n• 고객명: ${targetCust.name} (${targetCust.customerId})\n• 등급: ${targetCust.tier}\n\n이제 카메라 앞에 서시면 AI가 [${targetCust.name}] 고객으로 정확히 실시간 식별합니다!`);
         };
 
         // ==========================================
