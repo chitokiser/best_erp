@@ -1247,7 +1247,7 @@
 
         
         // ==========================================
-        // 📹 다중 CCTV 카메라 관리 및 멀티 분할 관제 시스템
+        // 📹 다중 CCTV 카메라 동시 캡처 및 멀티 분할 관제 시스템
         // ==========================================
         let storeCameras = [
             {
@@ -1258,6 +1258,7 @@
                 purpose: 'AI 안면 인식 & 고객 식별',
                 sourceType: 'usb',
                 deviceId: '',
+                deviceName: 'USB 외장 카메라 (GENERAL WEBCAM)',
                 streamUrl: '',
                 simulatedSrc: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1000&auto=format&fit=crop&q=80',
                 active: true
@@ -1268,8 +1269,9 @@
                 zone: 'HALL',
                 zoneLabel: '중앙 홀 & 유입 동선',
                 purpose: '방문객 수 (Footfall) 피플 카운팅',
-                sourceType: 'simulated',
+                sourceType: 'usb',
                 deviceId: '',
+                deviceName: '노트북 자체 내장 카메라',
                 streamUrl: '',
                 simulatedSrc: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1000&auto=format&fit=crop&q=80',
                 active: true
@@ -1313,6 +1315,8 @@
 
         let activeCameraId = storeCameras[0]?.id || 'cam-01';
         let cameraViewMode = 'single'; // 'single' | 'dual' | 'quad'
+        let availableVideoDevices = [];
+        let activeCameraStreams = {}; // { 'cam-01': MediaStream, 'cam-02': MediaStream }
 
         window.saveStoreCamerasState = () => {
             try {
@@ -1320,21 +1324,243 @@
             } catch (e) {}
         };
 
+        // 다중 하드웨어 비디오 장치 동시 탐색 및 자동 매핑
+        window.scanUsbCameraDevices = async (showAlert = false) => {
+            const selectEl = document.getElementById('usbCamSelect');
+            if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+                if (showAlert) alert('이 브라우저는 비디오 장치 탐색 API를 지원하지 않습니다.');
+                return;
+            }
+
+            try {
+                // If devices have empty labels, prompt permission once
+                let devices = await navigator.mediaDevices.enumerateDevices();
+                let vDevices = devices.filter(d => d.kind === 'videoinput');
+
+                if (vDevices.length > 0 && !vDevices[0].label) {
+                    try {
+                        const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                        devices = await navigator.mediaDevices.enumerateDevices();
+                        vDevices = devices.filter(d => d.kind === 'videoinput');
+                        tempStream.getTracks().forEach(t => t.stop());
+                    } catch (e) {}
+                }
+
+                availableVideoDevices = vDevices;
+                console.log(`🔌 감지된 물리 비디오 장치 (${availableVideoDevices.length}대):`, availableVideoDevices);
+
+                // 2대 이상의 카메라가 감지된 경우: CCTV #01과 CCTV #02에 자동 각각 매핑!
+                if (availableVideoDevices.length >= 2) {
+                    // Camera 1 (e.g. USB 외장 웹캠 또는 내장)
+                    if (storeCameras[0]) {
+                        storeCameras[0].sourceType = 'usb';
+                        storeCameras[0].deviceId = availableVideoDevices[0].deviceId;
+                        storeCameras[0].deviceName = availableVideoDevices[0].label || '카메라 #1';
+                        storeCameras[0].name = `CCTV #01 (${availableVideoDevices[0].label ? availableVideoDevices[0].label.split('(')[0].trim() : '카메라 #1'})`;
+                        storeCameras[0].active = true;
+                    }
+                    // Camera 2 (e.g. 노트북 내장 카메라)
+                    if (storeCameras[1]) {
+                        storeCameras[1].sourceType = 'usb';
+                        storeCameras[1].deviceId = availableVideoDevices[1].deviceId;
+                        storeCameras[1].deviceName = availableVideoDevices[1].label || '카메라 #2';
+                        storeCameras[1].name = `CCTV #02 (${availableVideoDevices[1].label ? availableVideoDevices[1].label.split('(')[0].trim() : '카메라 #2'})`;
+                        storeCameras[1].active = true;
+                    }
+                    saveStoreCamerasState();
+                    renderCameraChannelTabs();
+                } else if (availableVideoDevices.length === 1) {
+                    if (storeCameras[0]) {
+                        storeCameras[0].sourceType = 'usb';
+                        storeCameras[0].deviceId = availableVideoDevices[0].deviceId;
+                        storeCameras[0].deviceName = availableVideoDevices[0].label || '카메라 #1';
+                        storeCameras[0].active = true;
+                    }
+                    saveStoreCamerasState();
+                    renderCameraChannelTabs();
+                }
+
+                // Update select dropdown
+                if (selectEl) {
+                    selectEl.innerHTML = '';
+                    if (availableVideoDevices.length === 0) {
+                        selectEl.innerHTML = '<option value="">인식된 카메라 없음</option>';
+                    } else {
+                        availableVideoDevices.forEach((dev, idx) => {
+                            const opt = document.createElement('option');
+                            opt.value = dev.deviceId;
+                            const devName = dev.label || `비디오 장치 #${idx + 1}`;
+                            opt.textContent = `🔌 [CH #${idx + 1}] ${devName}`;
+                            if (idx === 0) opt.selected = true;
+                            selectEl.appendChild(opt);
+                        });
+                    }
+                }
+
+                if (showAlert) {
+                    playNotificationSound();
+                    const listStr = availableVideoDevices.map((d, i) => `${i + 1}. ${d.label || '카메라'}`).join('\n');
+                    alert(`✅ [다중 카메라 감지 완료! 총 ${availableVideoDevices.length}대]\n\n${listStr}\n\n[CCTV #01]과 [CCTV #02]에 각각 실시간 배정되어 2분할/4분할 화면에서 동시에 촬영 및 모니터링됩니다.`);
+                }
+            } catch (err) {
+                console.warn('카메라 장치 탐색 에러:', err);
+            }
+        };
+
+        window.onUsbCameraSelected = async (deviceId) => {
+            selectedCameraDeviceId = deviceId;
+            const targetCam = storeCameras.find(c => c.id === activeCameraId);
+            if (targetCam) {
+                targetCam.deviceId = deviceId;
+                targetCam.sourceType = 'usb';
+                saveStoreCamerasState();
+            }
+            if (isWebcamOn) {
+                await startAllCameras();
+            }
+        };
+
+        // 다중 카메라 동시 가동 (All Cameras Simultaneous Capture)
+        window.startAllCameras = async () => {
+            const btn = document.getElementById('btnToggleCam');
+            const videoEl = document.getElementById('webcamVideo');
+            const imgEl = document.getElementById('simulatedStreamImg');
+
+            // Clean up existing streams
+            stopAllCameras();
+
+            try {
+                await scanUsbCameraDevices(false);
+
+                // Open streams for all USB cameras
+                for (let i = 0; i < storeCameras.length; i++) {
+                    const cam = storeCameras[i];
+                    if (cam.sourceType === 'usb' && cam.active) {
+                        let devId = cam.deviceId;
+                        if (!devId && availableVideoDevices[i]) {
+                            devId = availableVideoDevices[i].deviceId;
+                            cam.deviceId = devId;
+                        }
+
+                        try {
+                            let stream = null;
+                            if (devId) {
+                                try {
+                                    stream = await navigator.mediaDevices.getUserMedia({
+                                        video: { deviceId: { exact: devId }, width: { ideal: 1280 }, height: { ideal: 720 } }
+                                    });
+                                } catch (e) {
+                                    console.warn(`Exact deviceId ${devId} failed, trying ideal:`, e);
+                                    stream = await navigator.mediaDevices.getUserMedia({
+                                        video: { deviceId: { ideal: devId } }
+                                    });
+                                }
+                            } else if (i === 0) {
+                                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                            }
+
+                            if (stream) {
+                                activeCameraStreams[cam.id] = stream;
+                                console.log(`🎥 [${cam.name}] 실시간 스트림 연결 완료! (Device: ${cam.deviceName || devId})`);
+                            }
+                        } catch (camErr) {
+                            console.warn(`[${cam.name}] 스트림 오픈 실패:`, camErr);
+                        }
+                    }
+                }
+
+                // Fallback: if no specific stream opened, open default video
+                if (Object.keys(activeCameraStreams).length === 0) {
+                    const genericStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    activeCameraStreams['cam-01'] = genericStream;
+                }
+
+                webcamStream = activeCameraStreams[activeCameraId] || activeCameraStreams['cam-01'] || Object.values(activeCameraStreams)[0];
+                isWebcamOn = !!webcamStream;
+
+                if (btn) {
+                    const streamCount = Object.keys(activeCameraStreams).length;
+                    btn.textContent = `⏹ 카메라 해제 (${streamCount}대 가동중)`;
+                    btn.style.background = '#ef4444';
+                }
+
+                playNotificationSound();
+
+                // If 2+ cameras are streaming, auto-switch to 2분할 (dual) view so user sees both live cameras side by side!
+                const activeCount = Object.keys(activeCameraStreams).length;
+                if (activeCount >= 2) {
+                    setCameraViewMode('dual');
+                } else {
+                    setCameraViewMode('single');
+                    if (videoEl && webcamStream) {
+                        videoEl.srcObject = webcamStream;
+                        videoEl.style.display = 'block';
+                        if (imgEl) imgEl.style.display = 'none';
+                        videoEl.play().catch(() => {});
+                    }
+                }
+
+                startLiveFaceTrackingLoop();
+
+            } catch (err) {
+                console.error("다중 카메라 가동 에러:", err);
+                alert('카메라 접근 권한 실패: ' + err.message + '\n브라우저의 카메라 사용 권한을 허용해 주세요.');
+            }
+        };
+
+        window.stopAllCameras = () => {
+            const btn = document.getElementById('btnToggleCam');
+            Object.values(activeCameraStreams).forEach(s => {
+                if (s) {
+                    s.getTracks().forEach(t => t.stop());
+                }
+            });
+            activeCameraStreams = {};
+            webcamStream = null;
+            isWebcamOn = false;
+
+            if (btn) {
+                btn.textContent = '📷 카메라 전체 연결';
+                btn.style.background = '#1e293b';
+            }
+
+            const videoEl = document.getElementById('webcamVideo');
+            const imgEl = document.getElementById('simulatedStreamImg');
+            if (videoEl) videoEl.style.display = 'none';
+            if (imgEl) imgEl.style.display = 'block';
+
+            stopLiveFaceTrackingLoop();
+            if (cameraViewMode !== 'single') {
+                renderMultiCamGrid();
+            }
+        };
+
+        window.startWebcam = window.startAllCameras;
+        window.stopWebcam = window.stopAllCameras;
+
+        window.toggleWebcam = async () => {
+            if (!isWebcamOn) {
+                await startAllCameras();
+            } else {
+                stopAllCameras();
+            }
+        };
+
         window.renderCameraChannelTabs = () => {
             const container = document.getElementById('cameraChannelTabs');
             if (!container) return;
             container.innerHTML = '';
 
-            storeCameras.forEach(cam => {
+            storeCameras.forEach((cam, idx) => {
                 const tab = document.createElement('button');
                 tab.type = 'button';
+                const isStreaming = isWebcamOn && !!activeCameraStreams[cam.id];
                 tab.className = `cam-channel-tab ${cam.id === activeCameraId ? 'active' : ''}`;
                 tab.onclick = () => window.switchActiveCamera(cam.id);
-                const isUsb = cam.sourceType === 'usb';
                 tab.innerHTML = `
-                    <span style="width:6px; height:6px; border-radius:50%; background:${cam.active ? '#10B981' : '#94A3B8'}; display:inline-block;"></span>
-                    <span>${cam.name.split(' ')[0]} ${cam.name.split(' ')[1] || ''}</span>
-                    <span style="font-size:0.65rem; color:${cam.id === activeCameraId ? '#7DD3FC' : '#94A3B8'};">${isUsb ? '🔌' : '🌐'}</span>
+                    <span style="width:7px; height:7px; border-radius:50%; background:${isStreaming ? '#10B981' : (cam.active ? '#3B82F6' : '#94A3B8')}; display:inline-block;"></span>
+                    <span>${cam.name.split(' (')[0]}</span>
+                    <span style="font-size:0.65rem; color:${cam.id === activeCameraId ? '#38BDF8' : '#64748B'};">${cam.sourceType === 'usb' ? '🔌' : '🌐'}</span>
                 `;
                 container.appendChild(tab);
             });
@@ -1351,8 +1577,8 @@
             activeCameraId = camId;
             renderCameraChannelTabs();
 
-            const cam = storeCameras.find(c => c.id === camId);
-            if (!cam) return;
+            const cam = storeCameras.find(c => c.id === camId) || storeCameras[0];
+            const liveStream = activeCameraStreams[cam.id];
 
             // Update title
             const titleEl = document.getElementById('activeCameraTitle');
@@ -1360,17 +1586,17 @@
                 titleEl.innerHTML = `<span>📹</span> ${cam.name}`;
             }
 
-            // If in single view, update stream image or webcam device
             if (cameraViewMode === 'single') {
                 const videoEl = document.getElementById('webcamVideo');
                 const imgEl = document.getElementById('simulatedStreamImg');
 
-                if (cam.sourceType === 'usb' && isWebcamOn) {
-                    if (cam.deviceId && cam.deviceId !== selectedCameraDeviceId) {
-                        onUsbCameraSelected(cam.deviceId);
-                    }
-                    if (videoEl) videoEl.style.display = 'block';
+                if (isWebcamOn && liveStream && videoEl) {
+                    videoEl.srcObject = liveStream;
+                    videoEl.style.display = 'block';
                     if (imgEl) imgEl.style.display = 'none';
+                    videoEl.play().catch(() => {});
+                    webcamStream = liveStream;
+                    startLiveFaceTrackingLoop();
                 } else {
                     if (videoEl) videoEl.style.display = 'none';
                     if (imgEl) {
@@ -1402,7 +1628,9 @@
                 switchActiveCamera(activeCameraId);
                 const videoEl = document.getElementById('webcamVideo');
                 const imgEl = document.getElementById('simulatedStreamImg');
-                if (isWebcamOn && webcamStream && videoEl) {
+                const liveStream = activeCameraStreams[activeCameraId];
+                if (isWebcamOn && liveStream && videoEl) {
+                    videoEl.srcObject = liveStream;
                     videoEl.style.display = 'block';
                     if (imgEl) imgEl.style.display = 'none';
                     videoEl.play().catch(() => {});
@@ -1443,34 +1671,40 @@
                     setCameraViewMode('single');
                 };
 
-                const isUsbAndLive = (cam.sourceType === 'usb' || cam.id === 'cam-01') && isWebcamOn && webcamStream;
+                const liveStream = activeCameraStreams[cam.id];
+                const isLive = isWebcamOn && !!liveStream;
                 const imgSrc = cam.streamUrl || cam.simulatedSrc || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&auto=format&fit=crop&q=80';
 
                 // Header
                 const header = document.createElement('div');
                 header.className = 'cam-sub-header';
+                const devLabel = cam.deviceName ? ` (${cam.deviceName.split(' (')[0]})` : '';
                 header.innerHTML = `
-                    <strong style="font-size:0.75rem; background:rgba(15,23,42,0.85); padding:0.18rem 0.5rem; border-radius:0.3rem; border:1px solid rgba(255,255,255,0.15);">
-                        📹 ${cam.name}
+                    <strong style="font-size:0.75rem; background:rgba(15,23,42,0.85); padding:0.18rem 0.5rem; border-radius:0.3rem; border:1px solid rgba(255,255,255,0.15); display:inline-flex; align-items:center; gap:0.3rem;">
+                        📹 ${cam.name.split(' (')[0]}${devLabel}
                     </strong>
-                    <span class="cam-live-indicator" style="background:${isUsbAndLive ? '#10B981' : 'rgba(239,68,68,0.9)'}">
-                        ● ${isUsbAndLive ? '실시간 웹캠 LIVE' : 'LIVE'}
+                    <span class="cam-live-indicator" style="background:${isLive ? '#10B981' : 'rgba(239,68,68,0.9)'}">
+                        ● ${isLive ? '실시간 LIVE' : '대기중'}
                     </span>
                 `;
                 tile.appendChild(header);
 
-                // Video or Image Stream
-                if (isUsbAndLive) {
+                // Live Video Element OR Image
+                if (isLive) {
                     const subVideo = document.createElement('video');
                     subVideo.autoplay = true;
                     subVideo.playsInline = true;
                     subVideo.muted = true;
+                    subVideo.setAttribute('muted', '');
+                    subVideo.setAttribute('playsinline', '');
+                    subVideo.setAttribute('autoplay', '');
                     subVideo.style.width = '100%';
                     subVideo.style.height = '100%';
                     subVideo.style.objectFit = 'cover';
-                    subVideo.srcObject = webcamStream;
+                    subVideo.srcObject = liveStream;
+                    subVideo.play().catch(e => console.warn("subVideo immediate play:", e));
                     subVideo.onloadedmetadata = () => {
-                        subVideo.play().catch(e => console.warn("subVideo play:", e));
+                        subVideo.play().catch(e => console.warn("subVideo metadata play:", e));
                     };
                     tile.appendChild(subVideo);
                 } else {
@@ -1553,6 +1787,7 @@
             storeCameras.forEach((cam, idx) => {
                 const tr = document.createElement('tr');
                 tr.style.borderBottom = '1px solid #E2E8F0';
+                const isStreaming = isWebcamOn && !!activeCameraStreams[cam.id];
                 tr.innerHTML = `
                     <td style="padding:0.6rem 0.75rem; font-weight:800; color:#4F46E5;">CH #${idx + 1}</td>
                     <td style="padding:0.6rem 0.75rem; font-weight:700; color:#1E293B;">${cam.name}</td>
@@ -1560,15 +1795,15 @@
                         <span style="background:#F1F5F9; padding:0.15rem 0.45rem; border-radius:0.25rem; font-size:0.7rem;">${cam.zoneLabel || cam.zone}</span>
                     </td>
                     <td style="padding:0.6rem 0.75rem; color:#64748B;">
-                        ${cam.sourceType === 'usb' ? '🔌 USB 웹캠' : (cam.sourceType === 'stream' ? '🌐 IP 스트림' : '🎥 시뮬레이션')}
+                        ${cam.sourceType === 'usb' ? `🔌 ${cam.deviceName || 'USB 웹캠'}` : (cam.sourceType === 'stream' ? '🌐 IP 스트림' : '🎥 시뮬레이션')}
                     </td>
                     <td style="padding:0.6rem 0.75rem; text-align:center;">
-                        <button onclick="toggleCameraActive('${cam.id}')" style="background:${cam.active ? '#DCFCE7' : '#F1F5F9'}; color:${cam.active ? '#166534' : '#64748B'}; border:1px solid ${cam.active ? '#86EFAC' : '#CBD5E1'}; padding:0.2rem 0.5rem; border-radius:0.3rem; font-size:0.7rem; font-weight:700; cursor:pointer;">
-                            ${cam.active ? 'ON' : 'OFF'}
+                        <button onclick="toggleCameraActive('${cam.id}')" style="background:${isStreaming ? '#DCFCE7' : (cam.active ? '#EFF6FF' : '#F1F5F9')}; color:${isStreaming ? '#166534' : (cam.active ? '#1D4ED8' : '#64748B')}; border:1px solid ${isStreaming ? '#86EFAC' : '#CBD5E1'}; padding:0.2rem 0.5rem; border-radius:0.3rem; font-size:0.7rem; font-weight:700; cursor:pointer;">
+                            ${isStreaming ? '● LIVE' : (cam.active ? 'ON' : 'OFF')}
                         </button>
                     </td>
                     <td style="padding:0.6rem 0.75rem; text-align:center;">
-                        ${storeCameras.length > 1 ? `<button onclick="deleteStoreCamera('${cam.id}')" style="background:#FEE2E2; color:#B91C1C; border:1px solid #FCA5A5; padding:0.2rem 0.5rem; border-radius:0.3rem; font-size:0.7rem; font-weight:700; cursor:pointer;">삭제</button>` : '<span style="color:#94A3B8;">기본</span>'}
+                        ${storeCameras.length > 2 ? `<button onclick="deleteStoreCamera('${cam.id}')" style="background:#FEE2E2; color:#B91C1C; border:1px solid #FCA5A5; padding:0.2rem 0.5rem; border-radius:0.3rem; font-size:0.7rem; font-weight:700; cursor:pointer;">삭제</button>` : '<span style="color:#94A3B8;">기본</span>'}
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -1610,6 +1845,7 @@
             const zoneText = document.getElementById('newCamZone').options[document.getElementById('newCamZone').selectedIndex].text;
             const sourceType = document.getElementById('newCamSourceType').value;
             const usbDevice = document.getElementById('newCamUsbSelect')?.value || '';
+            const usbDeviceName = document.getElementById('newCamUsbSelect')?.options[document.getElementById('newCamUsbSelect')?.selectedIndex]?.text || '';
             const streamUrl = document.getElementById('newCamStreamUrl')?.value.trim() || '';
             const simPreset = document.getElementById('newCamSimPreset')?.value || '';
 
@@ -1622,6 +1858,7 @@
                 purpose: zoneText.includes('(') ? zoneText.split('(')[1].replace(')', '') : '매장 관제',
                 sourceType: sourceType,
                 deviceId: sourceType === 'usb' ? usbDevice : '',
+                deviceName: sourceType === 'usb' ? usbDeviceName.replace('🔌 ', '') : '',
                 streamUrl: sourceType === 'stream' ? streamUrl : '',
                 simulatedSrc: sourceType === 'simulated' ? simPreset : (streamUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1000&auto=format&fit=crop&q=80'),
                 active: true
@@ -2163,114 +2400,7 @@
             alert(`✅ [개인정보 영구 파기 완료]\n고객 [${crmId}]님의 데이터가 시스템에서 완전히 삭제되었습니다.`);
         };
 
-        // ==========================================
-        // CCTV / USB 카메라 장치 탐색 및 자동인식
-        // ==========================================
-        window.scanUsbCameraDevices = async (showAlert = false) => {
-            const selectEl = document.getElementById('usbCamSelect');
-            if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
-                if (showAlert) alert('이 브라우저는 USB 장치 탐색 API를 지원하지 않습니다.');
-                return;
-            }
-
-            try {
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const videoDevices = devices.filter(d => d.kind === 'videoinput');
-                selectEl.innerHTML = '';
-
-                if (videoDevices.length === 0) {
-                    selectEl.innerHTML = '<option value="">인식된 USB 카메라 없음</option>';
-                    if (showAlert) alert('연결된 USB 카메라를 찾을 수 없습니다.');
-                    return;
-                }
-
-                videoDevices.forEach((dev, idx) => {
-                    const opt = document.createElement('option');
-                    opt.value = dev.deviceId;
-                    let label = dev.label || `USB 비디오 장치 #${idx + 1}`;
-                    opt.textContent = `🔌 ${label}`;
-                    if (dev.deviceId === selectedCameraDeviceId || idx === 0) {
-                        opt.selected = true;
-                    }
-                    selectEl.appendChild(opt);
-                });
-
-                selectedCameraDeviceId = selectEl.value;
-                if (showAlert) {
-                    playNotificationSound();
-                    alert(`✅ [USB 카메라 검색 완료]\n총 ${videoDevices.length}대의 비디오 장치가 감지되었습니다.`);
-                }
-            } catch (err) {
-                console.warn('USB 장치 검색 에러:', err);
-            }
-        };
-
-        window.onUsbCameraSelected = async (deviceId) => {
-            selectedCameraDeviceId = deviceId;
-            if (isWebcamOn) {
-                await startWebcam();
-            }
-        };
-
-        window.toggleWebcam = async () => {
-            if (!isWebcamOn) {
-                await startWebcam();
-            } else {
-                stopWebcam();
-            }
-        };
-
-        async function startWebcam() {
-            const videoEl = document.getElementById('webcamVideo');
-            const imgEl = document.getElementById('simulatedStreamImg');
-            const btn = document.getElementById('btnToggleCam');
-
-            try {
-                if (webcamStream) {
-                    webcamStream.getTracks().forEach(t => t.stop());
-                }
-
-                const constraints = {
-                    video: selectedCameraDeviceId 
-                        ? { deviceId: { exact: selectedCameraDeviceId }, width: { ideal: 1280 }, height: { ideal: 720 } }
-                        : { facingMode: currentFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } }
-                };
-
-                webcamStream = await navigator.mediaDevices.getUserMedia(constraints);
-                videoEl.srcObject = webcamStream;
-                videoEl.onloadedmetadata = () => {
-                    videoEl.play();
-                    startLiveFaceTrackingLoop();
-                };
-                videoEl.style.display = 'block';
-                imgEl.style.display = 'none';
-                isWebcamOn = true;
-                btn.textContent = '⏹ 카메라 해제';
-                btn.style.background = '#ef4444';
-                playNotificationSound();
-                await scanUsbCameraDevices(false);
-            } catch (err) {
-                alert('카메라 접근 권한 실패: ' + err.message + '\n시뮬레이션 모드로 작동합니다.');
-            }
-        }
-
-        function stopWebcam() {
-            const videoEl = document.getElementById('webcamVideo');
-            const imgEl = document.getElementById('simulatedStreamImg');
-            const btn = document.getElementById('btnToggleCam');
-
-            if (webcamStream) {
-                webcamStream.getTracks().forEach(t => t.stop());
-                webcamStream = null;
-            }
-            videoEl.style.display = 'none';
-            imgEl.style.display = 'block';
-            isWebcamOn = false;
-            btn.textContent = '📷 웹캠 연결';
-            btn.style.background = '#1e293b';
-            stopLiveFaceTrackingLoop();
-            stopAutoCollection();
-        }
+        // (Duplicate webcam block removed, handled by Multi-Camera Engine)
 
         window.switchCameraFacing = async () => {
             currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
