@@ -1396,6 +1396,18 @@
                     }
                 }
 
+                // 3번, 4번 카메라는 물리 카메라 수가 부족할 경우 시뮬레이션으로 안전 리셋 (복제 방지)
+                if (storeCameras[2] && physicalDevices.length < 3) {
+                    storeCameras[2].sourceType = 'simulated';
+                    storeCameras[2].deviceId = '';
+                    storeCameras[2].name = 'CCTV #03 (테이블 구역 & 착석)';
+                }
+                if (storeCameras[3] && physicalDevices.length < 4) {
+                    storeCameras[3].sourceType = 'simulated';
+                    storeCameras[3].deviceId = '';
+                    storeCameras[3].name = 'CCTV #04 (VIP 룸 & 프라이빗)';
+                }
+
                 saveStoreCamerasState();
                 renderCameraChannelTabs();
 
@@ -1477,6 +1489,8 @@
             }
         };
 
+        let cameraErrors = {}; // { 'cam-01': '', 'cam-02': '...' }
+
         // 다중 카메라 동시 가동 (All Cameras Simultaneous Capture)
         window.startAllCameras = async () => {
             const btn = document.getElementById('btnToggleCam');
@@ -1485,6 +1499,7 @@
 
             // Clean up existing streams
             stopAllCameras();
+            cameraErrors = {};
 
             try {
                 await scanUsbCameraDevices(false);
@@ -1499,44 +1514,65 @@
                             cam.deviceId = devId;
                         }
 
+                        if (!devId) continue;
+
                         try {
-                            let stream = null;
-                            if (devId) {
-                                try {
-                                    stream = await navigator.mediaDevices.getUserMedia({
-                                        video: { deviceId: { exact: devId }, width: { ideal: 1280 }, height: { ideal: 720 } }
-                                    });
-                                } catch (e1) {
-                                    console.warn(`Exact 720p failed for ${devId}, trying exact:`, e1);
-                                    try {
-                                        stream = await navigator.mediaDevices.getUserMedia({
-                                            video: { deviceId: { exact: devId } }
-                                        });
-                                    } catch (e2) {
-                                        console.warn(`Exact failed for ${devId}, trying ideal:`, e2);
-                                        stream = await navigator.mediaDevices.getUserMedia({
-                                            video: { deviceId: { ideal: devId } }
-                                        });
-                                    }
-                                }
-                            } else if (i === 0) {
-                                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                            // 🌟 윈도우 USB 호스트 컨트롤러 안정화를 위해 장치별 350ms 간격 순차 개방
+                            if (i > 0) {
+                                await new Promise(r => setTimeout(r, 350));
                             }
 
+                            let stream = null;
+                            // 🌟 USB 2.0 버스 대역폭 충돌 방지: ideal 640x480(30fps)로 개방
+                            // 2대 이상의 카메라가 USB에 물려있을 때 720p 2대는 윈도우에서 NotReadableError를 발생시킵니다.
+                            try {
+                                stream = await navigator.mediaDevices.getUserMedia({
+                                    video: {
+                                        deviceId: { exact: devId },
+                                        width: { ideal: 640 },
+                                        height: { ideal: 480 },
+                                        frameRate: { ideal: 24, max: 30 }
+                                    }
+                                });
+                            } catch (e1) {
+                                console.warn(`[${cam.name}] exact 480p 실패, 기본 exact 시도:`, e1);
+                                stream = await navigator.mediaDevices.getUserMedia({
+                                    video: { deviceId: { exact: devId } }
+                                });
+                            }
+
+                            // 🌟 카메라 복제 방지 검증: 브라우저가 기본 카메라(CH #1)를 대신 넘겨주는 현상 차단
                             if (stream) {
+                                const track = stream.getVideoTracks()[0];
+                                const activeDevId = track.getSettings()?.deviceId;
+                                if (activeDevId && devId && activeDevId !== devId) {
+                                    console.warn(`[${cam.name}] 요청 장치(${devId})와 반환 장치(${activeDevId}) 불일치! 중복 스트림 차단.`);
+                                    stream.getTracks().forEach(t => t.stop());
+                                    throw new Error(`요청 장치가 아닌 다른 카메라가 복제되어 스트림을 차단했습니다.`);
+                                }
+
                                 activeCameraStreams[cam.id] = stream;
                                 console.log(`🎥 [${cam.name}] 실시간 스트림 연결 완료! (Device: ${cam.deviceName || devId})`);
                             }
                         } catch (camErr) {
-                            console.warn(`[${cam.name}] 스트림 오픈 실패:`, camErr);
+                            console.error(`[${cam.name}] 스트림 오픈 실패:`, camErr);
+                            let userReason = camErr.message || '카메라를 열 수 없습니다.';
+                            if (camErr.name === 'NotReadableError') {
+                                userReason = '다른 프로그램(OBS Studio, Zoom, Teams, 또는 알약/V3 카메라 보안)에서 이 카메라를 이미 사용 중이거나 USB 대역폭 충돌입니다. OBS를 완전히 종료해주세요.';
+                            } else if (camErr.name === 'NotAllowedError') {
+                                userReason = '브라우저에서 이 카메라 장치의 사용 권한이 차단되었습니다.';
+                            }
+                            cameraErrors[cam.id] = userReason;
                         }
                     }
                 }
 
                 // Fallback: if no specific stream opened, open default video
                 if (Object.keys(activeCameraStreams).length === 0) {
-                    const genericStream = await navigator.mediaDevices.getUserMedia({ video: true });
-                    activeCameraStreams['cam-01'] = genericStream;
+                    try {
+                        const genericStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                        activeCameraStreams['cam-01'] = genericStream;
+                    } catch (e) {}
                 }
 
                 webcamStream = activeCameraStreams[activeCameraId] || activeCameraStreams['cam-01'] || Object.values(activeCameraStreams)[0];
@@ -1565,6 +1601,14 @@
                 }
 
                 startLiveFaceTrackingLoop();
+
+                // 2대 중 1대만 열린 경우 사용자 안내
+                if (activeCount === 1 && availableVideoDevices.length >= 2) {
+                    const failedCam = storeCameras.find(c => c.sourceType === 'usb' && !activeCameraStreams[c.id]);
+                    if (failedCam && cameraErrors[failedCam.id]) {
+                        alert(`⚠️ [2번째 카메라 연결 실패 안내]\n\n• 실패 장치: ${failedCam.deviceName || failedCam.name}\n• 사유: ${cameraErrors[failedCam.id]}\n\nOBS Studio가 켜져 있다면 OBS를 완전히 종료하신 후 다시 연결해 주세요.`);
+                    }
+                }
 
             } catch (err) {
                 console.error("다중 카메라 가동 에러:", err);
@@ -1737,6 +1781,7 @@
 
                 const liveStream = activeCameraStreams[cam.id];
                 const isLive = isWebcamOn && !!liveStream;
+                const camError = cameraErrors[cam.id];
                 const imgSrc = cam.streamUrl || cam.simulatedSrc || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&auto=format&fit=crop&q=80';
 
                 // Header
@@ -1747,13 +1792,13 @@
                     <strong style="font-size:0.75rem; background:rgba(15,23,42,0.85); padding:0.18rem 0.5rem; border-radius:0.3rem; border:1px solid rgba(255,255,255,0.15); display:inline-flex; align-items:center; gap:0.3rem;">
                         📹 ${cam.name.split(' (')[0]}${devLabel}
                     </strong>
-                    <span class="cam-live-indicator" style="background:${isLive ? '#10B981' : 'rgba(239,68,68,0.9)'}">
-                        ● ${isLive ? '실시간 LIVE' : '대기중'}
+                    <span class="cam-live-indicator" style="background:${isLive ? '#10B981' : (camError ? '#EF4444' : 'rgba(239,68,68,0.9)')}">
+                        ● ${isLive ? '실시간 LIVE' : (camError ? '연결 오류' : '대기중')}
                     </span>
                 `;
                 tile.appendChild(header);
 
-                // Live Video Element OR Image
+                // Live Video Element OR Error Notice OR Image
                 if (isLive) {
                     const subVideo = document.createElement('video');
                     subVideo.autoplay = true;
@@ -1771,6 +1816,18 @@
                         subVideo.play().catch(e => console.warn("subVideo metadata play:", e));
                     };
                     tile.appendChild(subVideo);
+                } else if (camError) {
+                    const errBox = document.createElement('div');
+                    errBox.style.cssText = 'padding:1.5rem 1rem; text-align:center; color:#FCA5A5; background:rgba(15,23,42,0.95); width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box; z-index:5;';
+                    errBox.innerHTML = `
+                        <span style="font-size:1.75rem; margin-bottom:0.35rem;">⚠️</span>
+                        <strong style="color:white; font-size:0.85rem; margin-bottom:0.35rem;">[${cam.deviceName || cam.name}]</strong>
+                        <p style="font-size:0.72rem; color:#E2E8F0; margin:0 0 0.75rem 0; line-height:1.45; max-width:260px;">${camError}</p>
+                        <button onclick="startAllCameras()" style="background:#4F46E5; color:white; border:none; padding:0.35rem 0.75rem; border-radius:0.35rem; font-size:0.72rem; font-weight:800; cursor:pointer;">
+                            🔄 다시 연결 시도
+                        </button>
+                    `;
+                    tile.appendChild(errBox);
                 } else {
                     const img = document.createElement('img');
                     img.src = imgSrc;
