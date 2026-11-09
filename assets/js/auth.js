@@ -203,6 +203,32 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                     el.textContent = window.currentStoreName;
                 });
 
+                
+                // Merchant fallback lookup if currentStoreName is not resolved
+                if (!window.currentStoreName || window.currentStoreName === 'BEST WINNER' || window.currentStoreName === '미등록 가맹점') {
+                    try {
+                        const mSnap = await getDocs(query(collection(db, 'merchants'), where('email', '==', user.email)));
+                        if (!mSnap.empty) {
+                            const mData = mSnap.docs[0].data();
+                            window.currentStoreName = mData.name || mData.storeName || mData.brandName || window.currentStoreName;
+                            if (mData.tenantId || mSnap.docs[0].id) {
+                                window.tenantId = String(mData.tenantId || mSnap.docs[0].id);
+                            }
+                        } else {
+                            const mOwnerSnap = await getDocs(query(collection(db, 'merchants'), where('ownerEmail', '==', user.email)));
+                            if (!mOwnerSnap.empty) {
+                                const mData = mOwnerSnap.docs[0].data();
+                                window.currentStoreName = mData.name || mData.storeName || mData.brandName || window.currentStoreName;
+                                if (mData.tenantId || mOwnerSnap.docs[0].id) {
+                                    window.tenantId = String(mData.tenantId || mOwnerSnap.docs[0].id);
+                                }
+                            }
+                        }
+                    } catch (mErr) {
+                        console.warn("Merchant query fallback failed:", mErr);
+                    }
+                }
+
                 // Global variables for RBAC
                 window.currentUserRole = role;
                 window.currentUserPosition = position;
@@ -233,11 +259,17 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                                      document.getElementById('navUserEmailSpan')?.closest('div') ||
                                      document.querySelector('.top-nav > div[style*="text-align: right"]') ||
                                      document.querySelector('.top-nav > div[style*="text-align:right"]');
-                    if (navEmail) {
+                                        if (navEmail) {
+                        const storeDisplayName = window.currentStoreName || '가맹점';
                         navEmail.innerHTML = `
-                            <div style="display:flex; flex-direction:column; line-height:1.2; text-align:right; margin-left: 1rem;">
-                                <span style="font-size:0.8rem; font-weight:bold; color:var(--primary-color, #4F46E5);">${role}</span>
-                                <span style="font-size:0.75rem; color:var(--text-secondary, #64748b);">${position} (${user.email})</span>
+                            <div style="display:flex; flex-direction:column; line-height:1.25; text-align:right; margin-left: 1rem;">
+                                <div style="display:flex; align-items:center; gap:0.4rem; justify-content:flex-end;">
+                                    <span style="background:#fee2e2; border:1px solid #fca5a5; color:#b91c1c; font-size:0.75rem; font-weight:800; padding:0.18rem 0.55rem; border-radius:0.35rem; display:inline-flex; align-items:center; gap:0.25rem; white-space:nowrap; box-shadow:0 1px 2px rgba(0,0,0,0.05);" title="현재 접속 가맹점">
+                                        🏪 <strong>${storeDisplayName}</strong>
+                                    </span>
+                                    <span style="font-size:0.8rem; font-weight:800; color:var(--primary-color, #4F46E5); white-space:nowrap;">${role}</span>
+                                </div>
+                                <span style="font-size:0.75rem; color:var(--text-secondary, #64748b); margin-top:2px; white-space:nowrap;">${position} (${user.email})</span>
                             </div>
                             <button onclick="window.logoutAndRedirect ? window.logoutAndRedirect() : (window.location.href='../login.html')" style="margin-left:0.5rem; background:none; border:none; cursor:pointer; color:var(--primary-color, #2563eb); font-weight:bold; white-space:nowrap;">[로그아웃]</button>
                         `;
