@@ -8,9 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>:root{--crm-primary:#4f46e5;--crm-primary-dark:#3730a3;--zalo-blue:#0068ff;--crm-success:#10b981;--crm-warning:#f59e0b;--crm-danger:#ef4444;--crm-dark:#0f172a;--crm-bg:#f8fafc}body{background:#f1f5f9;font-family:Plus Jakarta Sans,Noto Sans KR,sans-serif}.cam-viewport-wrap{background:#090d16;border:2px solid #1e293b;border-radius:1rem;justify-content:center;align-items:center;width:100%;height:380px;display:flex;position:relative;overflow:hidden;box-shadow:0 15px 30px -5px #0000004d}#webcamVideo{object-fit:cover;width:100%;height:100%}.radar-scan-line{pointer-events:none;background:linear-gradient(90deg,#0000,#10b981,#0000);width:100%;height:3px;animation:2.5s linear infinite radarScan;position:absolute;top:0;left:0;box-shadow:0 0 15px #10b981}@keyframes radarScan{0%{opacity:.8;top:0%}50%{opacity:1;top:98%}to{opacity:.8;top:0%}}.ai-target-box{pointer-events:none;background:#10b98126;border:2px solid #10b981;border-radius:6px;transition:all .3s;position:absolute}.ai-target-tag{color:#000;white-space:nowrap;background:#10b981;border-radius:4px;padding:.15rem .45rem;font-size:.68rem;font-weight:800;position:absolute;top:-26px;left:-2px}.crm-tab-bar{border-bottom:2px solid #e2e8f0;gap:.4rem;margin-bottom:1rem;padding-bottom:.25rem;display:flex;overflow-x:auto}.crm-tab-btn{color:#64748b;cursor:pointer;white-space:nowrap;background:0 0;border:none;border-radius:.5rem .5rem 0 0;align-items:center;gap:.35rem;padding:.6rem 1rem;font-size:.875rem;font-weight:700;transition:all .2s;display:flex}.crm-tab-btn.active{color:var(--crm-primary);border-bottom:3px solid var(--crm-primary);background:#eef2ff}.tier-filter-pill{color:#475569;cursor:pointer;background:#fff;border:1px solid #cbd5e1;border-radius:999px;padding:.35rem .75rem;font-size:.75rem;font-weight:700;transition:all .15s}.tier-filter-pill.active{background:var(--crm-primary);color:#fff;border-color:var(--crm-primary)}.customer-card-item{cursor:pointer;background:#fff;border:1.5px solid #e2e8f0;border-radius:.85rem;justify-content:space-between;align-items:center;gap:.75rem;margin-bottom:.75rem;padding:1rem;transition:all .2s;display:flex}.customer-card-item:hover{border-color:var(--crm-primary);transform:translateY(-2px);box-shadow:0 6px 15px -3px #4f46e51f}.modal-overlay{backdrop-filter:blur(4px);z-index:99999;background:#0f172abf;justify-content:center;align-items:center;padding:1rem;display:none;position:fixed;inset:0}.modal-box{background:#fff;border:1px solid #e2e8f0;border-radius:1.25rem;width:100%;max-width:680px;max-height:90vh;padding:1.75rem;position:relative;overflow-y:auto;box-shadow:0 25px 50px -12px #00000040}.timeline-item{border-left:2px solid #e2e8f0;margin-bottom:.85rem;padding-left:1.5rem;position:relative}.timeline-item:before{content:"";background:var(--crm-primary);border-radius:50%;width:8px;height:8px;position:absolute;top:4px;left:-5px}.table-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.75rem;display:grid}.table-seat-box{text-align:center;cursor:pointer;background:#fff;border:1.5px solid #e2e8f0;border-radius:.75rem;padding:.85rem .6rem;transition:all .2s}.table-seat-box.occupied{background:#eef2ff;border-color:#6366f1}.table-seat-box.empty{opacity:.75;background:#f8fafc;border-color:#cbd5e1}</style>
-  <script type="module" crossorigin src="/assets/admin_vision-crm-CwcJi50j.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/firebase-config-CRr6M8Nr.js">
-  <link rel="modulepreload" crossorigin href="/assets/auth-Chok8jKQ.js">
+  <script type="module" crossorigin src="/assets/admin_vision-crm-B4U0MkRv.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/firebase-config-BURgN9gX.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-DIhk9xi8.js">
   <link rel="modulepreload" crossorigin href="/assets/notification-hub-ChDr8WD_.js">
   <link rel="stylesheet" crossorigin href="/assets/admin-CCpgtoVo.css">
   <link rel="stylesheet" crossorigin href="/assets/style-CTsXkP_6.css">
@@ -115,6 +115,13 @@
                     <div style="display:flex; align-items:center; gap:0.35rem;">
                         <span style="font-size:0.8rem; font-weight:700; color:#475569;">가맹점 ID:</span>
                         <input type="text" id="merchantIdInput" value="1791605366" style="width:110px; padding:0.35rem 0.5rem; border:1px solid #cbd5e1; border-radius:0.35rem; font-size:0.8rem; font-weight:700; text-align:center;">
+                    </div>
+                    <span style="color:#cbd5e1;">|</span>
+                    <!-- 점주 보유 BT 실시간 표시기 -->
+                    <div style="display:flex; align-items:center; gap:0.4rem; background:linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border:1.5px solid #F59E0B; padding:0.3rem 0.65rem; border-radius:0.45rem;">
+                        <span style="font-size:0.75rem; font-weight:800; color:#92400E;">🎫 점주 보유 BT:</span>
+                        <strong id="merchantBtBalanceDisplay" style="color:#B45309; font-size:0.875rem;">98 BT</strong>
+                        <span style="font-size:0.65rem; color:#78350F; background:#FDE68A; padding:0.1rem 0.35rem; border-radius:0.25rem; font-weight:700;">Zalo 등록 시 1 BT 자동지급</span>
                     </div>
                     <span style="color:#cbd5e1;">|</span>
                     <div style="display:flex; align-items:center; gap:0.4rem;">
@@ -472,6 +479,23 @@
                     <div>• <strong>① 언제 방문했는지</strong>: <span id="modalAutoVisitTime" style="font-weight:700;">오늘 18:40 (체류 38분 측정)</span></div>
                     <div>• <strong>② 만족도는 어땠는지</strong>: <span id="modalAutoSatisfaction" style="font-weight:800; color:#047857;">★ 4.9 / 5.0 (AI 미소 96% 감지)</span></div>
                     <div style="grid-column:span 2;">• <strong>③ 뭘 시켜서 먹었는지</strong>: <span id="modalAutoOrderedMenu" style="font-weight:700;">안심 스테이크 2인 세트 + 칠레산 와인 (Table 04 POS 자동 연동)</span></div>
+                </div>
+            </div>
+
+            <!-- 3. 🎫 가맹점주 보유 1 BT 보너스 티켓 지급 정보 -->
+            <div id="modalBtRewardBox" style="background:linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border:1.5px solid #F59E0B; border-radius:0.75rem; padding:0.85rem 1rem; margin-bottom:1.1rem; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="display:flex; align-items:center; gap:0.4rem;">
+                        <span style="background:#F59E0B; color:white; font-size:0.65rem; font-weight:800; padding:0.15rem 0.45rem; border-radius:0.25rem;">1 BT 차감 지급됨</span>
+                        <strong style="color:#78350F; font-size:0.875rem;">가맹점주 보유 1 BT 보너스 티켓</strong>
+                    </div>
+                    <p style="margin:0.25rem 0 0 0; font-size:0.75rem; color:#92400E;">
+                        테이블 QR 등록 시 점주 보유 BT 중 1장이 차감되어 고객 계정으로 즉시 발급되었습니다.
+                    </p>
+                </div>
+                <div style="text-align:right;">
+                    <span style="font-size:0.7rem; color:#B45309; display:block;">바우처 코드</span>
+                    <strong id="modalBtTicketCode" style="font-family:monospace; color:#92400E; font-size:0.95rem;">BT-839102</strong>
                 </div>
             </div>
 

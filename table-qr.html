@@ -303,7 +303,7 @@
                 <span id="displayStoreName">BEST CLUB RESTAURANT</span>
             </div>
             <h1>스마트 테이블 체크인 & VIP 리워드 멤버십</h1>
-            <p>Liên kết thành viên Google / Zalo & Nhận Voucher 50,000 VND</p>
+            <p>Zalo 등록 시 가맹점주 보유 [1 BT 보너스 티켓] 즉시 지급!</p>
         </div>
 
         <div class="form-body">
@@ -318,11 +318,14 @@
                 </div>
             </div>
 
-            <!-- 2. Zalo Quick Connect -->
-            <div class="zalo-connect-card">
+            <!-- 2. Zalo Quick Connect with 1 BT Reward -->
+            <div class="zalo-connect-card" style="border:1.5px solid #0068FF; background:#F0F7FF;">
                 <div>
-                    <strong style="color:var(--zalo-blue); font-size:0.875rem; display:block;">💬 Zalo OA 공식 연동</strong>
-                    <span style="font-size:0.75rem; color:#475569;">친구 추가 시 웰컴 쿠폰 즉시 전송</span>
+                    <div style="display:flex; align-items:center; gap:0.35rem;">
+                        <strong style="color:var(--zalo-blue); font-size:0.875rem;">💬 Zalo 공식 연동 등록</strong>
+                        <span style="background:#F59E0B; color:white; font-size:0.65rem; font-weight:800; padding:0.1rem 0.4rem; border-radius:0.25rem;">1 BT 증정</span>
+                    </div>
+                    <span style="font-size:0.75rem; color:#0369A1; font-weight:700;">🎁 Zalo 등록 시 점주 보유 BT 중 1장 고객 지갑으로 즉시 지급!</span>
                 </div>
                 <button type="button" class="zalo-btn" onclick="openZaloOA()">
                     <span>연동하기</span> →
@@ -461,7 +464,7 @@
                 </div>
 
                 <button type="submit" class="btn-submit" id="btnSubmit">
-                    <span>✨ 체크인 & 웰컴 5만동 바우처 받기</span>
+                    <span>✨ 체크인 & [1 BT 보너스 티켓] 받기</span>
                 </button>
             </form>
         </div>
@@ -471,16 +474,34 @@
     <div class="modal-overlay" id="successModal">
         <div class="modal-content">
             <div style="font-size:3rem; margin-bottom:0.5rem;">🎉</div>
-            <h2 style="font-size:1.35rem; color:#1E293B; margin-bottom:0.35rem;">체크인 등록 완료!</h2>
-            <p style="font-size:0.85rem; color:#64748B;">고객님의 맞춤형 CRM 멤버십이 생성되었습니다.</p>
+            <h2 style="font-size:1.35rem; color:#1E293B; margin-bottom:0.35rem;">체크인 & Zalo 등록 완료!</h2>
+            <p style="font-size:0.85rem; color:#64748B;">고객님의 맞춤형 CRM 멤버십과 1 BT 티켓이 발급되었습니다.</p>
 
             <div class="crm-id-badge" id="issuedCrmId">CRM-000125</div>
+
+            <!-- 1 BT 티켓 발급 카드 (가맹점주 보유 BT 중 1장 지급) -->
+            <div style="background:linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border:2px solid #F59E0B; border-radius:1rem; padding:1.1rem; margin-bottom:1.1rem; text-align:left; box-shadow:0 6px 16px rgba(245,158,11,0.18);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                    <span style="background:#F59E0B; color:white; font-size:0.7rem; font-weight:800; padding:0.2rem 0.55rem; border-radius:999px; letter-spacing:0.5px;">
+                        🎫 1 BT BONUS TICKET
+                    </span>
+                    <strong id="btTicketCodeDisplay" style="font-family:monospace; font-size:1rem; color:#92400E; letter-spacing:1px;">BT-......</strong>
+                </div>
+                <h3 style="margin:0; font-size:1.15rem; color:#78350F; font-weight:800;">가맹점주 보유 1 BT 지급 완료!</h3>
+                <p style="margin:0.25rem 0 0 0; font-size:0.775rem; color:#92400E; line-height:1.45;">
+                    Zalo 등록 감사 선물로 <strong>가맹점주 보유 BT 중 1장</strong>이 고객님 계정으로 즉시 차감 지급되었습니다.
+                </p>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.6rem; border-top:1px dashed #FCD34D; padding-top:0.5rem; font-size:0.725rem; color:#B45309;">
+                    <span>• 사용처: BestClub 쇼핑몰 / 룰렛 / 매장 할인</span>
+                    <span style="font-weight:800; color:#047857;">● 1 BT 즉시 사용 가능</span>
+                </div>
+            </div>
 
             <div style="background:#F1F5F9; border-radius:0.75rem; padding:0.9rem; text-align:left; font-size:0.8rem; color:#475569; margin-bottom:1.25rem;">
                 <p>• <strong>등급</strong>: <span style="color:#4F46E5; font-weight:700;">신규 고객 (웰컴 대상)</span></p>
                 <p style="margin-top:0.25rem;">• <strong>배정 테이블</strong>: <span id="confirmedTable">TABLE 04</span></p>
                 <p style="margin-top:0.25rem;">• <strong>안면 매칭 상태</strong>: <span id="confirmedFaceStatus" style="color:#10B981; font-weight:700;">연동 완료 (관제 카메라 자동인식)</span></p>
-                <p style="margin-top:0.25rem;">• <strong>혜택</strong>: 50,000 VND 웰컴 바우처 Zalo 전송 완료</p>
+                <p style="margin-top:0.25rem;">• <strong>지급 혜택</strong>: <strong style="color:#D97706;">1 BT 보너스 티켓 (점주 보유분 차감)</strong> + 5만동 바우처</p>
             </div>
 
             <!-- 방식 B: 3자 VIP 전담 단톡방 자동 개설 안내 -->
@@ -514,7 +535,7 @@
     <script type="module" src="./assets/js/firebase-config.js"></script>
     <script type="module">
         import { db, auth } from './assets/js/firebase-config.js';
-        import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+        import { collection, addDoc, doc, setDoc, increment, serverTimestamp } from 'firebase/firestore';
         import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
         // URL 파라미터 파싱 (?table=04&merchantId=1791605366)
@@ -628,13 +649,13 @@
         };
 
         // ==========================================
-        // 3. 체크인 폼 제출
+        // 3. 체크인 폼 제출 & 점주 보유 1 BT 차감 지급
         // ==========================================
         window.handleCustomerSubmit = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnSubmit');
             btn.disabled = true;
-            btn.innerHTML = '<span>⏳ 멤버십 발급 처리 중...</span>';
+            btn.innerHTML = '<span>⏳ 멤버십 & 1 BT 티켓 발급 처리 중...</span>';
 
             const name = document.getElementById('custName').value.trim();
             const email = document.getElementById('custEmail').value.trim();
@@ -652,6 +673,7 @@
 
             const randomCode = Math.floor(100000 + Math.random() * 900000);
             const customerId = `CRM-${randomCode}`;
+            const btTicketCode = `BT-${Math.floor(100000 + Math.random() * 900000)}`;
 
             try {
                 // 1. 고객 마스터 등록 (Firestore)
@@ -674,6 +696,8 @@
                     totalSpent: 0,
                     tier: '일반 고객',
                     serviceNotes: selectedPrefs.join(', '),
+                    awardedBt: 1,
+                    btTicketCode: btTicketCode,
                     createdAt: serverTimestamp()
                 });
 
@@ -687,7 +711,33 @@
                     status: 'active'
                 });
 
+                // 3. 점주 보유 BT 중 1장 고객에게 발급 (user_coupons 컬렉션에 등록)
+                await addDoc(collection(db, 'user_coupons'), {
+                    couponCode: btTicketCode,
+                    ticketType: 'BT_BONUS_TICKET',
+                    amount: 1,
+                    name: '1 BT 보너스 티켓 (가맹점주 지급)',
+                    merchantId: merchantId,
+                    customerId: customerId,
+                    customerName: name,
+                    customerEmail: email,
+                    status: 'ACTIVE',
+                    source: 'TABLE_QR_ZALO_REGISTRATION',
+                    createdAt: serverTimestamp(),
+                    expiryDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+                });
+
+                // 4. 가맹점주 보유 BT 잔고 1장 차감 (increment -1)
+                await setDoc(doc(db, 'merchants', merchantId), {
+                    btBalance: increment(-1),
+                    lastBtAwardedAt: serverTimestamp(),
+                    totalBtAwarded: increment(1)
+                }, { merge: true });
+
                 document.getElementById('issuedCrmId').textContent = customerId;
+                const btCodeEl = document.getElementById('btTicketCodeDisplay');
+                if (btCodeEl) btCodeEl.textContent = btTicketCode;
+
                 document.getElementById('confirmedFaceStatus').textContent = isFaceRegistered 
                     ? '연동 완료 (관제 카메라 자동인식)' 
                     : '미등록 (다음 방문 시 촬영 가능)';
@@ -702,10 +752,12 @@
             } catch (err) {
                 console.warn('Firestore 등록 오류 (로컬 시뮬레이션 폴백):', err);
                 document.getElementById('issuedCrmId').textContent = customerId;
+                const btCodeEl = document.getElementById('btTicketCodeDisplay');
+                if (btCodeEl) btCodeEl.textContent = btTicketCode;
                 document.getElementById('successModal').style.display = 'flex';
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<span>✨ 체크인 & 웰컴 5만동 바우처 받기</span>';
+                btn.innerHTML = '<span>✨ 체크인 & [1 BT 보너스 티켓] 받기</span>';
             }
         };
 

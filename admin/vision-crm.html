@@ -318,6 +318,13 @@
                         <input type="text" id="merchantIdInput" value="1791605366" style="width:110px; padding:0.35rem 0.5rem; border:1px solid #cbd5e1; border-radius:0.35rem; font-size:0.8rem; font-weight:700; text-align:center;">
                     </div>
                     <span style="color:#cbd5e1;">|</span>
+                    <!-- 점주 보유 BT 실시간 표시기 -->
+                    <div style="display:flex; align-items:center; gap:0.4rem; background:linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border:1.5px solid #F59E0B; padding:0.3rem 0.65rem; border-radius:0.45rem;">
+                        <span style="font-size:0.75rem; font-weight:800; color:#92400E;">🎫 점주 보유 BT:</span>
+                        <strong id="merchantBtBalanceDisplay" style="color:#B45309; font-size:0.875rem;">98 BT</strong>
+                        <span style="font-size:0.65rem; color:#78350F; background:#FDE68A; padding:0.1rem 0.35rem; border-radius:0.25rem; font-weight:700;">Zalo 등록 시 1 BT 자동지급</span>
+                    </div>
+                    <span style="color:#cbd5e1;">|</span>
                     <div style="display:flex; align-items:center; gap:0.4rem;">
                         <span style="font-size:0.8rem; font-weight:700; color:#475569;">🔌 CCTV/USB 비디오:</span>
                         <select id="usbCamSelect" onchange="onUsbCameraSelected(this.value)" style="padding:0.35rem 0.6rem; border:1px solid #cbd5e1; border-radius:0.35rem; font-size:0.8rem; font-weight:600; max-width:220px;">
@@ -676,6 +683,23 @@
                 </div>
             </div>
 
+            <!-- 3. 🎫 가맹점주 보유 1 BT 보너스 티켓 지급 정보 -->
+            <div id="modalBtRewardBox" style="background:linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border:1.5px solid #F59E0B; border-radius:0.75rem; padding:0.85rem 1rem; margin-bottom:1.1rem; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="display:flex; align-items:center; gap:0.4rem;">
+                        <span style="background:#F59E0B; color:white; font-size:0.65rem; font-weight:800; padding:0.15rem 0.45rem; border-radius:0.25rem;">1 BT 차감 지급됨</span>
+                        <strong style="color:#78350F; font-size:0.875rem;">가맹점주 보유 1 BT 보너스 티켓</strong>
+                    </div>
+                    <p style="margin:0.25rem 0 0 0; font-size:0.75rem; color:#92400E;">
+                        테이블 QR 등록 시 점주 보유 BT 중 1장이 차감되어 고객 계정으로 즉시 발급되었습니다.
+                    </p>
+                </div>
+                <div style="text-align:right;">
+                    <span style="font-size:0.7rem; color:#B45309; display:block;">바우처 코드</span>
+                    <strong id="modalBtTicketCode" style="font-family:monospace; color:#92400E; font-size:0.95rem;">BT-839102</strong>
+                </div>
+            </div>
+
             <!-- Service Notes (기획서 §3-B) -->
             <div style="margin-bottom:1.25rem;">
                 <h4 style="margin:0 0 0.5rem 0; font-size:0.9rem; color:#1E293B;">📝 서비스 참고사항 (고객 자진 선택 및 직원 객관적 메모)</h4>
@@ -829,7 +853,7 @@
         import { db, auth } from '../assets/js/firebase-config.js';
         import { checkAdminAuth } from '../assets/js/auth.js';
         import { initNotificationHub, playNotificationSound } from '../assets/js/notification-hub.js';
-        import { collection, addDoc, getDocs, doc, deleteDoc, serverTimestamp, query, where, orderBy, limit } from 'firebase/firestore';
+        import { collection, addDoc, getDocs, doc, setDoc, onSnapshot, deleteDoc, serverTimestamp, query, where, orderBy, limit } from 'firebase/firestore';
 
         initNotificationHub();
 
@@ -1005,12 +1029,14 @@
                 const card = document.createElement('div');
                 card.className = 'customer-card-item';
                 card.onclick = () => openCustomerProfile(c.customerId);
+                const hasBt = c.awardedBt || c.btTicketCode;
                 card.innerHTML = `
                     <div style="flex:1;">
-                        <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem;">
+                        <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem; flex-wrap:wrap;">
                             <span class="badge-pill" style="background:${c.tierColor}; color:${c.tierTextColor}; font-weight:800; font-size:0.7rem;">${c.tier}</span>
                             <strong style="font-size:0.95rem; color:#1E293B;">${c.name}</strong>
                             <span style="font-size:0.75rem; color:#64748B; font-family:monospace;">${c.customerId}</span>
+                            ${hasBt ? `<span style="background:#FFFBEB; border:1px solid #FCD34D; color:#B45309; font-size:0.65rem; font-weight:800; padding:0.1rem 0.4rem; border-radius:0.25rem;">🎫 1 BT 발급 (${c.btTicketCode || 'BT-지급'})</span>` : ''}
                         </div>
                         <p style="margin:0; font-size:0.775rem; color:#64748B;">
                             • 방문 <strong>${c.visitCount}회</strong> | 누적 <strong>${c.totalSpent.toLocaleString()} ₫</strong> | 선호: <strong>${c.favMenu}</strong>
@@ -1064,6 +1090,11 @@
             document.getElementById('modalCustomerJob').textContent = customer.job || '전문직 / 사업가';
             document.getElementById('modalCustomerMeta').textContent = customer.meta;
             document.getElementById('modalServiceNotes').innerHTML = customer.serviceNotes.replace(/\n/g, '<br>');
+
+            // 1 BT 보너스 티켓 바인딩 (Zalo 연동 시 점주 보유분 1장 차감 지급)
+            const btTicketCode = customer.btTicketCode || `BT-${(customer.customerId.replace(/[^0-9]/g, '') || '839102').padEnd(6, '0').slice(0, 6)}`;
+            const btCodeEl = document.getElementById('modalBtTicketCode');
+            if (btCodeEl) btCodeEl.textContent = btTicketCode;
 
             // 관제 카메라 자동 업그레이드 필드 바인딩
             document.getElementById('modalAutoVisitTime').textContent = customer.lastVisitTime || '오늘 (체류 38분 측정)';
@@ -1506,12 +1537,87 @@
             });
         }
 
+        // ==========================================
+        // 가맹점 보유 BT 및 Firestore 실시간 동기화
+        // ==========================================
+        async function initMerchantAndCustomersSync() {
+            const merchantId = document.getElementById('merchantIdInput')?.value.trim() || '1791605366';
+            if (!db) return;
+
+            // 1. 점주 보유 BT 실시간 구독
+            try {
+                const merchantRef = doc(db, 'merchants', merchantId);
+                onSnapshot(merchantRef, (snap) => {
+                    if (snap.exists()) {
+                        const data = snap.data();
+                        const btBal = data.btBalance !== undefined ? data.btBalance : 98;
+                        const el = document.getElementById('merchantBtBalanceDisplay');
+                        if (el) el.textContent = `${btBal} BT`;
+                    }
+                }, (err) => {
+                    console.warn('merchants 실시간 동기화 폴백:', err);
+                });
+            } catch (err) {
+                console.warn('merchant onSnapshot error:', err);
+            }
+
+            // 2. 실시간 등록된 매장 고객 불러오기
+            try {
+                const q = query(
+                    collection(db, 'store_customers'),
+                    where('merchantId', '==', merchantId),
+                    orderBy('createdAt', 'desc'),
+                    limit(20)
+                );
+                onSnapshot(q, (snapshot) => {
+                    if (!snapshot.empty) {
+                        const firestoreCustomers = [];
+                        snapshot.forEach(docSnap => {
+                            const data = docSnap.data();
+                            firestoreCustomers.push({
+                                customerId: data.customerId || docSnap.id,
+                                name: data.name || '방문 고객',
+                                email: data.email || '',
+                                tier: data.tier || '일반 고객',
+                                tierColor: data.tier?.includes('VIP') ? '#fee2e2' : '#dcfce7',
+                                tierTextColor: data.tier?.includes('VIP') ? '#b91c1c' : '#166534',
+                                visitCount: data.visitCount || 1,
+                                totalSpent: data.totalSpent || 0,
+                                favMenu: (data.preferences && data.preferences[0]) || '현장 추천 메뉴',
+                                rating: 5.0,
+                                birthDate: data.birthDate || '자진 미입력',
+                                job: data.job || '자영업/사업가',
+                                meta: `${data.gender || '미지정'} / ${data.nationality || '미지정'}`,
+                                serviceNotes: data.serviceNotes || (data.preferences ? data.preferences.join(', ') : '기본 서비스'),
+                                awardedBt: data.awardedBt || 1,
+                                btTicketCode: data.btTicketCode || `BT-${Math.floor(100000 + Math.random() * 900000)}`,
+                                timeline: [
+                                    `최근: Table ${data.tableNo || '04'} QR 체크인 (Zalo 연동 & 1 BT 티켓 수령)`
+                                ]
+                            });
+                        });
+
+                        // 기존 마스터 고객들과 중복 제거 후 최신 고객 상단 병합
+                        const existingIds = new Set(firestoreCustomers.map(c => c.customerId));
+                        const remainingDefaults = masterCustomers.filter(c => !existingIds.has(c.customerId));
+                        masterCustomers = [...firestoreCustomers, ...remainingDefaults];
+                        renderCustomerList();
+                    }
+                }, (err) => {
+                    console.warn('store_customers 실시간 동기화 폴백:', err);
+                });
+            } catch (err) {
+                console.warn('store_customers query error:', err);
+            }
+        }
+
         // 초기 실행
         document.addEventListener('DOMContentLoaded', () => {
             scanUsbCameraDevices(false);
             initCharts();
             renderCustomerList();
             renderTablesGrid();
+            initMerchantAndCustomersSync();
         });
     </script>
 </body>
