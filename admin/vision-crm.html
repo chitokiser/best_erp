@@ -301,8 +301,8 @@
                     <span style="background:#ecfdf5; border:1px solid #a7f3d0; color:#065f46; font-size:0.75rem; font-weight:800; padding:0.4rem 0.75rem; border-radius:999px; display:inline-flex; align-items:center; gap:0.35rem;">
                         <span>🛡️</span> 베트남 개인정보보호법 (Law No. 91/2025/QH15) 준수
                     </span>
-                    <button onclick="openTableQrModal()" style="background:#4F46E5; color:white; border:none; padding:0.5rem 0.9rem; border-radius:0.5rem; font-size:0.825rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 3px 8px rgba(79,70,229,0.3);">
-                        <span>🖨️</span> 테이블 QR 생성기
+                    <button onclick="openStoreQrModal()" style="background:#0068FF; color:white; border:none; padding:0.5rem 0.95rem; border-radius:0.5rem; font-size:0.825rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; box-shadow:0 3px 8px rgba(0,104,255,0.3);">
+                        <span>🖨️</span> Zalo 2단계 친구추가 QR 생성기
                     </button>
                     <button onclick="openAddCustomerModal()" style="background:#0F172A; color:white; border:none; padding:0.5rem 0.9rem; border-radius:0.5rem; font-size:0.825rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem;">
                         <span>➕</span> 고객/결제 수동 등록
@@ -768,35 +768,75 @@
     </div>
 
     <!-- ==================================================== -->
-    <!-- MODAL 2: 테이블 QR 생성기 (Table QR Generator)        -->
+    <!-- MODAL 2: 매장 대표 Zalo 2단계 친구추가 QR 생성기       -->
+    <!-- (테이블 구분 불필요: 1단계 수퍼관리자 + 2단계 가맹점주)   -->
     <!-- ==================================================== -->
-    <div class="modal-overlay" id="tableQrModal">
-        <div class="modal-box" style="max-width:540px;">
+    <div class="modal-overlay" id="storeQrModal">
+        <div class="modal-box" style="max-width:580px; text-align:center;">
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #E2E8F0; padding-bottom:0.75rem; margin-bottom:1rem;">
-                <h3 style="margin:0; font-size:1.2rem; color:#1E293B;">🖨️ 매장 테이블 QR 생성 및 관리</h3>
-                <button onclick="closeTableQrModal()" style="background:none; border:none; font-size:1.35rem; color:#94A3B8; cursor:pointer;">✕</button>
+                <div style="text-align:left;">
+                    <h3 style="margin:0; font-size:1.25rem; color:#1E293B; display:flex; align-items:center; gap:0.4rem;">
+                        <span>🖨️</span> 매장 대표 Zalo 친구추가 QR 생성기
+                    </h3>
+                    <span style="font-size:0.75rem; color:#0068FF; font-weight:700;">테이블 구분 없음 · 1단계 수퍼관리자 + 2단계 가맹점주 2-Step 자동 연결</span>
+                </div>
+                <button onclick="closeStoreQrModal()" style="background:none; border:none; font-size:1.35rem; color:#94A3B8; cursor:pointer;">✕</button>
             </div>
 
-            <p style="font-size:0.825rem; color:#64748B; margin-bottom:1rem;">
-                각 테이블에 부착할 고유 QR 코드를 확인하고 모바일 체크인 화면으로 즉시 이동하여 테스트할 수 있습니다.
-            </p>
-
-            <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:0.75rem; margin-bottom:1.25rem;">
-                <button onclick="openTableQrUrl('01')" class="tier-filter-pill" style="padding:0.75rem; font-size:0.85rem; text-align:center;">TABLE 01 열기 ↗</button>
-                <button onclick="openTableQrUrl('02')" class="tier-filter-pill" style="padding:0.75rem; font-size:0.85rem; text-align:center;">TABLE 02 열기 ↗</button>
-                <button onclick="openTableQrUrl('03')" class="tier-filter-pill" style="padding:0.75rem; font-size:0.85rem; text-align:center;">TABLE 03 열기 ↗</button>
-                <button onclick="openTableQrUrl('04')" class="tier-filter-pill active" style="padding:0.75rem; font-size:0.85rem; text-align:center;">TABLE 04 (메인) ↗</button>
-                <button onclick="openTableQrUrl('05')" class="tier-filter-pill" style="padding:0.75rem; font-size:0.85rem; text-align:center;">TABLE 05 열기 ↗</button>
-                <button onclick="openTableQrUrl('06')" class="tier-filter-pill" style="padding:0.75rem; font-size:0.85rem; text-align:center;">TABLE 06 열기 ↗</button>
-                <button onclick="openTableQrUrl('07')" class="tier-filter-pill" style="padding:0.75rem; font-size:0.85rem; text-align:center;">TABLE 07 열기 ↗</button>
-                <button onclick="openTableQrUrl('08')" class="tier-filter-pill" style="padding:0.75rem; font-size:0.85rem; text-align:center;">TABLE 08 열기 ↗</button>
-                <button onclick="openTableQrUrl('12')" class="tier-filter-pill" style="padding:0.75rem; font-size:0.85rem; text-align:center;">TABLE 12 (VIP룸) ↗</button>
+            <!-- 2-Step Logic Summary Banner -->
+            <div style="background:#EFF6FF; border:1px solid #BFDBFE; border-radius:0.75rem; padding:0.75rem; margin-bottom:1rem; text-align:left; font-size:0.775rem; color:#1E40AF; line-height:1.5;">
+                <strong>💡 QR 동작 구조 (테이블 구분 불필요):</strong><br>
+                고객이 매장 어디서나 이 QR을 인식하면 <strong>[1단계: 본사 수퍼관리자 친구추가]</strong>로 고객 권익과 1 BT 발급이 보증되고, 바로 <strong>[2단계: 가맹점주 직통 Zalo 친구추가]</strong>로 연결되어 실시간 단골 케어가 시작됩니다.
             </div>
 
-            <div style="background:#F1F5F9; border-radius:0.75rem; padding:0.85rem; font-size:0.8rem; color:#475569;">
-                • 테이블 QR 링크 규격: <code>https://besterp.netlify.app/table-qr.html?merchantId=1791605366&table=[번호]</code><br>
-                • 고객이 스캔 시 개인정보 동의 후 고유 CRM 번호 발급 및 Zalo OA와 즉시 연결됩니다.
+            <!-- QR Code Center Stage -->
+            <div style="background:#F8FAFC; border:1.5px dashed #CBD5E1; border-radius:1rem; padding:1.25rem; margin-bottom:1.1rem; display:inline-block; width:100%; box-sizing:border-box;">
+                <div style="background:white; padding:1rem; border-radius:0.75rem; display:inline-block; box-shadow:0 4px 12px rgba(0,0,0,0.06); border:1px solid #E2E8F0;">
+                    <img id="storeQrImage" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=https%3A%2F%2Fbesterp.netlify.app%2Ftable-qr.html%3FmerchantId%3D1791605366%26ownerZalo%3D0981234567" alt="매장 Zalo 친구추가 QR" style="width:200px; height:200px; display:block; margin:0 auto;">
+                    <span style="display:block; margin-top:0.5rem; font-size:0.75rem; font-weight:800; color:#1E293B;">
+                        베스트위너점 매장 대표 QR (공용)
+                    </span>
+                </div>
+
+                <!-- Owner Zalo Setup Field -->
+                <div style="margin-top:1rem; display:flex; justify-content:center; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                    <span style="font-size:0.8rem; font-weight:700; color:#475569;">🏪 2단계 점주 Zalo:</span>
+                    <input type="text" id="ownerZaloInput" value="0981234567" placeholder="점주 Zalo 번호" style="width:130px; padding:0.35rem 0.6rem; border:1px solid #CBD5E1; border-radius:0.35rem; font-size:0.8rem; font-weight:700; text-align:center;" oninput="updateStoreQrCode()">
+                    <button type="button" onclick="updateStoreQrCode()" style="background:#4F46E5; color:white; border:none; padding:0.35rem 0.65rem; border-radius:0.35rem; font-size:0.75rem; font-weight:700; cursor:pointer;">
+                        QR 갱신
+                    </button>
+                </div>
+
+                <div style="margin-top:0.6rem; font-size:0.725rem; color:#64748B; word-break:break-all;">
+                    🔗 링크: <span id="storeQrUrlDisplay" style="font-family:monospace; color:#0068FF;">https://besterp.netlify.app/table-qr.html?merchantId=1791605366&ownerZalo=0981234567</span>
+                </div>
             </div>
+
+            <!-- Action Buttons -->
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.6rem; margin-bottom:1rem;">
+                <button type="button" onclick="printStoreQrPoster()" style="background:#0F172A; color:white; border:none; padding:0.75rem 0.5rem; border-radius:0.5rem; font-size:0.825rem; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.35rem;">
+                    <span>🖨️</span> A4 포스터 인쇄
+                </button>
+                <button type="button" onclick="copyStoreQrUrl()" style="background:#F1F5F9; border:1px solid #CBD5E1; color:#1E293B; padding:0.75rem 0.5rem; border-radius:0.5rem; font-size:0.825rem; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.35rem;">
+                    <span>📋</span> URL 복사
+                </button>
+                <button type="button" onclick="testOpenStoreQrUrl()" style="background:#0068FF; color:white; border:none; padding:0.75rem 0.5rem; border-radius:0.5rem; font-size:0.825rem; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.35rem;">
+                    <span>📱</span> 고객 화면 열기 ↗
+                </button>
+            </div>
+
+            <!-- Optional Table Specific QR Collapsible -->
+            <details style="text-align:left; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:0.6rem; padding:0.6rem 0.8rem; font-size:0.775rem;">
+                <summary style="font-weight:700; color:#475569; cursor:pointer;">
+                    💡 특정 테이블 번호를 지정하여 열고 싶은 경우 (선택 사항)
+                </summary>
+                <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:0.4rem; margin-top:0.6rem;">
+                    <button onclick="openTableQrUrl('01')" style="padding:0.4rem; font-size:0.75rem; border:1px solid #CBD5E1; border-radius:0.35rem; background:white; cursor:pointer;">Table 01 ↗</button>
+                    <button onclick="openTableQrUrl('02')" style="padding:0.4rem; font-size:0.75rem; border:1px solid #CBD5E1; border-radius:0.35rem; background:white; cursor:pointer;">Table 02 ↗</button>
+                    <button onclick="openTableQrUrl('03')" style="padding:0.4rem; font-size:0.75rem; border:1px solid #CBD5E1; border-radius:0.35rem; background:white; cursor:pointer;">Table 03 ↗</button>
+                    <button onclick="openTableQrUrl('04')" style="padding:0.4rem; font-size:0.75rem; border:1px solid #CBD5E1; border-radius:0.35rem; background:#EFF6FF; color:#0068FF; font-weight:700; cursor:pointer;">Table 04 ↗</button>
+                </div>
+            </details>
         </div>
     </div>
 
@@ -1187,17 +1227,99 @@
         }
 
         // ==========================================
-        // 테이블 QR 모달 & 테스트 링크
+        // 매장 대표 Zalo 2단계 친구추가 QR 모달 & 툴 (테이블 구분 불필요)
         // ==========================================
-        window.openTableQrModal = () => {
-            document.getElementById('tableQrModal').style.display = 'flex';
+        window.openStoreQrModal = () => {
+            updateStoreQrCode();
+            document.getElementById('storeQrModal').style.display = 'flex';
         };
-        window.closeTableQrModal = () => {
-            document.getElementById('tableQrModal').style.display = 'none';
+        window.closeStoreQrModal = () => {
+            document.getElementById('storeQrModal').style.display = 'none';
         };
+        window.openTableQrModal = window.openStoreQrModal; // 호환성 유지
+
+        window.getStoreQrUrl = () => {
+            const merchantId = document.getElementById('merchantIdInput')?.value.trim() || '1791605366';
+            const ownerZalo = document.getElementById('ownerZaloInput')?.value.trim() || '0981234567';
+            return `https://besterp.netlify.app/table-qr.html?merchantId=${merchantId}&ownerZalo=${ownerZalo}`;
+        };
+
+        window.updateStoreQrCode = () => {
+            const qrUrl = window.getStoreQrUrl();
+            const qrImg = document.getElementById('storeQrImage');
+            const displaySpan = document.getElementById('storeQrUrlDisplay');
+            if (qrImg) {
+                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(qrUrl)}`;
+            }
+            if (displaySpan) {
+                displaySpan.textContent = qrUrl;
+            }
+        };
+
+        window.copyStoreQrUrl = () => {
+            const qrUrl = window.getStoreQrUrl();
+            navigator.clipboard.writeText(qrUrl);
+            playNotificationSound();
+            alert(`📋 [매장 대표 Zalo QR 링크 복사 완료]\n\n${qrUrl}\n\n테이블 구분 없이 매장 어디에나 부착/공유하여 사용하실 수 있습니다!`);
+        };
+
+        window.testOpenStoreQrUrl = () => {
+            const merchantId = document.getElementById('merchantIdInput')?.value.trim() || '1791605366';
+            const ownerZalo = document.getElementById('ownerZaloInput')?.value.trim() || '0981234567';
+            const url = `../table-qr.html?merchantId=${merchantId}&ownerZalo=${ownerZalo}`;
+            window.open(url, '_blank');
+        };
+
+        window.printStoreQrPoster = () => {
+            const qrUrl = window.getStoreQrUrl();
+            const merchantId = document.getElementById('merchantIdInput')?.value.trim() || '1791605366';
+            const ownerZalo = document.getElementById('ownerZaloInput')?.value.trim() || '0981234567';
+            const printWin = window.open('', '_blank', 'width=750,height=900');
+            printWin.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>BEST CLUB 매장 Zalo 친구추가 QR 포스터</title>
+                    <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding: 2.5rem; color: #1E293B; }
+                        .poster-box { border: 4px solid #0068FF; border-radius: 1.5rem; padding: 2.5rem 2rem; max-width: 520px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,104,255,0.12); }
+                        .brand { font-size: 1.8rem; font-weight: 900; color: #0068FF; margin-bottom: 0.5rem; }
+                        .title { font-size: 1.4rem; font-weight: 800; margin-bottom: 1rem; color: #0F172A; }
+                        .qr-wrap { background: white; padding: 1.5rem; border-radius: 1rem; display: inline-block; border: 2px dashed #0068FF; margin: 1rem 0; }
+                        .step-banner { background: #EFF6FF; border: 1.5px dashed #0068FF; border-radius: 0.75rem; padding: 1rem; margin: 1.25rem 0; text-align: left; font-size: 0.9rem; line-height: 1.6; }
+                        .badge-bt { background: #F59E0B; color: white; padding: 0.35rem 0.85rem; border-radius: 999px; font-weight: 800; font-size: 1rem; display: inline-block; margin-bottom: 0.5rem; }
+                    </style>
+                </head>
+                <body>
+                    <div class="poster-box">
+                        <div class="brand">BEST CLUB RESTAURANT</div>
+                        <div class="badge-bt">🎁 1 BT 보너스 티켓 100% 즉시 지급</div>
+                        <div class="title">스마트 폰으로 QR을 스캔해 주세요!</div>
+                        
+                        <div class="qr-wrap">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(qrUrl)}" style="width:250px; height:250px;">
+                        </div>
+
+                        <div class="step-banner">
+                            <strong>💬 2단계 간편 Zalo 친구추가 절차:</strong><br>
+                            • <strong>1단계</strong>: 🛡️ 본사 수퍼관리자 친구추가 (고객 보호 & 1 BT 승인)<br>
+                            • <strong>2단계</strong>: 🏪 매장 점주님 직통 친구추가 (실시간 단골 VIP 케어)
+                        </div>
+                        <p style="font-size:0.85rem; color:#64748B;">가맹점 ID: ${merchantId} | 점주 Zalo: ${ownerZalo}</p>
+                    </div>
+                    <script>
+                        window.onload = () => { setTimeout(() => { window.print(); }, 500); };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWin.document.close();
+        };
+
         window.openTableQrUrl = (tableNo) => {
             const merchantId = document.getElementById('merchantIdInput')?.value.trim() || '1791605366';
-            const url = `../table-qr.html?merchantId=${merchantId}&table=${tableNo}`;
+            const ownerZalo = document.getElementById('ownerZaloInput')?.value.trim() || '0981234567';
+            const url = `../table-qr.html?merchantId=${merchantId}&table=${tableNo}&ownerZalo=${ownerZalo}`;
             window.open(url, '_blank');
         };
 

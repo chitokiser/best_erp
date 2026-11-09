@@ -298,12 +298,12 @@
         <div class="header-banner">
             <div class="table-pill">
                 <span>🍽️</span>
-                <span id="displayTableNo">TABLE 04</span>
+                <span id="displayTableNo">매장 공용 QR (테이블 구분 없음)</span>
                 <span style="opacity:0.6;">|</span>
                 <span id="displayStoreName">BEST CLUB RESTAURANT</span>
             </div>
-            <h1>스마트 테이블 체크인 & VIP 리워드 멤버십</h1>
-            <p>Zalo 등록 시 가맹점주 보유 [1 BT 보너스 티켓] 즉시 지급!</p>
+            <h1>스마트 Zalo 친구추가 & VIP 리워드 멤버십</h1>
+            <p>1단계: 수퍼관리자 + 2단계: 가맹점주 친구추가 완료 시 [1 BT 티켓] 즉시 지급!</p>
         </div>
 
         <div class="form-body">
@@ -318,17 +318,43 @@
                 </div>
             </div>
 
-            <!-- 2. Zalo Quick Connect with 1 BT Reward -->
-            <div class="zalo-connect-card" style="border:1.5px solid #0068FF; background:#F0F7FF;">
-                <div>
+            <!-- 2. Zalo 2단계 친구추가 (수퍼관리자 ➔ 가맹점주) & 1 BT Reward -->
+            <div style="background:linear-gradient(135deg, #F0F7FF 0%, #E0F2FE 100%); border:2px solid #0068FF; border-radius:1rem; padding:1.1rem; margin-bottom:1.35rem; box-shadow:0 4px 14px rgba(0,104,255,0.12);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.45rem;">
                     <div style="display:flex; align-items:center; gap:0.35rem;">
-                        <strong style="color:var(--zalo-blue); font-size:0.875rem;">💬 Zalo 공식 연동 등록</strong>
-                        <span style="background:#F59E0B; color:white; font-size:0.65rem; font-weight:800; padding:0.1rem 0.4rem; border-radius:0.25rem;">1 BT 증정</span>
+                        <span style="font-size:1.1rem;">💬</span>
+                        <strong style="color:#0068FF; font-size:0.95rem;">Zalo 2단계 친구추가</strong>
                     </div>
-                    <span style="font-size:0.75rem; color:#0369A1; font-weight:700;">🎁 Zalo 등록 시 점주 보유 BT 중 1장 고객 지갑으로 즉시 지급!</span>
+                    <span style="background:#F59E0B; color:white; font-size:0.65rem; font-weight:800; padding:0.15rem 0.5rem; border-radius:999px;">1 BT 100% 증정</span>
                 </div>
-                <button type="button" class="zalo-btn" onclick="openZaloOA()">
-                    <span>연동하기</span> →
+                <p style="margin:0 0 0.85rem 0; font-size:0.775rem; color:#0369A1; line-height:1.45;">
+                    QR 인식 후 <strong>1단계 본사 수퍼관리자</strong>와 친구를 맺고, 이어 <strong>2단계 매장 점주님</strong>과 친구가 되면 점주 보유 1 BT가 즉시 지급됩니다.
+                </p>
+
+                <!-- 2-Step Interactive Grid -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.55rem; margin-bottom:0.65rem;">
+                    <!-- Step 1 Card -->
+                    <div id="step1Card" style="background:white; border:1.5px solid #93C5FD; border-radius:0.75rem; padding:0.75rem 0.6rem; text-align:center; transition:all 0.2s;">
+                        <div style="font-size:0.68rem; font-weight:800; color:#2563EB; margin-bottom:0.2rem;">STEP 1 (본사)</div>
+                        <div id="step1Title" style="font-size:0.775rem; font-weight:800; color:#1E293B; margin-bottom:0.4rem;">🛡️ 수퍼관리자</div>
+                        <button type="button" id="btnStep1" onclick="handleStep1SuperAdminZalo()" style="width:100%; background:#0068FF; color:white; border:none; padding:0.45rem 0.2rem; border-radius:0.4rem; font-size:0.725rem; font-weight:800; cursor:pointer;">
+                            1단계 친구추가 ↗
+                        </button>
+                    </div>
+
+                    <!-- Step 2 Card -->
+                    <div id="step2Card" style="background:#F8FAFC; border:1.5px solid #CBD5E1; border-radius:0.75rem; padding:0.75rem 0.6rem; text-align:center; transition:all 0.2s;">
+                        <div style="font-size:0.68rem; font-weight:800; color:#64748B; margin-bottom:0.2rem;">STEP 2 (매장)</div>
+                        <div id="step2Title" style="font-size:0.775rem; font-weight:800; color:#64748B; margin-bottom:0.4rem;">🏪 가맹점주님</div>
+                        <button type="button" id="btnStep2" onclick="handleStep2OwnerZalo()" style="width:100%; background:#94A3B8; color:white; border:none; padding:0.45rem 0.2rem; border-radius:0.4rem; font-size:0.725rem; font-weight:800; cursor:pointer;" disabled>
+                            2단계 친구추가 🔒
+                        </button>
+                    </div>
+                </div>
+
+                <!-- One-Click Consecutive Flow Button -->
+                <button type="button" onclick="start2StepZaloFlow()" style="width:100%; background:linear-gradient(135deg, #0068FF 0%, #004ECC 100%); color:white; border:none; padding:0.7rem; border-radius:0.6rem; font-size:0.825rem; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.4rem; box-shadow:0 3px 10px rgba(0,104,255,0.25);">
+                    <span>⚡</span> <span>1단계(수퍼관리자) + 2단계(점주) 연속 친구추가</span>
                 </button>
             </div>
 
@@ -538,26 +564,96 @@
         import { collection, addDoc, doc, setDoc, increment, serverTimestamp } from 'firebase/firestore';
         import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
-        // URL 파라미터 파싱 (?table=04&merchantId=1791605366)
+        // URL 파라미터 파싱 (?merchantId=1791605366&ownerZalo=0981234567, table은 선택)
         const params = new URLSearchParams(window.location.search);
-        const tableNo = params.get('table') || '04';
+        const tableNo = params.get('table'); // 테이블 번호 없어도 됨 (공용)
         const merchantId = params.get('merchantId') || '1791605366';
+        const ownerZalo = params.get('ownerZalo') || '0981234567';
+        const superAdminZalo = params.get('superZalo') || 'https://zalo.me/0909000111';
 
-        document.getElementById('displayTableNo').textContent = `TABLE ${tableNo}`;
-        document.getElementById('confirmedTable').textContent = `TABLE ${tableNo}`;
+        const tableTitle = tableNo ? `TABLE ${tableNo}` : '매장 공용 QR (테이블 구분 없음)';
+        document.getElementById('displayTableNo').textContent = tableTitle;
+        document.getElementById('confirmedTable').textContent = tableNo ? `TABLE ${tableNo}` : '매장 자유 착석 (공용)';
 
         let uploadedFacePhotoData = null;
         let isFaceRegistered = false;
+        let isStep1Done = false;
+        let isStep2Done = false;
 
         // 선호 태그 토글
         window.togglePref = (el) => {
             el.classList.toggle('selected');
         };
 
-        // Zalo OA 열기
-        window.openZaloOA = () => {
-            window.open('https://zalo.me/0981234567', '_blank');
+        // ==========================================
+        // 💬 2단계 Zalo 친구추가 프로세스 핸들러
+        // (1단계: 수퍼관리자 ➔ 2단계: 가맹점주)
+        // ==========================================
+        window.handleStep1SuperAdminZalo = () => {
+            window.open(superAdminZalo, '_blank');
+            isStep1Done = true;
+
+            const card1 = document.getElementById('step1Card');
+            const title1 = document.getElementById('step1Title');
+            const btn1 = document.getElementById('btnStep1');
+            if (card1) {
+                card1.style.borderColor = '#10B981';
+                card1.style.background = '#ECFDF5';
+            }
+            if (title1) title1.innerHTML = '✅ 수퍼관리자 완료';
+            if (btn1) {
+                btn1.textContent = '1단계 완료됨';
+                btn1.style.background = '#10B981';
+            }
+
+            // Step 2 활성화
+            const card2 = document.getElementById('step2Card');
+            const title2 = document.getElementById('step2Title');
+            const btn2 = document.getElementById('btnStep2');
+            if (card2) {
+                card2.style.borderColor = '#0068FF';
+                card2.style.background = '#EFF6FF';
+            }
+            if (title2) title2.style.color = '#1E293B';
+            if (btn2) {
+                btn2.disabled = false;
+                btn2.style.background = '#0068FF';
+                btn2.textContent = '2단계 점주 친구추가 ↗';
+            }
+
+            alert('🛡️ [1단계 본사 수퍼관리자 친구추가]\nBestClub 본사 공식 채널과 연결되었습니다!\n\n이제 [2단계: 가맹점주님 Zalo 친구추가]를 진행해 주세요.\n(친구추가 완료 시 점주 보유 1 BT가 즉시 지급됩니다)');
         };
+
+        window.handleStep2OwnerZalo = () => {
+            window.open(`https://zalo.me/${ownerZalo}`, '_blank');
+            isStep2Done = true;
+
+            const card2 = document.getElementById('step2Card');
+            const title2 = document.getElementById('step2Title');
+            const btn2 = document.getElementById('btnStep2');
+            if (card2) {
+                card2.style.borderColor = '#10B981';
+                card2.style.background = '#ECFDF5';
+            }
+            if (title2) title2.innerHTML = '✅ 가맹점주 완료';
+            if (btn2) {
+                btn2.textContent = '2단계 완료됨';
+                btn2.style.background = '#10B981';
+            }
+
+            alert(`🏪 [2단계 가맹점주 Zalo 친구추가]\n가맹점주님(${ownerZalo})과 성공적으로 연결되었습니다!\n\n🎁 점주 보유 1 BT 보너스 티켓 지급 대상자로 등록되었습니다.\n아래 [체크인 & 1 BT 받기] 버튼을 눌러 완료하세요!`);
+        };
+
+        window.start2StepZaloFlow = () => {
+            handleStep1SuperAdminZalo();
+            setTimeout(() => {
+                if (confirm('1단계 본사 수퍼관리자 연결에 이어, [2단계 매장 점주님 Zalo]로 바로 친구추가를 진행하시겠습니까?')) {
+                    handleStep2OwnerZalo();
+                }
+            }, 1200);
+        };
+
+        window.openZaloOA = window.start2StepZaloFlow;
 
         // ==========================================
         // 1. Google 1초 간편 로그인/연동
@@ -691,7 +787,9 @@
                     isFaceRegistered: isFaceRegistered,
                     marketingConsent: marketingConsent,
                     privacyConsent: privacyConsent,
-                    tableNo: tableNo,
+                    tableNo: tableNo || '매장 공용 (자유 착석)',
+                    zaloSuperAdminConnected: isStep1Done,
+                    zaloOwnerConnected: isStep2Done,
                     visitCount: 1,
                     totalSpent: 0,
                     tier: '일반 고객',
@@ -705,7 +803,7 @@
                 await addDoc(collection(db, 'store_visits'), {
                     customerId: customerId,
                     merchantId: merchantId,
-                    tableNo: tableNo,
+                    tableNo: tableNo || '매장 공용 (자유 착석)',
                     customerName: name,
                     visitTime: serverTimestamp(),
                     status: 'active'
