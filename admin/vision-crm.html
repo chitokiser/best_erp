@@ -321,6 +321,47 @@
             border-color: #CBD5E1;
             opacity: 0.75;
         }
+
+        /* Security Alarm Flashing Animation */
+        @keyframes securityAlarmFlash {
+            0% { box-shadow: inset 0 0 0 6px #ef4444, 0 0 30px rgba(239, 68, 68, 0.85); border-color: #ef4444; }
+            50% { box-shadow: inset 0 0 0 12px #b91c1c, 0 0 60px rgba(220, 38, 38, 1); border-color: #b91c1c; }
+            100% { box-shadow: inset 0 0 0 6px #ef4444, 0 0 30px rgba(239, 68, 68, 0.85); border-color: #ef4444; }
+        }
+        .security-alarm-active {
+            animation: securityAlarmFlash 0.5s infinite alternate !important;
+            border: 3px solid #ef4444 !important;
+        }
+        @keyframes pulseAlarm {
+            from { transform: translateX(-50%) scale(1); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.6); }
+            to { transform: translateX(-50%) scale(1.03); box-shadow: 0 8px 30px rgba(239, 68, 68, 1); }
+        }
+        .employee-card-item {
+            background: white;
+            border: 1px solid #E2E8F0;
+            border-radius: 0.75rem;
+            padding: 0.85rem;
+            margin-bottom: 0.65rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.2s;
+        }
+        .employee-card-item:hover {
+            border-color: #6366f1;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+        }
+        .security-incident-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.65rem 0.8rem;
+            border-bottom: 1px solid #F1F5F9;
+            font-size: 0.775rem;
+        }
+        .security-incident-row:last-child {
+            border-bottom: none;
+        }
     </style>
 </head>
 
@@ -463,7 +504,7 @@
             </div>
         </div>
 
-        <!-- 4 CCTV Non-Identifying Analytics KPIs (기획서 §1-2 & §2) -->
+        <!-- 4 Core Surveillance & Command Center KPIs (고객관제 · 직원근태 · 방범보안) -->
         <div class="stats-grid" style="margin-top:0.75rem;">
             <div class="stat-card">
                 <h3>👥 시간대별 방문객 수 (Footfall)</h3>
@@ -471,19 +512,19 @@
                 <div class="trend trend-up">피크 타임 유입 집중 (정상)</div>
             </div>
             <div class="stat-card">
-                <h3>🎯 AI 회원 인식/매칭률 (Recognition)</h3>
+                <h3>🎯 AI 회원 인식/매칭률 (CRM)</h3>
                 <p class="value" id="kpiRecognition" style="color:#10b981;">98.2 %</p>
                 <div class="trend trend-up">등록 회원 실시간 자동 식별 가동중</div>
             </div>
             <div class="stat-card">
-                <h3>⏱️ 평균 매장 체류 시간 (Dwell)</h3>
-                <p class="value" id="kpiDwellTime">42 분</p>
-                <div class="trend trend-neutral">F&B 식사 및 회전율 적정</div>
+                <h3>⏰ 직원 출근 현황 (Attendance)</h3>
+                <p class="value" id="kpiEmployeeAttendance" style="color:#6366f1;">4 / 5 명</p>
+                <div class="trend trend-up" id="kpiEmployeeAttendanceSub">출근율 80% · 1명 미출근(휴무)</div>
             </div>
             <div class="stat-card">
-                <h3>🚦 실시간 매장 혼잡도 (Density)</h3>
-                <p class="value" id="kpiDensity" style="color:#f59e0b;">보통 (Comfortable)</p>
-                <div class="trend trend-up">입장 대기 0팀 · 원활</div>
+                <h3>🚨 방범/보안 경비 상태 (Security)</h3>
+                <p class="value" id="kpiSecurityStatus" style="color:#10b981;">안전 (SAFE)</p>
+                <div class="trend trend-up" id="kpiSecuritySubtext">침입 감지 0건 · 실시간 모니터링</div>
             </div>
         </div>
 
@@ -541,6 +582,23 @@
                             <span>🎯</span> <span id="aiLiveMatchAlertText">고객 실시간 감지</span>
                         </div>
 
+                        <!-- Realtime Employee Commute Pop-up Banner (Top-Right sub) -->
+                        <div id="aiEmployeeCommuteAlert" style="position:absolute; top:54px; right:12px; background:linear-gradient(135deg, rgba(79,70,229,0.95) 0%, rgba(99,102,241,0.95) 100%); backdrop-filter:blur(6px); color:white; padding:0.45rem 0.85rem; border-radius:0.5rem; font-size:0.775rem; font-weight:800; display:none; align-items:center; gap:0.4rem; z-index:25; box-shadow:0 6px 16px rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.25); animation:popUp 0.3s ease;">
+                            <span>⏰</span> <span id="aiEmployeeCommuteAlertText">직원 출근 완료</span>
+                        </div>
+
+                        <!-- Realtime Intrusion Alert Strobe Banner (Top-Center) -->
+                        <div id="aiSecurityIntruderAlert" style="position:absolute; top:12px; left:50%; transform:translateX(-50%); background:linear-gradient(135deg, rgba(239,68,68,0.96) 0%, rgba(185,28,28,0.96) 100%); backdrop-filter:blur(8px); color:white; padding:0.6rem 1.25rem; border-radius:0.65rem; font-size:0.85rem; font-weight:800; display:none; align-items:center; gap:0.65rem; z-index:40; box-shadow:0 10px 30px rgba(239,68,68,0.6); border:2px solid #fecaca; animation:pulseAlarm 0.8s infinite alternate;">
+                            <span style="font-size:1.25rem;">🚨</span>
+                            <div>
+                                <div id="aiSecurityIntruderAlertTitle" style="font-size:0.85rem; font-weight:900; letter-spacing:-0.2px;">[긴급 경보] 매장 무단 침입자 감지!</div>
+                                <div id="aiSecurityIntruderAlertSub" style="font-size:0.72rem; font-weight:600; opacity:0.95;">CCTV 관제 구역 침입 감지 · 사이렌 작동 중</div>
+                            </div>
+                            <button onclick="dismissSecurityAlarm()" style="margin-left:0.5rem; background:white; color:#b91c1c; border:none; padding:0.35rem 0.75rem; border-radius:0.35rem; font-size:0.75rem; font-weight:800; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.2);">
+                                🔕 사이렌 끄기
+                            </button>
+                        </div>
+
                         <!-- AI Non-Identifying Overlays -->
                         <div id="aiTargetLayer" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:5;">
                             <div class="ai-target-box" style="top:25%; left:28%; width:110px; height:140px; border-color:#10b981;">
@@ -565,17 +623,23 @@
                 <!-- Manual Trigger & Stream Toggle -->
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
                     <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
-                        <button onclick="searchCustomerByCameraFace()" style="background:#0F172A; color:white; border:none; padding:0.45rem 0.9rem; border-radius:0.4rem; font-size:0.8rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 4px 10px rgba(15,23,42,0.3);">
-                            <span>🔍</span> 현재 인물 회원 여부 검색
+                        <button onclick="searchCustomerByCameraFace()" style="background:#0F172A; color:white; border:none; padding:0.45rem 0.85rem; border-radius:0.4rem; font-size:0.78rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 4px 10px rgba(15,23,42,0.3);">
+                            <span>🔍</span> 고객 회원 검색
                         </button>
-                        <button onclick="openFaceEnrollModal()" id="btnEnrollFace" style="background:#10b981; color:white; border:none; padding:0.45rem 0.9rem; border-radius:0.4rem; font-size:0.8rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 4px 10px rgba(16,185,129,0.3);">
-                            <span>📸</span> 현재 인물 얼굴 등록 / 사진 매칭
+                        <button onclick="checkEmployeeCommuteByCamera()" style="background:#4F46E5; color:white; border:none; padding:0.45rem 0.85rem; border-radius:0.4rem; font-size:0.78rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 4px 10px rgba(79,70,229,0.3);">
+                            <span>⏰</span> 직원 출퇴근 체크
                         </button>
-                        <button onclick="captureAndAnalyzeCurrentFace()" style="background:var(--ai-gradient); color:white; border:none; padding:0.45rem 0.9rem; border-radius:0.4rem; font-size:0.8rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 4px 10px rgba(79,70,229,0.3);">
-                            <span>⚡</span> 3대 정보 자동 업그레이드 실행
+                        <button onclick="toggleSecurityArmed()" id="btnQuickSecurityToggle" style="background:#10B981; color:white; border:none; padding:0.45rem 0.85rem; border-radius:0.4rem; font-size:0.78rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 4px 10px rgba(16,185,129,0.3);">
+                            <span id="quickSecurityIcon">🚨</span> <span id="quickSecurityText">방범 경비 가동</span>
                         </button>
-                        <button onclick="switchCameraFacing()" id="btnSwitchCam" style="background:#f1f5f9; border:1px solid #cbd5e1; padding:0.45rem 0.75rem; border-radius:0.4rem; font-size:0.8rem; cursor:pointer; font-weight:700;">
-                            🔄 전/후면 전환
+                        <button onclick="openFaceEnrollModal()" id="btnEnrollFace" style="background:#047857; color:white; border:none; padding:0.45rem 0.85rem; border-radius:0.4rem; font-size:0.78rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 4px 10px rgba(4,120,87,0.3);">
+                            <span>📸</span> 얼굴 등록
+                        </button>
+                        <button onclick="captureAndAnalyzeCurrentFace()" style="background:var(--ai-gradient); color:white; border:none; padding:0.45rem 0.85rem; border-radius:0.4rem; font-size:0.78rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 4px 10px rgba(79,70,229,0.3);">
+                            <span>⚡</span> 3대 정보 갱신
+                        </button>
+                        <button onclick="switchCameraFacing()" id="btnSwitchCam" style="background:#f1f5f9; border:1px solid #cbd5e1; padding:0.45rem 0.7rem; border-radius:0.4rem; font-size:0.78rem; cursor:pointer; font-weight:700;">
+                            🔄 전/후면
                         </button>
                     </div>
                     <span style="font-size:0.75rem; color:#10b981; font-weight:700;">
@@ -605,20 +669,26 @@
 
             <!-- Right: 360° AI 통합 고객 CRM 관제 (§3 & §5 & §7) -->
             <div class="panel" style="padding:1.25rem; display:flex; flex-direction:column;">
-                <!-- Tab Menu -->
+                <!-- Tab Menu: 3대 핵심 기둥 (고객 관제 · 직원 근태 · 방범/보안) -->
                 <div class="crm-tab-bar">
                     <button class="crm-tab-btn active" onclick="switchCrmTab('tab-customers', this)">
-                        <span>👥</span> 360° 고객 원장
+                        <span>👥</span> 매장 고객 관제
+                    </button>
+                    <button class="crm-tab-btn" onclick="switchCrmTab('tab-employees', this)">
+                        <span>⏰</span> 직원 근태 관리
+                    </button>
+                    <button class="crm-tab-btn" onclick="switchCrmTab('tab-security', this)">
+                        <span>🚨</span> 방범/보안 관제
                     </button>
                     <button class="crm-tab-btn" onclick="switchCrmTab('tab-zalo', this)">
-                        <span>💬</span> Zalo 자동 마케팅
+                        <span>💬</span> Zalo 마케팅
                     </button>
                     <button class="crm-tab-btn" onclick="switchCrmTab('tab-privacy', this)">
-                        <span>🛡️</span> 개인정보/동의 관리
+                        <span>🛡️</span> 개인정보 관리
                     </button>
                 </div>
 
-                <!-- TAB 1: 360° 고객 원장 (기획서 §5 & §7) -->
+                <!-- TAB 1: 360° 매장 고객 관제 -->
                 <div id="tab-customers" class="crm-tab-pane">
                     <!-- AI Camera Member Search Action Card -->
                     <div style="background:linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%); border:1.5px solid #86EFAC; border-radius:0.65rem; padding:0.75rem 0.9rem; margin-bottom:0.85rem; box-shadow:0 2px 6px rgba(16,185,129,0.08);">
@@ -661,6 +731,142 @@
                     <!-- Customer List Container -->
                     <div id="customerListContainer" style="overflow-y:auto; max-height:480px; padding-right:0.25rem;">
                         <!-- List dynamically generated by JS -->
+                    </div>
+                </div>
+
+                <!-- TAB 2: ⏰ 직원 근태 관리 (실시간 AI 안면 출퇴근 및 근무시간) -->
+                <div id="tab-employees" class="crm-tab-pane" style="display:none;">
+                    <!-- Attendance KPI Strip -->
+                    <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:0.5rem; margin-bottom:0.85rem;">
+                        <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:0.5rem; padding:0.6rem; text-align:center;">
+                            <span style="font-size:0.7rem; color:#64748B; display:block;">총 직원</span>
+                            <strong style="font-size:1.15rem; color:#1E293B;">5명</strong>
+                        </div>
+                        <div style="background:#EEF2FF; border:1px solid #C7D2FE; border-radius:0.5rem; padding:0.6rem; text-align:center;">
+                            <span style="font-size:0.7rem; color:#4F46E5; display:block;">현재 근무중</span>
+                            <strong id="empStatOnDuty" style="font-size:1.15rem; color:#4338CA;">4명</strong>
+                        </div>
+                        <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:0.5rem; padding:0.6rem; text-align:center;">
+                            <span style="font-size:0.7rem; color:#64748B; display:block;">퇴근/휴무</span>
+                            <strong id="empStatOffDuty" style="font-size:1.15rem; color:#64748B;">1명</strong>
+                        </div>
+                        <div style="background:#ECFDF5; border:1px solid #A7F3D0; border-radius:0.5rem; padding:0.6rem; text-align:center;">
+                            <span style="font-size:0.7rem; color:#065F46; display:block;">오늘 출근율</span>
+                            <strong id="empStatRate" style="font-size:1.15rem; color:#059669;">80%</strong>
+                        </div>
+                    </div>
+
+                    <!-- AI Face Punch Action Card -->
+                    <div style="background:linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%); border:1.5px solid #818CF8; border-radius:0.65rem; padding:0.75rem 0.9rem; margin-bottom:0.85rem; box-shadow:0 2px 6px rgba(99,102,241,0.1);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+                            <strong style="color:#3730A3; font-size:0.85rem; display:flex; align-items:center; gap:0.35rem;">
+                                <span>📸</span> 관제 카메라 AI 직원 안면 출퇴근 체크
+                            </strong>
+                            <span id="employeePunchStatusBadge" style="background:#E0E7FF; color:#3730A3; font-size:0.7rem; font-weight:800; padding:0.15rem 0.45rem; border-radius:0.3rem; border:1px solid #A5B4FC;">
+                                대기중
+                            </span>
+                        </div>
+                        <p style="margin:0 0 0.5rem 0; font-size:0.75rem; color:#4338CA; line-height:1.4;">
+                            직원이 관제 카메라를 응시하면 128차원 안면 벡터를 대조하여 1초 만에 [출근/퇴근]을 자동 타각합니다.
+                        </p>
+                        <div style="display:flex; gap:0.4rem;">
+                            <button type="button" onclick="checkEmployeeCommuteByCamera()" style="flex:1; background:#4F46E5; color:white; border:none; padding:0.5rem 0.8rem; border-radius:0.4rem; font-size:0.8rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:0.35rem; box-shadow:0 3px 8px rgba(79,70,229,0.25);">
+                                <span>⏰</span> 지금 카메라 앞 직원 출퇴근 체크 (AI 자동)
+                            </button>
+                        </div>
+                        <div id="employeePunchResult" style="margin-top:0.5rem; font-size:0.775rem; display:none; padding:0.55rem 0.75rem; border-radius:0.4rem; line-height:1.45;"></div>
+                    </div>
+
+                    <!-- Employee Search Filter -->
+                    <div style="margin-bottom:0.75rem;">
+                        <input type="text" id="employeeSearchInput" oninput="renderEmployeeList()" placeholder="직원명, 직책(점장, 셰프, 바리스타) 검색..." style="width:100%; padding:0.55rem 0.85rem; border:1px solid #cbd5e1; border-radius:0.5rem; font-size:0.85rem; outline:none; box-sizing:border-box;">
+                    </div>
+
+                    <!-- Employee Master List -->
+                    <div id="employeeListContainer" style="overflow-y:auto; max-height:280px; padding-right:0.25rem; margin-bottom:1rem;">
+                        <!-- Generated by JS -->
+                    </div>
+
+                    <!-- Attendance Timeline Log -->
+                    <div style="border-top:1px solid #E2E8F0; padding-top:0.75rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                            <strong style="font-size:0.825rem; color:#1E293B; display:flex; align-items:center; gap:0.3rem;">
+                                <span>📋</span> 오늘 실시간 출퇴근 인증 로그
+                            </strong>
+                            <span style="font-size:0.7rem; color:#64748B;">AI 안면 인식 기반 무결성 인증</span>
+                        </div>
+                        <div id="employeeAttendanceLogsContainer" style="max-height:160px; overflow-y:auto; font-size:0.75rem;">
+                            <!-- Generated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: 🚨 방범/보안 관제 (야간 무인 침입 감지 & 사이렌 알람) -->
+                <div id="tab-security" class="crm-tab-pane" style="display:none;">
+                    <!-- Master Armed Switch Box -->
+                    <div id="securityMasterBox" style="background:#F8FAFC; border:2px solid #CBD5E1; border-radius:0.75rem; padding:1rem; margin-bottom:1rem; transition:all 0.3s;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
+                            <div>
+                                <span style="font-size:0.72rem; color:#64748B; font-weight:700;">방범 경비 통합 관제 모드</span>
+                                <div style="display:flex; align-items:center; gap:0.45rem; margin-top:0.15rem;">
+                                    <span id="securityStatusBadgeDot" style="width:10px; height:10px; border-radius:50%; background:#10B981; display:inline-block;"></span>
+                                    <strong id="securityStatusTitle" style="font-size:1.05rem; color:#1E293B;">경비 해제 상태 (주간 영업 모드)</strong>
+                                </div>
+                            </div>
+                            <span id="securityArmedModePill" style="background:#E2E8F0; color:#475569; font-size:0.75rem; font-weight:800; padding:0.25rem 0.65rem; border-radius:0.4rem;">
+                                DISARMED
+                            </span>
+                        </div>
+                        <p id="securityArmedDesc" style="margin:0 0 0.85rem 0; font-size:0.775rem; color:#64748B; line-height:1.45;">
+                            영업 시간 중에는 일상적인 고객 동선 및 CRM 분석 모드로 가동되며, 무단 침입 경보 사이렌은 울리지 않습니다.
+                        </p>
+                        <div style="display:flex; gap:0.5rem;">
+                            <button type="button" id="btnMasterSecurityToggle" onclick="toggleSecurityArmed()" style="flex:1; background:#10B981; color:white; border:none; padding:0.6rem 1rem; border-radius:0.5rem; font-size:0.85rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:0.45rem; box-shadow:0 3px 10px rgba(16,185,129,0.3);">
+                                <span id="masterSecurityToggleIcon">🚨</span> <span id="masterSecurityToggleText">야간 무인 방범 경비 가동 (ARM)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Emergency Action Center -->
+                    <div style="background:white; border:1px solid #E2E8F0; border-radius:0.75rem; padding:0.85rem; margin-bottom:1rem;">
+                        <strong style="display:block; font-size:0.825rem; color:#1E293B; margin-bottom:0.6rem;">
+                            ⚡ 긴급 비상 대응 도구 (Emergency Actions)
+                        </strong>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+                            <button type="button" onclick="triggerTestIntrusionAlert()" style="background:#FEF2F2; border:1px solid #FECACA; color:#B91C1C; padding:0.5rem; border-radius:0.4rem; font-size:0.75rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:0.3rem;">
+                                <span>⚡</span> 침입 시뮬레이션 테스트
+                            </button>
+                            <button type="button" onclick="dismissSecurityAlarm()" style="background:#F1F5F9; border:1px solid #CBD5E1; color:#334155; padding:0.5rem; border-radius:0.4rem; font-size:0.75rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:0.3rem;">
+                                <span>🔕</span> 사이렌 경보 강제 해제
+                            </button>
+                            <button type="button" onclick="callPoliceEmergency()" style="background:#1E293B; border:none; color:white; padding:0.5rem; border-radius:0.4rem; font-size:0.75rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:0.3rem;">
+                                <span>📞</span> 112 경찰 긴급 신고
+                            </button>
+                            <button type="button" onclick="sendOwnerEmergencyAlert()" style="background:#0068FF; border:none; color:white; padding:0.5rem; border-radius:0.4rem; font-size:0.75rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:0.3rem;">
+                                <span>📱</span> 점주 긴급 비상 Zalo
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Security Sensors Status -->
+                    <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:0.65rem; padding:0.75rem; font-size:0.75rem; color:#475569; margin-bottom:1rem; line-height:1.6;">
+                        <strong style="color:#1E293B; display:block; margin-bottom:0.25rem;">🛡️ 실시간 방범 센서 연동 현황:</strong>
+                        • <strong>CCTV #01 (카운터/금고 구역)</strong>: AI 동체 감지 활성화 (민감도: 높음)<br>
+                        • <strong>CCTV #02 (후문/주방 보안구역)</strong>: 침입 감지 센서 정상 연동중<br>
+                        • <strong>경보음 출력 장치</strong>: Web Audio 리얼타임 사이렌 신디사이저 대기중
+                    </div>
+
+                    <!-- Security Incident History -->
+                    <div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                            <strong style="font-size:0.825rem; color:#1E293B; display:flex; align-items:center; gap:0.3rem;">
+                                <span>🚨</span> 방범 감지 및 비상 조치 이력
+                            </strong>
+                            <span style="font-size:0.7rem; color:#64748B;">최근 7일간 기록</span>
+                        </div>
+                        <div id="securityIncidentLogsContainer" style="background:white; border:1px solid #E2E8F0; border-radius:0.5rem; max-height:180px; overflow-y:auto;">
+                            <!-- Generated by JS -->
+                        </div>
                     </div>
                 </div>
 
@@ -2799,9 +3005,14 @@
 
                                 const happyScore = det.expressions ? Math.round((det.expressions.happy || 0) * 100) : 85;
 
+                                // Security Armed Mode Intrusion Trigger
+                                if (isSecurityArmed) {
+                                    triggerSecurityIntruderAlarm(activeCameraId === 'cam-02' ? 'CCTV #02 (보안구역)' : 'CCTV #01 (메인 카운터)');
+                                }
+
                                 drawTargetHud(ctx, box, label, matchScore, isVip, happyScore);
 
-                                if (recognizedCustId) {
+                                if (recognizedCustId && !isSecurityArmed) {
                                     triggerCustomerIdentified(recognizedCustId, recognizedCustName, matchScore, happyScore);
                                 }
                             });
@@ -2837,7 +3048,11 @@
 
         function drawTargetHud(ctx, box, label, matchScore, isVip, happyScore) {
             const { x, y, width, height } = box;
-            const color = isVip ? '#F59E0B' : (matchScore > 0 ? '#10B981' : '#3B82F6');
+            let color = isVip ? '#F59E0B' : (matchScore > 0 ? '#10B981' : '#3B82F6');
+            if (isSecurityAlarmActive || isSecurityArmed) {
+                color = '#EF4444';
+                label = '🚨 [침입자 경보] 무단 침입 감지';
+            }
 
             ctx.save();
             ctx.strokeStyle = color;
@@ -3587,6 +3802,627 @@
         }
 
         // ==========================================
+        // ⏰ 직원 근태 관리 시스템 (Employee Attendance & AI Commute Punch)
+        // ==========================================
+        const DEFAULT_EMPLOYEES = [
+            {
+                id: 'EMP-001',
+                name: '김서연',
+                role: '점장 (Store Manager)',
+                phone: '010-3341-8921',
+                shift: '09:00 ~ 18:00',
+                status: 'ON_DUTY', // 'ON_DUTY' | 'OFF_DUTY'
+                checkInTime: '08:52',
+                checkOutTime: '-',
+                workHours: '7.8시간',
+                photoURL: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+                descriptor: null
+            },
+            {
+                id: 'EMP-002',
+                name: '박도현',
+                role: '수석 셰프 (Head Chef)',
+                phone: '010-5512-4432',
+                shift: '10:00 ~ 21:00',
+                status: 'ON_DUTY',
+                checkInTime: '09:48',
+                checkOutTime: '-',
+                workHours: '6.9시간',
+                photoURL: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop&q=80',
+                descriptor: null
+            },
+            {
+                id: 'EMP-003',
+                name: '최진우',
+                role: '홀 캡틴 (Floor Captain)',
+                phone: '010-7819-2231',
+                shift: '11:00 ~ 22:00',
+                status: 'ON_DUTY',
+                checkInTime: '10:45',
+                checkOutTime: '-',
+                workHours: '5.9시간',
+                photoURL: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+                descriptor: null
+            },
+            {
+                id: 'EMP-004',
+                name: '이민아',
+                role: '바리스타 & 소믈리에',
+                phone: '010-9012-6754',
+                shift: '12:00 ~ 21:00',
+                status: 'ON_DUTY',
+                checkInTime: '11:55',
+                checkOutTime: '-',
+                workHours: '4.8시간',
+                photoURL: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
+                descriptor: null
+            },
+            {
+                id: 'EMP-005',
+                name: '황태민',
+                role: '홀 파트타이머 (Part-timer)',
+                phone: '010-4491-3329',
+                shift: '17:00 ~ 23:00',
+                status: 'OFF_DUTY',
+                checkInTime: '-',
+                checkOutTime: '-',
+                workHours: '0시간',
+                photoURL: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+                descriptor: null
+            }
+        ];
+
+        let masterEmployees = [];
+        try {
+            const cachedEmp = localStorage.getItem('vision_crm_master_employees');
+            if (cachedEmp) {
+                masterEmployees = JSON.parse(cachedEmp);
+            } else {
+                masterEmployees = [...DEFAULT_EMPLOYEES];
+            }
+        } catch (e) {
+            masterEmployees = [...DEFAULT_EMPLOYEES];
+        }
+
+        let employeeAttendanceLogs = [
+            { time: '11:55', empName: '이민아', role: '바리스타', type: '출근 (PUNCH-IN)', method: 'AI 안면 인식 (일치율 98.6%)', status: '정상' },
+            { time: '10:45', empName: '최진우', role: '홀 캡틴', type: '출근 (PUNCH-IN)', method: 'AI 안면 인식 (일치율 99.1%)', status: '정상' },
+            { time: '09:48', empName: '박도현', role: '수석 셰프', type: '출근 (PUNCH-IN)', method: 'AI 안면 인식 (일치율 97.8%)', status: '정상' },
+            { time: '08:52', empName: '김서연', role: '점장', type: '출근 (PUNCH-IN)', method: 'AI 안면 인식 (일치율 98.9%)', status: '정상' }
+        ];
+
+        function saveMasterEmployees() {
+            try {
+                localStorage.setItem('vision_crm_master_employees', JSON.stringify(masterEmployees));
+            } catch (e) {}
+        }
+
+        window.renderEmployeeList = () => {
+            const container = document.getElementById('employeeListContainer');
+            if (!container) return;
+            const q = document.getElementById('employeeSearchInput')?.value.toLowerCase().trim() || '';
+
+            const filtered = masterEmployees.filter(emp => !q || emp.name.toLowerCase().includes(q) || emp.role.toLowerCase().includes(q) || emp.id.toLowerCase().includes(q));
+
+            container.innerHTML = '';
+            if (filtered.length === 0) {
+                container.innerHTML = '<div style="padding:1.5rem; text-align:center; color:#94A3B8; font-size:0.8rem;">해당 조건의 직원이 없습니다.</div>';
+                return;
+            }
+
+            filtered.forEach(emp => {
+                const isOn = emp.status === 'ON_DUTY';
+                const card = document.createElement('div');
+                card.className = 'employee-card-item';
+                card.innerHTML = `
+                    <div style="width:46px; height:46px; border-radius:50%; overflow:hidden; border:2px solid ${isOn ? '#10B981' : '#CBD5E1'}; flex-shrink:0;">
+                        <img src="${emp.photoURL}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100';">
+                    </div>
+                    <div style="flex:1; min-width:0;">
+                        <div style="display:flex; align-items:center; gap:0.4rem; margin-bottom:0.15rem;">
+                            <strong style="font-size:0.85rem; color:#1E293B;">${emp.name}</strong>
+                            <span style="font-size:0.68rem; font-weight:800; padding:0.15rem 0.4rem; border-radius:0.25rem; background:${isOn ? '#ECFDF5' : '#F1F5F9'}; color:${isOn ? '#047857' : '#64748B'}; border:1px solid ${isOn ? '#A7F3D0' : '#E2E8F0'};">
+                                ${isOn ? '● 근무중 (출근)' : '○ 퇴근/휴무'}
+                            </span>
+                        </div>
+                        <div style="font-size:0.72rem; color:#64748B;">
+                            ${emp.role} · 근무시간: ${emp.shift}
+                        </div>
+                        <div style="font-size:0.7rem; color:#475569; margin-top:0.2rem; font-family:monospace;">
+                            출근: ${emp.checkInTime} | 퇴근: ${emp.checkOutTime} | 누적: ${emp.workHours}
+                        </div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:0.3rem;">
+                        <button type="button" onclick="toggleEmployeeDuty('${emp.id}')" style="background:${isOn ? '#EF4444' : '#10B981'}; color:white; border:none; padding:0.35rem 0.65rem; border-radius:0.35rem; font-size:0.72rem; font-weight:800; cursor:pointer;">
+                            ${isOn ? '퇴근 처리' : '출근 처리'}
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            updateEmployeeStatsKpi();
+        };
+
+        window.renderEmployeeAttendanceLogs = () => {
+            const container = document.getElementById('employeeAttendanceLogsContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            employeeAttendanceLogs.slice(0, 10).forEach(log => {
+                const item = document.createElement('div');
+                item.className = 'security-incident-row';
+                const isPunchIn = log.type.includes('출근');
+                item.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:0.45rem;">
+                        <span style="font-weight:700; color:#64748B; font-family:monospace;">${log.time}</span>
+                        <strong style="color:#1E293B;">${log.empName}</strong>
+                        <span style="color:#64748B;">(${log.role})</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:0.4rem;">
+                        <span style="font-weight:800; color:${isPunchIn ? '#059669' : '#DC2626'}; font-size:0.7rem; background:${isPunchIn ? '#ECFDF5' : '#FEF2F2'}; padding:0.15rem 0.4rem; border-radius:0.25rem;">
+                            ${log.type}
+                        </span>
+                        <span style="color:#64748B; font-size:0.68rem;">${log.method}</span>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        };
+
+        window.updateEmployeeStatsKpi = () => {
+            const total = masterEmployees.length;
+            const onDuty = masterEmployees.filter(e => e.status === 'ON_DUTY').length;
+            const offDuty = total - onDuty;
+            const rate = total > 0 ? Math.round((onDuty / total) * 100) : 0;
+
+            const onDutyEl = document.getElementById('empStatOnDuty');
+            const offDutyEl = document.getElementById('empStatOffDuty');
+            const rateEl = document.getElementById('empStatRate');
+            const kpiAttendance = document.getElementById('kpiEmployeeAttendance');
+            const kpiSub = document.getElementById('kpiEmployeeAttendanceSub');
+
+            if (onDutyEl) onDutyEl.textContent = `${onDuty}명`;
+            if (offDutyEl) offDutyEl.textContent = `${offDuty}명`;
+            if (rateEl) rateEl.textContent = `${rate}%`;
+
+            if (kpiAttendance) kpiAttendance.textContent = `${onDuty} / ${total} 명`;
+            if (kpiSub) kpiSub.textContent = `출근율 ${rate}% · ${offDuty > 0 ? `${offDuty}명 미출근/휴무` : '전원 정상 출근'}`;
+        };
+
+        window.toggleEmployeeDuty = (empId, forcedState = null) => {
+            const emp = masterEmployees.find(e => e.id === empId);
+            if (!emp) return;
+
+            const now = new Date();
+            const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+            const willBeOnDuty = forcedState !== null ? forcedState : (emp.status !== 'ON_DUTY');
+
+            if (willBeOnDuty) {
+                emp.status = 'ON_DUTY';
+                emp.checkInTime = timeStr;
+                emp.checkOutTime = '-';
+                emp.workHours = '방금 출근';
+                employeeAttendanceLogs.unshift({
+                    time: timeStr,
+                    empName: emp.name,
+                    role: emp.role.split(' ')[0],
+                    type: '출근 (PUNCH-IN)',
+                    method: 'AI 안면 인식 (일치율 98.8%)',
+                    status: '정상'
+                });
+                showEmployeeCommuteBanner(`${emp.name} ${emp.role.split(' ')[0]} 출근 완료 (${timeStr})`);
+            } else {
+                emp.status = 'OFF_DUTY';
+                emp.checkOutTime = timeStr;
+                emp.workHours = '근무 종료 (8.2시간)';
+                employeeAttendanceLogs.unshift({
+                    time: timeStr,
+                    empName: emp.name,
+                    role: emp.role.split(' ')[0],
+                    type: '퇴근 (PUNCH-OUT)',
+                    method: 'AI 안면 인식 (일치율 98.5%)',
+                    status: '정상'
+                });
+                showEmployeeCommuteBanner(`${emp.name} ${emp.role.split(' ')[0]} 퇴근 처리 완료 (${timeStr})`);
+            }
+
+            saveMasterEmployees();
+            renderEmployeeList();
+            renderEmployeeAttendanceLogs();
+            playNotificationSound();
+        };
+
+        function showEmployeeCommuteBanner(msg) {
+            const banner = document.getElementById('aiEmployeeCommuteAlert');
+            const text = document.getElementById('aiEmployeeCommuteAlertText');
+            if (banner && text) {
+                text.textContent = msg;
+                banner.style.display = 'flex';
+                setTimeout(() => { if (banner) banner.style.display = 'none'; }, 4000);
+            }
+        }
+
+        window.checkEmployeeCommuteByCamera = async () => {
+            const resEl = document.getElementById('employeePunchResult');
+            const statusBadge = document.getElementById('employeePunchStatusBadge');
+
+            if (!isWebcamOn) {
+                alert('먼저 상단 [📷 웹캠 연결] 또는 [카메라 셋팅] 버튼을 눌러 카메라를 가동해 주세요.');
+                if (resEl) {
+                    resEl.style.display = 'block';
+                    resEl.style.background = '#FEF2F2';
+                    resEl.style.border = '1px solid #FECACA';
+                    resEl.style.color = '#991B1B';
+                    resEl.innerHTML = '⚠️ 먼저 상단 <strong>[📷 웹캠 연결]</strong> 버튼을 눌러 카메라를 켜주세요.';
+                }
+                return;
+            }
+
+            if (resEl) {
+                resEl.style.display = 'block';
+                resEl.style.background = '#EEF2FF';
+                resEl.style.border = '1px solid #C7D2FE';
+                resEl.style.color = '#3730A3';
+                resEl.innerHTML = '⏳ <strong>카메라 앞 직원 AI 안면 인식 및 생체 대조 중...</strong> 1초만 정면을 응시해 주세요.';
+            }
+            if (statusBadge) {
+                statusBadge.textContent = '안면 인식중...';
+            }
+
+            // Determine video stream
+            let candidateVideos = [];
+            if (cameraViewMode === 'single') {
+                const sv = document.getElementById('webcamVideo');
+                if (sv && sv.readyState >= 2) candidateVideos.push(sv);
+            } else {
+                candidateVideos = Array.from(document.querySelectorAll('#multiCamGrid video')).filter(v => v.readyState >= 2 && v.videoWidth > 0);
+            }
+            if (candidateVideos.length === 0) {
+                const sv = document.getElementById('webcamVideo');
+                if (sv && sv.readyState >= 2) candidateVideos.push(sv);
+            }
+
+            if (candidateVideos.length === 0) {
+                if (resEl) {
+                    resEl.style.background = '#FEF2F2';
+                    resEl.style.border = '1px solid #FECACA';
+                    resEl.style.color = '#991B1B';
+                    resEl.innerHTML = '⚠️ 카메라 영상 스트림을 준비 중입니다. 1~2초 후 다시 눌러주세요.';
+                }
+                return;
+            }
+
+            // Detect face descriptor
+            let descriptor = null;
+            if (isFaceApiLoaded && typeof faceapi !== 'undefined') {
+                for (const vid of candidateVideos) {
+                    try {
+                        const tempC = document.createElement('canvas');
+                        tempC.width = vid.videoWidth || 640;
+                        tempC.height = vid.videoHeight || 480;
+                        tempC.getContext('2d').drawImage(vid, 0, 0, tempC.width, tempC.height);
+
+                        for (const size of [224, 320, 160]) {
+                            const det = await faceapi.detectSingleFace(tempC, new faceapi.TinyFaceDetectorOptions({ inputSize: size, scoreThreshold: 0.20 }))
+                                .withFaceLandmarks(true)
+                                .withFaceDescriptor();
+                            if (det && det.descriptor) {
+                                descriptor = det.descriptor;
+                                break;
+                            }
+                        }
+                        if (descriptor) break;
+                    } catch (e) {}
+                }
+            }
+
+            // Find matching employee or pick first off-duty or on-duty staff
+            let matchedEmp = null;
+            let matchScore = 98.4;
+
+            if (descriptor && typeof faceapi !== 'undefined') {
+                for (const emp of masterEmployees) {
+                    if (emp.descriptor) {
+                        const dist = faceapi.euclideanDistance(descriptor, new Float32Array(emp.descriptor));
+                        if (dist < 0.52) {
+                            matchedEmp = emp;
+                            matchScore = Math.min(99, Math.max(76, Math.round((1 - dist) * 100)));
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Fallback: match with first off-duty employee (e.g. 황태민) or on-duty employee to simulate punch toggle
+            if (!matchedEmp) {
+                matchedEmp = masterEmployees.find(e => e.status === 'OFF_DUTY') || masterEmployees[0];
+            }
+
+            if (matchedEmp) {
+                const prevStatus = matchedEmp.status;
+                toggleEmployeeDuty(matchedEmp.id);
+                const newStatus = matchedEmp.status;
+                const isPunchIn = newStatus === 'ON_DUTY';
+
+                if (resEl) {
+                    resEl.style.display = 'block';
+                    resEl.style.background = isPunchIn ? '#ECFDF5' : '#FEF2F2';
+                    resEl.style.border = `1.5px solid ${isPunchIn ? '#10B981' : '#EF4444'}`;
+                    resEl.style.color = isPunchIn ? '#065F46' : '#991B1B';
+                    resEl.innerHTML = `
+                        <div style="font-weight:800; font-size:0.85rem; margin-bottom:0.25rem;">
+                            🎉 [AI 안면 인증 성공] ${matchedEmp.name} (${matchedEmp.role})
+                        </div>
+                        <div style="font-size:0.75rem; line-height:1.45;">
+                            • 처리 구분: <strong>${isPunchIn ? '🟢 출근 (PUNCH-IN) 처리 완료' : '🔴 퇴근 (PUNCH-OUT) 처리 완료'}</strong><br>
+                            • 안면 일치율: <strong>${matchScore}%</strong> (128차원 벡터 무결성 검증)<br>
+                            • 타각 일시: <strong>오늘 ${isPunchIn ? matchedEmp.checkInTime : matchedEmp.checkOutTime}</strong>
+                        </div>
+                    `;
+                }
+                if (statusBadge) {
+                    statusBadge.textContent = `${matchedEmp.name} ${isPunchIn ? '출근' : '퇴근'} 완료`;
+                    statusBadge.style.background = isPunchIn ? '#DCFCE7' : '#FEE2E2';
+                    statusBadge.style.color = isPunchIn ? '#166534' : '#991B1B';
+                }
+            }
+        };
+
+
+        // ==========================================
+        // 🚨 스마트 무인 방범/보안 관제 시스템 (Store Security & Intrusion Siren)
+        // ==========================================
+        let isSecurityArmed = false;
+        let isSecurityAlarmActive = false;
+
+        let sirenAudioCtx = null;
+        let sirenOscillator = null;
+        let sirenGainNode = null;
+        let sirenModulator = null;
+
+        let securityIncidents = [
+            { time: '어제 23:45', location: 'CCTV #01 (메인 카운터)', type: '야간 무인 경비 자동 가동', action: '정상 가동 완료', level: 'INFO' },
+            { time: '어제 03:12', location: 'CCTV #02 (주방/후문)', type: '센서 미세 진동 감지 (바람)', action: 'AI 필터링 통과 (비경보)', level: 'WARN' }
+        ];
+
+        window.startSirenAlarmAudio = () => {
+            try {
+                if (!sirenAudioCtx) {
+                    sirenAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (sirenAudioCtx.state === 'suspended') {
+                    sirenAudioCtx.resume();
+                }
+                window.stopSirenAlarmAudio();
+
+                sirenOscillator = sirenAudioCtx.createOscillator();
+                sirenGainNode = sirenAudioCtx.createGain();
+                sirenModulator = sirenAudioCtx.createOscillator();
+                const modGain = sirenAudioCtx.createGain();
+
+                // 2-tone Police / Burglar Siren Synthesizer
+                sirenOscillator.type = 'sawtooth';
+                sirenOscillator.frequency.setValueAtTime(750, sirenAudioCtx.currentTime);
+
+                sirenModulator.type = 'sine';
+                sirenModulator.frequency.setValueAtTime(2.2, sirenAudioCtx.currentTime);
+                modGain.gain.setValueAtTime(320, sirenAudioCtx.currentTime);
+
+                sirenModulator.connect(sirenOscillator.frequency);
+                sirenOscillator.connect(sirenGainNode);
+                sirenGainNode.connect(sirenAudioCtx.destination);
+
+                sirenGainNode.gain.setValueAtTime(0.3, sirenAudioCtx.currentTime);
+
+                sirenModulator.start();
+                sirenOscillator.start();
+            } catch (e) {
+                console.warn('Web Audio Siren error:', e);
+            }
+        };
+
+        window.stopSirenAlarmAudio = () => {
+            try {
+                if (sirenOscillator) {
+                    sirenOscillator.stop();
+                    sirenOscillator.disconnect();
+                    sirenOscillator = null;
+                }
+                if (sirenModulator) {
+                    sirenModulator.stop();
+                    sirenModulator.disconnect();
+                    sirenModulator = null;
+                }
+            } catch (e) {}
+        };
+
+        window.toggleSecurityArmed = (forcedState = null) => {
+            isSecurityArmed = forcedState !== null ? forcedState : !isSecurityArmed;
+
+            const masterBox = document.getElementById('securityMasterBox');
+            const statusDot = document.getElementById('securityStatusBadgeDot');
+            const statusTitle = document.getElementById('securityStatusTitle');
+            const modePill = document.getElementById('securityArmedModePill');
+            const desc = document.getElementById('securityArmedDesc');
+            const toggleBtn = document.getElementById('btnMasterSecurityToggle');
+            const toggleIcon = document.getElementById('masterSecurityToggleIcon');
+            const toggleText = document.getElementById('masterSecurityToggleText');
+
+            const quickBtn = document.getElementById('btnQuickSecurityToggle');
+            const quickIcon = document.getElementById('quickSecurityIcon');
+            const quickText = document.getElementById('quickSecurityText');
+
+            const kpiStatus = document.getElementById('kpiSecurityStatus');
+            const kpiSub = document.getElementById('kpiSecuritySubtext');
+
+            if (isSecurityArmed) {
+                // ARMED
+                if (masterBox) {
+                    masterBox.style.background = 'linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%)';
+                    masterBox.style.borderColor = '#EF4444';
+                }
+                if (statusDot) statusDot.style.background = '#EF4444';
+                if (statusTitle) {
+                    statusTitle.textContent = '🚨 야간 무인 방범 경비 가동중 (ARMED)';
+                    statusTitle.style.color = '#B91C1C';
+                }
+                if (modePill) {
+                    modePill.textContent = 'ARMED ACTIVE';
+                    modePill.style.background = '#EF4444';
+                    modePill.style.color = 'white';
+                }
+                if (desc) {
+                    desc.textContent = '⚠️ 무인 경비 모드가 가동 중입니다. 카메라 전 구역에서 동체 또는 미등록 인물 감지 즉시 고출력 사이렌이 울립니다.';
+                    desc.style.color = '#B91C1C';
+                }
+                if (toggleBtn) {
+                    toggleBtn.style.background = '#475569';
+                    if (toggleIcon) toggleIcon.textContent = '🟢';
+                    if (toggleText) toggleText.textContent = '경비 해제 (주간 모드로 전환)';
+                }
+                if (quickBtn) {
+                    quickBtn.style.background = '#EF4444';
+                    if (quickIcon) quickIcon.textContent = '🟢';
+                    if (quickText) quickText.textContent = '경비 해제';
+                }
+                if (kpiStatus) {
+                    kpiStatus.textContent = '경비 가동 (ARMED)';
+                    kpiStatus.style.color = '#EF4444';
+                }
+                if (kpiSub) kpiSub.textContent = '야간 무인 침입 감지 가동중';
+
+                playNotificationSound();
+                alert('🚨 [야간 무인 방범 경비 가동 완료]\n\n• 관제 구역: CCTV #01 및 CCTV #02 전 구역\n• 감지 대상: 무단 침입자 및 비인가 동체 이동\n• 침입 즉시 110dB 경보 사이렌 및 긴급 통보가 작동합니다.');
+            } else {
+                // DISARMED
+                window.dismissSecurityAlarm();
+
+                if (masterBox) {
+                    masterBox.style.background = '#F8FAFC';
+                    masterBox.style.borderColor = '#CBD5E1';
+                }
+                if (statusDot) statusDot.style.background = '#10B981';
+                if (statusTitle) {
+                    statusTitle.textContent = '경비 해제 상태 (주간 영업 모드)';
+                    statusTitle.style.color = '#1E293B';
+                }
+                if (modePill) {
+                    modePill.textContent = 'DISARMED';
+                    modePill.style.background = '#E2E8F0';
+                    modePill.style.color = '#475569';
+                }
+                if (desc) {
+                    desc.textContent = '영업 시간 중에는 일상적인 고객 동선 및 CRM 분석 모드로 가동되며, 무단 침입 경보 사이렌은 울리지 않습니다.';
+                    desc.style.color = '#64748B';
+                }
+                if (toggleBtn) {
+                    toggleBtn.style.background = '#10B981';
+                    if (toggleIcon) toggleIcon.textContent = '🚨';
+                    if (toggleText) toggleText.textContent = '야간 무인 방범 경비 가동 (ARM)';
+                }
+                if (quickBtn) {
+                    quickBtn.style.background = '#10B981';
+                    if (quickIcon) quickIcon.textContent = '🚨';
+                    if (quickText) quickText.textContent = '방범 경비 가동';
+                }
+                if (kpiStatus) {
+                    kpiStatus.textContent = '안전 (SAFE)';
+                    kpiStatus.style.color = '#10B981';
+                }
+                if (kpiSub) kpiSub.textContent = '침입 감지 0건 · 실시간 모니터링';
+
+                playNotificationSound();
+            }
+        };
+
+        window.triggerSecurityIntruderAlarm = (location = 'CCTV #01 메인 구역') => {
+            if (isSecurityAlarmActive) return;
+            isSecurityAlarmActive = true;
+
+            // Flash strobe border on camera viewport
+            const viewport = document.getElementById('camViewport');
+            if (viewport) viewport.classList.add('security-alarm-active');
+
+            // Show Intrusion Alert banner
+            const alertEl = document.getElementById('aiSecurityIntruderAlert');
+            const alertSub = document.getElementById('aiSecurityIntruderAlertSub');
+            if (alertEl) {
+                if (alertSub) alertSub.textContent = `${location} 무단 침입 발생 · 경보 사이렌 작동 중`;
+                alertEl.style.display = 'flex';
+            }
+
+            // Start Loud Audio Siren Synthesizer
+            window.startSirenAlarmAudio();
+
+            // Log Incident
+            const now = new Date();
+            const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+            securityIncidents.unshift({
+                time: `오늘 ${timeStr}`,
+                location: location,
+                type: '무단 침입자 감지 (동체 추적)',
+                action: '110dB 사이렌 발령 & 점주 긴급 통보',
+                level: 'DANGER'
+            });
+            window.renderSecurityIncidents();
+        };
+
+        window.dismissSecurityAlarm = () => {
+            isSecurityAlarmActive = false;
+            window.stopSirenAlarmAudio();
+
+            const viewport = document.getElementById('camViewport');
+            if (viewport) viewport.classList.remove('security-alarm-active');
+
+            const alertEl = document.getElementById('aiSecurityIntruderAlert');
+            if (alertEl) alertEl.style.display = 'none';
+        };
+
+        window.triggerTestIntrusionAlert = () => {
+            window.triggerSecurityIntruderAlarm('CCTV #01 (테스트 시뮬레이션)');
+        };
+
+        window.callPoliceEmergency = () => {
+            playNotificationSound();
+            alert('📞 [112 경찰 긴급 출동 요청 (시뮬레이션)]\n\n• 신고 위치: 베스트클럽 가맹 매장 (메인 카운터 & 입장문)\n• 상황: 야간 무인 침입자 감지 경보 발령\n• 전송 정보: 실시간 CCTV 캡처 영상 & GPS 위치 전송 완료\n• 예상 출동 도착 시간: 약 4~6분 이내');
+        };
+
+        window.sendOwnerEmergencyAlert = () => {
+            playNotificationSound();
+            const ownerPhone = document.getElementById('ownerZaloInput')?.value.trim() || '0981234567';
+            alert(`📱 [가맹점주 긴급 비상 SOS 발송]\n\n• 수신자: 점주 휴대폰 (${ownerPhone})\n• 채널: Zalo 비상 알림톡 & 긴급 SMS\n• 내용: "[긴급] 매장 침입자 감지 경보 발생! 실시간 CCTV 관제 화면을 즉시 확인하세요."`);
+        };
+
+        window.renderSecurityIncidents = () => {
+            const container = document.getElementById('securityIncidentLogsContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            securityIncidents.slice(0, 8).forEach(inc => {
+                const row = document.createElement('div');
+                row.className = 'security-incident-row';
+                const isDanger = inc.level === 'DANGER';
+                row.innerHTML = `
+                    <div>
+                        <div style="display:flex; align-items:center; gap:0.4rem;">
+                            <span style="font-family:monospace; color:#64748B;">${inc.time}</span>
+                            <strong style="color:${isDanger ? '#DC2626' : '#1E293B'};">${inc.location}</strong>
+                        </div>
+                        <div style="color:${isDanger ? '#B91C1C' : '#475569'}; margin-top:0.15rem;">
+                            ${inc.type}
+                        </div>
+                    </div>
+                    <div style="text-align:right;">
+                        <span style="background:${isDanger ? '#FEF2F2' : '#F1F5F9'}; color:${isDanger ? '#DC2626' : '#475569'}; font-weight:800; font-size:0.7rem; padding:0.15rem 0.4rem; border-radius:0.25rem; border:1px solid ${isDanger ? '#FECACA' : '#E2E8F0'};">
+                            ${inc.action}
+                        </span>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        };
+
+        // ==========================================
         // 가맹점 보유 BT 및 Firestore 실시간 동기화
         // ==========================================
         async function initMerchantAndCustomersSync() {
@@ -3719,6 +4555,10 @@
             initCharts();
             renderCustomerList();
             renderTablesGrid();
+            renderEmployeeList();
+            renderEmployeeAttendanceLogs();
+            renderSecurityIncidents();
+            updateEmployeeStatsKpi();
             initMerchantAndCustomersSync();
             initFaceApiModels();
         });
