@@ -1400,6 +1400,14 @@
                 if (singleView) singleView.style.display = 'flex';
                 if (multiGrid) multiGrid.style.display = 'none';
                 switchActiveCamera(activeCameraId);
+                const videoEl = document.getElementById('webcamVideo');
+                const imgEl = document.getElementById('simulatedStreamImg');
+                if (isWebcamOn && webcamStream && videoEl) {
+                    videoEl.style.display = 'block';
+                    if (imgEl) imgEl.style.display = 'none';
+                    videoEl.play().catch(() => {});
+                    startLiveFaceTrackingLoop();
+                }
             } else {
                 if (singleView) singleView.style.display = 'none';
                 if (multiGrid) {
@@ -1435,28 +1443,59 @@
                     setCameraViewMode('single');
                 };
 
-                const isUsbAndLive = cam.sourceType === 'usb' && isWebcamOn;
+                const isUsbAndLive = (cam.sourceType === 'usb' || cam.id === 'cam-01') && isWebcamOn && webcamStream;
                 const imgSrc = cam.streamUrl || cam.simulatedSrc || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&auto=format&fit=crop&q=80';
 
-                tile.innerHTML = `
-                    <div class="cam-sub-header">
-                        <strong style="font-size:0.75rem; background:rgba(15,23,42,0.8); padding:0.15rem 0.45rem; border-radius:0.3rem;">
-                            📹 ${cam.name}
-                        </strong>
-                        <span class="cam-live-indicator">● LIVE</span>
-                    </div>
-
-                    <img src="${imgSrc}" style="width:100%; height:100%; object-fit:cover; filter:brightness(0.85);">
-
-                    <div class="cam-sub-footer">
-                        <span style="background:rgba(0,0,0,0.75); padding:0.15rem 0.4rem; border-radius:0.25rem;">
-                            📍 ${cam.zoneLabel || cam.zone}
-                        </span>
-                        <span style="color:#38BDF8; font-weight:800; background:rgba(15,23,42,0.8); padding:0.15rem 0.45rem; border-radius:0.25rem;">
-                            확대 포커스 ↗
-                        </span>
-                    </div>
+                // Header
+                const header = document.createElement('div');
+                header.className = 'cam-sub-header';
+                header.innerHTML = `
+                    <strong style="font-size:0.75rem; background:rgba(15,23,42,0.85); padding:0.18rem 0.5rem; border-radius:0.3rem; border:1px solid rgba(255,255,255,0.15);">
+                        📹 ${cam.name}
+                    </strong>
+                    <span class="cam-live-indicator" style="background:${isUsbAndLive ? '#10B981' : 'rgba(239,68,68,0.9)'}">
+                        ● ${isUsbAndLive ? '실시간 웹캠 LIVE' : 'LIVE'}
+                    </span>
                 `;
+                tile.appendChild(header);
+
+                // Video or Image Stream
+                if (isUsbAndLive) {
+                    const subVideo = document.createElement('video');
+                    subVideo.autoplay = true;
+                    subVideo.playsInline = true;
+                    subVideo.muted = true;
+                    subVideo.style.width = '100%';
+                    subVideo.style.height = '100%';
+                    subVideo.style.objectFit = 'cover';
+                    subVideo.srcObject = webcamStream;
+                    subVideo.onloadedmetadata = () => {
+                        subVideo.play().catch(e => console.warn("subVideo play:", e));
+                    };
+                    tile.appendChild(subVideo);
+                } else {
+                    const img = document.createElement('img');
+                    img.src = imgSrc;
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.objectFit = 'cover';
+                    img.style.filter = 'brightness(0.85)';
+                    tile.appendChild(img);
+                }
+
+                // Footer
+                const footer = document.createElement('div');
+                footer.className = 'cam-sub-footer';
+                footer.innerHTML = `
+                    <span style="background:rgba(0,0,0,0.8); padding:0.15rem 0.45rem; border-radius:0.25rem;">
+                        📍 ${cam.zoneLabel || cam.zone}
+                    </span>
+                    <span style="color:#38BDF8; font-weight:800; background:rgba(15,23,42,0.85); padding:0.15rem 0.45rem; border-radius:0.25rem;">
+                        🔍 클릭 시 포커스 확대 ↗
+                    </span>
+                `;
+                tile.appendChild(footer);
+
                 multiGrid.appendChild(tile);
             });
         };
