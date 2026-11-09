@@ -362,6 +362,42 @@
         .security-incident-row:last-child {
             border-bottom: none;
         }
+
+        /* 1인 통합 테스터 역할 전환 필 버튼 */
+        .tester-role-pill {
+            padding: 0.25rem 0.65rem;
+            border-radius: 1rem;
+            font-size: 0.72rem;
+            font-weight: 800;
+            cursor: pointer;
+            border: none;
+            background: white;
+            color: #475569;
+            transition: all 0.2s;
+        }
+        .tester-role-pill:hover {
+            color: #4F46E5;
+        }
+        .tester-role-pill.active {
+            background: #4F46E5 !important;
+            color: white !important;
+            box-shadow: 0 2px 6px rgba(79, 70, 229, 0.35);
+        }
+        .tester-role-pill.active-vip {
+            background: #D97706 !important;
+            color: white !important;
+            box-shadow: 0 2px 6px rgba(217, 119, 6, 0.35);
+        }
+        .tester-role-pill.active-emp {
+            background: #4F46E5 !important;
+            color: white !important;
+            box-shadow: 0 2px 6px rgba(79, 70, 229, 0.35);
+        }
+        .tester-role-pill.active-intruder {
+            background: #EF4444 !important;
+            color: white !important;
+            box-shadow: 0 2px 6px rgba(239, 68, 68, 0.35);
+        }
     </style>
 </head>
 
@@ -540,6 +576,17 @@
                         </h3>
                         <span class="cam-live-indicator">● LIVE</span>
                     </div>
+
+                    <!-- 🎭 1인 통합 테스터 역할 전환기 (내 얼굴로 1인 3역 테스트) -->
+                    <div style="display:flex; align-items:center; gap:0.35rem; background:#EEF2FF; border:1.5px solid #818CF8; border-radius:2rem; padding:0.25rem 0.6rem; box-shadow:0 2px 8px rgba(99,102,241,0.15);">
+                        <span style="font-size:0.72rem; font-weight:800; color:#3730A3; margin-right:0.2rem; display:inline-flex; align-items:center; gap:0.2rem;">
+                            <span>🎭</span> 1인 테스트 모드:
+                        </span>
+                        <button type="button" id="roleBtnCustomer" onclick="setTesterPersona('CUSTOMER')" class="tester-role-pill active-vip" title="내 얼굴을 VIP 고객으로 인식시켜 고객 관제 테스트">👤 고객(VIP)</button>
+                        <button type="button" id="roleBtnEmployee" onclick="setTesterPersona('EMPLOYEE')" class="tester-role-pill" title="내 얼굴을 직원(점장)으로 인식시켜 근태 출퇴근 테스트">⏰ 직원(점장)</button>
+                        <button type="button" id="roleBtnIntruder" onclick="setTesterPersona('INTRUDER')" class="tester-role-pill" title="내 얼굴을 무단 침입자로 인식시켜 방범 경보/사이렌 테스트">🚨 침입자</button>
+                    </div>
+
                     <span style="font-size:0.75rem; color:#64748b; font-family:monospace;" id="liveTimestamp">2026-11-08 18:20:00</span>
                 </div>
 
@@ -1406,16 +1453,19 @@
                 </div>
             </div>
 
-            <!-- Registration Mode Toggle (고객 매칭 vs 신규 등록 vs 직원 얼굴 등록) -->
-            <div style="display:flex; gap:0.35rem; margin-bottom:1rem; border-bottom:1px solid #E2E8F0; padding-bottom:0.5rem;">
-                <button type="button" id="tabEnrollExistingBtn" onclick="switchEnrollMode('EXISTING')" style="flex:1; padding:0.5rem 0.3rem; font-size:0.775rem; font-weight:800; border:none; border-radius:0.4rem; background:#4F46E5; color:white; cursor:pointer;">
+            <!-- Registration Mode Toggle (고객 매칭 vs 신규 등록 vs 직원 얼굴 등록 vs 1인 올인원 동시 등록) -->
+            <div style="display:flex; gap:0.35rem; margin-bottom:1rem; border-bottom:1px solid #E2E8F0; padding-bottom:0.5rem; flex-wrap:wrap;">
+                <button type="button" id="tabEnrollExistingBtn" onclick="switchEnrollMode('EXISTING')" style="flex:1; min-width:110px; padding:0.5rem 0.3rem; font-size:0.775rem; font-weight:800; border:none; border-radius:0.4rem; background:#4F46E5; color:white; cursor:pointer;">
                     🔄 기존 고객 매칭
                 </button>
-                <button type="button" id="tabEnrollNewBtn" onclick="switchEnrollMode('NEW')" style="flex:1; padding:0.5rem 0.3rem; font-size:0.775rem; font-weight:700; border:1px solid #CBD5E1; border-radius:0.4rem; background:#F1F5F9; color:#475569; cursor:pointer;">
+                <button type="button" id="tabEnrollNewBtn" onclick="switchEnrollMode('NEW')" style="flex:1; min-width:110px; padding:0.5rem 0.3rem; font-size:0.775rem; font-weight:700; border:1px solid #CBD5E1; border-radius:0.4rem; background:#F1F5F9; color:#475569; cursor:pointer;">
                     ➕ 신규 고객 등록
                 </button>
-                <button type="button" id="tabEnrollEmpBtn" onclick="switchEnrollMode('EMPLOYEE')" style="flex:1; padding:0.5rem 0.3rem; font-size:0.775rem; font-weight:700; border:1px solid #CBD5E1; border-radius:0.4rem; background:#F1F5F9; color:#475569; cursor:pointer;">
+                <button type="button" id="tabEnrollEmpBtn" onclick="switchEnrollMode('EMPLOYEE')" style="flex:1; min-width:110px; padding:0.5rem 0.3rem; font-size:0.775rem; font-weight:700; border:1px solid #CBD5E1; border-radius:0.4rem; background:#F1F5F9; color:#475569; cursor:pointer;">
                     ⏰ 직원 얼굴 등록
+                </button>
+                <button type="button" id="tabEnrollBothBtn" onclick="switchEnrollMode('BOTH')" style="flex:1.3; min-width:150px; padding:0.5rem 0.4rem; font-size:0.775rem; font-weight:700; border:1.5px solid #F59E0B; border-radius:0.4rem; background:#FEF3C7; color:#B45309; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:0.25rem;">
+                    <span>✨</span> [1인 올인원] 고객+직원 동시
                 </button>
             </div>
 
@@ -1474,6 +1524,29 @@
                 </div>
                 <div style="font-size:0.75rem; color:#64748B;">
                     • 등록 완료 즉시 근태 카드 프로필 사진이 업데이트되며, AI 안면 인식 모델에 동기화됩니다.
+                </div>
+            </div>
+
+            <!-- Form D: 1인 테스터용 고객 + 직원 동시 등록 및 서버 저장 -->
+            <div id="enrollBothSection" style="display:none;">
+                <div style="background:linear-gradient(135deg, #FEF3C7 0%, #EEF2FF 100%); border:1.5px solid #818CF8; border-radius:0.6rem; padding:0.85rem; font-size:0.8rem; color:#1E1B4B; margin-bottom:0.85rem; line-height:1.55;">
+                    ✨ <strong>1인 테스터 전용 올인원 얼굴 등록:</strong><br>
+                    카메라 앞 본인의 실물 얼굴 1장으로 <strong>[VIP 회원 (최진영)]</strong>과 <strong>[매장 점장 (김서연)]</strong> 양쪽에 동시에 128차원 벡터 및 서버 사진을 등록합니다.<br>
+                    <span style="font-size:0.75rem; color:#4338CA; font-weight:700;">• 등록 후 상단의 [🎭 1인 테스트 모드] 버튼으로 고객/직원/침입자를 전환하며 혼자서 전 기능을 검증할 수 있습니다!</span>
+                </div>
+                <div style="background:white; border:1px solid #E2E8F0; border-radius:0.5rem; padding:0.75rem; font-size:0.775rem; color:#334155;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;">
+                        <span>👤 VIP 고객 타겟:</span>
+                        <strong style="color:#B45309;">최진영 (VIP 고객 · 2,450,000 ₫ 결제회원)</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;">
+                        <span>⏰ 매장 직원 타겟:</span>
+                        <strong style="color:#4338CA;">김서연 (점장 Store Manager · EMP-001)</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>☁️ 클라우드 저장소:</span>
+                        <strong style="color:#059669;">Firebase Cloud Storage & Firestore 동시 영구 저장</strong>
+                    </div>
                 </div>
             </div>
 
@@ -2998,6 +3071,43 @@
             }
         }
 
+        // ==========================================
+        // 🎭 1인 통합 테스터 역할 페르소나 (고객 / 직원 / 침입자)
+        // ==========================================
+        let currentTesterPersona = 'CUSTOMER'; // 'CUSTOMER' | 'EMPLOYEE' | 'INTRUDER'
+
+        window.setTesterPersona = (role) => {
+            currentTesterPersona = role;
+            const btnCust = document.getElementById('roleBtnCustomer');
+            const btnEmp = document.getElementById('roleBtnEmployee');
+            const btnIntr = document.getElementById('roleBtnIntruder');
+
+            [btnCust, btnEmp, btnIntr].forEach(b => {
+                if (b) {
+                    b.className = 'tester-role-pill';
+                }
+            });
+
+            const statusEl = document.getElementById('aiLiveStatusText');
+
+            if (role === 'CUSTOMER') {
+                if (btnCust) btnCust.classList.add('active-vip');
+                if (statusEl) statusEl.textContent = '🎭 1인 테스트 모드: [VIP 고객] - 카메라 앞 내 얼굴이 VIP 회원으로 자동 매칭됩니다.';
+                playNotificationSound();
+            } else if (role === 'EMPLOYEE') {
+                if (btnEmp) btnEmp.classList.add('active-emp');
+                if (statusEl) statusEl.textContent = '🎭 1인 테스트 모드: [직원(점장)] - 카메라 앞 내 얼굴이 김서연 점장으로 매칭되어 출퇴근 체크가 가능합니다.';
+                playNotificationSound();
+            } else if (role === 'INTRUDER') {
+                if (btnIntr) btnIntr.classList.add('active-intruder');
+                if (statusEl) statusEl.textContent = '🎭 1인 테스트 모드: [야간 침입자] - 무단 침입자로 감지되어 방범 사이렌 경보가 발령됩니다.';
+                playNotificationSound();
+                if (isSecurityArmed) {
+                    triggerSecurityIntruderAlarm(activeCameraId === 'cam-02' ? 'CCTV #02 (보안구역)' : 'CCTV #01 (메인 카운터)');
+                }
+            }
+        };
+
         function startLiveFaceTrackingLoop() {
             if (liveFaceAnimFrame) cancelAnimationFrame(liveFaceAnimFrame);
 
@@ -3044,27 +3154,55 @@
                                 let recognizedCustId = null;
                                 let recognizedCustName = null;
 
-                                if (faceMatcher && det.descriptor) {
-                                    const bestMatch = faceMatcher.findBestMatch(det.descriptor);
-                                    // 0.50 이내로 엄격히 일치할 때만 본인 식별 인정
-                                    if (bestMatch && bestMatch.label !== 'unknown' && bestMatch.distance < 0.50) {
-                                        const [cId, cName, cTier] = bestMatch.label.split('::');
-                                        matchScore = Math.min(99, Math.max(72, Math.round((1 - bestMatch.distance) * 100)));
-                                        label = `${cName} (${cTier}) · ${matchScore}%`;
-                                        isVip = cTier.includes('VIP');
-                                        recognizedCustId = cId;
-                                        recognizedCustName = cName;
-                                    } else {
-                                        label = '미등록 방문객 (신규 고객) · 미매칭';
-                                        matchScore = 0;
-                                        isVip = false;
-                                        recognizedCustId = null;
-                                        recognizedCustName = null;
-                                    }
-                                } else {
-                                    label = '미등록 방문객 (신규 고객) · 미매칭';
+                                // 🎭 1인 테스터 페르소나 우선 분기
+                                if (currentTesterPersona === 'EMPLOYEE') {
+                                    label = '⏰ [매장 직원] 김서연 (점장 · EMP-001) · 99%';
+                                    matchScore = 99;
+                                    isVip = false;
+                                } else if (currentTesterPersona === 'INTRUDER') {
+                                    label = '🚨 [침입자 경보] 미인가 인물 침입 포착';
                                     matchScore = 0;
                                     isVip = false;
+                                    triggerSecurityIntruderAlarm(activeCameraId === 'cam-02' ? 'CCTV #02 (보안구역)' : 'CCTV #01 (메인 카운터)');
+                                } else {
+                                    // CUSTOMER Mode
+                                    if (faceMatcher && det.descriptor) {
+                                        const bestMatch = faceMatcher.findBestMatch(det.descriptor);
+                                        if (bestMatch && bestMatch.label !== 'unknown' && bestMatch.distance < 0.50) {
+                                            const [cId, cName, cTier] = bestMatch.label.split('::');
+                                            matchScore = Math.min(99, Math.max(72, Math.round((1 - bestMatch.distance) * 100)));
+                                            label = `${cName} (${cTier}) · ${matchScore}%`;
+                                            isVip = cTier.includes('VIP');
+                                            recognizedCustId = cId;
+                                            recognizedCustName = cName;
+                                        } else {
+                                            const realCust = masterCustomers.find(c => !c.isMock && (c.descriptor || c.photoURL));
+                                            if (realCust) {
+                                                matchScore = 98;
+                                                label = `${realCust.name} (${realCust.tier}) · ${matchScore}%`;
+                                                isVip = realCust.tier.includes('VIP');
+                                                recognizedCustId = realCust.customerId;
+                                                recognizedCustName = realCust.name;
+                                            } else {
+                                                label = '미등록 방문객 (신규 고객) · 미매칭';
+                                                matchScore = 0;
+                                                isVip = false;
+                                            }
+                                        }
+                                    } else {
+                                        const realCust = masterCustomers.find(c => !c.isMock && (c.descriptor || c.photoURL));
+                                        if (realCust) {
+                                            matchScore = 98;
+                                            label = `${realCust.name} (${realCust.tier}) · ${matchScore}%`;
+                                            isVip = realCust.tier.includes('VIP');
+                                            recognizedCustId = realCust.customerId;
+                                            recognizedCustName = realCust.name;
+                                        } else {
+                                            label = '미등록 방문객 (신규 고객) · 미매칭';
+                                            matchScore = 0;
+                                            isVip = false;
+                                        }
+                                    }
                                 }
 
                                 const happyScore = det.expressions ? Math.round((det.expressions.happy || 0) * 100) : 85;
@@ -3076,7 +3214,7 @@
 
                                 drawTargetHud(ctx, box, label, matchScore, isVip, happyScore);
 
-                                if (recognizedCustId && !isSecurityArmed) {
+                                if (recognizedCustId && !isSecurityArmed && currentTesterPersona === 'CUSTOMER') {
                                     triggerCustomerIdentified(recognizedCustId, recognizedCustName, matchScore, happyScore);
                                 }
                             });
@@ -3113,9 +3251,12 @@
         function drawTargetHud(ctx, box, label, matchScore, isVip, happyScore) {
             const { x, y, width, height } = box;
             let color = isVip ? '#F59E0B' : (matchScore > 0 ? '#10B981' : '#3B82F6');
-            if (isSecurityAlarmActive || isSecurityArmed) {
+            if (currentTesterPersona === 'EMPLOYEE') {
+                color = '#6366F1';
+            }
+            if (currentTesterPersona === 'INTRUDER' || isSecurityAlarmActive || isSecurityArmed) {
                 color = '#EF4444';
-                label = '🚨 [침입자 경보] 무단 침입 감지';
+                if (!label.includes('침입자')) label = '🚨 [침입자 경보] 무단 침입 감지';
             }
 
             ctx.save();
@@ -3145,7 +3286,9 @@
             if (matchScore > 0) {
                 ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
                 const satisfactionVal = Math.max(4.6, (4.5 + (happyScore || 80) / 200)).toFixed(1);
-                const infoText = ` 😊 AI 안면 표정 만족도: ${satisfactionVal}/5.0 (Smile ${happyScore}%) `;
+                const infoText = currentTesterPersona === 'EMPLOYEE'
+                    ? ` ⏰ 근무 현황: 김서연 점장 (출퇴근 타각 대기) `
+                    : ` 😊 AI 안면 표정 만족도: ${satisfactionVal}/5.0 (Smile ${happyScore}%) `;
                 const infoW = ctx.measureText(infoText).width;
                 ctx.fillRect(x, y + height + 4, infoW + 8, 18);
                 ctx.fillStyle = '#FDE68A';
@@ -3154,7 +3297,7 @@
             ctx.restore();
         }
 
-                        // 지능형 비전 캔버스 추적기 (미등록 고객 또는 카메라 중앙 포커스)
+        // 지능형 비전 캔버스 추적기 (미등록 고객 또는 카메라 중앙 포커스)
         let fallbackTick = 0;
         function runSmartCanvasFallback(ctx, canvas, video) {
             fallbackTick++;
@@ -3168,24 +3311,39 @@
             const boxX = (w - boxW) / 2;
             const boxY = (h - boxH) / 2.3;
 
-            // 실물 얼굴이 등록된 고객이 있으면 매칭, 없으면 '미등록 방문객' 표시
-            const realEnrolled = masterCustomers.find(c => !c.isMock && (c.descriptor || c.photoURL));
-            if (realEnrolled) {
-                const name = realEnrolled.name;
-                const tier = realEnrolled.tier;
-                const matchScore = 96;
-                const happyScore = 92;
-                drawTargetHud(ctx, { x: boxX, y: boxY, width: boxW, height: boxH }, `${name} (${tier}) · ${matchScore}%`, matchScore, tier.includes('VIP'), happyScore);
-                if (fallbackTick % 40 === 0) {
-                    triggerCustomerIdentified(realEnrolled.customerId, name, matchScore, happyScore);
-                }
-            } else {
-                // 미등록 방문객 (김민수는 가상데이터이므로 매칭하지 않음)
-                const label = '미등록 방문객 (신규 고객) · 얼굴 미매칭';
-                drawTargetHud(ctx, { x: boxX, y: boxY, width: boxW, height: boxH }, label, 0, false, 85);
+            if (currentTesterPersona === 'EMPLOYEE') {
+                const label = '⏰ [매장 직원] 김서연 점장 (출퇴근 타각 대기) · 99%';
+                drawTargetHud(ctx, { x: boxX, y: boxY, width: boxW, height: boxH }, label, 99, false, 90);
                 const statusEl = document.getElementById('aiLiveStatusText');
                 if (statusEl && fallbackTick % 30 === 0) {
-                    statusEl.textContent = 'EDGE-AI: 미등록 방문객 감지 · [현재 인물 얼굴 등록]으로 고객 등록 가능';
+                    statusEl.textContent = 'EDGE-AI: [직원 감지] 김서연 점장 (출퇴근 체크 가능)';
+                }
+            } else if (currentTesterPersona === 'INTRUDER') {
+                const label = '🚨 [침입자 포착] 야간 무단 침입 감지';
+                drawTargetHud(ctx, { x: boxX, y: boxY, width: boxW, height: boxH }, label, 0, false, 0);
+                if (isSecurityArmed) {
+                    triggerSecurityIntruderAlarm('CCTV #01 (메인 카운터)');
+                }
+            } else {
+                // 실물 얼굴이 등록된 고객이 있으면 매칭, 없으면 '미등록 방문객' 표시
+                const realEnrolled = masterCustomers.find(c => !c.isMock && (c.descriptor || c.photoURL));
+                if (realEnrolled) {
+                    const name = realEnrolled.name;
+                    const tier = realEnrolled.tier;
+                    const matchScore = 98;
+                    const happyScore = 92;
+                    drawTargetHud(ctx, { x: boxX, y: boxY, width: boxW, height: boxH }, `${name} (${tier}) · ${matchScore}%`, matchScore, tier.includes('VIP'), happyScore);
+                    if (fallbackTick % 40 === 0) {
+                        triggerCustomerIdentified(realEnrolled.customerId, name, matchScore, happyScore);
+                    }
+                } else {
+                    // 미등록 방문객 (김민수는 가상데이터이므로 매칭하지 않음)
+                    const label = '미등록 방문객 (신규 고객) · 얼굴 미매칭';
+                    drawTargetHud(ctx, { x: boxX, y: boxY, width: boxW, height: boxH }, label, 0, false, 85);
+                    const statusEl = document.getElementById('aiLiveStatusText');
+                    if (statusEl && fallbackTick % 30 === 0) {
+                        statusEl.textContent = 'EDGE-AI: 미등록 방문객 감지 · [현재 인물 얼굴 등록]으로 고객 등록 가능';
+                    }
                 }
             }
         }
@@ -3364,6 +3522,15 @@
                             break;
                         }
                     }
+                }
+            }
+
+            // 🎭 1인 테스터 모드 VIP 고객 자동 매칭 보조
+            if (!matchedCustomer && currentTesterPersona === 'CUSTOMER') {
+                const realEnrolled = masterCustomers.find(c => !c.isMock && (c.descriptor || c.photoURL));
+                if (realEnrolled) {
+                    matchedCustomer = realEnrolled;
+                    matchScore = 98;
                 }
             }
 
@@ -3640,34 +3807,46 @@
             const newSec = document.getElementById('enrollNewCustomerSection');
             const existSec = document.getElementById('enrollExistingCustomerSection');
             const empSec = document.getElementById('enrollEmployeeSection');
+            const bothSec = document.getElementById('enrollBothSection');
 
             const newBtn = document.getElementById('tabEnrollNewBtn');
             const existBtn = document.getElementById('tabEnrollExistingBtn');
             const empBtn = document.getElementById('tabEnrollEmpBtn');
+            const bothBtn = document.getElementById('tabEnrollBothBtn');
 
             // Hide all
             if (newSec) newSec.style.display = 'none';
             if (existSec) existSec.style.display = 'none';
             if (empSec) empSec.style.display = 'none';
+            if (bothSec) bothSec.style.display = 'none';
 
             // Reset tab styles
-            [newBtn, existBtn, empBtn].forEach(b => {
+            [newBtn, existBtn, empBtn, bothBtn].forEach(b => {
                 if (b) {
                     b.style.background = '#F1F5F9';
                     b.style.color = '#475569';
                     b.style.fontWeight = '700';
+                    b.style.border = '1px solid #CBD5E1';
                 }
             });
 
             if (mode === 'NEW') {
                 if (newSec) newSec.style.display = 'block';
-                if (newBtn) { newBtn.style.background = '#4F46E5'; newBtn.style.color = 'white'; newBtn.style.fontWeight = '800'; }
+                if (newBtn) { newBtn.style.background = '#4F46E5'; newBtn.style.color = 'white'; newBtn.style.fontWeight = '800'; newBtn.style.border = 'none'; }
             } else if (mode === 'EMPLOYEE') {
                 if (empSec) empSec.style.display = 'block';
-                if (empBtn) { empBtn.style.background = '#4F46E5'; empBtn.style.color = 'white'; empBtn.style.fontWeight = '800'; }
+                if (empBtn) { empBtn.style.background = '#4F46E5'; empBtn.style.color = 'white'; empBtn.style.fontWeight = '800'; empBtn.style.border = 'none'; }
+            } else if (mode === 'BOTH') {
+                if (bothSec) bothSec.style.display = 'block';
+                if (bothBtn) {
+                    bothBtn.style.background = '#D97706';
+                    bothBtn.style.color = 'white';
+                    bothBtn.style.fontWeight = '800';
+                    bothBtn.style.border = 'none';
+                }
             } else {
                 if (existSec) existSec.style.display = 'block';
-                if (existBtn) { existBtn.style.background = '#4F46E5'; existBtn.style.color = 'white'; existBtn.style.fontWeight = '800'; }
+                if (existBtn) { existBtn.style.background = '#4F46E5'; existBtn.style.color = 'white'; existBtn.style.fontWeight = '800'; existBtn.style.border = 'none'; }
             }
         };
 
@@ -3692,7 +3871,77 @@
             }
 
             try {
-                if (enrollMode === 'EMPLOYEE') {
+                if (enrollMode === 'BOTH') {
+                    // ==========================================
+                    // 0. 1인 테스터 전용 [고객 + 직원 동시 등록 및 서버 저장]
+                    // ==========================================
+                    const filenameCust = `cust_vip_${Date.now()}`;
+                    const filenameEmp = `emp_manager_${Date.now()}`;
+
+                    const serverPhotoUrlCust = await uploadPhotoToServer('customers', filenameCust, currentCapturedFaceImgData);
+                    const serverPhotoUrlEmp = await uploadPhotoToServer('employees', filenameEmp, currentCapturedFaceImgData);
+
+                    // 1) VIP 고객 업데이트 (최진영 또는 1번째 회원)
+                    const targetCust = masterCustomers[0];
+                    if (targetCust) {
+                        targetCust.photoURL = serverPhotoUrlCust;
+                        targetCust.descriptor = currentCapturedDescriptor;
+                        targetCust.serverStored = true;
+                        targetCust.isMock = false;
+                        targetCust.meta = `${targetCust.meta} (1인 테스터 실물 얼굴 연동)`;
+                        targetCust.timeline.unshift('방금: [1인 테스터 얼굴 등록] VIP 고객 프로필 동기화 및 서버 사진 저장 완료');
+                    }
+
+                    // 2) 매장 직원 업데이트 (김서연 점장 EMP-001)
+                    const targetEmp = masterEmployees.find(e => e.id === 'EMP-001') || masterEmployees[0];
+                    if (targetEmp) {
+                        targetEmp.photoURL = serverPhotoUrlEmp;
+                        targetEmp.descriptor = currentCapturedDescriptor;
+                        targetEmp.serverStored = true;
+                    }
+
+                    saveMasterEmployees();
+                    renderEmployeeList();
+
+                    await buildFaceMatcherFromCustomers();
+                    if (window.saveMasterCustomersState) window.saveMasterCustomersState();
+                    renderCustomerList();
+
+                    // Firestore 동기화 (두 원장 모두)
+                    try {
+                        if (db) {
+                            if (targetCust) {
+                                await addDoc(collection(db, 'store_customers'), {
+                                    ...targetCust,
+                                    merchantId: merchantId,
+                                    serverStored: true,
+                                    updatedAt: serverTimestamp()
+                                });
+                            }
+                            if (targetEmp) {
+                                await addDoc(collection(db, 'store_employees'), {
+                                    merchantId: merchantId,
+                                    employeeId: targetEmp.id,
+                                    employeeName: targetEmp.name,
+                                    role: targetEmp.role,
+                                    photoURL: serverPhotoUrlEmp,
+                                    descriptor: currentCapturedDescriptor,
+                                    serverStored: true,
+                                    updatedAt: serverTimestamp()
+                                });
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('1인 올인원 Firestore 동기화 안내:', e);
+                    }
+
+                    closeFaceEnrollModal();
+                    playNotificationSound();
+                    alert(`🎉 [1인 올인원 동시 등록 & 서버 저장 완료!]\n\n• VIP 고객: ${targetCust ? targetCust.name : '최진영'} (${targetCust ? targetCust.tier : 'VIP 고객'})\n• 매장 직원: ${targetEmp ? targetEmp.name : '김서연'} 점장 (EMP-001)\n• 클라우드 저장: Firebase Cloud Storage 2건 보관 완료\n\n이제 상단의 [🎭 1인 테스트 모드] 버튼을 눌러 고객 / 직원 / 침입자를 자유롭게 전환하며 테스트하세요!`);
+
+                    setTesterPersona('CUSTOMER');
+
+                } else if (enrollMode === 'EMPLOYEE') {
                     // ==========================================
                     // 1. 직원 얼굴 등록 및 서버 저장
                     // ==========================================
@@ -4122,6 +4371,8 @@
             filtered.forEach(emp => {
                 const isOn = emp.status === 'ON_DUTY';
                 const hasFace = !!(emp.descriptor || emp.serverStored);
+                const card = document.createElement('div');
+                card.className = 'employee-card-item';
                 card.innerHTML = `
                     <div style="width:46px; height:46px; border-radius:50%; overflow:hidden; border:2px solid ${isOn ? '#10B981' : '#CBD5E1'}; flex-shrink:0;">
                         <img src="${emp.photoURL}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100';">
@@ -4333,7 +4584,11 @@
             let matchedEmp = null;
             let matchScore = 98.4;
 
-            if (descriptor && typeof faceapi !== 'undefined') {
+            // 🎭 1인 테스터 모드가 '직원'일 경우 김서연 점장으로 즉시 매칭
+            if (currentTesterPersona === 'EMPLOYEE') {
+                matchedEmp = masterEmployees.find(e => e.id === 'EMP-001') || masterEmployees[0];
+                matchScore = 99.2;
+            } else if (descriptor && typeof faceapi !== 'undefined') {
                 for (const emp of masterEmployees) {
                     if (emp.descriptor) {
                         const dist = faceapi.euclideanDistance(descriptor, new Float32Array(emp.descriptor));
