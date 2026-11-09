@@ -471,9 +471,9 @@
                 <div class="trend trend-up">피크 타임 유입 집중 (정상)</div>
             </div>
             <div class="stat-card">
-                <h3>🪑 테이블 이용률 (Occupancy)</h3>
-                <p class="value" id="kpiOccupancy" style="color:#10b981;">75.0 %</p>
-                <div class="trend trend-up">12석 중 9개 테이블 착석</div>
+                <h3>🎯 AI 회원 인식/매칭률 (Recognition)</h3>
+                <p class="value" id="kpiRecognition" style="color:#10b981;">98.2 %</p>
+                <div class="trend trend-up">등록 회원 실시간 자동 식별 가동중</div>
             </div>
             <div class="stat-card">
                 <h3>⏱️ 평균 매장 체류 시간 (Dwell)</h3>
@@ -564,12 +564,15 @@
 
                 <!-- Manual Trigger & Stream Toggle -->
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
-                    <div style="display:flex; gap:0.4rem;">
-                        <button onclick="captureAndAnalyzeCurrentFace()" style="background:var(--ai-gradient); color:white; border:none; padding:0.45rem 0.9rem; border-radius:0.4rem; font-size:0.8rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 4px 10px rgba(79,70,229,0.3);">
-                            <span>⚡</span> 관제 카메라 3대 정보 자동 업그레이드 실행
+                    <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+                        <button onclick="searchCustomerByCameraFace()" style="background:#0F172A; color:white; border:none; padding:0.45rem 0.9rem; border-radius:0.4rem; font-size:0.8rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 4px 10px rgba(15,23,42,0.3);">
+                            <span>🔍</span> 현재 인물 회원 여부 검색
                         </button>
                         <button onclick="openFaceEnrollModal()" id="btnEnrollFace" style="background:#10b981; color:white; border:none; padding:0.45rem 0.9rem; border-radius:0.4rem; font-size:0.8rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 4px 10px rgba(16,185,129,0.3);">
                             <span>📸</span> 현재 인물 얼굴 등록 / 사진 매칭
+                        </button>
+                        <button onclick="captureAndAnalyzeCurrentFace()" style="background:var(--ai-gradient); color:white; border:none; padding:0.45rem 0.9rem; border-radius:0.4rem; font-size:0.8rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 4px 10px rgba(79,70,229,0.3);">
+                            <span>⚡</span> 3대 정보 자동 업그레이드 실행
                         </button>
                         <button onclick="switchCameraFacing()" id="btnSwitchCam" style="background:#f1f5f9; border:1px solid #cbd5e1; padding:0.45rem 0.75rem; border-radius:0.4rem; font-size:0.8rem; cursor:pointer; font-weight:700;">
                             🔄 전/후면 전환
@@ -607,9 +610,6 @@
                     <button class="crm-tab-btn active" onclick="switchCrmTab('tab-customers', this)">
                         <span>👥</span> 360° 고객 원장
                     </button>
-                    <button class="crm-tab-btn" onclick="switchCrmTab('tab-tables', this)">
-                        <span>🍽️</span> 테이블 실시간 관제
-                    </button>
                     <button class="crm-tab-btn" onclick="switchCrmTab('tab-zalo', this)">
                         <span>💬</span> Zalo 자동 마케팅
                     </button>
@@ -620,6 +620,30 @@
 
                 <!-- TAB 1: 360° 고객 원장 (기획서 §5 & §7) -->
                 <div id="tab-customers" class="crm-tab-pane">
+                    <!-- AI Camera Member Search Action Card -->
+                    <div style="background:linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%); border:1.5px solid #86EFAC; border-radius:0.65rem; padding:0.75rem 0.9rem; margin-bottom:0.85rem; box-shadow:0 2px 6px rgba(16,185,129,0.08);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+                            <strong style="color:#065F46; font-size:0.85rem; display:flex; align-items:center; gap:0.35rem;">
+                                <span>🔍</span> 카메라 실시간 회원 여부 검색 (AI 대조)
+                            </strong>
+                            <span id="faceSearchStatusBadge" style="background:#DCFCE7; color:#166534; font-size:0.7rem; font-weight:800; padding:0.15rem 0.45rem; border-radius:0.3rem; border:1px solid #86EFAC;">
+                                실시간 대기중
+                            </span>
+                        </div>
+                        <p style="margin:0 0 0.5rem 0; font-size:0.75rem; color:#475569; line-height:1.4;">
+                            카메라에 비친 인물이 고객 원장에 등록된 회원인지 128차원 AI 안면 벡터로 즉시 대조 검색합니다.
+                        </p>
+                        <div style="display:flex; gap:0.4rem;">
+                            <button type="button" onclick="searchCustomerByCameraFace()" style="flex:1; background:#10B981; color:white; border:none; padding:0.5rem 0.8rem; border-radius:0.4rem; font-size:0.8rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:0.35rem; box-shadow:0 3px 8px rgba(16,185,129,0.25);">
+                                <span>🔎</span> 지금 카메라 앞 고객 회원 검색
+                            </button>
+                            <button type="button" onclick="openFaceEnrollModal()" style="background:white; border:1px solid #10B981; color:#065F46; padding:0.5rem 0.8rem; border-radius:0.4rem; font-size:0.775rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.3rem;">
+                                <span>📸</span> 얼굴 등록
+                            </button>
+                        </div>
+                        <div id="cameraFaceSearchResult" style="margin-top:0.5rem; font-size:0.775rem; display:none; padding:0.55rem 0.75rem; border-radius:0.4rem; line-height:1.45;"></div>
+                    </div>
+
                     <!-- Tier Filters -->
                     <div style="display:flex; gap:0.35rem; flex-wrap:wrap; margin-bottom:0.75rem;">
                         <button class="tier-filter-pill active" onclick="filterCustomerTier('ALL', this)">전체 (<span id="countAll">5</span>)</button>
@@ -637,18 +661,6 @@
                     <!-- Customer List Container -->
                     <div id="customerListContainer" style="overflow-y:auto; max-height:480px; padding-right:0.25rem;">
                         <!-- List dynamically generated by JS -->
-                    </div>
-                </div>
-
-                <!-- TAB 2: 테이블 실시간 관제 (§2 & §6) -->
-                <div id="tab-tables" class="crm-tab-pane" style="display:none;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
-                        <span style="font-size:0.85rem; font-weight:700; color:#334155;">총 12개 테이블 현황</span>
-                        <span style="font-size:0.75rem; color:#64748b;">테이블 클릭 시 체크인 링크 복사</span>
-                    </div>
-
-                    <div class="table-grid" id="tablesContainer">
-                        <!-- Populated dynamically (Tables 1~12) -->
                     </div>
                 </div>
 
@@ -1281,10 +1293,10 @@
             },
             {
                 id: 'cam-03',
-                name: 'CCTV #03 (테이블 구역 & 착석)',
-                zone: 'TABLES',
-                zoneLabel: '테이블 좌석 구역',
-                purpose: '테이블 이용률 & 체류 시간 (Dwell)',
+                name: 'CCTV #03 (매장 홀 & 통로 관제)',
+                zone: 'HALL',
+                zoneLabel: '매장 홀 & 이동 동선',
+                purpose: '매장 이동 관제 & 체류 시간 (Dwell)',
                 sourceType: 'simulated',
                 deviceId: '',
                 streamUrl: '',
@@ -2220,6 +2232,23 @@
             }
         ];
 
+        // Restore cached master customers from localStorage
+        try {
+            const cachedCustomers = localStorage.getItem('vision_crm_master_customers');
+            if (cachedCustomers) {
+                const parsed = JSON.parse(cachedCustomers);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    masterCustomers = parsed;
+                }
+            }
+        } catch (e) {}
+
+        window.saveMasterCustomersState = () => {
+            try {
+                localStorage.setItem('vision_crm_master_customers', JSON.stringify(masterCustomers));
+            } catch (e) {}
+        };
+
         // 12개 테이블 기본 상태
         const tablesState = [
             { no: '01', occupied: true, custName: '박준형 (단골)', time: '18분', spent: '650,000 ₫' },
@@ -2929,6 +2958,209 @@
 
         
         // ==========================================
+        // 🔍 실시간 카메라 앞 고객 회원 여부 검색 / 대조
+        // ==========================================
+        window.searchCustomerByCameraFace = async () => {
+            const resEl = document.getElementById('cameraFaceSearchResult');
+            const statusBadge = document.getElementById('faceSearchStatusBadge');
+
+            if (!isWebcamOn) {
+                if (resEl) {
+                    resEl.style.display = 'block';
+                    resEl.style.background = '#FEF2F2';
+                    resEl.style.border = '1px solid #FECACA';
+                    resEl.style.color = '#991B1B';
+                    resEl.innerHTML = '⚠️ 먼저 상단 <strong>[📷 카메라 전체 연결]</strong> 버튼을 눌러 카메라를 가동해 주세요.';
+                }
+                alert('먼저 상단 [📷 카메라 전체 연결] 버튼을 눌러 카메라를 켜주세요.');
+                return;
+            }
+
+            if (resEl) {
+                resEl.style.display = 'block';
+                resEl.style.background = '#EFF6FF';
+                resEl.style.border = '1px solid #BFDBFE';
+                resEl.style.color = '#1E40AF';
+                resEl.innerHTML = '⏳ <strong>AI 안면 벡터 분석 및 회원 대조 중...</strong> 잠시만 카메라를 응시해 주세요.';
+            }
+            if (statusBadge) {
+                statusBadge.textContent = '대조 분석중...';
+                statusBadge.style.background = '#DBEAFE';
+                statusBadge.style.color = '#1E40AF';
+            }
+
+            // Find valid video element (single or multiCamGrid)
+            let video = document.getElementById('webcamVideo');
+            if (cameraViewMode !== 'single') {
+                const subVideos = Array.from(document.querySelectorAll('#multiCamGrid video')).filter(v => v.readyState >= 2 && v.videoWidth > 0);
+                if (subVideos.length > 0) {
+                    const activeIndex = storeCameras.findIndex(c => c.id === activeCameraId);
+                    if (activeIndex >= 0 && subVideos[activeIndex]) {
+                        video = subVideos[activeIndex];
+                    } else {
+                        video = subVideos[0];
+                    }
+                }
+            }
+
+            if (!video || video.readyState < 2 || video.videoWidth === 0) {
+                if (resEl) {
+                    resEl.style.background = '#FEF2F2';
+                    resEl.style.border = '1px solid #FECACA';
+                    resEl.style.color = '#991B1B';
+                    resEl.innerHTML = '⚠️ 카메라 영상 스트림이 아직 로딩 중입니다. 1~2초 후 다시 눌러주세요.';
+                }
+                return;
+            }
+
+            let descriptor = null;
+            let detected = null;
+
+            if (isFaceApiLoaded && typeof faceapi !== 'undefined') {
+                try {
+                    detected = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.35 }))
+                        .withFaceLandmarks(true)
+                        .withFaceDescriptor();
+                    if (detected && detected.descriptor) {
+                        descriptor = detected.descriptor;
+                    }
+                } catch (e) {
+                    console.warn("Face detection error:", e);
+                }
+
+                // If no face on current video and in multiCamGrid, try other subVideos
+                if (!descriptor && cameraViewMode !== 'single') {
+                    const subVideos = Array.from(document.querySelectorAll('#multiCamGrid video')).filter(v => v !== video && v.readyState >= 2 && v.videoWidth > 0);
+                    for (const otherVid of subVideos) {
+                        try {
+                            const det = await faceapi.detectSingleFace(otherVid, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.35 }))
+                                .withFaceLandmarks(true)
+                                .withFaceDescriptor();
+                            if (det && det.descriptor) {
+                                descriptor = det.descriptor;
+                                detected = det;
+                                video = otherVid;
+                                break;
+                            }
+                        } catch (e) {}
+                    }
+                }
+            }
+
+            // Check if face was detected
+            if (!descriptor) {
+                const realEnrolledCount = masterCustomers.filter(c => !c.isMock && (c.descriptor || c.photoURL)).length;
+                if (resEl) {
+                    resEl.style.display = 'block';
+                    resEl.style.background = '#FFFBEB';
+                    resEl.style.border = '1.5px solid #FDE68A';
+                    resEl.style.color = '#B45309';
+                    resEl.innerHTML = `
+                        <div style="font-weight:800; margin-bottom:0.25rem;">⚠️ 카메라에서 얼굴을 선명하게 감지하지 못했습니다.</div>
+                        <div style="font-size:0.75rem; color:#78350F; line-height:1.45;">
+                            카메라를 정면으로 바라보고 얼굴이 화면 중앙에 오도록 해 주세요.<br>
+                            (현재 DB 등록 실물 회원: <strong>${realEnrolledCount}명</strong> / 가상 샘플: 5명)
+                        </div>
+                    `;
+                }
+                if (statusBadge) {
+                    statusBadge.textContent = '얼굴 미인식';
+                    statusBadge.style.background = '#FEF3C7';
+                    statusBadge.style.color = '#B45309';
+                }
+                return;
+            }
+
+            // Compare with registered customers using faceMatcher
+            let matchedCustomer = null;
+            let matchScore = 0;
+
+            if (faceMatcher) {
+                const bestMatch = faceMatcher.findBestMatch(descriptor);
+                if (bestMatch && bestMatch.label !== 'unknown' && bestMatch.distance < 0.50) {
+                    const [cId] = bestMatch.label.split('::');
+                    matchedCustomer = masterCustomers.find(c => c.customerId === cId);
+                    matchScore = Math.min(99, Math.max(75, Math.round((1 - bestMatch.distance) * 100)));
+                }
+            }
+
+            // Direct descriptor fallback check
+            if (!matchedCustomer && typeof faceapi !== 'undefined') {
+                for (const c of masterCustomers) {
+                    if (!c.isMock && c.descriptor && Array.isArray(c.descriptor)) {
+                        const dist = faceapi.euclideanDistance(descriptor, new Float32Array(c.descriptor));
+                        if (dist < 0.50) {
+                            matchedCustomer = c;
+                            matchScore = Math.min(99, Math.max(75, Math.round((1 - dist) * 100)));
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (matchedCustomer) {
+                // Registered Member Match Success!
+                playNotificationSound();
+                if (resEl) {
+                    resEl.style.display = 'block';
+                    resEl.style.background = '#ECFDF5';
+                    resEl.style.border = '1.5px solid #10B981';
+                    resEl.style.color = '#065F46';
+                    resEl.innerHTML = `
+                        <div style="font-weight:800; font-size:0.85rem; color:#047857; margin-bottom:0.35rem;">
+                            🎉 [등록 회원 일치 확인!] AI 일치율: ${matchScore}%
+                        </div>
+                        <div style="font-size:0.775rem; color:#1F2937; line-height:1.5;">
+                            • <strong>회원명</strong>: <strong style="color:#0F766E;">${matchedCustomer.name}</strong> (${matchedCustomer.tier})<br>
+                            • <strong>고객번호</strong>: <span style="font-family:monospace; font-weight:700;">${matchedCustomer.customerId}</span><br>
+                            • <strong>누적 방문</strong>: ${matchedCustomer.visitCount}회차 | 누적 결제: ${matchedCustomer.totalSpent.toLocaleString()} ₫<br>
+                            • <strong>선호 메뉴</strong>: ${matchedCustomer.favMenu}
+                        </div>
+                        <div style="margin-top:0.45rem;">
+                            <button type="button" onclick="openCustomerProfile('${matchedCustomer.customerId}')" style="background:#10B981; color:white; border:none; padding:0.35rem 0.75rem; border-radius:0.3rem; font-size:0.75rem; font-weight:800; cursor:pointer;">
+                                👥 이 회원 360° 상세 원장 열기 ↗
+                            </button>
+                        </div>
+                    `;
+                }
+                if (statusBadge) {
+                    statusBadge.textContent = `회원 일치 (${matchedCustomer.name} · ${matchScore}%)`;
+                    statusBadge.style.background = '#DCFCE7';
+                    statusBadge.style.color = '#166534';
+                }
+
+                // Trigger identification in system
+                triggerCustomerIdentified(matchedCustomer.customerId, matchedCustomer.name, matchScore, 92);
+                openCustomerProfile(matchedCustomer.customerId);
+            } else {
+                // Unregistered Customer (No Match in DB)
+                if (resEl) {
+                    resEl.style.display = 'block';
+                    resEl.style.background = '#FFFBEB';
+                    resEl.style.border = '1.5px solid #F59E0B';
+                    resEl.style.color = '#92400E';
+                    resEl.innerHTML = `
+                        <div style="font-weight:800; font-size:0.85rem; color:#B45309; margin-bottom:0.35rem;">
+                            🔍 [미등록 방문객 감지] 고객 데이터베이스에 없는 인물입니다
+                        </div>
+                        <div style="font-size:0.75rem; color:#4B5563; line-height:1.5; margin-bottom:0.5rem;">
+                            현재 카메라에 비친 얼굴은 고객 원장에 등록된 기존 회원과 일치하지 않는 <strong>신규 방문객</strong>입니다.<br>
+                            (김민수 등 기본 샘플은 가상 데이터이므로 본인 얼굴과 매칭되지 않습니다)
+                        </div>
+                        <button type="button" onclick="openFaceEnrollModal()" style="background:#10B981; color:white; border:none; padding:0.4rem 0.8rem; border-radius:0.35rem; font-size:0.775rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.3rem; box-shadow:0 2px 6px rgba(16,185,129,0.3);">
+                            <span>📸</span> 지금 얼굴을 신규 회원으로 등록하기
+                        </button>
+                    `;
+                }
+                if (statusBadge) {
+                    statusBadge.textContent = '미등록 고객 (일치 없음)';
+                    statusBadge.style.background = '#FEF3C7';
+                    statusBadge.style.color = '#B45309';
+                }
+            }
+        };
+
+        // ==========================================
         // 📸 실시간 안면(얼굴) 등록 및 사진 매칭
         // ==========================================
         let currentCapturedFaceImgData = '';
@@ -2938,9 +3170,20 @@
         window.openFaceEnrollModal = async () => {
             let video = document.getElementById('webcamVideo');
             if (cameraViewMode !== 'single') {
-                const subVideos = document.querySelectorAll('#multiCamGrid video');
+                const subVideos = Array.from(document.querySelectorAll('#multiCamGrid video')).filter(v => v.readyState >= 2 && v.videoWidth > 0);
                 if (subVideos.length > 0) {
                     video = subVideos[0];
+                    if (isFaceApiLoaded && typeof faceapi !== 'undefined' && subVideos.length > 1) {
+                        for (const sv of subVideos) {
+                            try {
+                                const qDet = await faceapi.detectSingleFace(sv, new faceapi.TinyFaceDetectorOptions({ inputSize: 160, scoreThreshold: 0.35 }));
+                                if (qDet) {
+                                    video = sv;
+                                    break;
+                                }
+                            } catch (e) {}
+                        }
+                    }
                 }
             }
             if (!isWebcamOn || !video || video.videoWidth === 0) {
@@ -3112,10 +3355,15 @@
 
             // Rebuild face matcher with the new face descriptor
             await buildFaceMatcherFromCustomers();
+            if (window.saveMasterCustomersState) window.saveMasterCustomersState();
 
             renderCustomerList();
             closeFaceEnrollModal();
             playNotificationSound();
+
+            setTimeout(() => {
+                if (window.searchCustomerByCameraFace) window.searchCustomerByCameraFace();
+            }, 600);
 
             try {
                 if (db) {
