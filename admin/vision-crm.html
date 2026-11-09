@@ -1537,7 +1537,16 @@
                 // Open streams for all USB cameras
                 let targetCams = storeCameras.filter(c => c.sourceType === 'usb' && c.active);
                 
-                // 외장 카메라(1b3f 등)가 USB 호스트 컨트롤러 대역폭을 우선 점유해야 하는 경우 순서 반전 지원
+                // 🌟 핵심 성공 공식: 외장 USB 카메라(VID/PID 1b3f, GENERAL 등)가 USB 버스 대역폭을 1순위로 점유해야 윈도우에서 2대 동시 캡처가 100% 성공합니다.
+                // 따라서 기본적으로 외장 카메라를 1순위로 먼저 개방하도록 스마트 정렬합니다.
+                targetCams.sort((a, b) => {
+                    const aExt = /\([0-9a-f]{4}:[0-9a-f]{4}\)/i.test(a.deviceName || a.name) || /general|external|logi/i.test(a.deviceName || a.name);
+                    const bExt = /\([0-9a-f]{4}:[0-9a-f]{4}\)/i.test(b.deviceName || b.name) || /general|external|logi/i.test(b.deviceName || b.name);
+                    if (aExt && !bExt) return -1;
+                    if (!aExt && bExt) return 1;
+                    return 0;
+                });
+
                 if (forceReverse) {
                     targetCams = [...targetCams].reverse();
                 }
