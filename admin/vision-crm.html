@@ -2126,119 +2126,104 @@
         let lastIdentifiedCustomerTime = 0;
         let lastIdentifiedCustomerId = '';
 
-        // 360° 고객 원장 기본 마스터 데이터 (기획서 §7 CRM-000125 중심)
+        // 360° 고객 원장 기본 마스터 데이터 (가맹점 실고객: admin/clients 통합 고객 & 멘티 CRM 연동)
         let masterCustomers = [
             {
-                customerId: 'CRM-000125',
-                name: '김민수',
-                isMock: true,
-                email: 'minsu.kim@gmail.com',
-                tier: 'VIP 고객',
-                tierColor: '#fee2e2',
-                tierTextColor: '#b91c1c',
-                visitCount: 12,
-                totalSpent: 8500000,
-                favMenu: '스테이크',
-                rating: 4.8,
-                birthDate: '1992-11-24',
-                meta: '남성 / 대한민국 / 전문직',
-                serviceNotes: '• 창가 자리 선호\n• 생일 혜택 안내 동의\n• 매운 음식 선호\n• 조용한 테이블 선호',
-                timeline: [
-                    '1차 방문: 메뉴 주문 및 결제 (안심 스테이크 2인 세트, 750,000 ₫)',
-                    '2차 방문: 선호 메뉴 확인 (와인 페어링 및 창가석 요청)',
-                    '3차 방문: VIP 등급 승급 및 웰컴 쿠폰 사용',
-                    '최근 방문: Table 04 착석 (850,000 ₫ 결제)'
-                ]
-            },
-            {
-                customerId: 'CRM-000248',
-                name: 'Nguyễn Thị Hoa',
-                isMock: true,
-                email: 'hoa.nguyen@gmail.com',
+                customerId: 'CRM-100411',
+                name: '최진영',
+                isMock: false,
+                email: 'hexttokenopbnb@gmail.com',
+                phone: '010-6542-8957',
                 tier: 'VIP 고객',
                 tierColor: '#fee2e2',
                 tierTextColor: '#b91c1c',
                 visitCount: 8,
-                totalSpent: 6200000,
-                favMenu: '파스타 & 리조또',
+                totalSpent: 4766200,
+                favMenu: '스테이크 & 와인 세트',
                 rating: 5.0,
-                birthDate: '1996-03-12',
-                meta: '여성 / 베트남 / 비즈니스',
-                serviceNotes: '• 올리브 오일 듬뿍 요청\n• Zalo 알림 마케팅 동의\n• 디저트 티라미수 단골',
+                birthDate: '1985-07-14',
+                meta: '우수 멘티 VIP / 47,662 P 보유',
+                serviceNotes: '• 가맹점 내 멘티 회원 (VIP 우수)\n• 누적 포인트 47,662 P 보유\n• 선호: 조용한 테이블, 와인 페어링\n• 연락처: 010-6542-8957',
                 timeline: [
-                    '1차 방문: 파스타 런치 주문 (220,000 ₫)',
-                    '2차 방문: 친구 동반 4인 테이블 (1,450,000 ₫)',
-                    '최근 방문: VIP 생일 쿠폰 혜택 적용'
+                    '가맹점 추천 멘티 가입 완료',
+                    '포인트 47,662 P 적립 달성 (VIP 승급)',
+                    '최근 방문: 오프라인 매장 방문 상담'
                 ]
             },
             {
-                customerId: 'CRM-000305',
-                name: '박준형',
-                isMock: true,
-                email: 'park.jh@naver.com',
-                tier: '단골 고객',
-                tierColor: '#fef3c7',
-                tierTextColor: '#b45309',
-                visitCount: 5,
-                totalSpent: 3400000,
-                favMenu: '바베큐 플래터',
-                rating: 4.6,
-                birthDate: '1988-08-04',
-                meta: '남성 / 대한민국 / 자영업',
-                serviceNotes: '• 생맥주 추가 주문 잦음\n• 빠른 서빙 선호',
+                customerId: 'CRM-100412',
+                name: 'William Cater',
+                isMock: false,
+                email: 'caterwilliam66@gmail.com',
+                phone: '+84 292-2152',
+                tier: 'VIP 고객',
+                tierColor: '#fee2e2',
+                tierTextColor: '#b91c1c',
+                visitCount: 12,
+                totalSpent: 9022100,
+                favMenu: '시그니처 바베큐 플래터',
+                rating: 5.0,
+                birthDate: '1982-03-21',
+                meta: '글로벌 VIP 멘티 / 90,221 P 보유',
+                serviceNotes: '• 가맹점 내 멘티 회원 (VIP 우수 최고등급)\n• 누적 포인트 90,221 P 보유\n• 영문 소통 가능 / 바베큐 선호\n• 연락처: +84 292-2152',
                 timeline: [
-                    '1차 방문: 바베큐 플래터 주문 (650,000 ₫)',
-                    '최근 방문: 단골 5회차 달성 서비스 증정'
+                    '글로벌 멘티 등록 완료 (+84 베트남)',
+                    '누적 포인트 90,221 P 달성 (최우수 VIP)',
+                    '최근 방문: 패밀리 세트 주문'
                 ]
             },
             {
-                customerId: 'CRM-000411',
-                name: '이수진',
-                isMock: true,
-                email: 'sujin.lee@gmail.com',
-                tier: '재방문 고객',
-                tierColor: '#e0e7ff',
-                tierTextColor: '#4338ca',
-                visitCount: 3,
-                totalSpent: 1850000,
-                favMenu: '연어 샐러드',
-                rating: 4.9,
-                birthDate: '1998-05-19',
-                meta: '여성 / 대한민국 / 학생',
-                serviceNotes: '• 조용한 구석 자리 선호\n• 드레싱 따로 제공 요청',
-                timeline: [
-                    '1차 방문: 샐러드 & 에이드 (180,000 ₫)',
-                    '2차 방문: 재방문 웰컴 바우처 사용'
-                ]
-            },
-            {
-                customerId: 'CRM-000592',
-                name: 'John Miller',
-                isMock: true,
-                email: 'john.m@outlook.com',
-                tier: '일반 고객',
+                customerId: 'CRM-100413',
+                name: 'jong lee',
+                isMock: false,
+                email: 'hexdao722@gmail.com',
+                phone: '+82 010-3687-0314',
+                tier: '신규 고객',
                 tierColor: '#dcfce7',
                 tierTextColor: '#166534',
                 visitCount: 1,
-                totalSpent: 450000,
-                favMenu: '수제 버거 세트',
-                rating: 4.7,
-                birthDate: '1990-10-02',
-                meta: '남성 / 미국 / 외국인 관광객',
-                serviceNotes: '• 영문 메뉴판 제공 요청\n• 얼음물 많이 요청',
+                totalSpent: 0,
+                favMenu: '대표 추천 메뉴',
+                rating: 4.8,
+                birthDate: '1995-11-02',
+                meta: '추천 멘티 회원 (신규 NEW)',
+                serviceNotes: '• 가맹점 직속 멘티 신규 가입\n• 신규 웰컴 쿠폰 발급 대상\n• 연락처: +82 010-3687-0314',
                 timeline: [
-                    '1차 방문: Table 02 착석 후 현장 체크인 (첫 방문)'
+                    '가맹점 추천 링크를 통한 멘티 신규 가입 (NEW)'
+                ]
+            },
+            {
+                customerId: 'CRM-100414',
+                name: 'fu kang',
+                isMock: false,
+                email: 'kfu134252@gmail.com',
+                phone: '미등록',
+                tier: '일반 고객',
+                tierColor: '#e0e7ff',
+                tierTextColor: '#3730a3',
+                visitCount: 1,
+                totalSpent: 1000000,
+                favMenu: 'F&B 제휴 매장 상품',
+                rating: 4.9,
+                birthDate: '1990-01-01',
+                meta: '제휴 구매 회원 (총 1회 구매 실적 1,000,000 ₫)',
+                serviceNotes: '• 쇼핑몰 제휴 회원 (내 상품 1회 구매 완료)\n• 결제 실적: ₫ 1,000,000\n• 계정: kfu134252@gmail.com',
+                timeline: [
+                    '쇼핑몰 내 상품 온라인 구매 결제 (₫ 1,000,000)'
                 ]
             }
         ];
 
-        // Restore cached master customers from localStorage
+        // Restore cached master customers from localStorage (legacy mock filtered)
         try {
             const cachedCustomers = localStorage.getItem('vision_crm_master_customers');
             if (cachedCustomers) {
                 const parsed = JSON.parse(cachedCustomers);
-                if (Array.isArray(parsed) && parsed.length > 0) {
+                const hasLegacyMock = Array.isArray(parsed) && parsed.some(c => c.name === '김민수' || c.name === 'Nguyễn Thị Hoa' || c.name === '박준형');
+                if (!hasLegacyMock && Array.isArray(parsed) && parsed.length > 0) {
                     masterCustomers = parsed;
+                } else if (hasLegacyMock) {
+                    localStorage.setItem('vision_crm_master_customers', JSON.stringify(masterCustomers));
                 }
             }
         } catch (e) {}
@@ -3603,6 +3588,58 @@
                 });
             } catch (err) {
                 console.warn('store_customers query error:', err);
+            }
+
+            // 3. 가맹점 통합 멘티/고객 (users 컬렉션) 동기화
+            try {
+                const userSnaps = await getDocs(collection(db, 'users'));
+                if (!userSnaps.empty) {
+                    const mappedUsers = [];
+                    userSnaps.forEach(uDoc => {
+                        const ud = uDoc.data();
+                        const email = (ud.email || '').toLowerCase().trim();
+                        const name = ud.name || '멘티 고객';
+                        if (!email && !ud.name) return;
+
+                        const pts = Number(ud.points || ud.pointBalance || 0);
+                        const isVip = pts >= 5000 || (ud.tier && ud.tier.includes('VIP'));
+                        const tier = isVip ? 'VIP 고객' : (pts > 0 ? '단골 고객' : (ud.tier || '신규 고객'));
+
+                        mappedUsers.push({
+                            customerId: `CRM-${uDoc.id.slice(0, 6).toUpperCase()}`,
+                            name: name,
+                            email: ud.email || '',
+                            phone: ud.phone || '',
+                            tier: tier,
+                            tierColor: isVip ? '#fee2e2' : '#dcfce7',
+                            tierTextColor: isVip ? '#b91c1c' : '#166534',
+                            visitCount: pts > 0 ? Math.min(15, Math.max(2, Math.floor(pts / 5000))) : 1,
+                            totalSpent: pts * 100,
+                            favMenu: ud.favMenu || '대표 추천 메뉴',
+                            rating: isVip ? 5.0 : 4.8,
+                            birthDate: ud.birthDate || '1990-01-01',
+                            meta: `${ud.phone ? ud.phone + ' · ' : ''}통합 고객 CRM 연동 회원 (${pts.toLocaleString()} P)`,
+                            serviceNotes: `• 가맹점 마스터 멘티/고객 DB 연동\n• 누적 포인트: ${pts.toLocaleString()} P\n• 연락처: ${ud.phone || '미등록'}`,
+                            timeline: [
+                                `가맹점 통합 CRM 회원 연동 완료 (${pts.toLocaleString()} P 보유)`
+                            ],
+                            isMock: false
+                        });
+                    });
+
+                    if (mappedUsers.length > 0) {
+                        const existingNames = new Set(masterCustomers.map(c => c.name.toLowerCase()));
+                        mappedUsers.forEach(mu => {
+                            if (!existingNames.has(mu.name.toLowerCase())) {
+                                masterCustomers.push(mu);
+                            }
+                        });
+                        renderCustomerList();
+                        buildFaceMatcherFromCustomers();
+                    }
+                }
+            } catch (err) {
+                console.warn('users 컬렉션 동기화 스킵:', err);
             }
         }
 
