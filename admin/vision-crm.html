@@ -2936,9 +2936,15 @@
         let enrollMode = 'NEW';
 
         window.openFaceEnrollModal = async () => {
-            const video = document.getElementById('webcamVideo');
+            let video = document.getElementById('webcamVideo');
+            if (cameraViewMode !== 'single') {
+                const subVideos = document.querySelectorAll('#multiCamGrid video');
+                if (subVideos.length > 0) {
+                    video = subVideos[0];
+                }
+            }
             if (!isWebcamOn || !video || video.videoWidth === 0) {
-                alert('먼저 상단 [📷 웹캠 연결] 버튼을 눌러 카메라를 켜주세요.');
+                alert('먼저 상단 [📷 카메라 전체 연결] 버튼을 눌러 카메라를 켜주세요.');
                 return;
             }
 
