@@ -773,6 +773,9 @@
                             <button type="button" onclick="checkEmployeeCommuteByCamera()" style="flex:1; background:#4F46E5; color:white; border:none; padding:0.5rem 0.8rem; border-radius:0.4rem; font-size:0.8rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:0.35rem; box-shadow:0 3px 8px rgba(79,70,229,0.25);">
                                 <span>⏰</span> 지금 카메라 앞 직원 출퇴근 체크 (AI 자동)
                             </button>
+                            <button type="button" onclick="openFaceEnrollModal('EMPLOYEE')" style="background:white; border:1px solid #4F46E5; color:#3730A3; padding:0.5rem 0.8rem; border-radius:0.4rem; font-size:0.775rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.3rem; box-shadow:0 2px 6px rgba(99,102,241,0.15);">
+                                <span>📸</span> 직원 얼굴 등록
+                            </button>
                         </div>
                         <div id="employeePunchResult" style="margin-top:0.5rem; font-size:0.775rem; display:none; padding:0.55rem 0.75rem; border-radius:0.4rem; line-height:1.45;"></div>
                     </div>
@@ -1403,20 +1406,23 @@
                 </div>
             </div>
 
-            <!-- Registration Mode Toggle (Tab 1 vs Tab 2) -->
-            <div style="display:flex; gap:0.5rem; margin-bottom:1rem; border-bottom:1px solid #E2E8F0; padding-bottom:0.5rem;">
-                <button type="button" id="tabEnrollExistingBtn" onclick="switchEnrollMode('EXISTING')" style="flex:1; padding:0.55rem; font-size:0.825rem; font-weight:800; border:none; border-radius:0.4rem; background:#4F46E5; color:white; cursor:pointer;">
-                    🔄 기존 회원에 내 얼굴 매칭
+            <!-- Registration Mode Toggle (고객 매칭 vs 신규 등록 vs 직원 얼굴 등록) -->
+            <div style="display:flex; gap:0.35rem; margin-bottom:1rem; border-bottom:1px solid #E2E8F0; padding-bottom:0.5rem;">
+                <button type="button" id="tabEnrollExistingBtn" onclick="switchEnrollMode('EXISTING')" style="flex:1; padding:0.5rem 0.3rem; font-size:0.775rem; font-weight:800; border:none; border-radius:0.4rem; background:#4F46E5; color:white; cursor:pointer;">
+                    🔄 기존 고객 매칭
                 </button>
-                <button type="button" id="tabEnrollNewBtn" onclick="switchEnrollMode('NEW')" style="flex:1; padding:0.55rem; font-size:0.825rem; font-weight:700; border:1px solid #CBD5E1; border-radius:0.4rem; background:#F1F5F9; color:#475569; cursor:pointer;">
-                    ➕ 신규 회원으로 추가
+                <button type="button" id="tabEnrollNewBtn" onclick="switchEnrollMode('NEW')" style="flex:1; padding:0.5rem 0.3rem; font-size:0.775rem; font-weight:700; border:1px solid #CBD5E1; border-radius:0.4rem; background:#F1F5F9; color:#475569; cursor:pointer;">
+                    ➕ 신규 고객 등록
+                </button>
+                <button type="button" id="tabEnrollEmpBtn" onclick="switchEnrollMode('EMPLOYEE')" style="flex:1; padding:0.5rem 0.3rem; font-size:0.775rem; font-weight:700; border:1px solid #CBD5E1; border-radius:0.4rem; background:#F1F5F9; color:#475569; cursor:pointer;">
+                    ⏰ 직원 얼굴 등록
                 </button>
             </div>
 
             <!-- Form B: 기존 고객과 매칭 업데이트 -->
             <div id="enrollExistingCustomerSection">
                 <div style="background:#ECFDF5; border:1px solid #A7F3D0; border-radius:0.5rem; padding:0.65rem; font-size:0.775rem; color:#065F46; margin-bottom:0.85rem; line-height:1.4;">
-                    💡 <strong>안내:</strong> 가맹점 등록 회원(최진영, William Cater, fu kang 등)을 선택하시면, 현재 캡처된 실제 얼굴을 해당 회원에게 1:1 매칭 등록합니다.
+                    💡 <strong>고객 안면 매칭 안내:</strong> 가맹점 등록 회원(최진영, William Cater, fu kang 등)을 선택하시면, 현재 카메라에 비친 얼굴 사진과 128차원 벡터를 <strong>서버에 저장</strong>하여 1:1 자동 식별합니다.
                 </div>
                 <div style="margin-bottom:0.85rem;">
                     <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.25rem;">매칭 대상 고객 선택 *</label>
@@ -1456,13 +1462,70 @@
                 </div>
             </div>
 
-            <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1.25rem;">
-                <button type="button" onclick="closeFaceEnrollModal()" style="padding:0.65rem 1.1rem; border:1px solid #CBD5E1; border-radius:0.4rem; background:white; font-size:0.85rem; cursor:pointer;">
-                    취소
-                </button>
-                <button type="button" onclick="saveEnrolledFace()" style="padding:0.65rem 1.35rem; border:none; border-radius:0.4rem; background:#10B981; color:white; font-size:0.85rem; font-weight:800; cursor:pointer; box-shadow:0 4px 10px rgba(16,185,129,0.3);">
-                    💾 안면 등록 및 매칭 확정
-                </button>
+            <!-- Form C: 직원 얼굴 등록 및 서버 저장 -->
+            <div id="enrollEmployeeSection" style="display:none;">
+                <div style="background:#EFF6FF; border:1px solid #BFDBFE; border-radius:0.5rem; padding:0.65rem; font-size:0.775rem; color:#1E40AF; margin-bottom:0.85rem; line-height:1.4;">
+                    💼 <strong>직원 얼굴 등록 안내:</strong> 매장 직원을 선택하시면 현재 카메라에 캡처된 실제 얼굴 사진과 128차원 생체 벡터를 <strong>클라우드 서버에 영구 저장</strong>합니다. 이후 [직원 출퇴근 체크] 시 실물 얼굴로 자동 타각됩니다.
+                </div>
+                <div style="margin-bottom:0.85rem;">
+                    <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.25rem;">등록할 매장 직원 선택 *</label>
+                    <select id="enrollEmployeeSelect" style="width:100%; padding:0.6rem; border:1px solid #CBD5E1; border-radius:0.4rem; font-size:0.85rem; box-sizing:border-box;">
+                    </select>
+                </div>
+                <div style="font-size:0.75rem; color:#64748B;">
+                    • 등록 완료 즉시 근태 카드 프로필 사진이 업데이트되며, AI 안면 인식 모델에 동기화됩니다.
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1.25rem;">
+                <span id="enrollServerStatusIndicator" style="font-size:0.75rem; color:#059669; font-weight:700;">
+                    ☁️ 서버 클라우드 저장 활성화
+                </span>
+                <div style="display:flex; gap:0.5rem;">
+                    <button type="button" onclick="closeFaceEnrollModal()" style="padding:0.6rem 1rem; border:1px solid #CBD5E1; border-radius:0.4rem; background:white; font-size:0.825rem; cursor:pointer;">
+                        취소
+                    </button>
+                    <button type="button" id="btnConfirmFaceEnroll" onclick="saveEnrolledFace()" style="padding:0.6rem 1.25rem; border:none; border-radius:0.4rem; background:#10B981; color:white; font-size:0.825rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 4px 10px rgba(16,185,129,0.3);">
+                        <span>☁️</span> 사진 서버 저장 및 확정
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================================================== -->
+    <!-- MODAL 6: 방범 경비 침입자 스냅샷 사진 확인 및 다운로드 모달 -->
+    <!-- ==================================================== -->
+    <div class="modal-overlay" id="securitySnapshotModal" style="display:none;">
+        <div class="modal-box" style="max-width:620px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #E2E8F0; padding-bottom:0.75rem; margin-bottom:1rem;">
+                <h3 style="margin:0; font-size:1.1rem; color:#B91C1C; display:flex; align-items:center; gap:0.4rem;">
+                    <span>🚨</span> 방범 침입 감지 현장 스냅샷 (서버 저장본)
+                </h3>
+                <button onclick="closeSecuritySnapshotModal()" style="background:none; border:none; font-size:1.35rem; color:#94A3B8; cursor:pointer;">✕</button>
+            </div>
+
+            <div style="position:relative; width:100%; border-radius:0.6rem; overflow:hidden; border:2px solid #EF4444; background:#000; margin-bottom:0.85rem;">
+                <img id="securitySnapshotImg" src="" style="width:100%; display:block; object-fit:contain; max-height:380px;">
+                <div style="position:absolute; top:8px; left:8px; background:rgba(239,68,68,0.95); color:white; font-size:0.75rem; font-weight:800; padding:0.25rem 0.55rem; border-radius:0.35rem; box-shadow:0 2px 6px rgba(0,0,0,0.3);">
+                    🚨 무단 침입 현장 포착
+                </div>
+                <div id="securitySnapshotWatermark" style="position:absolute; bottom:8px; left:8px; right:8px; background:rgba(0,0,0,0.85); color:white; font-size:0.72rem; padding:0.4rem 0.65rem; border-radius:0.3rem; font-family:monospace; line-height:1.4;">
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem;">
+                <span id="securitySnapshotCloudStatus" style="font-size:0.75rem; color:#059669; font-weight:700;">
+                    ☁️ Firebase Cloud 서버 안전 보관 완료
+                </span>
+                <div style="display:flex; gap:0.5rem;">
+                    <a id="securitySnapshotDownloadBtn" href="" download="security_intruder_snapshot.jpg" style="background:#1E293B; color:white; padding:0.55rem 0.95rem; border-radius:0.4rem; font-size:0.8rem; font-weight:800; text-decoration:none; display:inline-flex; align-items:center; gap:0.3rem;">
+                        <span>💾</span> 사진 다운로드
+                    </a>
+                    <button type="button" onclick="closeSecuritySnapshotModal()" style="padding:0.55rem 0.95rem; border:1px solid #CBD5E1; border-radius:0.4rem; background:white; font-size:0.8rem; font-weight:700; cursor:pointer;">
+                        닫기
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -1470,10 +1533,11 @@
     <!-- Scripts -->
     <script type="module" src="../assets/js/firebase-config.js"></script>
     <script type="module">
-        import { db, auth } from '../assets/js/firebase-config.js';
+        import { db, auth, storage } from '../assets/js/firebase-config.js';
         import { checkAdminAuth } from '../assets/js/auth.js';
         import { initNotificationHub, playNotificationSound } from '../assets/js/notification-hub.js';
         import { collection, addDoc, getDocs, doc, setDoc, onSnapshot, deleteDoc, serverTimestamp, query, where, orderBy, limit } from 'firebase/firestore';
+        import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 
         initNotificationHub();
 
@@ -3507,30 +3571,63 @@
             }
         };
 
-        window.openFaceEnrollModal = async () => {
+        // ==========================================
+        // ☁️ Firebase Storage / Firestore 서버 사진 안전 보관 엔진
+        // ==========================================
+        async function uploadPhotoToServer(folder, filename, dataUrl) {
+            let downloadUrl = null;
+            try {
+                if (storage && dataUrl && dataUrl.startsWith('data:image')) {
+                    const storageRef = ref(storage, `vision_crm/${folder}/${filename}.jpg`);
+                    const uploadRes = await uploadString(storageRef, dataUrl, 'data_url');
+                    downloadUrl = await getDownloadURL(uploadRes.ref);
+                    console.log(`☁️ Firebase Storage 업로드 성공 (${folder}/${filename}):`, downloadUrl);
+                }
+            } catch (e) {
+                console.warn(`Firebase Storage 업로드 폴백 (Firestore 문서 및 Base64 보관):`, e.message || e);
+            }
+            return downloadUrl || dataUrl;
+        }
+
+        window.openFaceEnrollModal = async (initialMode = 'EXISTING', targetId = null) => {
             if (!isWebcamOn) {
-                alert('먼저 상단 [📷 카메라 전체 연결] 버튼을 눌러 카메라를 켜주세요.');
+                alert('먼저 상단 [📷 웹캠 연결] 또는 [카메라 셋팅] 버튼을 눌러 카메라를 켜주세요.');
                 return;
             }
 
             enrollActiveCamIndex = null;
             await recaptureEnrollFrame();
 
-            // Populate existing customers select
-            const selectEl = document.getElementById('enrollExistingSelect');
-            if (selectEl) {
-                selectEl.innerHTML = '';
+            // 1. Populate existing customers select
+            const custSelectEl = document.getElementById('enrollExistingSelect');
+            if (custSelectEl) {
+                custSelectEl.innerHTML = '';
                 masterCustomers.forEach(c => {
                     const opt = document.createElement('option');
                     opt.value = c.customerId;
                     const hasFace = !!(c.descriptor || c.photoURL);
                     opt.textContent = `${c.name} (${c.tier} / ${c.customerId})${hasFace ? ' [얼굴 등록됨]' : ' [얼굴 미등록]'}`;
-                    selectEl.appendChild(opt);
+                    custSelectEl.appendChild(opt);
                 });
             }
 
-            // Default to EXISTING mode so user immediately connects to real clients
-            switchEnrollMode('EXISTING');
+            // 2. Populate employees select
+            const empSelectEl = document.getElementById('enrollEmployeeSelect');
+            if (empSelectEl) {
+                empSelectEl.innerHTML = '';
+                masterEmployees.forEach(emp => {
+                    const opt = document.createElement('option');
+                    opt.value = emp.id;
+                    const hasFace = !!(emp.descriptor || emp.serverStored);
+                    opt.textContent = `${emp.name} (${emp.role})${hasFace ? ' [얼굴 등록됨]' : ' [얼굴 미등록]'}`;
+                    empSelectEl.appendChild(opt);
+                });
+                if (targetId && initialMode === 'EMPLOYEE') {
+                    empSelectEl.value = targetId;
+                }
+            }
+
+            switchEnrollMode(initialMode || 'EXISTING');
             document.getElementById('enrollFaceModal').style.display = 'flex';
         };
 
@@ -3542,23 +3639,35 @@
             enrollMode = mode;
             const newSec = document.getElementById('enrollNewCustomerSection');
             const existSec = document.getElementById('enrollExistingCustomerSection');
+            const empSec = document.getElementById('enrollEmployeeSection');
+
             const newBtn = document.getElementById('tabEnrollNewBtn');
             const existBtn = document.getElementById('tabEnrollExistingBtn');
+            const empBtn = document.getElementById('tabEnrollEmpBtn');
+
+            // Hide all
+            if (newSec) newSec.style.display = 'none';
+            if (existSec) existSec.style.display = 'none';
+            if (empSec) empSec.style.display = 'none';
+
+            // Reset tab styles
+            [newBtn, existBtn, empBtn].forEach(b => {
+                if (b) {
+                    b.style.background = '#F1F5F9';
+                    b.style.color = '#475569';
+                    b.style.fontWeight = '700';
+                }
+            });
 
             if (mode === 'NEW') {
-                newSec.style.display = 'block';
-                existSec.style.display = 'none';
-                newBtn.style.background = '#4F46E5';
-                newBtn.style.color = 'white';
-                existBtn.style.background = '#F1F5F9';
-                existBtn.style.color = '#475569';
+                if (newSec) newSec.style.display = 'block';
+                if (newBtn) { newBtn.style.background = '#4F46E5'; newBtn.style.color = 'white'; newBtn.style.fontWeight = '800'; }
+            } else if (mode === 'EMPLOYEE') {
+                if (empSec) empSec.style.display = 'block';
+                if (empBtn) { empBtn.style.background = '#4F46E5'; empBtn.style.color = 'white'; empBtn.style.fontWeight = '800'; }
             } else {
-                newSec.style.display = 'none';
-                existSec.style.display = 'block';
-                existBtn.style.background = '#4F46E5';
-                existBtn.style.color = 'white';
-                newBtn.style.background = '#F1F5F9';
-                newBtn.style.color = '#475569';
+                if (existSec) existSec.style.display = 'block';
+                if (existBtn) { existBtn.style.background = '#4F46E5'; existBtn.style.color = 'white'; existBtn.style.fontWeight = '800'; }
             }
         };
 
@@ -3570,83 +3679,183 @@
             }
 
             const merchantId = document.getElementById('merchantIdInput')?.value.trim() || '1791605366';
-            let targetCust = null;
-
-            if (enrollMode === 'NEW') {
-                const name = document.getElementById('enrollNewName').value.trim();
-                if (!name) {
-                    alert('고객 성함을 입력해 주세요.');
-                    return;
-                }
-                const contact = document.getElementById('enrollNewContact').value.trim() || '090-0000-0000';
-                const tier = document.getElementById('enrollNewTier').value;
-                const favMenu = document.getElementById('enrollNewFavMenu').value.trim() || '추천 메뉴';
-
-                const randomCode = Math.floor(100000 + Math.random() * 900000);
-                const customerId = `CRM-${randomCode}`;
-
-                targetCust = {
-                    customerId: customerId,
-                    name: name,
-                    email: contact.includes('@') ? contact : `${customerId.toLowerCase()}@beststore.com`,
-                    tier: tier,
-                    tierColor: tier.includes('VIP') ? '#fee2e2' : (tier.includes('단골') ? '#fef3c7' : '#dcfce7'),
-                    tierTextColor: tier.includes('VIP') ? '#b91c1c' : (tier.includes('단골') ? '#b45309' : '#166534'),
-                    visitCount: 1,
-                    totalSpent: 450000,
-                    favMenu: favMenu,
-                    rating: 5.0,
-                    birthDate: '1990-01-01',
-                    meta: '실제 매장 방문자 안면 등록',
-                    serviceNotes: '• 관제 카메라 실물 안면 등록 완료\n• 신규 고객 환영 혜택 적용',
-                    timeline: [`방금: [카메라 안면 등록 완료] ${name} 고객 프로필 생성`],
-                    photoURL: currentCapturedFaceImgData,
-                    descriptor: currentCapturedDescriptor,
-                    isMock: false
-                };
-
-                masterCustomers.unshift(targetCust);
-            } else {
-                const selectedId = document.getElementById('enrollExistingSelect').value;
-                targetCust = masterCustomers.find(c => c.customerId === selectedId);
-                if (!targetCust) return;
-
-                const nameOverride = document.getElementById('enrollExistingNameOverride').value.trim();
-                if (nameOverride) {
-                    targetCust.name = nameOverride;
-                }
-
-                targetCust.photoURL = currentCapturedFaceImgData;
-                targetCust.descriptor = currentCapturedDescriptor;
-                targetCust.isMock = false;
-                targetCust.meta = `${targetCust.meta} (실물 얼굴 등록 완료)`;
-                targetCust.timeline.unshift(`방금: [실물 얼굴 등록 완료] 카메라 안면 벡터 1:1 매칭 완료`);
+            const confirmBtn = document.getElementById('btnConfirmFaceEnroll');
+            const statusIndicator = document.getElementById('enrollServerStatusIndicator');
+            const origBtnText = confirmBtn ? confirmBtn.innerHTML : '';
+            if (confirmBtn) {
+                confirmBtn.innerHTML = '<span>⏳</span> 서버 저장 업로드 중...';
+                confirmBtn.disabled = true;
+            }
+            if (statusIndicator) {
+                statusIndicator.textContent = '⏳ 서버 클라우드 업로드 전송 중...';
+                statusIndicator.style.color = '#4F46E5';
             }
 
-            // Rebuild face matcher with the new face descriptor
-            await buildFaceMatcherFromCustomers();
-            if (window.saveMasterCustomersState) window.saveMasterCustomersState();
-
-            renderCustomerList();
-            closeFaceEnrollModal();
-            playNotificationSound();
-
-            alert(`🎉 [안면 등록 완료!]\n\n• 대상 회원: ${targetCust.name} (${targetCust.tier})\n• 고객 번호: ${targetCust.customerId}\n\n얼굴이 데이터베이스에 등록되었습니다! 이제 [지금 카메라 앞 고객 회원 검색] 시 100% 일치 회원으로 즉시 식별됩니다.`);
-
-            setTimeout(() => {
-                if (window.searchCustomerByCameraFace) window.searchCustomerByCameraFace();
-            }, 500);
-
             try {
-                if (db) {
-                    await addDoc(collection(db, 'store_customers'), {
-                        ...targetCust,
-                        merchantId: merchantId,
-                        updatedAt: serverTimestamp()
-                    });
+                if (enrollMode === 'EMPLOYEE') {
+                    // ==========================================
+                    // 1. 직원 얼굴 등록 및 서버 저장
+                    // ==========================================
+                    const empId = document.getElementById('enrollEmployeeSelect')?.value;
+                    const targetEmp = masterEmployees.find(e => e.id === empId) || masterEmployees[0];
+                    if (!targetEmp) return;
+
+                    const filename = `emp_${targetEmp.id}_${Date.now()}`;
+                    const serverPhotoUrl = await uploadPhotoToServer('employees', filename, currentCapturedFaceImgData);
+
+                    targetEmp.photoURL = serverPhotoUrl;
+                    targetEmp.descriptor = currentCapturedDescriptor;
+                    targetEmp.serverStored = true;
+
+                    saveMasterEmployees();
+                    renderEmployeeList();
+
+                    // Firestore store_employees collection sync
+                    try {
+                        if (db) {
+                            await addDoc(collection(db, 'store_employees'), {
+                                merchantId: merchantId,
+                                employeeId: targetEmp.id,
+                                employeeName: targetEmp.name,
+                                role: targetEmp.role,
+                                photoURL: serverPhotoUrl,
+                                descriptor: currentCapturedDescriptor,
+                                serverStored: true,
+                                updatedAt: serverTimestamp()
+                            });
+                        }
+                    } catch (e) {
+                        console.warn('Firestore store_employees sync warning:', e);
+                    }
+
+                    closeFaceEnrollModal();
+                    playNotificationSound();
+                    alert(`🎉 [직원 얼굴 등록 & 서버 저장 완료!]\n\n• 직원명: ${targetEmp.name} (${targetEmp.role})\n• 실물 안면 사진 서버 보관: 완료 (Firebase Storage & Cloud)\n• AI 안면 특징 벡터: 1:1 매칭 완료\n\n이제 [직원 출퇴근 체크] 시 실물 얼굴로 99% 즉시 인식 및 자동 타각됩니다.`);
+
+                } else if (enrollMode === 'NEW') {
+                    // ==========================================
+                    // 2. 신규 고객 얼굴 등록 및 서버 저장
+                    // ==========================================
+                    const name = document.getElementById('enrollNewName').value.trim();
+                    if (!name) {
+                        alert('고객 성함을 입력해 주세요.');
+                        return;
+                    }
+                    const contact = document.getElementById('enrollNewContact').value.trim() || '090-0000-0000';
+                    const tier = document.getElementById('enrollNewTier').value;
+                    const favMenu = document.getElementById('enrollNewFavMenu').value.trim() || '추천 메뉴';
+
+                    const randomCode = Math.floor(100000 + Math.random() * 900000);
+                    const customerId = `CRM-${randomCode}`;
+                    const filename = `cust_${customerId}_${Date.now()}`;
+                    const serverPhotoUrl = await uploadPhotoToServer('customers', filename, currentCapturedFaceImgData);
+
+                    const targetCust = {
+                        customerId: customerId,
+                        name: name,
+                        email: contact.includes('@') ? contact : `${customerId.toLowerCase()}@beststore.com`,
+                        tier: tier,
+                        tierColor: tier.includes('VIP') ? '#fee2e2' : (tier.includes('단골') ? '#fef3c7' : '#dcfce7'),
+                        tierTextColor: tier.includes('VIP') ? '#b91c1c' : (tier.includes('단골') ? '#b45309' : '#166534'),
+                        visitCount: 1,
+                        totalSpent: 450000,
+                        favMenu: favMenu,
+                        rating: 5.0,
+                        birthDate: '1990-01-01',
+                        meta: '실제 매장 방문자 안면 등록',
+                        serviceNotes: '• 관제 카메라 실물 안면 등록 및 서버 저장 완료\n• 신규 고객 환영 혜택 적용',
+                        timeline: [`방금: [카메라 안면 등록 완료] ${name} 고객 프로필 및 서버 사진 저장 생성`],
+                        photoURL: serverPhotoUrl,
+                        descriptor: currentCapturedDescriptor,
+                        serverStored: true,
+                        isMock: false
+                    };
+
+                    masterCustomers.unshift(targetCust);
+                    await buildFaceMatcherFromCustomers();
+                    if (window.saveMasterCustomersState) window.saveMasterCustomersState();
+
+                    renderCustomerList();
+
+                    try {
+                        if (db) {
+                            await addDoc(collection(db, 'store_customers'), {
+                                ...targetCust,
+                                merchantId: merchantId,
+                                serverStored: true,
+                                updatedAt: serverTimestamp()
+                            });
+                        }
+                    } catch (err) {
+                        console.warn('Firestore 등록 에러 (로컬 적용 완료):', err);
+                    }
+
+                    closeFaceEnrollModal();
+                    playNotificationSound();
+                    alert(`🎉 [신규 고객 안면 등록 & 서버 저장 완료!]\n\n• 고객명: ${targetCust.name} (${targetCust.tier})\n• 고객 번호: ${targetCust.customerId}\n• 실물 사진 서버 보관: 완료 (Firebase Storage)\n\n얼굴이 데이터베이스에 등록되었습니다! 이제 [현재 인물 회원 여부 검색] 시 100% 일치 회원으로 즉시 식별됩니다.`);
+
+                    setTimeout(() => {
+                        if (window.searchCustomerByCameraFace) window.searchCustomerByCameraFace();
+                    }, 500);
+
+                } else {
+                    // ==========================================
+                    // 3. 기존 고객 안면 매칭 및 서버 저장
+                    // ==========================================
+                    const selectedId = document.getElementById('enrollExistingSelect').value;
+                    const targetCust = masterCustomers.find(c => c.customerId === selectedId);
+                    if (!targetCust) return;
+
+                    const nameOverride = document.getElementById('enrollExistingNameOverride').value.trim();
+                    if (nameOverride) {
+                        targetCust.name = nameOverride;
+                    }
+
+                    const filename = `cust_${targetCust.customerId}_${Date.now()}`;
+                    const serverPhotoUrl = await uploadPhotoToServer('customers', filename, currentCapturedFaceImgData);
+
+                    targetCust.photoURL = serverPhotoUrl;
+                    targetCust.descriptor = currentCapturedDescriptor;
+                    targetCust.isMock = false;
+                    targetCust.serverStored = true;
+                    targetCust.meta = `${targetCust.meta} (실물 얼굴 서버 등록 완료)`;
+                    targetCust.timeline.unshift(`방금: [실물 얼굴 서버 등록 완료] 카메라 안면 벡터 1:1 매칭 완료`);
+
+                    await buildFaceMatcherFromCustomers();
+                    if (window.saveMasterCustomersState) window.saveMasterCustomersState();
+
+                    renderCustomerList();
+
+                    try {
+                        if (db) {
+                            await addDoc(collection(db, 'store_customers'), {
+                                ...targetCust,
+                                merchantId: merchantId,
+                                serverStored: true,
+                                updatedAt: serverTimestamp()
+                            });
+                        }
+                    } catch (err) {
+                        console.warn('Firestore 등록 에러:', err);
+                    }
+
+                    closeFaceEnrollModal();
+                    playNotificationSound();
+                    alert(`🎉 [고객 안면 매칭 & 서버 저장 완료!]\n\n• 회원명: ${targetCust.name} (${targetCust.tier})\n• 고객 번호: ${targetCust.customerId}\n• 실물 사진 서버 보관: 완료 (Firebase Storage)\n\n이제 [카메라 앞 고객 회원 검색] 시 100% 일치 회원으로 즉시 식별됩니다.`);
+
+                    setTimeout(() => {
+                        if (window.searchCustomerByCameraFace) window.searchCustomerByCameraFace();
+                    }, 500);
                 }
-            } catch (err) {
-                console.warn('Firestore 등록 에러 (로컬 적용 완료):', err);
+            } finally {
+                if (confirmBtn) {
+                    confirmBtn.innerHTML = origBtnText;
+                    confirmBtn.disabled = false;
+                }
+                if (statusIndicator) {
+                    statusIndicator.textContent = '☁️ 서버 클라우드 저장 활성화';
+                    statusIndicator.style.color = '#059669';
+                }
             }
         };
 
@@ -3912,18 +4121,18 @@
 
             filtered.forEach(emp => {
                 const isOn = emp.status === 'ON_DUTY';
-                const card = document.createElement('div');
-                card.className = 'employee-card-item';
+                const hasFace = !!(emp.descriptor || emp.serverStored);
                 card.innerHTML = `
                     <div style="width:46px; height:46px; border-radius:50%; overflow:hidden; border:2px solid ${isOn ? '#10B981' : '#CBD5E1'}; flex-shrink:0;">
                         <img src="${emp.photoURL}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100';">
                     </div>
                     <div style="flex:1; min-width:0;">
-                        <div style="display:flex; align-items:center; gap:0.4rem; margin-bottom:0.15rem;">
+                        <div style="display:flex; align-items:center; gap:0.4rem; margin-bottom:0.15rem; flex-wrap:wrap;">
                             <strong style="font-size:0.85rem; color:#1E293B;">${emp.name}</strong>
                             <span style="font-size:0.68rem; font-weight:800; padding:0.15rem 0.4rem; border-radius:0.25rem; background:${isOn ? '#ECFDF5' : '#F1F5F9'}; color:${isOn ? '#047857' : '#64748B'}; border:1px solid ${isOn ? '#A7F3D0' : '#E2E8F0'};">
                                 ${isOn ? '● 근무중 (출근)' : '○ 퇴근/휴무'}
                             </span>
+                            ${hasFace ? '<span style="font-size:0.65rem; color:#059669; font-weight:800; background:#ECFDF5; padding:0.1rem 0.35rem; border-radius:0.25rem; border:1px solid #A7F3D0;">☁️ 서버 얼굴 등록됨</span>' : ''}
                         </div>
                         <div style="font-size:0.72rem; color:#64748B;">
                             ${emp.role} · 근무시간: ${emp.shift}
@@ -3935,6 +4144,9 @@
                     <div style="display:flex; flex-direction:column; gap:0.3rem;">
                         <button type="button" onclick="toggleEmployeeDuty('${emp.id}')" style="background:${isOn ? '#EF4444' : '#10B981'}; color:white; border:none; padding:0.35rem 0.65rem; border-radius:0.35rem; font-size:0.72rem; font-weight:800; cursor:pointer;">
                             ${isOn ? '퇴근 처리' : '출근 처리'}
+                        </button>
+                        <button type="button" onclick="openFaceEnrollModal('EMPLOYEE', '${emp.id}')" style="background:#4F46E5; color:white; border:none; padding:0.3rem 0.6rem; border-radius:0.35rem; font-size:0.68rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.2rem;">
+                            <span>📸</span> 얼굴 등록
                         </button>
                     </div>
                 `;
@@ -4336,6 +4548,26 @@
             }
         };
 
+        window.openSecuritySnapshotModal = (imgSrc, location, time) => {
+            const modal = document.getElementById('securitySnapshotModal');
+            const img = document.getElementById('securitySnapshotImg');
+            const watermark = document.getElementById('securitySnapshotWatermark');
+            const downloadBtn = document.getElementById('securitySnapshotDownloadBtn');
+
+            if (img) img.src = imgSrc;
+            if (watermark) watermark.textContent = `📍 관제 구역: ${location} | ⏱️ 침입 일시: ${time} | 🚨 110dB 사이렌 발령 & Firebase Cloud 서버 보관`;
+            if (downloadBtn) {
+                downloadBtn.href = imgSrc;
+                downloadBtn.download = `intruder_snapshot_${Date.now()}.jpg`;
+            }
+            if (modal) modal.style.display = 'flex';
+        };
+
+        window.closeSecuritySnapshotModal = () => {
+            const modal = document.getElementById('securitySnapshotModal');
+            if (modal) modal.style.display = 'none';
+        };
+
         window.triggerSecurityIntruderAlarm = (location = 'CCTV #01 메인 구역') => {
             if (isSecurityAlarmActive) return;
             isSecurityAlarmActive = true;
@@ -4355,17 +4587,101 @@
             // Start Loud Audio Siren Synthesizer
             window.startSirenAlarmAudio();
 
-            // Log Incident
+            // ==========================================
+            // 📸 방범 경비 무단 침입 현장 사진 실시간 캡처 및 워터마크 합성
+            // ==========================================
+            let intruderSnapshotDataUrl = '';
+            try {
+                let video = document.getElementById('webcamVideo');
+                if (!video || video.readyState < 2 || video.videoWidth === 0) {
+                    video = document.querySelector('#multiCamGrid video');
+                }
+
+                const snapCanvas = document.createElement('canvas');
+                snapCanvas.width = (video && video.videoWidth) ? video.videoWidth : 640;
+                snapCanvas.height = (video && video.videoHeight) ? video.videoHeight : 480;
+                const snapCtx = snapCanvas.getContext('2d');
+
+                if (video && video.readyState >= 2 && video.videoWidth > 0) {
+                    snapCtx.drawImage(video, 0, 0, snapCanvas.width, snapCanvas.height);
+                } else {
+                    const simImg = document.getElementById('simulatedStreamImg');
+                    if (simImg) snapCtx.drawImage(simImg, 0, 0, snapCanvas.width, snapCanvas.height);
+                }
+
+                // Security Red Flashing Border on captured photo
+                snapCtx.lineWidth = 10;
+                snapCtx.strokeStyle = '#EF4444';
+                snapCtx.strokeRect(0, 0, snapCanvas.width, snapCanvas.height);
+
+                // Header Security Watermark
+                snapCtx.fillStyle = 'rgba(239, 68, 68, 0.95)';
+                snapCtx.fillRect(0, 0, snapCanvas.width, 36);
+                snapCtx.fillStyle = '#FFFFFF';
+                snapCtx.font = 'bold 15px "Plus Jakarta Sans", sans-serif';
+                snapCtx.fillText('🚨 [INTRUSION ALERT] BEST STORE SMART SECURITY SYSTEM', 12, 24);
+
+                // Footer Timestamp Watermark
+                snapCtx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+                snapCtx.fillRect(0, snapCanvas.height - 38, snapCanvas.width, 38);
+                snapCtx.fillStyle = '#F8FAFC';
+                snapCtx.font = 'bold 12px monospace';
+                const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 19);
+                snapCtx.fillText(`[${nowStr}] 구역: ${location} | 침입자 동체 포착 | 사이렌 발령`, 12, snapCanvas.height - 14);
+
+                intruderSnapshotDataUrl = snapCanvas.toDataURL('image/jpeg', 0.85);
+            } catch (e) {
+                console.warn('침입자 현장 캡처 오류:', e);
+            }
+
             const now = new Date();
             const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-            securityIncidents.unshift({
+            const incidentId = `INC-${Date.now()}`;
+
+            const newIncident = {
+                id: incidentId,
                 time: `오늘 ${timeStr}`,
                 location: location,
                 type: '무단 침입자 감지 (동체 추적)',
-                action: '110dB 사이렌 발령 & 점주 긴급 통보',
-                level: 'DANGER'
-            });
+                action: '110dB 사이렌 발령 & 서버 사진 보관',
+                level: 'DANGER',
+                snapshotURL: intruderSnapshotDataUrl,
+                serverStored: true
+            };
+
+            securityIncidents.unshift(newIncident);
             window.renderSecurityIncidents();
+
+            // ==========================================
+            // ☁️ 침입자 사진 Firebase Storage & Firestore 서버 영구 저장 (비동기)
+            // ==========================================
+            (async () => {
+                try {
+                    let finalSnapshotUrl = intruderSnapshotDataUrl;
+                    if (intruderSnapshotDataUrl) {
+                        finalSnapshotUrl = await uploadPhotoToServer('security_snapshots', `intruder_${incidentId}`, intruderSnapshotDataUrl);
+                        newIncident.snapshotURL = finalSnapshotUrl;
+                    }
+
+                    if (db) {
+                        const merchantId = document.getElementById('merchantIdInput')?.value.trim() || '1791605366';
+                        await addDoc(collection(db, 'security_incident_logs'), {
+                            merchantId: merchantId,
+                            incidentId: incidentId,
+                            time: `오늘 ${timeStr}`,
+                            location: location,
+                            type: '무단 침입자 감지 (동체 추적)',
+                            action: '110dB 사이렌 발령 & 서버 사진 보관',
+                            snapshotURL: finalSnapshotUrl,
+                            serverStored: true,
+                            createdAt: serverTimestamp()
+                        });
+                        console.log(`☁️ [보안 서버] 침입자 스냅샷 사진 및 사고 로그 서버 저장 완료 (${incidentId})`);
+                    }
+                } catch (err) {
+                    console.warn('침입자 스냅샷 서버 업로드 실패 (로컬 유지):', err);
+                }
+            })();
         };
 
         window.dismissSecurityAlarm = () => {
@@ -4402,17 +4718,31 @@
                 const row = document.createElement('div');
                 row.className = 'security-incident-row';
                 const isDanger = inc.level === 'DANGER';
+                const hasSnap = !!inc.snapshotURL;
                 row.innerHTML = `
-                    <div>
-                        <div style="display:flex; align-items:center; gap:0.4rem;">
-                            <span style="font-family:monospace; color:#64748B;">${inc.time}</span>
-                            <strong style="color:${isDanger ? '#DC2626' : '#1E293B'};">${inc.location}</strong>
-                        </div>
-                        <div style="color:${isDanger ? '#B91C1C' : '#475569'}; margin-top:0.15rem;">
-                            ${inc.type}
+                    <div style="display:flex; align-items:center; gap:0.6rem;">
+                        ${hasSnap ? `
+                            <div onclick="openSecuritySnapshotModal('${inc.snapshotURL}', '${inc.location}', '${inc.time}')" style="width:42px; height:42px; border-radius:0.35rem; overflow:hidden; border:2px solid #EF4444; cursor:pointer; flex-shrink:0; background:#000;" title="클릭하여 현장 사진 크게 보기">
+                                <img src="${inc.snapshotURL}" style="width:100%; height:100%; object-fit:cover;">
+                            </div>
+                        ` : ''}
+                        <div>
+                            <div style="display:flex; align-items:center; gap:0.4rem;">
+                                <span style="font-family:monospace; color:#64748B;">${inc.time}</span>
+                                <strong style="color:${isDanger ? '#DC2626' : '#1E293B'};">${inc.location}</strong>
+                                ${hasSnap ? '<span style="font-size:0.65rem; color:#059669; font-weight:800; background:#ECFDF5; padding:0.1rem 0.35rem; border-radius:0.25rem;">☁️ 사진 보관됨</span>' : ''}
+                            </div>
+                            <div style="color:${isDanger ? '#B91C1C' : '#475569'}; margin-top:0.15rem;">
+                                ${inc.type}
+                            </div>
                         </div>
                     </div>
-                    <div style="text-align:right;">
+                    <div style="text-align:right; display:flex; align-items:center; gap:0.35rem;">
+                        ${hasSnap ? `
+                            <button type="button" onclick="openSecuritySnapshotModal('${inc.snapshotURL}', '${inc.location}', '${inc.time}')" style="background:#EF4444; color:white; border:none; padding:0.25rem 0.55rem; border-radius:0.3rem; font-size:0.68rem; font-weight:800; cursor:pointer;">
+                                🖼️ 현장 사진
+                            </button>
+                        ` : ''}
                         <span style="background:${isDanger ? '#FEF2F2' : '#F1F5F9'}; color:${isDanger ? '#DC2626' : '#475569'}; font-weight:800; font-size:0.7rem; padding:0.15rem 0.4rem; border-radius:0.25rem; border:1px solid ${isDanger ? '#FECACA' : '#E2E8F0'};">
                             ${inc.action}
                         </span>

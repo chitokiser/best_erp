@@ -1,0 +1,1 @@
+import"./firebase-config-DeRfEPu4.js";/* empty css              */import{t as e}from"./auth-DVCcixJ2.js";/* empty css              */e(e=>{},()=>{location.href=`../login.html?redirect=`+encodeURIComponent(location.pathname)});

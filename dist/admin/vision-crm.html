@@ -10,9 +10,9 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
     <style>:root{--crm-primary:#4f46e5;--crm-primary-dark:#3730a3;--zalo-blue:#0068ff;--crm-success:#10b981;--crm-warning:#f59e0b;--crm-danger:#ef4444;--crm-dark:#0f172a;--crm-bg:#f8fafc}body{background:#f1f5f9;font-family:Plus Jakarta Sans,Noto Sans KR,sans-serif}.cam-viewport-wrap{background:#090d16;border:2px solid #1e293b;border-radius:1rem;justify-content:center;align-items:center;width:100%;height:380px;display:flex;position:relative;overflow:hidden;box-shadow:0 15px 30px -5px #0000004d}#webcamVideo{object-fit:cover;width:100%;height:100%}.radar-scan-line{pointer-events:none;background:linear-gradient(90deg,#0000,#10b981,#0000);width:100%;height:3px;animation:2.5s linear infinite radarScan;position:absolute;top:0;left:0;box-shadow:0 0 15px #10b981}@keyframes radarScan{0%{opacity:.8;top:0%}50%{opacity:1;top:98%}to{opacity:.8;top:0%}}.ai-target-box{pointer-events:none;background:#10b98126;border:2px solid #10b981;border-radius:6px;transition:all .3s;position:absolute}.ai-target-tag{color:#000;white-space:nowrap;background:#10b981;border-radius:4px;padding:.15rem .45rem;font-size:.68rem;font-weight:800;position:absolute;top:-26px;left:-2px}.cam-view-btn{color:#475569;cursor:pointer;background:#f8fafc;border:1px solid #cbd5e1;border-radius:.35rem;padding:.3rem .6rem;font-size:.75rem;font-weight:700;transition:all .2s}.cam-view-btn.active{color:#fff;background:#4f46e5;border-color:#4f46e5;box-shadow:0 2px 4px #4f46e540}.cam-channel-tab{cursor:pointer;color:#475569;background:#fff;border:1px solid #cbd5e1;border-radius:.35rem;align-items:center;gap:.3rem;padding:.3rem .65rem;font-size:.75rem;font-weight:700;transition:all .15s;display:inline-flex}.cam-channel-tab:hover{background:#f1f5f9;border-color:#94a3b8}.cam-channel-tab.active{color:#38bdf8;background:#0f172a;border-color:#0f172a;box-shadow:0 2px 4px #0f172a33}.cam-live-indicator{color:#fff;letter-spacing:.05em;background:#ef4444e6;border-radius:.25rem;align-items:center;gap:.25rem;padding:.12rem .4rem;font-size:.625rem;font-weight:800;display:inline-flex}.cam-sub-viewport{cursor:pointer;background:#090d16;border:2px solid #1e293b;border-radius:.6rem;justify-content:center;align-items:center;width:100%;height:100%;transition:all .2s;display:flex;position:relative;overflow:hidden}.cam-sub-viewport:hover{border-color:#38bdf8;transform:scale(.992);box-shadow:0 0 12px #38bdf866}.cam-sub-viewport.active-stream{border-color:#10b981}.cam-sub-header{z-index:10;color:#fff;text-shadow:0 1px 3px #000000e6;pointer-events:none;justify-content:space-between;align-items:center;font-size:.725rem;display:flex;position:absolute;top:8px;left:8px;right:8px}.cam-sub-footer{z-index:10;color:#ffffffd9;pointer-events:none;justify-content:space-between;align-items:center;font-size:.68rem;display:flex;position:absolute;bottom:8px;left:8px;right:8px}.crm-tab-bar{border-bottom:2px solid #e2e8f0;gap:.4rem;margin-bottom:1rem;padding-bottom:.25rem;display:flex;overflow-x:auto}.crm-tab-btn{color:#64748b;cursor:pointer;white-space:nowrap;background:0 0;border:none;border-radius:.5rem .5rem 0 0;align-items:center;gap:.35rem;padding:.6rem 1rem;font-size:.875rem;font-weight:700;transition:all .2s;display:flex}.crm-tab-btn.active{color:var(--crm-primary);border-bottom:3px solid var(--crm-primary);background:#eef2ff}.tier-filter-pill{color:#475569;cursor:pointer;background:#fff;border:1px solid #cbd5e1;border-radius:999px;padding:.35rem .75rem;font-size:.75rem;font-weight:700;transition:all .15s}.tier-filter-pill.active{background:var(--crm-primary);color:#fff;border-color:var(--crm-primary)}.customer-card-item{cursor:pointer;background:#fff;border:1.5px solid #e2e8f0;border-radius:.85rem;justify-content:space-between;align-items:center;gap:.75rem;margin-bottom:.75rem;padding:1rem;transition:all .2s;display:flex}.customer-card-item:hover{border-color:var(--crm-primary);transform:translateY(-2px);box-shadow:0 6px 15px -3px #4f46e51f}.modal-overlay{backdrop-filter:blur(4px);z-index:99999;background:#0f172abf;justify-content:center;align-items:center;padding:1rem;display:none;position:fixed;inset:0}.modal-box{background:#fff;border:1px solid #e2e8f0;border-radius:1.25rem;width:100%;max-width:680px;max-height:90vh;padding:1.75rem;position:relative;overflow-y:auto;box-shadow:0 25px 50px -12px #00000040}.timeline-item{border-left:2px solid #e2e8f0;margin-bottom:.85rem;padding-left:1.5rem;position:relative}.timeline-item:before{content:"";background:var(--crm-primary);border-radius:50%;width:8px;height:8px;position:absolute;top:4px;left:-5px}.table-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.75rem;display:grid}.table-seat-box{text-align:center;cursor:pointer;background:#fff;border:1.5px solid #e2e8f0;border-radius:.75rem;padding:.85rem .6rem;transition:all .2s}.table-seat-box.occupied{background:#eef2ff;border-color:#6366f1}.table-seat-box.empty{opacity:.75;background:#f8fafc;border-color:#cbd5e1}@keyframes securityAlarmFlash{0%{border-color:#ef4444;box-shadow:inset 0 0 0 6px #ef4444,0 0 30px #ef4444d9}50%{border-color:#b91c1c;box-shadow:inset 0 0 0 12px #b91c1c,0 0 60px #dc2626}to{border-color:#ef4444;box-shadow:inset 0 0 0 6px #ef4444,0 0 30px #ef4444d9}}.security-alarm-active{border:3px solid #ef4444!important;animation:.5s infinite alternate securityAlarmFlash!important}@keyframes pulseAlarm{0%{transform:translate(-50%)scale(1);box-shadow:0 4px 15px #ef444499}to{transform:translate(-50%)scale(1.03);box-shadow:0 8px 30px #ef4444}}.employee-card-item{background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;align-items:center;gap:.75rem;margin-bottom:.65rem;padding:.85rem;transition:all .2s;display:flex}.employee-card-item:hover{border-color:#6366f1;box-shadow:0 4px 12px #6366f11a}.security-incident-row{border-bottom:1px solid #f1f5f9;justify-content:space-between;align-items:center;padding:.65rem .8rem;font-size:.775rem;display:flex}.security-incident-row:last-child{border-bottom:none}</style>
-  <script type="module" crossorigin src="/assets/admin_vision-crm-aCH4Ujo0.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/firebase-config-BURgN9gX.js">
-  <link rel="modulepreload" crossorigin href="/assets/auth-iIMH-e68.js">
+  <script type="module" crossorigin src="/assets/admin_vision-crm-BR1Yy2XK.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/firebase-config-DeRfEPu4.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-DVCcixJ2.js">
   <link rel="modulepreload" crossorigin href="/assets/notification-hub-ChDr8WD_.js">
   <link rel="stylesheet" crossorigin href="/assets/admin-CCpgtoVo.css">
   <link rel="stylesheet" crossorigin href="/assets/style-CTsXkP_6.css">
@@ -425,6 +425,9 @@
                         <div style="display:flex; gap:0.4rem;">
                             <button type="button" onclick="checkEmployeeCommuteByCamera()" style="flex:1; background:#4F46E5; color:white; border:none; padding:0.5rem 0.8rem; border-radius:0.4rem; font-size:0.8rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:0.35rem; box-shadow:0 3px 8px rgba(79,70,229,0.25);">
                                 <span>⏰</span> 지금 카메라 앞 직원 출퇴근 체크 (AI 자동)
+                            </button>
+                            <button type="button" onclick="openFaceEnrollModal('EMPLOYEE')" style="background:white; border:1px solid #4F46E5; color:#3730A3; padding:0.5rem 0.8rem; border-radius:0.4rem; font-size:0.775rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.3rem; box-shadow:0 2px 6px rgba(99,102,241,0.15);">
+                                <span>📸</span> 직원 얼굴 등록
                             </button>
                         </div>
                         <div id="employeePunchResult" style="margin-top:0.5rem; font-size:0.775rem; display:none; padding:0.55rem 0.75rem; border-radius:0.4rem; line-height:1.45;"></div>
@@ -1056,20 +1059,23 @@
                 </div>
             </div>
 
-            <!-- Registration Mode Toggle (Tab 1 vs Tab 2) -->
-            <div style="display:flex; gap:0.5rem; margin-bottom:1rem; border-bottom:1px solid #E2E8F0; padding-bottom:0.5rem;">
-                <button type="button" id="tabEnrollExistingBtn" onclick="switchEnrollMode('EXISTING')" style="flex:1; padding:0.55rem; font-size:0.825rem; font-weight:800; border:none; border-radius:0.4rem; background:#4F46E5; color:white; cursor:pointer;">
-                    🔄 기존 회원에 내 얼굴 매칭
+            <!-- Registration Mode Toggle (고객 매칭 vs 신규 등록 vs 직원 얼굴 등록) -->
+            <div style="display:flex; gap:0.35rem; margin-bottom:1rem; border-bottom:1px solid #E2E8F0; padding-bottom:0.5rem;">
+                <button type="button" id="tabEnrollExistingBtn" onclick="switchEnrollMode('EXISTING')" style="flex:1; padding:0.5rem 0.3rem; font-size:0.775rem; font-weight:800; border:none; border-radius:0.4rem; background:#4F46E5; color:white; cursor:pointer;">
+                    🔄 기존 고객 매칭
                 </button>
-                <button type="button" id="tabEnrollNewBtn" onclick="switchEnrollMode('NEW')" style="flex:1; padding:0.55rem; font-size:0.825rem; font-weight:700; border:1px solid #CBD5E1; border-radius:0.4rem; background:#F1F5F9; color:#475569; cursor:pointer;">
-                    ➕ 신규 회원으로 추가
+                <button type="button" id="tabEnrollNewBtn" onclick="switchEnrollMode('NEW')" style="flex:1; padding:0.5rem 0.3rem; font-size:0.775rem; font-weight:700; border:1px solid #CBD5E1; border-radius:0.4rem; background:#F1F5F9; color:#475569; cursor:pointer;">
+                    ➕ 신규 고객 등록
+                </button>
+                <button type="button" id="tabEnrollEmpBtn" onclick="switchEnrollMode('EMPLOYEE')" style="flex:1; padding:0.5rem 0.3rem; font-size:0.775rem; font-weight:700; border:1px solid #CBD5E1; border-radius:0.4rem; background:#F1F5F9; color:#475569; cursor:pointer;">
+                    ⏰ 직원 얼굴 등록
                 </button>
             </div>
 
             <!-- Form B: 기존 고객과 매칭 업데이트 -->
             <div id="enrollExistingCustomerSection">
                 <div style="background:#ECFDF5; border:1px solid #A7F3D0; border-radius:0.5rem; padding:0.65rem; font-size:0.775rem; color:#065F46; margin-bottom:0.85rem; line-height:1.4;">
-                    💡 <strong>안내:</strong> 가맹점 등록 회원(최진영, William Cater, fu kang 등)을 선택하시면, 현재 캡처된 실제 얼굴을 해당 회원에게 1:1 매칭 등록합니다.
+                    💡 <strong>고객 안면 매칭 안내:</strong> 가맹점 등록 회원(최진영, William Cater, fu kang 등)을 선택하시면, 현재 카메라에 비친 얼굴 사진과 128차원 벡터를 <strong>서버에 저장</strong>하여 1:1 자동 식별합니다.
                 </div>
                 <div style="margin-bottom:0.85rem;">
                     <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.25rem;">매칭 대상 고객 선택 *</label>
@@ -1109,13 +1115,70 @@
                 </div>
             </div>
 
-            <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1.25rem;">
-                <button type="button" onclick="closeFaceEnrollModal()" style="padding:0.65rem 1.1rem; border:1px solid #CBD5E1; border-radius:0.4rem; background:white; font-size:0.85rem; cursor:pointer;">
-                    취소
-                </button>
-                <button type="button" onclick="saveEnrolledFace()" style="padding:0.65rem 1.35rem; border:none; border-radius:0.4rem; background:#10B981; color:white; font-size:0.85rem; font-weight:800; cursor:pointer; box-shadow:0 4px 10px rgba(16,185,129,0.3);">
-                    💾 안면 등록 및 매칭 확정
-                </button>
+            <!-- Form C: 직원 얼굴 등록 및 서버 저장 -->
+            <div id="enrollEmployeeSection" style="display:none;">
+                <div style="background:#EFF6FF; border:1px solid #BFDBFE; border-radius:0.5rem; padding:0.65rem; font-size:0.775rem; color:#1E40AF; margin-bottom:0.85rem; line-height:1.4;">
+                    💼 <strong>직원 얼굴 등록 안내:</strong> 매장 직원을 선택하시면 현재 카메라에 캡처된 실제 얼굴 사진과 128차원 생체 벡터를 <strong>클라우드 서버에 영구 저장</strong>합니다. 이후 [직원 출퇴근 체크] 시 실물 얼굴로 자동 타각됩니다.
+                </div>
+                <div style="margin-bottom:0.85rem;">
+                    <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.25rem;">등록할 매장 직원 선택 *</label>
+                    <select id="enrollEmployeeSelect" style="width:100%; padding:0.6rem; border:1px solid #CBD5E1; border-radius:0.4rem; font-size:0.85rem; box-sizing:border-box;">
+                    </select>
+                </div>
+                <div style="font-size:0.75rem; color:#64748B;">
+                    • 등록 완료 즉시 근태 카드 프로필 사진이 업데이트되며, AI 안면 인식 모델에 동기화됩니다.
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1.25rem;">
+                <span id="enrollServerStatusIndicator" style="font-size:0.75rem; color:#059669; font-weight:700;">
+                    ☁️ 서버 클라우드 저장 활성화
+                </span>
+                <div style="display:flex; gap:0.5rem;">
+                    <button type="button" onclick="closeFaceEnrollModal()" style="padding:0.6rem 1rem; border:1px solid #CBD5E1; border-radius:0.4rem; background:white; font-size:0.825rem; cursor:pointer;">
+                        취소
+                    </button>
+                    <button type="button" id="btnConfirmFaceEnroll" onclick="saveEnrolledFace()" style="padding:0.6rem 1.25rem; border:none; border-radius:0.4rem; background:#10B981; color:white; font-size:0.825rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 4px 10px rgba(16,185,129,0.3);">
+                        <span>☁️</span> 사진 서버 저장 및 확정
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================================================== -->
+    <!-- MODAL 6: 방범 경비 침입자 스냅샷 사진 확인 및 다운로드 모달 -->
+    <!-- ==================================================== -->
+    <div class="modal-overlay" id="securitySnapshotModal" style="display:none;">
+        <div class="modal-box" style="max-width:620px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #E2E8F0; padding-bottom:0.75rem; margin-bottom:1rem;">
+                <h3 style="margin:0; font-size:1.1rem; color:#B91C1C; display:flex; align-items:center; gap:0.4rem;">
+                    <span>🚨</span> 방범 침입 감지 현장 스냅샷 (서버 저장본)
+                </h3>
+                <button onclick="closeSecuritySnapshotModal()" style="background:none; border:none; font-size:1.35rem; color:#94A3B8; cursor:pointer;">✕</button>
+            </div>
+
+            <div style="position:relative; width:100%; border-radius:0.6rem; overflow:hidden; border:2px solid #EF4444; background:#000; margin-bottom:0.85rem;">
+                <img id="securitySnapshotImg" src="" style="width:100%; display:block; object-fit:contain; max-height:380px;">
+                <div style="position:absolute; top:8px; left:8px; background:rgba(239,68,68,0.95); color:white; font-size:0.75rem; font-weight:800; padding:0.25rem 0.55rem; border-radius:0.35rem; box-shadow:0 2px 6px rgba(0,0,0,0.3);">
+                    🚨 무단 침입 현장 포착
+                </div>
+                <div id="securitySnapshotWatermark" style="position:absolute; bottom:8px; left:8px; right:8px; background:rgba(0,0,0,0.85); color:white; font-size:0.72rem; padding:0.4rem 0.65rem; border-radius:0.3rem; font-family:monospace; line-height:1.4;">
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem;">
+                <span id="securitySnapshotCloudStatus" style="font-size:0.75rem; color:#059669; font-weight:700;">
+                    ☁️ Firebase Cloud 서버 안전 보관 완료
+                </span>
+                <div style="display:flex; gap:0.5rem;">
+                    <a id="securitySnapshotDownloadBtn" href="" download="security_intruder_snapshot.jpg" style="background:#1E293B; color:white; padding:0.55rem 0.95rem; border-radius:0.4rem; font-size:0.8rem; font-weight:800; text-decoration:none; display:inline-flex; align-items:center; gap:0.3rem;">
+                        <span>💾</span> 사진 다운로드
+                    </a>
+                    <button type="button" onclick="closeSecuritySnapshotModal()" style="padding:0.55rem 0.95rem; border:1px solid #CBD5E1; border-radius:0.4rem; background:white; font-size:0.8rem; font-weight:700; cursor:pointer;">
+                        닫기
+                    </button>
+                </div>
             </div>
         </div>
     </div>
