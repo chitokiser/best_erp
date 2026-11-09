@@ -7,8 +7,9 @@
     <title>AI Smart Store CRM & 비전 관제 시스템 - BestERP</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
     <style>:root{--crm-primary:#4f46e5;--crm-primary-dark:#3730a3;--zalo-blue:#0068ff;--crm-success:#10b981;--crm-warning:#f59e0b;--crm-danger:#ef4444;--crm-dark:#0f172a;--crm-bg:#f8fafc}body{background:#f1f5f9;font-family:Plus Jakarta Sans,Noto Sans KR,sans-serif}.cam-viewport-wrap{background:#090d16;border:2px solid #1e293b;border-radius:1rem;justify-content:center;align-items:center;width:100%;height:380px;display:flex;position:relative;overflow:hidden;box-shadow:0 15px 30px -5px #0000004d}#webcamVideo{object-fit:cover;width:100%;height:100%}.radar-scan-line{pointer-events:none;background:linear-gradient(90deg,#0000,#10b981,#0000);width:100%;height:3px;animation:2.5s linear infinite radarScan;position:absolute;top:0;left:0;box-shadow:0 0 15px #10b981}@keyframes radarScan{0%{opacity:.8;top:0%}50%{opacity:1;top:98%}to{opacity:.8;top:0%}}.ai-target-box{pointer-events:none;background:#10b98126;border:2px solid #10b981;border-radius:6px;transition:all .3s;position:absolute}.ai-target-tag{color:#000;white-space:nowrap;background:#10b981;border-radius:4px;padding:.15rem .45rem;font-size:.68rem;font-weight:800;position:absolute;top:-26px;left:-2px}.crm-tab-bar{border-bottom:2px solid #e2e8f0;gap:.4rem;margin-bottom:1rem;padding-bottom:.25rem;display:flex;overflow-x:auto}.crm-tab-btn{color:#64748b;cursor:pointer;white-space:nowrap;background:0 0;border:none;border-radius:.5rem .5rem 0 0;align-items:center;gap:.35rem;padding:.6rem 1rem;font-size:.875rem;font-weight:700;transition:all .2s;display:flex}.crm-tab-btn.active{color:var(--crm-primary);border-bottom:3px solid var(--crm-primary);background:#eef2ff}.tier-filter-pill{color:#475569;cursor:pointer;background:#fff;border:1px solid #cbd5e1;border-radius:999px;padding:.35rem .75rem;font-size:.75rem;font-weight:700;transition:all .15s}.tier-filter-pill.active{background:var(--crm-primary);color:#fff;border-color:var(--crm-primary)}.customer-card-item{cursor:pointer;background:#fff;border:1.5px solid #e2e8f0;border-radius:.85rem;justify-content:space-between;align-items:center;gap:.75rem;margin-bottom:.75rem;padding:1rem;transition:all .2s;display:flex}.customer-card-item:hover{border-color:var(--crm-primary);transform:translateY(-2px);box-shadow:0 6px 15px -3px #4f46e51f}.modal-overlay{backdrop-filter:blur(4px);z-index:99999;background:#0f172abf;justify-content:center;align-items:center;padding:1rem;display:none;position:fixed;inset:0}.modal-box{background:#fff;border:1px solid #e2e8f0;border-radius:1.25rem;width:100%;max-width:680px;max-height:90vh;padding:1.75rem;position:relative;overflow-y:auto;box-shadow:0 25px 50px -12px #00000040}.timeline-item{border-left:2px solid #e2e8f0;margin-bottom:.85rem;padding-left:1.5rem;position:relative}.timeline-item:before{content:"";background:var(--crm-primary);border-radius:50%;width:8px;height:8px;position:absolute;top:4px;left:-5px}.table-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.75rem;display:grid}.table-seat-box{text-align:center;cursor:pointer;background:#fff;border:1.5px solid #e2e8f0;border-radius:.75rem;padding:.85rem .6rem;transition:all .2s}.table-seat-box.occupied{background:#eef2ff;border-color:#6366f1}.table-seat-box.empty{opacity:.75;background:#f8fafc;border-color:#cbd5e1}</style>
-  <script type="module" crossorigin src="/assets/admin_vision-crm-DdimP8M2.js"></script>
+  <script type="module" crossorigin src="/assets/admin_vision-crm-C5jmcN0C.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/firebase-config-BURgN9gX.js">
   <link rel="modulepreload" crossorigin href="/assets/auth-DIhk9xi8.js">
   <link rel="modulepreload" crossorigin href="/assets/notification-hub-ChDr8WD_.js">
@@ -187,14 +188,26 @@
 
                 <!-- Video Viewport -->
                 <div class="cam-viewport-wrap" id="camViewport">
-                    <video id="webcamVideo" autoplay playsinline muted style="display:none;"></video>
+                    <video id="webcamVideo" autoplay playsinline muted style="display:none; width:100%; height:100%; object-fit:cover;"></video>
+                    <canvas id="faceAiCanvas" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:15;"></canvas>
                     
                     <img id="simulatedStreamImg" src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1000&auto=format&fit=crop&q=80" style="width:100%; height:100%; object-fit:cover; filter:brightness(0.85);">
 
                     <div class="radar-scan-line"></div>
 
+                    <!-- Realtime AI Engine Status Badge (Top-Left) -->
+                    <div style="position:absolute; top:12px; left:12px; background:rgba(15,23,42,0.85); backdrop-filter:blur(6px); color:white; padding:0.4rem 0.75rem; border-radius:0.5rem; font-size:0.75rem; font-weight:800; display:flex; align-items:center; gap:0.4rem; z-index:20; border:1px solid rgba(255,255,255,0.15);">
+                        <span id="aiEngineDot" style="width:8px; height:8px; border-radius:50%; background:#10B981; display:inline-block;"></span>
+                        <span id="aiEngineStatusText">AI 실시간 안면 구별(식별) 대기 중</span>
+                    </div>
+
+                    <!-- Realtime Live Match Pop-up Banner (Top-Right) -->
+                    <div id="aiLiveMatchAlert" style="position:absolute; top:12px; right:12px; background:linear-gradient(135deg, rgba(16,185,129,0.95) 0%, rgba(5,150,105,0.95) 100%); backdrop-filter:blur(6px); color:white; padding:0.45rem 0.85rem; border-radius:0.5rem; font-size:0.775rem; font-weight:800; display:none; align-items:center; gap:0.4rem; z-index:25; box-shadow:0 6px 16px rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.25); animation:popUp 0.3s ease;">
+                        <span>🎯</span> <span id="aiLiveMatchAlertText">김민수 VIP 감지 (일치율 98.4%)</span>
+                    </div>
+
                     <!-- AI Non-Identifying Overlays -->
-                    <div id="aiTargetLayer" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;">
+                    <div id="aiTargetLayer" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:5;">
                         <div class="ai-target-box" style="top:25%; left:28%; width:110px; height:140px; border-color:#10b981;">
                             <div class="ai-target-tag" style="background:#10b981;">Table #04 착석 (체류 38분)</div>
                         </div>
@@ -204,8 +217,8 @@
                     </div>
 
                     <!-- Status Overlay -->
-                    <div style="position:absolute; bottom:12px; left:12px; background:rgba(0,0,0,0.75); backdrop-filter:blur(4px); color:white; padding:0.35rem 0.65rem; border-radius:0.4rem; font-size:0.725rem; font-family:monospace;">
-                        EDGE-AI: 비식별 객체 추적 가동중 | FPS: 30 | PRIVACY SHIELD ON
+                    <div style="position:absolute; bottom:12px; left:12px; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); color:white; padding:0.35rem 0.65rem; border-radius:0.4rem; font-size:0.725rem; font-family:monospace; z-index:20;">
+                        <span id="aiLiveStatusText">EDGE-AI: 1:N 실시간 안면 인식 & 감정 분석 가동중 | FPS: 30</span>
                     </div>
                 </div>
 
