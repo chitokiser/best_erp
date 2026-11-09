@@ -8,7 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/admin.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js">        document.addEventListener("DOMContentLoaded", () => { window.renderCameraChannelTabs(); });
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
     <style>
         :root {
@@ -80,6 +81,111 @@
             padding: 0.15rem 0.45rem;
             border-radius: 4px;
             white-space: nowrap;
+        }
+
+        
+        /* Multi-Camera Channel & Grid Styling */
+        .cam-view-btn {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border: 1px solid #CBD5E1;
+            border-radius: 0.35rem;
+            background: #F8FAFC;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .cam-view-btn.active {
+            background: #4F46E5;
+            color: white;
+            border-color: #4F46E5;
+            box-shadow: 0 2px 4px rgba(79,70,229,0.25);
+        }
+        .cam-channel-tab {
+            padding: 0.3rem 0.65rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border-radius: 0.35rem;
+            cursor: pointer;
+            border: 1px solid #CBD5E1;
+            background: #FFFFFF;
+            color: #475569;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: all 0.15s;
+        }
+        .cam-channel-tab:hover {
+            border-color: #94A3B8;
+            background: #F1F5F9;
+        }
+        .cam-channel-tab.active {
+            background: #0F172A;
+            color: #38BDF8;
+            border-color: #0F172A;
+            box-shadow: 0 2px 4px rgba(15,23,42,0.2);
+        }
+        .cam-live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            padding: 0.12rem 0.4rem;
+            border-radius: 0.25rem;
+            font-weight: 800;
+            font-size: 0.625rem;
+            letter-spacing: 0.05em;
+        }
+        .cam-sub-viewport {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: #090d16;
+            border-radius: 0.6rem;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid #1E293B;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .cam-sub-viewport:hover {
+            border-color: #38BDF8;
+            box-shadow: 0 0 12px rgba(56,189,248,0.4);
+            transform: scale(0.992);
+        }
+        .cam-sub-viewport.active-stream {
+            border-color: #10B981;
+        }
+        .cam-sub-header {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            right: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+            font-size: 0.725rem;
+            color: white;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+            pointer-events: none;
+        }
+        .cam-sub-footer {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            right: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+            font-size: 0.68rem;
+            color: rgba(255,255,255,0.85);
+            pointer-events: none;
         }
 
         /* CRM Tabs */
@@ -334,6 +440,9 @@
                         <button onclick="scanUsbCameraDevices(true)" style="background:#f1f5f9; border:1px solid #cbd5e1; padding:0.35rem 0.6rem; border-radius:0.35rem; font-size:0.75rem; font-weight:700; cursor:pointer;">
                             🔍 재검색
                         </button>
+                        <button onclick="openCameraManagerModal()" style="background:#4F46E5; color:white; border:none; padding:0.35rem 0.75rem; border-radius:0.35rem; font-size:0.75rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.25rem; box-shadow:0 2px 4px rgba(79,70,229,0.25);">
+                            <span>📹</span> 카메라 추가/셋팅
+                        </button>
                     </div>
                 </div>
 
@@ -380,46 +489,73 @@
             
             <!-- Left: CCTV 매장 관제 & 비식별 방문 행동 분석 (§2) -->
             <div class="panel" style="padding:1.25rem; display:flex; flex-direction:column; gap:0.75rem;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3 style="margin:0; font-size:1.05rem; color:#1e293b; display:flex; align-items:center; gap:0.4rem;">
-                        <span>📹</span> CCTV #01 (메인 카운터 & 홀 모니터링)
-                    </h3>
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                        <h3 style="margin:0; font-size:1.05rem; color:#1e293b; display:flex; align-items:center; gap:0.4rem;" id="activeCameraTitle">
+                            <span>📹</span> CCTV #01 (메인 카운터 & 입장 모니터링)
+                        </h3>
+                        <span class="cam-live-indicator">● LIVE</span>
+                    </div>
                     <span style="font-size:0.75rem; color:#64748b; font-family:monospace;" id="liveTimestamp">2026-11-08 18:20:00</span>
                 </div>
 
-                <!-- Video Viewport -->
+                <!-- Camera Multi-Channel Tabs & View Mode Bar -->
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:0.5rem; padding:0.4rem 0.6rem;">
+                    <!-- Dynamic Channel Tabs -->
+                    <div style="display:flex; gap:0.35rem; align-items:center; flex-wrap:wrap;" id="cameraChannelTabs">
+                    </div>
+                    <!-- Multi-View Modes -->
+                    <div style="display:flex; gap:0.25rem; align-items:center;">
+                        <span style="font-size:0.72rem; color:#64748b; font-weight:700; margin-right:0.2rem;">분할뷰:</span>
+                        <button type="button" onclick="setCameraViewMode('single')" id="viewModeSingleBtn" class="cam-view-btn active" title="단일 채널 확대">🔲 단일</button>
+                        <button type="button" onclick="setCameraViewMode('dual')" id="viewModeDualBtn" class="cam-view-btn" title="2분할 뷰">◫ 2분할</button>
+                        <button type="button" onclick="setCameraViewMode('quad')" id="viewModeQuadBtn" class="cam-view-btn" title="4분할 쿼드 매트릭스">⊞ 4분할</button>
+                        <button type="button" onclick="openCameraManagerModal()" style="background:#0F172A; color:white; border:none; padding:0.3rem 0.65rem; border-radius:0.35rem; font-size:0.72rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.25rem;">
+                            <span>➕</span> 카메라 셋팅
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Video Viewport Container -->
                 <div class="cam-viewport-wrap" id="camViewport">
-                    <video id="webcamVideo" autoplay playsinline muted style="display:none; width:100%; height:100%; object-fit:cover;"></video>
-                    <canvas id="faceAiCanvas" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:15;"></canvas>
-                    
-                    <img id="simulatedStreamImg" src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1000&auto=format&fit=crop&q=80" style="width:100%; height:100%; object-fit:cover; filter:brightness(0.85);">
+                    <!-- 1. Single View (Full Focused Channel) -->
+                    <div id="singleCamView" style="position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
+                        <video id="webcamVideo" autoplay playsinline muted style="display:none; width:100%; height:100%; object-fit:cover;"></video>
+                        <canvas id="faceAiCanvas" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:15;"></canvas>
+                        
+                        <img id="simulatedStreamImg" src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1000&auto=format&fit=crop&q=80" style="width:100%; height:100%; object-fit:cover; filter:brightness(0.85);">
 
-                    <div class="radar-scan-line"></div>
+                        <div class="radar-scan-line"></div>
 
-                    <!-- Realtime AI Engine Status Badge (Top-Left) -->
-                    <div style="position:absolute; top:12px; left:12px; background:rgba(15,23,42,0.85); backdrop-filter:blur(6px); color:white; padding:0.4rem 0.75rem; border-radius:0.5rem; font-size:0.75rem; font-weight:800; display:flex; align-items:center; gap:0.4rem; z-index:20; border:1px solid rgba(255,255,255,0.15);">
-                        <span id="aiEngineDot" style="width:8px; height:8px; border-radius:50%; background:#10B981; display:inline-block;"></span>
-                        <span id="aiEngineStatusText">AI 실시간 안면 구별(식별) 대기 중</span>
-                    </div>
-
-                    <!-- Realtime Live Match Pop-up Banner (Top-Right) -->
-                    <div id="aiLiveMatchAlert" style="position:absolute; top:12px; right:12px; background:linear-gradient(135deg, rgba(16,185,129,0.95) 0%, rgba(5,150,105,0.95) 100%); backdrop-filter:blur(6px); color:white; padding:0.45rem 0.85rem; border-radius:0.5rem; font-size:0.775rem; font-weight:800; display:none; align-items:center; gap:0.4rem; z-index:25; box-shadow:0 6px 16px rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.25); animation:popUp 0.3s ease;">
-                        <span>🎯</span> <span id="aiLiveMatchAlertText">김민수 VIP 감지 (일치율 98.4%)</span>
-                    </div>
-
-                    <!-- AI Non-Identifying Overlays -->
-                    <div id="aiTargetLayer" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:5;">
-                        <div class="ai-target-box" style="top:25%; left:28%; width:110px; height:140px; border-color:#10b981;">
-                            <div class="ai-target-tag" style="background:#10b981;">Table #04 착석 (체류 38분)</div>
+                        <!-- Realtime AI Engine Status Badge (Top-Left) -->
+                        <div style="position:absolute; top:12px; left:12px; background:rgba(15,23,42,0.85); backdrop-filter:blur(6px); color:white; padding:0.4rem 0.75rem; border-radius:0.5rem; font-size:0.75rem; font-weight:800; display:flex; align-items:center; gap:0.4rem; z-index:20; border:1px solid rgba(255,255,255,0.15);">
+                            <span id="aiEngineDot" style="width:8px; height:8px; border-radius:50%; background:#10B981; display:inline-block;"></span>
+                            <span id="aiEngineStatusText">AI 실시간 안면 구별(식별) 대기 중</span>
                         </div>
-                        <div class="ai-target-box" style="top:32%; left:58%; width:105px; height:135px; border-color:#6366f1;">
-                            <div class="ai-target-tag" style="background:#6366f1; color:white;">입구 통과 (신규 유입)</div>
+
+                        <!-- Realtime Live Match Pop-up Banner (Top-Right) -->
+                        <div id="aiLiveMatchAlert" style="position:absolute; top:12px; right:12px; background:linear-gradient(135deg, rgba(16,185,129,0.95) 0%, rgba(5,150,105,0.95) 100%); backdrop-filter:blur(6px); color:white; padding:0.45rem 0.85rem; border-radius:0.5rem; font-size:0.775rem; font-weight:800; display:none; align-items:center; gap:0.4rem; z-index:25; box-shadow:0 6px 16px rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.25); animation:popUp 0.3s ease;">
+                            <span>🎯</span> <span id="aiLiveMatchAlertText">고객 실시간 감지</span>
+                        </div>
+
+                        <!-- AI Non-Identifying Overlays -->
+                        <div id="aiTargetLayer" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:5;">
+                            <div class="ai-target-box" style="top:25%; left:28%; width:110px; height:140px; border-color:#10b981;">
+                                <div class="ai-target-tag" style="background:#10b981;">Table #04 착석 (체류 38분)</div>
+                            </div>
+                            <div class="ai-target-box" style="top:32%; left:58%; width:105px; height:135px; border-color:#6366f1;">
+                                <div class="ai-target-tag" style="background:#6366f1; color:white;">입구 통과 (신규 유입)</div>
+                            </div>
+                        </div>
+
+                        <!-- Status Overlay -->
+                        <div style="position:absolute; bottom:12px; left:12px; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); color:white; padding:0.35rem 0.65rem; border-radius:0.4rem; font-size:0.725rem; font-family:monospace; z-index:20;">
+                            <span id="aiLiveStatusText">EDGE-AI: 1:N 실시간 안면 인식 & 감정 분석 가동중 | FPS: 30</span>
                         </div>
                     </div>
 
-                    <!-- Status Overlay -->
-                    <div style="position:absolute; bottom:12px; left:12px; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); color:white; padding:0.35rem 0.65rem; border-radius:0.4rem; font-size:0.725rem; font-family:monospace; z-index:20;">
-                        <span id="aiLiveStatusText">EDGE-AI: 1:N 실시간 안면 인식 & 감정 분석 가동중 | FPS: 30</span>
+                    <!-- 2. Multi Grid View (Dual 1x2 or Quad 2x2 Matrix) -->
+                    <div id="multiCamGrid" style="display:none; width:100%; height:100%; padding:0.5rem; box-sizing:border-box;">
                     </div>
                 </div>
 
@@ -904,6 +1040,113 @@
     </div>
 
     
+    
+    <!-- ==================================================== -->
+    <!-- MODAL 6: 다중 CCTV 카메라 추가 및 셋팅 모달              -->
+    <!-- ==================================================== -->
+    <div class="modal-overlay" id="cameraManagerModal" style="display:none;">
+        <div class="modal-box" style="max-width:680px; max-height:88vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #E2E8F0; padding-bottom:0.75rem; margin-bottom:1rem;">
+                <h3 style="margin:0; font-size:1.2rem; color:#1E293B; display:flex; align-items:center; gap:0.4rem;">
+                    <span>📹</span> 매장 다중 CCTV 카메라 관리 및 추가 셋팅
+                </h3>
+                <button onclick="closeCameraManagerModal()" style="background:none; border:none; font-size:1.35rem; color:#94A3B8; cursor:pointer;">✕</button>
+            </div>
+
+            <div style="background:#EFF6FF; border:1px solid #BFDBFE; border-radius:0.6rem; padding:0.65rem 0.85rem; font-size:0.775rem; color:#1E40AF; line-height:1.5; margin-bottom:1rem;">
+                <strong>💡 다중 카메라 연동 구조:</strong><br>
+                매장에 설치된 여러 대의 USB 웹캠, 포스 연동 카메라, 네트워크 IP 카메라(RTSP/WebRTC)를 자유롭게 추가하여 <strong>단일/2분할/4분할 쿼드 뷰</strong>로 실시간 관제할 수 있습니다.
+            </div>
+
+            <!-- Current Registered Cameras List -->
+            <div style="margin-bottom:1.25rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                    <strong style="font-size:0.875rem; color:#1E293B;">📋 현재 등록된 카메라 목록 (<span id="storeCamCount">4</span>대)</strong>
+                </div>
+                <div style="border:1px solid #E2E8F0; border-radius:0.5rem; overflow:hidden;">
+                    <table style="width:100%; border-collapse:collapse; font-size:0.775rem; text-align:left;">
+                        <thead style="background:#F8FAFC; border-bottom:1px solid #E2E8F0;">
+                            <tr>
+                                <th style="padding:0.55rem 0.75rem;">채널</th>
+                                <th style="padding:0.55rem 0.75rem;">카메라 명칭</th>
+                                <th style="padding:0.55rem 0.75rem;">관제 구역/목적</th>
+                                <th style="padding:0.55rem 0.75rem;">소스</th>
+                                <th style="padding:0.55rem 0.75rem; text-align:center;">상태</th>
+                                <th style="padding:0.55rem 0.75rem; text-align:center;">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cameraListTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Add New Camera Form Accordion -->
+            <div style="background:#F8FAFC; border:1.5px dashed #CBD5E1; border-radius:0.75rem; padding:1rem; margin-bottom:1rem;">
+                <strong style="display:block; font-size:0.9rem; color:#0F172A; margin-bottom:0.75rem;">➕ 신규 카메라 추가 등록</strong>
+                <form onsubmit="handleAddNewCamera(event)">
+                    <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
+                        <div>
+                            <label style="display:block; font-size:0.775rem; font-weight:700; margin-bottom:0.25rem;">카메라 명칭 *</label>
+                            <input type="text" id="newCamName" required placeholder="예: CCTV #05 (주방 입구 & 퇴식구)" style="width:100%; padding:0.55rem; border:1px solid #CBD5E1; border-radius:0.4rem; font-size:0.8rem; box-sizing:border-box;">
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:0.775rem; font-weight:700; margin-bottom:0.25rem;">관제 구역 및 목적</label>
+                            <select id="newCamZone" style="width:100%; padding:0.55rem; border:1px solid #CBD5E1; border-radius:0.4rem; font-size:0.8rem; box-sizing:border-box;">
+                                <option value="COUNTER">카운터 & 입장문 (AI 안면인식)</option>
+                                <option value="HALL">중앙 홀 (유입량 & 피플카운팅)</option>
+                                <option value="TABLES">테이블 좌석 (체류시간 & 착석율)</option>
+                                <option value="VIP_ROOM">VIP 전용 룸 & 프라이빗 라운지</option>
+                                <option value="TERRACE">야외 테라스 & 흡연구역</option>
+                                <option value="KITCHEN">주방 출입구 & 보안구역</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:0.75rem;">
+                        <label style="display:block; font-size:0.775rem; font-weight:700; margin-bottom:0.25rem;">비디오 입력 소스 타입</label>
+                        <select id="newCamSourceType" onchange="onNewCamSourceTypeChange(this.value)" style="width:100%; padding:0.55rem; border:1px solid #CBD5E1; border-radius:0.4rem; font-size:0.8rem; box-sizing:border-box;">
+                            <option value="usb">🔌 연결된 USB 웹캠 / 비디오 하드웨어 장치</option>
+                            <option value="stream">🌐 네트워크 IP 카메라 (RTSP / HTTP / HLS 스트림 URL)</option>
+                            <option value="simulated">🎥 가상 매장 시뮬레이션 스트림 (데모용)</option>
+                        </select>
+                    </div>
+
+                    <div id="newCamUsbDeviceWrap" style="margin-bottom:0.75rem;">
+                        <label style="display:block; font-size:0.775rem; font-weight:700; margin-bottom:0.25rem;">연결할 USB 카메라 하드웨어</label>
+                        <select id="newCamUsbSelect" style="width:100%; padding:0.55rem; border:1px solid #CBD5E1; border-radius:0.4rem; font-size:0.8rem; box-sizing:border-box;">
+                        </select>
+                    </div>
+
+                    <div id="newCamStreamUrlWrap" style="display:none; margin-bottom:0.75rem;">
+                        <label style="display:block; font-size:0.775rem; font-weight:700; margin-bottom:0.25rem;">IP 카메라 스트림 URL (RTSP / HLS / MP4)</label>
+                        <input type="text" id="newCamStreamUrl" placeholder="rtsp://admin:pass@192.168.1.100:554/ch1 또는 https://..." style="width:100%; padding:0.55rem; border:1px solid #CBD5E1; border-radius:0.4rem; font-size:0.8rem; box-sizing:border-box;">
+                    </div>
+
+                    <div id="newCamSimulatedWrap" style="display:none; margin-bottom:0.75rem;">
+                        <label style="display:block; font-size:0.775rem; font-weight:700; margin-bottom:0.25rem;">시뮬레이션 영상 테마</label>
+                        <select id="newCamSimPreset" style="width:100%; padding:0.55rem; border:1px solid #CBD5E1; border-radius:0.4rem; font-size:0.8rem; box-sizing:border-box;">
+                            <option value="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1000&auto=format&fit=crop&q=80">메인 카운터 & 입장 (레스토랑)</option>
+                            <option value="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1000&auto=format&fit=crop&q=80">중앙 다이닝 홀 & 테이블 동선</option>
+                            <option value="https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?w=1000&auto=format&fit=crop&q=80">테이블석 & 바 카운터 체류구역</option>
+                            <option value="https://images.unsplash.com/photo-1578474846511-04ba529f0b88?w=1000&auto=format&fit=crop&q=80">VIP 프라이빗 룸</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" style="background:#10B981; color:white; border:none; padding:0.65rem 1.25rem; border-radius:0.4rem; font-size:0.825rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 2px 6px rgba(16,185,129,0.3);">
+                        <span>💾</span> 새 카메라 추가 등록
+                    </button>
+                </form>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end;">
+                <button type="button" onclick="closeCameraManagerModal()" style="padding:0.6rem 1.25rem; border:1px solid #CBD5E1; border-radius:0.4rem; background:white; font-size:0.825rem; font-weight:700; cursor:pointer;">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ==================================================== -->
     <!-- MODAL 5: 실시간 안면(얼굴) 등록 및 사진 매칭 업데이트 모달 -->
     <!-- ==================================================== -->
@@ -1001,6 +1244,361 @@
         import { collection, addDoc, getDocs, doc, setDoc, onSnapshot, deleteDoc, serverTimestamp, query, where, orderBy, limit } from 'firebase/firestore';
 
         initNotificationHub();
+
+        
+        // ==========================================
+        // 📹 다중 CCTV 카메라 관리 및 멀티 분할 관제 시스템
+        // ==========================================
+        let storeCameras = [
+            {
+                id: 'cam-01',
+                name: 'CCTV #01 (메인 카운터 & 입장)',
+                zone: 'COUNTER',
+                zoneLabel: '메인 카운터 & 입장문',
+                purpose: 'AI 안면 인식 & 고객 식별',
+                sourceType: 'usb',
+                deviceId: '',
+                streamUrl: '',
+                simulatedSrc: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1000&auto=format&fit=crop&q=80',
+                active: true
+            },
+            {
+                id: 'cam-02',
+                name: 'CCTV #02 (중앙 홀 & 유입 동선)',
+                zone: 'HALL',
+                zoneLabel: '중앙 홀 & 유입 동선',
+                purpose: '방문객 수 (Footfall) 피플 카운팅',
+                sourceType: 'simulated',
+                deviceId: '',
+                streamUrl: '',
+                simulatedSrc: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1000&auto=format&fit=crop&q=80',
+                active: true
+            },
+            {
+                id: 'cam-03',
+                name: 'CCTV #03 (테이블 구역 & 착석)',
+                zone: 'TABLES',
+                zoneLabel: '테이블 좌석 구역',
+                purpose: '테이블 이용률 & 체류 시간 (Dwell)',
+                sourceType: 'simulated',
+                deviceId: '',
+                streamUrl: '',
+                simulatedSrc: 'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?w=1000&auto=format&fit=crop&q=80',
+                active: true
+            },
+            {
+                id: 'cam-04',
+                name: 'CCTV #04 (VIP 룸 & 프라이빗)',
+                zone: 'VIP_ROOM',
+                zoneLabel: 'VIP 프라이빗 라운지',
+                purpose: 'VIP 고객 케어 & 혼잡도 관제',
+                sourceType: 'simulated',
+                deviceId: '',
+                streamUrl: '',
+                simulatedSrc: 'https://images.unsplash.com/photo-1578474846511-04ba529f0b88?w=1000&auto=format&fit=crop&q=80',
+                active: true
+            }
+        ];
+
+        // Restore cached cameras if present
+        try {
+            const cachedCams = localStorage.getItem('vision_crm_store_cameras');
+            if (cachedCams) {
+                const parsed = JSON.parse(cachedCams);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    storeCameras = parsed;
+                }
+            }
+        } catch (e) {}
+
+        let activeCameraId = storeCameras[0]?.id || 'cam-01';
+        let cameraViewMode = 'single'; // 'single' | 'dual' | 'quad'
+
+        window.saveStoreCamerasState = () => {
+            try {
+                localStorage.setItem('vision_crm_store_cameras', JSON.stringify(storeCameras));
+            } catch (e) {}
+        };
+
+        window.renderCameraChannelTabs = () => {
+            const container = document.getElementById('cameraChannelTabs');
+            if (!container) return;
+            container.innerHTML = '';
+
+            storeCameras.forEach(cam => {
+                const tab = document.createElement('button');
+                tab.type = 'button';
+                tab.className = `cam-channel-tab ${cam.id === activeCameraId ? 'active' : ''}`;
+                tab.onclick = () => window.switchActiveCamera(cam.id);
+                const isUsb = cam.sourceType === 'usb';
+                tab.innerHTML = `
+                    <span style="width:6px; height:6px; border-radius:50%; background:${cam.active ? '#10B981' : '#94A3B8'}; display:inline-block;"></span>
+                    <span>${cam.name.split(' ')[0]} ${cam.name.split(' ')[1] || ''}</span>
+                    <span style="font-size:0.65rem; color:${cam.id === activeCameraId ? '#7DD3FC' : '#94A3B8'};">${isUsb ? '🔌' : '🌐'}</span>
+                `;
+                container.appendChild(tab);
+            });
+
+            // Update title
+            const activeCam = storeCameras.find(c => c.id === activeCameraId) || storeCameras[0];
+            const titleEl = document.getElementById('activeCameraTitle');
+            if (titleEl && activeCam) {
+                titleEl.innerHTML = `<span>📹</span> ${activeCam.name}`;
+            }
+        };
+
+        window.switchActiveCamera = (camId) => {
+            activeCameraId = camId;
+            renderCameraChannelTabs();
+
+            const cam = storeCameras.find(c => c.id === camId);
+            if (!cam) return;
+
+            // Update title
+            const titleEl = document.getElementById('activeCameraTitle');
+            if (titleEl) {
+                titleEl.innerHTML = `<span>📹</span> ${cam.name}`;
+            }
+
+            // If in single view, update stream image or webcam device
+            if (cameraViewMode === 'single') {
+                const videoEl = document.getElementById('webcamVideo');
+                const imgEl = document.getElementById('simulatedStreamImg');
+
+                if (cam.sourceType === 'usb' && isWebcamOn) {
+                    if (cam.deviceId && cam.deviceId !== selectedCameraDeviceId) {
+                        onUsbCameraSelected(cam.deviceId);
+                    }
+                    if (videoEl) videoEl.style.display = 'block';
+                    if (imgEl) imgEl.style.display = 'none';
+                } else {
+                    if (videoEl) videoEl.style.display = 'none';
+                    if (imgEl) {
+                        imgEl.src = cam.streamUrl || cam.simulatedSrc;
+                        imgEl.style.display = 'block';
+                    }
+                }
+            } else {
+                renderMultiCamGrid();
+            }
+        };
+
+        window.setCameraViewMode = (mode) => {
+            cameraViewMode = mode;
+            ['single', 'dual', 'quad'].forEach(m => {
+                const btn = document.getElementById(`viewMode${m.charAt(0).toUpperCase() + m.slice(1)}Btn`);
+                if (btn) {
+                    if (m === mode) btn.classList.add('active');
+                    else btn.classList.remove('active');
+                }
+            });
+
+            const singleView = document.getElementById('singleCamView');
+            const multiGrid = document.getElementById('multiCamGrid');
+
+            if (mode === 'single') {
+                if (singleView) singleView.style.display = 'flex';
+                if (multiGrid) multiGrid.style.display = 'none';
+                switchActiveCamera(activeCameraId);
+            } else {
+                if (singleView) singleView.style.display = 'none';
+                if (multiGrid) {
+                    multiGrid.style.display = 'grid';
+                    if (mode === 'dual') {
+                        multiGrid.style.gridTemplateColumns = '1fr 1fr';
+                        multiGrid.style.gridTemplateRows = '1fr';
+                        multiGrid.style.gap = '0.5rem';
+                    } else {
+                        multiGrid.style.gridTemplateColumns = '1fr 1fr';
+                        multiGrid.style.gridTemplateRows = '1fr 1fr';
+                        multiGrid.style.gap = '0.5rem';
+                    }
+                    renderMultiCamGrid();
+                }
+            }
+        };
+
+        window.renderMultiCamGrid = () => {
+            const multiGrid = document.getElementById('multiCamGrid');
+            if (!multiGrid) return;
+            multiGrid.innerHTML = '';
+
+            const count = cameraViewMode === 'dual' ? 2 : 4;
+            const displayCams = storeCameras.slice(0, count);
+
+            displayCams.forEach((cam, idx) => {
+                const tile = document.createElement('div');
+                tile.className = `cam-sub-viewport ${cam.id === activeCameraId ? 'active-stream' : ''}`;
+                tile.title = `${cam.name} (클릭 시 1채널 전체화면 확대)`;
+                tile.onclick = () => {
+                    switchActiveCamera(cam.id);
+                    setCameraViewMode('single');
+                };
+
+                const isUsbAndLive = cam.sourceType === 'usb' && isWebcamOn;
+                const imgSrc = cam.streamUrl || cam.simulatedSrc || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&auto=format&fit=crop&q=80';
+
+                tile.innerHTML = `
+                    <div class="cam-sub-header">
+                        <strong style="font-size:0.75rem; background:rgba(15,23,42,0.8); padding:0.15rem 0.45rem; border-radius:0.3rem;">
+                            📹 ${cam.name}
+                        </strong>
+                        <span class="cam-live-indicator">● LIVE</span>
+                    </div>
+
+                    <img src="${imgSrc}" style="width:100%; height:100%; object-fit:cover; filter:brightness(0.85);">
+
+                    <div class="cam-sub-footer">
+                        <span style="background:rgba(0,0,0,0.75); padding:0.15rem 0.4rem; border-radius:0.25rem;">
+                            📍 ${cam.zoneLabel || cam.zone}
+                        </span>
+                        <span style="color:#38BDF8; font-weight:800; background:rgba(15,23,42,0.8); padding:0.15rem 0.45rem; border-radius:0.25rem;">
+                            확대 포커스 ↗
+                        </span>
+                    </div>
+                `;
+                multiGrid.appendChild(tile);
+            });
+        };
+
+        // ==========================================
+        // 카메라 관리 모달 로직
+        // ==========================================
+        window.openCameraManagerModal = async () => {
+            renderCameraListTable();
+            populateNewCamUsbSelect();
+            document.getElementById('cameraManagerModal').style.display = 'flex';
+        };
+
+        window.closeCameraManagerModal = () => {
+            document.getElementById('cameraManagerModal').style.display = 'none';
+        };
+
+        window.populateNewCamUsbSelect = async () => {
+            const selectEl = document.getElementById('newCamUsbSelect');
+            if (!selectEl) return;
+            selectEl.innerHTML = '';
+
+            try {
+                if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    const videoDevices = devices.filter(d => d.kind === 'videoinput');
+                    if (videoDevices.length > 0) {
+                        videoDevices.forEach((dev, idx) => {
+                            const opt = document.createElement('option');
+                            opt.value = dev.deviceId;
+                            opt.textContent = `🔌 ${dev.label || `비디오 장치 #${idx + 1}`}`;
+                            selectEl.appendChild(opt);
+                        });
+                        return;
+                    }
+                }
+            } catch (e) {}
+
+            selectEl.innerHTML = '<option value="">기본 USB 비디오 입력 장치</option>';
+        };
+
+        window.onNewCamSourceTypeChange = (type) => {
+            document.getElementById('newCamUsbDeviceWrap').style.display = type === 'usb' ? 'block' : 'none';
+            document.getElementById('newCamStreamUrlWrap').style.display = type === 'stream' ? 'block' : 'none';
+            document.getElementById('newCamSimulatedWrap').style.display = type === 'simulated' ? 'block' : 'none';
+        };
+
+        window.renderCameraListTable = () => {
+            const tbody = document.getElementById('cameraListTableBody');
+            const countEl = document.getElementById('storeCamCount');
+            if (countEl) countEl.textContent = storeCameras.length;
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+            storeCameras.forEach((cam, idx) => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid #E2E8F0';
+                tr.innerHTML = `
+                    <td style="padding:0.6rem 0.75rem; font-weight:800; color:#4F46E5;">CH #${idx + 1}</td>
+                    <td style="padding:0.6rem 0.75rem; font-weight:700; color:#1E293B;">${cam.name}</td>
+                    <td style="padding:0.6rem 0.75rem; color:#475569;">
+                        <span style="background:#F1F5F9; padding:0.15rem 0.45rem; border-radius:0.25rem; font-size:0.7rem;">${cam.zoneLabel || cam.zone}</span>
+                    </td>
+                    <td style="padding:0.6rem 0.75rem; color:#64748B;">
+                        ${cam.sourceType === 'usb' ? '🔌 USB 웹캠' : (cam.sourceType === 'stream' ? '🌐 IP 스트림' : '🎥 시뮬레이션')}
+                    </td>
+                    <td style="padding:0.6rem 0.75rem; text-align:center;">
+                        <button onclick="toggleCameraActive('${cam.id}')" style="background:${cam.active ? '#DCFCE7' : '#F1F5F9'}; color:${cam.active ? '#166534' : '#64748B'}; border:1px solid ${cam.active ? '#86EFAC' : '#CBD5E1'}; padding:0.2rem 0.5rem; border-radius:0.3rem; font-size:0.7rem; font-weight:700; cursor:pointer;">
+                            ${cam.active ? 'ON' : 'OFF'}
+                        </button>
+                    </td>
+                    <td style="padding:0.6rem 0.75rem; text-align:center;">
+                        ${storeCameras.length > 1 ? `<button onclick="deleteStoreCamera('${cam.id}')" style="background:#FEE2E2; color:#B91C1C; border:1px solid #FCA5A5; padding:0.2rem 0.5rem; border-radius:0.3rem; font-size:0.7rem; font-weight:700; cursor:pointer;">삭제</button>` : '<span style="color:#94A3B8;">기본</span>'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+
+        window.toggleCameraActive = (camId) => {
+            const cam = storeCameras.find(c => c.id === camId);
+            if (cam) {
+                cam.active = !cam.active;
+                saveStoreCamerasState();
+                renderCameraListTable();
+                renderCameraChannelTabs();
+                if (cameraViewMode !== 'single') renderMultiCamGrid();
+            }
+        };
+
+        window.deleteStoreCamera = (camId) => {
+            if (storeCameras.length <= 1) {
+                alert('최소 1대 이상의 카메라는 등록되어 있어야 합니다.');
+                return;
+            }
+            if (!confirm('정말로 이 카메라를 삭제하시겠습니까?')) return;
+            storeCameras = storeCameras.filter(c => c.id !== camId);
+            if (activeCameraId === camId) {
+                activeCameraId = storeCameras[0].id;
+            }
+            saveStoreCamerasState();
+            renderCameraListTable();
+            renderCameraChannelTabs();
+            if (cameraViewMode !== 'single') renderMultiCamGrid();
+            playNotificationSound();
+        };
+
+        window.handleAddNewCamera = async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('newCamName').value.trim();
+            const zone = document.getElementById('newCamZone').value;
+            const zoneText = document.getElementById('newCamZone').options[document.getElementById('newCamZone').selectedIndex].text;
+            const sourceType = document.getElementById('newCamSourceType').value;
+            const usbDevice = document.getElementById('newCamUsbSelect')?.value || '';
+            const streamUrl = document.getElementById('newCamStreamUrl')?.value.trim() || '';
+            const simPreset = document.getElementById('newCamSimPreset')?.value || '';
+
+            const newId = 'cam-' + String(Date.now()).slice(-4);
+            const newCam = {
+                id: newId,
+                name: name,
+                zone: zone,
+                zoneLabel: zoneText.split(' (')[0],
+                purpose: zoneText.includes('(') ? zoneText.split('(')[1].replace(')', '') : '매장 관제',
+                sourceType: sourceType,
+                deviceId: sourceType === 'usb' ? usbDevice : '',
+                streamUrl: sourceType === 'stream' ? streamUrl : '',
+                simulatedSrc: sourceType === 'simulated' ? simPreset : (streamUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1000&auto=format&fit=crop&q=80'),
+                active: true
+            };
+
+            storeCameras.push(newCam);
+            saveStoreCamerasState();
+            renderCameraListTable();
+            renderCameraChannelTabs();
+            if (cameraViewMode !== 'single') renderMultiCamGrid();
+
+            // Reset form
+            document.getElementById('newCamName').value = '';
+            playNotificationSound();
+            alert(`✅ [신규 카메라 추가 완료]\n\n• ${newCam.name}\n• ${newCam.zoneLabel} 관제용으로 등록되었습니다!\n상단 탭 또는 분할 뷰에서 바로 확인하실 수 있습니다.`);
+        };
 
         // Core App State
         let isWebcamOn = false;
