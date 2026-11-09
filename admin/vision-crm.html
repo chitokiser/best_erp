@@ -440,6 +440,9 @@
                         <button onclick="scanUsbCameraDevices(true)" style="background:#f1f5f9; border:1px solid #cbd5e1; padding:0.35rem 0.6rem; border-radius:0.35rem; font-size:0.75rem; font-weight:700; cursor:pointer;">
                             🔍 재검색
                         </button>
+                        <button onclick="startAllCameras(true)" style="background:#0F172A; color:white; border:none; padding:0.35rem 0.65rem; border-radius:0.35rem; font-size:0.75rem; font-weight:700; cursor:pointer;" title="USB 외장 카메라를 1순위로 먼저 켜는 순서 반전 모드">
+                            🔄 외장우선 연결
+                        </button>
                         <button onclick="openCameraManagerModal()" style="background:#4F46E5; color:white; border:none; padding:0.35rem 0.75rem; border-radius:0.35rem; font-size:0.75rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.25rem; box-shadow:0 2px 4px rgba(79,70,229,0.25);">
                             <span>📹</span> 카메라 추가/셋팅
                         </button>
@@ -1491,8 +1494,35 @@
 
         let cameraErrors = {}; // { 'cam-01': '', 'cam-02': '...' }
 
+        // 개별 카메라 하드웨어 스트림 오픈 헬퍼
+        async function openSingleCameraStream(devId, camName) {
+            // 1차: USB 버스 대역폭 친화적 640x480 (24~30fps)
+            try {
+                return await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        deviceId: { exact: devId },
+                        width: { ideal: 640 },
+                        height: { ideal: 480 },
+                        frameRate: { ideal: 24, max: 30 }
+                    }
+                });
+            } catch (e1) {
+                console.warn(`[${camName}] 480p 해상도 실패, 기본 exact 시도:`, e1);
+            }
+
+            // 2차: 해상도 제약 없는 기본 exact
+            try {
+                return await navigator.mediaDevices.getUserMedia({
+                    video: { deviceId: { exact: devId } }
+                });
+            } catch (e2) {
+                console.warn(`[${camName}] 기본 exact 실패:`, e2);
+                throw e2;
+            }
+        }
+
         // 다중 카메라 동시 가동 (All Cameras Simultaneous Capture)
-        window.startAllCameras = async () => {
+        window.startAllCameras = async (forceReverse = false) => {
             const btn = document.getElementById('btnToggleCam');
             const videoEl = document.getElementById('webcamVideo');
             const imgEl = document.getElementById('simulatedStreamImg');
@@ -1505,66 +1535,63 @@
                 await scanUsbCameraDevices(false);
 
                 // Open streams for all USB cameras
-                for (let i = 0; i < storeCameras.length; i++) {
-                    const cam = storeCameras[i];
-                    if (cam.sourceType === 'usb' && cam.active) {
-                        let devId = cam.deviceId;
-                        if (!devId && availableVideoDevices[i]) {
-                            devId = availableVideoDevices[i].deviceId;
-                            cam.deviceId = devId;
-                        }
+                let targetCams = storeCameras.filter(c => c.sourceType === 'usb' && c.active);
+                
+                // 외장 카메라(1b3f 등)가 USB 호스트 컨트롤러 대역폭을 우선 점유해야 하는 경우 순서 반전 지원
+                if (forceReverse) {
+                    targetCams = [...targetCams].reverse();
+                }
 
-                        if (!devId) continue;
-
-                        try {
-                            // 🌟 윈도우 USB 호스트 컨트롤러 안정화를 위해 장치별 350ms 간격 순차 개방
-                            if (i > 0) {
-                                await new Promise(r => setTimeout(r, 350));
-                            }
-
-                            let stream = null;
-                            // 🌟 USB 2.0 버스 대역폭 충돌 방지: ideal 640x480(30fps)로 개방
-                            // 2대 이상의 카메라가 USB에 물려있을 때 720p 2대는 윈도우에서 NotReadableError를 발생시킵니다.
-                            try {
-                                stream = await navigator.mediaDevices.getUserMedia({
-                                    video: {
-                                        deviceId: { exact: devId },
-                                        width: { ideal: 640 },
-                                        height: { ideal: 480 },
-                                        frameRate: { ideal: 24, max: 30 }
-                                    }
-                                });
-                            } catch (e1) {
-                                console.warn(`[${cam.name}] exact 480p 실패, 기본 exact 시도:`, e1);
-                                stream = await navigator.mediaDevices.getUserMedia({
-                                    video: { deviceId: { exact: devId } }
-                                });
-                            }
-
-                            // 🌟 카메라 복제 방지 검증: 브라우저가 기본 카메라(CH #1)를 대신 넘겨주는 현상 차단
-                            if (stream) {
-                                const track = stream.getVideoTracks()[0];
-                                const activeDevId = track.getSettings()?.deviceId;
-                                if (activeDevId && devId && activeDevId !== devId) {
-                                    console.warn(`[${cam.name}] 요청 장치(${devId})와 반환 장치(${activeDevId}) 불일치! 중복 스트림 차단.`);
-                                    stream.getTracks().forEach(t => t.stop());
-                                    throw new Error(`요청 장치가 아닌 다른 카메라가 복제되어 스트림을 차단했습니다.`);
-                                }
-
-                                activeCameraStreams[cam.id] = stream;
-                                console.log(`🎥 [${cam.name}] 실시간 스트림 연결 완료! (Device: ${cam.deviceName || devId})`);
-                            }
-                        } catch (camErr) {
-                            console.error(`[${cam.name}] 스트림 오픈 실패:`, camErr);
-                            let userReason = camErr.message || '카메라를 열 수 없습니다.';
-                            if (camErr.name === 'NotReadableError') {
-                                userReason = '다른 프로그램(OBS Studio, Zoom, Teams, 또는 알약/V3 카메라 보안)에서 이 카메라를 이미 사용 중이거나 USB 대역폭 충돌입니다. OBS를 완전히 종료해주세요.';
-                            } else if (camErr.name === 'NotAllowedError') {
-                                userReason = '브라우저에서 이 카메라 장치의 사용 권한이 차단되었습니다.';
-                            }
-                            cameraErrors[cam.id] = userReason;
-                        }
+                for (let i = 0; i < targetCams.length; i++) {
+                    const cam = targetCams[i];
+                    let devId = cam.deviceId;
+                    if (!devId && availableVideoDevices[i]) {
+                        devId = availableVideoDevices[i].deviceId;
+                        cam.deviceId = devId;
                     }
+
+                    if (!devId) continue;
+
+                    try {
+                        // 🌟 윈도우 USB 호스트 컨트롤러 안정화를 위해 장치별 400ms 간격 순차 개방
+                        if (i > 0) {
+                            await new Promise(r => setTimeout(r, 400));
+                        }
+
+                        let stream = await openSingleCameraStream(devId, cam.name);
+
+                        // 🌟 카메라 복제 방지 검증: 브라우저가 기본 카메라를 대신 넘겨주는 현상 차단
+                        if (stream) {
+                            const track = stream.getVideoTracks()[0];
+                            const activeDevId = track.getSettings()?.deviceId;
+                            if (activeDevId && devId && activeDevId !== devId) {
+                                console.warn(`[${cam.name}] 요청 장치(${devId})와 반환 장치(${activeDevId}) 불일치! 중복 스트림 차단.`);
+                                stream.getTracks().forEach(t => t.stop());
+                                throw new Error(`요청 장치가 아닌 다른 카메라가 복제되어 스트림을 차단했습니다.`);
+                            }
+
+                            activeCameraStreams[cam.id] = stream;
+                            console.log(`🎥 [${cam.name}] 실시간 스트림 연결 완료! (Device: ${cam.deviceName || devId})`);
+                        }
+                    } catch (camErr) {
+                        console.error(`[${cam.name}] 스트림 오픈 실패:`, camErr);
+                        let userReason = camErr.message || '카메라를 열 수 없습니다.';
+                        if (camErr.name === 'NotReadableError') {
+                            userReason = '다른 프로그램(OBS Studio, Zoom, Teams, 또는 알약/V3 카메라 보안)에서 이 카메라를 이미 사용 중이거나 USB 대역폭 충돌입니다. OBS를 완전히 종료해주세요.';
+                        } else if (camErr.name === 'NotAllowedError') {
+                            userReason = '브라우저에서 이 카메라 장치의 사용 권한이 차단되었습니다.';
+                        }
+                        cameraErrors[cam.id] = userReason;
+                    }
+                }
+
+                // 🌟 중요: 2대 중 1대만 열린 경우 (USB 대역폭 순서 충돌일 가능성):
+                // 1차 순서(내장->외장)에서 실패했고 forceReverse가 아니었다면, 자동으로 외장 카메라 우선 순서로 1회 자동 재시도!
+                if (!forceReverse && targetCams.length >= 2 && Object.keys(activeCameraStreams).length < 2) {
+                    console.log("🔄 1차 순서 개방 실패. 외장 카메라 우선 순서로 자동 재시도합니다...");
+                    stopAllCameras();
+                    await new Promise(r => setTimeout(r, 400));
+                    return await window.startAllCameras(true);
                 }
 
                 // Fallback: if no specific stream opened, open default video
@@ -1602,17 +1629,57 @@
 
                 startLiveFaceTrackingLoop();
 
-                // 2대 중 1대만 열린 경우 사용자 안내
+                // 2대 중 1대만 열린 경우 최종 사용자 안내
                 if (activeCount === 1 && availableVideoDevices.length >= 2) {
                     const failedCam = storeCameras.find(c => c.sourceType === 'usb' && !activeCameraStreams[c.id]);
                     if (failedCam && cameraErrors[failedCam.id]) {
-                        alert(`⚠️ [2번째 카메라 연결 실패 안내]\n\n• 실패 장치: ${failedCam.deviceName || failedCam.name}\n• 사유: ${cameraErrors[failedCam.id]}\n\nOBS Studio가 켜져 있다면 OBS를 완전히 종료하신 후 다시 연결해 주세요.`);
+                        alert(`⚠️ [2번째 카메라 연결 실패 안내]\n\n• 실패 장치: ${failedCam.deviceName || failedCam.name}\n• 사유: ${cameraErrors[failedCam.id]}\n\n[카메라 셋팅] 모달에서 '단독 테스트' 버튼을 눌러 해당 카메라가 단독으로 켜지는지 확인해 보세요.`);
                     }
                 }
 
             } catch (err) {
                 console.error("다중 카메라 가동 에러:", err);
                 alert('카메라 접근 권한 실패: ' + err.message + '\n브라우저의 카메라 사용 권한을 허용해 주세요.');
+            }
+        };
+
+        // 단일 카메라 단독 진단 테스트 (다른 카메라 모두 끄고 1대만 독립 테스트)
+        window.testSoloCamera = async (camId) => {
+            const cam = storeCameras.find(c => c.id === camId);
+            if (!cam) return;
+            if (!cam.deviceId) {
+                alert(`[${cam.name}]에 할당된 비디오 장치가 없습니다.`);
+                return;
+            }
+
+            stopAllCameras();
+            cameraErrors = {};
+            playNotificationSound();
+
+            try {
+                const stream = await openSingleCameraStream(cam.deviceId, cam.name);
+                activeCameraStreams[cam.id] = stream;
+                activeCameraId = cam.id;
+                webcamStream = stream;
+                isWebcamOn = true;
+                setCameraViewMode('single');
+                const videoEl = document.getElementById('webcamVideo');
+                const imgEl = document.getElementById('simulatedStreamImg');
+                if (videoEl) {
+                    videoEl.srcObject = stream;
+                    videoEl.style.display = 'block';
+                    if (imgEl) imgEl.style.display = 'none';
+                    videoEl.play().catch(() => {});
+                }
+                const btn = document.getElementById('btnToggleCam');
+                if (btn) {
+                    btn.textContent = `⏹ 카메라 해제 (단독 테스트중)`;
+                    btn.style.background = '#ef4444';
+                }
+                startLiveFaceTrackingLoop();
+                alert(`✅ [${cam.name} 단독 테스트 성공!]\n\n이 카메라는 정상 작동합니다!\n화면에 실시간 영상이 정상 표출되는지 확인해 주세요.`);
+            } catch (err) {
+                alert(`❌ [${cam.name} 단독 테스트 실패!]\n\n• 오류: ${err.name} - ${err.message}\n\n이 카메라는 단독으로도 열리지 않습니다.\n원인: OBS Studio, Zoom, 또는 윈도우 카메라 앱이 이 카메라를 잡고 있습니다. 해당 프로그램을 완전히 종료해 주세요.`);
             }
         };
 
@@ -1920,10 +1987,13 @@
                         return `<option value="${dev.deviceId}" ${isSel ? 'selected' : ''}>${badge} ${dev.label || `장치 #${dIdx + 1}`}</option>`;
                     }).join('');
                     deviceHtml = `
-                        <select onchange="changeChannelDevice('${cam.id}', this.value)" style="padding:0.3rem 0.5rem; font-size:0.75rem; border:1.5px solid #CBD5E1; border-radius:0.35rem; max-width:240px; font-weight:700; background:white; color:#1E293B;">
-                            <option value="" ${!cam.deviceId ? 'selected' : ''}>-- 비디오 장치 선택 --</option>
-                            ${options}
-                        </select>
+                        <div style="display:flex; align-items:center; gap:0.35rem;">
+                            <select onchange="changeChannelDevice('${cam.id}', this.value)" style="padding:0.3rem 0.5rem; font-size:0.75rem; border:1.5px solid #CBD5E1; border-radius:0.35rem; max-width:200px; font-weight:700; background:white; color:#1E293B;">
+                                <option value="" ${!cam.deviceId ? 'selected' : ''}>-- 비디오 장치 선택 --</option>
+                                ${options}
+                            </select>
+                            ${cam.deviceId ? `<button onclick="testSoloCamera('${cam.id}')" style="background:#0F172A; color:white; border:none; padding:0.3rem 0.55rem; border-radius:0.35rem; font-size:0.7rem; font-weight:800; cursor:pointer; white-space:nowrap;" title="다른 카메라를 끄고 이 카메라만 단독으로 켜지는지 진단">🧪 단독 테스트</button>` : ''}
+                        </div>
                     `;
                 } else {
                     deviceHtml = cam.sourceType === 'usb' ? `🔌 ${cam.deviceName || 'USB 웹캠'}` : (cam.sourceType === 'stream' ? '🌐 IP 스트림' : '🎥 시뮬레이션');
