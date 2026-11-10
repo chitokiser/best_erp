@@ -1,6 +1,8 @@
-import { db, auth } from './firebase-config.js';
+import { db, auth, storage } from './firebase-config.js';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, getDocs, addDoc, serverTimestamp, query, orderBy, where } from 'firebase/firestore';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { scanReceiptAI } from './aiApi.js';
 
 const modal = document.getElementById('financeModal');
 const openBtn = document.getElementById('openModalBtn');
@@ -14,6 +16,21 @@ const amountInput = document.getElementById('finAmount');
 const amountPreviewBadge = document.getElementById('amountPreviewBadge');
 const amountPreviewText = document.getElementById('amountPreviewText');
 const btnResetAmount = document.getElementById('btnResetAmount');
+
+// Receipt OCR elements
+const openReceiptOcrBtn = document.getElementById('openReceiptOcrBtn');
+const receiptFileInput = document.getElementById('receiptFileInput');
+const receiptPreviewBox = document.getElementById('receiptPreviewBox');
+const receiptThumbImg = document.getElementById('receiptThumbImg');
+const receiptOcrBadge = document.getElementById('receiptOcrBadge');
+const receiptFileName = document.getElementById('receiptFileName');
+const receiptItemSummaryText = document.getElementById('receiptItemSummaryText');
+const receiptOcrProgress = document.getElementById('receiptOcrProgress');
+const btnRemoveReceipt = document.getElementById('btnRemoveReceipt');
+
+let currentReceiptDataUrl = '';
+let currentReceiptMimeType = 'image/jpeg';
+let currentReceiptItems = [];
 
 function formatCurrency(val) {
     return new Intl.NumberFormat('ko-KR').format(val);
@@ -210,7 +227,16 @@ async function loadFinanceData() {
                         <div style="color:var(--text-dark);">${partner}</div>
                         <div style="font-size:0.85rem; color:var(--text-muted);">${project}</div>
                     </td>
-                    <td style="color:var(--text-muted);">${data.memo || '-'}</td>
+                    <td style="color:var(--text-muted);">
+                        <div>${data.memo || '-'}</div>
+                        ${data.receiptUrl ? `
+                            <div style="margin-top:0.35rem;">
+                                <a href="javascript:void(0)" onclick="openReceiptImageModal('${data.receiptUrl}')" style="display:inline-flex; align-items:center; gap:0.25rem; font-size:0.75rem; background:#ECFDF5; color:#047857; border:1px solid #A7F3D0; padding:0.2rem 0.5rem; border-radius:0.35rem; font-weight:800; text-decoration:none;">
+                                    <span>📸</span> 영수증 확인
+                                </a>
+                            </div>
+                        ` : ''}
+                    </td>
                 </tr>
             `;
         });
@@ -238,6 +264,20 @@ form.addEventListener('submit', async (e) => {
     try {
         const tId = window.tenantId || 'system_master';
         const sName = window.currentStoreName || '';
+        let receiptUrl = '';
+        if (currentReceiptDataUrl && currentReceiptDataUrl.startsWith('data:image')) {
+            try {
+                if (storage) {
+                    const storageRef = ref(storage, `receipts/${tId}/${Date.now()}_receipt.jpg`);
+                    const uploadRes = await uploadString(storageRef, currentReceiptDataUrl, 'data_url');
+                    receiptUrl = await getDownloadURL(uploadRes.ref);
+                }
+            } catch (storageErr) {
+                console.warn('Receipt upload to storage failed, using data fallback:', storageErr);
+                receiptUrl = currentReceiptDataUrl;
+            }
+        }
+
         await addDoc(collection(db, 'financeRecords'), {
             type: document.getElementById('finType').value,
             category: document.getElementById('finCategory').value,
@@ -246,11 +286,15 @@ form.addEventListener('submit', async (e) => {
             partner: document.getElementById('finPartner').value,
             project: document.getElementById('finProject').value,
             memo: document.getElementById('finMemo').value,
+            receiptUrl: receiptUrl,
+            receiptItems: currentReceiptItems || [],
             tenantId: tId,
             storeName: sName,
             createdBy: auth.currentUser?.email || auth.currentUser?.uid || 'user',
             createdAt: serverTimestamp()
         });
+
+        clearReceiptPreview();
 
         modal.style.display = 'none';
         form.reset();
@@ -277,3 +321,158 @@ if (auth.currentUser) {
 }
 
 window.loadFinanceData = loadFinanceData;
+
+// Beep chime helper
+function playSuccessChime() {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1); // A5
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.35);
+    } catch (e) {}
+}
+
+window.openReceiptImageModal = (url) => {
+    const modal = document.getElementById('receiptImageModal');
+    const img = document.getElementById('receiptModalFullImg');
+    const dlLink = document.getElementById('receiptDownloadLink');
+    if (modal && img) {
+        img.src = url;
+        if (dlLink) dlLink.href = url;
+        modal.style.display = 'flex';
+    }
+};
+
+function clearReceiptPreview() {
+    currentReceiptDataUrl = '';
+    currentReceiptItems = [];
+    if (receiptFileInput) receiptFileInput.value = '';
+    if (receiptPreviewBox) receiptPreviewBox.style.display = 'none';
+    if (receiptThumbImg) receiptThumbImg.src = '';
+    if (receiptItemSummaryText) receiptItemSummaryText.textContent = '';
+    if (receiptOcrProgress) receiptOcrProgress.style.display = 'none';
+}
+
+if (btnRemoveReceipt) {
+    btnRemoveReceipt.addEventListener('click', clearReceiptPreview);
+}
+
+if (openReceiptOcrBtn) {
+    openReceiptOcrBtn.addEventListener('click', () => {
+        openModal();
+        setType('EXPENSE');
+        if (receiptFileInput) {
+            setTimeout(() => { receiptFileInput.click(); }, 200);
+        }
+    });
+}
+
+if (receiptFileInput) {
+    receiptFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        currentReceiptMimeType = file.type || 'image/jpeg';
+        if (receiptFileName) receiptFileName.textContent = file.name;
+
+        // Display progress
+        if (receiptPreviewBox) receiptPreviewBox.style.display = 'flex';
+        if (receiptOcrProgress) receiptOcrProgress.style.display = 'block';
+        if (receiptOcrBadge) {
+            receiptOcrBadge.textContent = '⏳ AI 판독 진행 중...';
+            receiptOcrBadge.style.background = '#EFF6FF';
+            receiptOcrBadge.style.color = '#1E40AF';
+        }
+        if (receiptItemSummaryText) receiptItemSummaryText.textContent = '영수증 이미지를 분석하여 지출 내역을 정리하고 있습니다...';
+
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+            const dataUrl = ev.target.result;
+            currentReceiptDataUrl = dataUrl;
+            if (receiptThumbImg) receiptThumbImg.src = dataUrl;
+
+            try {
+                // Extract base64 payload
+                const base64Data = dataUrl.split(',')[1];
+                const ocrResult = await scanReceiptAI(base64Data, currentReceiptMimeType);
+
+                // Auto-fill form fields
+                setType('EXPENSE');
+
+                const dateInput = document.getElementById('finDate');
+                if (dateInput && ocrResult.date) dateInput.value = ocrResult.date;
+
+                if (ocrResult.totalAmount && amountInput) {
+                    amountInput.value = ocrResult.totalAmount;
+                    updateAmountPreview(ocrResult.totalAmount);
+                }
+
+                const catInput = document.getElementById('finCategory');
+                if (catInput && ocrResult.category) catInput.value = ocrResult.category;
+
+                const partnerInput = document.getElementById('finPartner');
+                if (partnerInput && ocrResult.storeName) partnerInput.value = ocrResult.storeName;
+
+                const projectInput = document.getElementById('finProject');
+                if (projectInput && !projectInput.value) {
+                    projectInput.value = '가맹점 매장 운영';
+                }
+
+                currentReceiptItems = ocrResult.items || [];
+                const memoInput = document.getElementById('finMemo');
+                if (memoInput) {
+                    const itemsDesc = currentReceiptItems.length > 0 
+                        ? currentReceiptItems.map(it => `${it.name}${it.quantity > 1 ? ' x' + it.quantity : ''}${it.price ? ' (' + formatCurrency(it.price) + ')' : ''}`).join(', ')
+                        : '';
+                    memoInput.value = `[AI 영수증 자동정리] ${ocrResult.summary || ''}${itemsDesc ? '\n품목: ' + itemsDesc : ''}`;
+                }
+
+                // Update UI badges
+                if (receiptOcrBadge) {
+                    receiptOcrBadge.textContent = '✅ AI 영수증 분석 완료';
+                    receiptOcrBadge.style.background = '#DCFCE7';
+                    receiptOcrBadge.style.color = '#166534';
+                }
+                if (receiptOcrProgress) receiptOcrProgress.style.display = 'none';
+                if (receiptItemSummaryText) {
+                    receiptItemSummaryText.textContent = `🏬 ${ocrResult.storeName || '상호명'} | 💰 ${formatCurrency(ocrResult.totalAmount)} ${ocrResult.currency || 'VND'} | ${ocrResult.summary || '지출 항목 정리 완료'}`;
+                }
+
+                playSuccessChime();
+
+            } catch (scanErr) {
+                console.error("Receipt OCR error:", scanErr);
+                if (receiptOcrProgress) receiptOcrProgress.style.display = 'none';
+                if (receiptOcrBadge) {
+                    receiptOcrBadge.textContent = '⚠️ 수동 검토 필요';
+                    receiptOcrBadge.style.background = '#FEF3C7';
+                    receiptOcrBadge.style.color = '#92400E';
+                }
+                if (receiptItemSummaryText) {
+                    receiptItemSummaryText.textContent = '사진이 첨부되었습니다. 금액 및 항목을 확인해 주세요.';
+                }
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+// URL param action=receipt auto-trigger
+setTimeout(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('action') === 'receipt') {
+        openModal();
+        setType('EXPENSE');
+        if (receiptFileInput) {
+            setTimeout(() => { receiptFileInput.click(); }, 300);
+        }
+    }
+}, 300);

@@ -720,8 +720,18 @@
 
     <div class="main-container">
         <div class="header-action">
-            <h2>AI 재무/현금흐름 DB</h2>
-            <button class="btn-add" id="openModalBtn">+ 새 재무 데이터 등록</button>
+            <div>
+                <h2>AI 재무/현금흐름 DB</h2>
+                <p style="margin:0.25rem 0 0 0; font-size:0.875rem; color:var(--text-muted);">
+                    가맹점주 및 직원의 지출 영수증 사진을 AI가 자동 판독하여 지출 내역으로 정리합니다.
+                </p>
+            </div>
+            <div style="display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center;">
+                <button type="button" class="btn-receipt-ocr" id="openReceiptOcrBtn" style="background:#10B981; color:white; border:none; border-radius:0.5rem; padding:0.75rem 1.35rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; box-shadow:0 4px 12px rgba(16,185,129,0.3); transition:all 0.2s;">
+                    <span style="font-size:1.15rem;">📸</span> AI 영수증 자동 지출 등록
+                </button>
+                <button class="btn-add" id="openModalBtn">+ 새 재무 데이터 등록</button>
+            </div>
         </div>
 
         <div class="finance-summary">
@@ -776,6 +786,45 @@
             </div>
             <form id="financeForm">
                 <div class="modal-body">
+                    <!-- 📸 Receipt OCR Upload Box -->
+                    <div id="receiptOcrDropArea" style="background:linear-gradient(135deg, #ECFDF5 0%, #EFF6FF 100%); border:2px dashed #10B981; border-radius:0.9rem; padding:1rem 1.25rem; margin-bottom:1.25rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+                        <div style="display:flex; align-items:center; gap:0.75rem;">
+                            <div style="width:44px; height:44px; border-radius:50%; background:white; display:flex; align-items:center; justify-content:center; font-size:1.4rem; box-shadow:0 2px 6px rgba(0,0,0,0.06); flex-shrink:0;">
+                                📸
+                            </div>
+                            <div>
+                                <strong style="color:#065F46; font-size:0.925rem; display:block;">영수증 사진 올리기 (지출 자동 정리)</strong>
+                                <span style="font-size:0.775rem; color:#047857;">식당·식자재 영수증 사진을 올리면 AI가 일자·금액·상호·품목을 1초 만에 자동 채웁니다.</span>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:0.5rem; align-items:center;">
+                            <label for="receiptFileInput" style="background:#10B981; color:white; padding:0.55rem 1.1rem; border-radius:0.5rem; font-size:0.825rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 2px 6px rgba(16,185,129,0.25); white-space:nowrap; transition:all 0.15s;">
+                                <span>📷</span> 사진 촬영 / 파일 선택
+                            </label>
+                            <input type="file" id="receiptFileInput" accept="image/*" capture="environment" style="display:none;">
+                        </div>
+                    </div>
+
+                    <!-- Receipt Preview & Analysis Progress -->
+                    <div id="receiptPreviewBox" style="display:none; margin-bottom:1.25rem; background:#F8FAFC; border:1.5px solid #CBD5E1; border-radius:0.75rem; padding:0.85rem; align-items:center; gap:0.85rem; position:relative;">
+                        <div style="width:68px; height:68px; border-radius:0.5rem; overflow:hidden; border:1px solid #94A3B8; flex-shrink:0; background:#000;">
+                            <img id="receiptThumbImg" src="" style="width:100%; height:100%; object-fit:cover;" alt="영수증 사진">
+                        </div>
+                        <div style="flex:1; min-width:0;">
+                            <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
+                                <span id="receiptOcrBadge" style="background:#DCFCE7; color:#166534; font-size:0.75rem; font-weight:800; padding:0.2rem 0.5rem; border-radius:0.3rem;">
+                                    ✅ AI 영수증 분석 완료
+                                </span>
+                                <span id="receiptFileName" style="font-size:0.75rem; color:#64748B;"></span>
+                            </div>
+                            <p id="receiptItemSummaryText" style="margin:0.25rem 0 0 0; font-size:0.825rem; color:#1E293B; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></p>
+                            <div id="receiptOcrProgress" style="display:none; font-size:0.775rem; color:#4F46E5; font-weight:700; margin-top:0.25rem;">
+                                ⏳ AI가 영수증 텍스트와 금액을 정밀 판독 중입니다...
+                            </div>
+                        </div>
+                        <button type="button" id="btnRemoveReceipt" style="background:#F1F5F9; border:none; width:28px; height:28px; border-radius:50%; color:#64748B; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;" title="영수증 사진 취소">✕</button>
+                    </div>
+
                     <!-- Type Selection Segmented Cards -->
                     <div>
                         <label class="type-label">거래 성격 (유형)<span class="required-mark" style="color:#ef4444;"> *</span></label>
@@ -932,6 +981,16 @@
                 });
             }
             document.addEventListener('DOMContentLoaded', highlightActiveMenu);
-        </script></body>
+        </script>    <!-- Fullscreen Receipt Viewer Modal -->
+    <div id="receiptImageModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:11000; align-items:center; justify-content:center; padding:1rem;" onclick="this.style.display='none'">
+        <div style="position:relative; max-width:92%; max-height:92%; display:flex; flex-direction:column; align-items:center;" onclick="event.stopPropagation()">
+            <img id="receiptModalFullImg" src="" style="max-width:100%; max-height:82vh; border-radius:0.75rem; box-shadow:0 20px 25px -5px rgba(0,0,0,0.5); object-fit:contain;">
+            <div style="margin-top:0.75rem; display:flex; gap:0.5rem;">
+                <a id="receiptDownloadLink" href="" download="receipt.jpg" style="background:#4F46E5; color:white; padding:0.45rem 1rem; border-radius:0.4rem; text-decoration:none; font-size:0.8rem; font-weight:700;">💾 원본 사진 다운로드</a>
+                <button type="button" onclick="document.getElementById('receiptImageModal').style.display='none'" style="background:#EF4444; color:white; border:none; padding:0.45rem 1rem; border-radius:0.4rem; font-size:0.8rem; font-weight:700; cursor:pointer;">✕ 닫기</button>
+            </div>
+        </div>
+    </div>
+</body>
 
 </html>

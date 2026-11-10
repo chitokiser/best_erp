@@ -9,10 +9,12 @@
     <style>:root{--ai-primary:#4f46e5;--ai-secondary:#818cf8;--ai-gradient:linear-gradient(135deg, #4f46e5, #7c3aed);--danger:#ef4444;--warning:#f59e0b;--success:#10b981;--info:#3b82f6;--text-dark:#1e293b;--text-muted:#64748b}body{color:var(--text-dark);background:#f8fafc;margin:0;padding:0;font-family:Inter,sans-serif}.top-nav{background:#fff;justify-content:space-between;align-items:center;padding:1rem 2rem;display:flex;box-shadow:0 4px 15px #00000008}.top-nav .logo{background:var(--ai-gradient);-webkit-text-fill-color:transparent;cursor:pointer;-webkit-background-clip:text;margin:0;font-size:1.5rem;font-weight:800}.main-container{max-width:1200px;margin:2rem auto;padding:0 1.5rem}.header-action{justify-content:space-between;align-items:center;margin-bottom:2rem;display:flex}.header-action h2{margin:0;font-size:1.8rem;font-weight:800}.btn-add{background:var(--ai-gradient);color:#fff;cursor:pointer;border:none;border-radius:.5rem;padding:.75rem 1.5rem;font-weight:600;transition:transform .2s}.btn-add:hover{transform:translateY(-2px)}.finance-summary{grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;display:grid}.summary-box{text-align:center;background:#fff;border:1px solid #e2e8f0;border-radius:1rem;padding:1.5rem;box-shadow:0 2px 4px #00000005}.summary-label{color:var(--text-muted);margin-bottom:.5rem;font-size:.9rem;font-weight:600}.summary-val{font-size:1.5rem;font-weight:800}.val-income{color:var(--success)}.val-expense{color:var(--danger)}.val-receivable{color:var(--info)}.val-payable{color:var(--warning)}.data-card{background:#fff;border-radius:1rem;padding:1.5rem;box-shadow:0 4px 6px -1px #0000000d}table{border-collapse:collapse;text-align:left;width:100%}th{color:var(--text-muted);border-bottom:2px solid #e2e8f0;padding:1rem;font-weight:600}td{border-bottom:1px solid #f1f5f9;padding:1rem}.type-badge{border-radius:.5rem;padding:.3rem .6rem;font-size:.8rem;font-weight:700;display:inline-block}.badge-income{color:#065f46;background:#d1fae5}.badge-expense{color:#991b1b;background:#fee2e2}.badge-receivable{color:#1e40af;background:#dbeafe}.badge-payable{color:#92400e;background:#fef3c7}.modal-overlay{backdrop-filter:blur(8px);z-index:1000;box-sizing:border-box;background:#0f172aa6;justify-content:center;align-items:center;width:100%;height:100%;padding:1rem;display:none;position:fixed;inset:0}.modal-content{background:#fff;border-radius:1.25rem;flex-direction:column;width:720px;max-width:100%;max-height:92vh;animation:.22s cubic-bezier(.16,1,.3,1) modalPop;display:flex;overflow:hidden;box-shadow:0 25px 50px -12px #00000040,0 0 0 1px #e2e8f0cc}@keyframes modalPop{0%{opacity:0;transform:scale(.96)translateY(12px)}to{opacity:1;transform:scale(1)translateY(0)}}.modal-header{background:#fff;border-bottom:1px solid #f1f5f9;justify-content:space-between;align-items:flex-start;padding:1.5rem 2rem 1.25rem;display:flex}.modal-header-titles h3{color:#0f172a;align-items:center;gap:.5rem;margin:0;font-size:1.35rem;font-weight:800;display:flex}.modal-header-titles p{color:#64748b;margin:.25rem 0 0;font-size:.875rem}.close-btn{cursor:pointer;color:#64748b;background:#f1f5f9;border:none;border-radius:.5rem;justify-content:center;align-items:center;width:2.25rem;height:2.25rem;font-size:1.25rem;line-height:1;transition:all .2s;display:flex}.close-btn:hover{color:#0f172a;background:#e2e8f0}.modal-body{flex:1;padding:1.5rem 2rem;overflow-y:auto}.type-label{color:#334155;margin-bottom:.5rem;font-size:.85rem;font-weight:700;display:block}.type-selector-grid{grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:1.25rem;display:grid}.type-card{text-align:center;cursor:pointer;user-select:none;background:#fff;border:2px solid #e2e8f0;border-radius:.75rem;flex-direction:column;justify-content:center;align-items:center;gap:.25rem;padding:.85rem .6rem;transition:all .2s cubic-bezier(.16,1,.3,1);display:flex;position:relative}.type-card:hover{border-color:#cbd5e1;transform:translateY(-2px);box-shadow:0 4px 6px -1px #0000000d}.type-card .icon{margin-bottom:.15rem;font-size:1.4rem}.type-card .title{color:#1e293b;font-size:.95rem;font-weight:700}.type-card .desc{color:#64748b;font-size:.75rem}.type-card[data-type=INCOME].active{background:#ecfdf5;border-color:#10b981;box-shadow:0 0 0 3px #10b98126}.type-card[data-type=INCOME].active .title{color:#065f46}.type-card[data-type=EXPENSE].active{background:#fef2f2;border-color:#ef4444;box-shadow:0 0 0 3px #ef444426}.type-card[data-type=EXPENSE].active .title{color:#991b1b}.type-card[data-type=RECEIVABLE].active{background:#eff6ff;border-color:#3b82f6;box-shadow:0 0 0 3px #3b82f626}.type-card[data-type=RECEIVABLE].active .title{color:#1e40af}.type-card[data-type=PAYABLE].active{background:#fffbeb;border-color:#f59e0b;box-shadow:0 0 0 3px #f59e0b26}.type-card[data-type=PAYABLE].active .title{color:#92400e}.form-grid-2{grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem;display:grid}.form-group{flex-direction:column;margin-bottom:1.25rem;display:flex}.form-grid-2 .form-group{margin-bottom:0}.form-group label{color:#334155;justify-content:space-between;align-items:center;margin-bottom:.45rem;font-size:.85rem;font-weight:700;display:flex}.form-group label .required-mark{color:#ef4444;margin-left:.2rem;font-weight:800}.form-group input,.form-group select,.form-group textarea{box-sizing:border-box;color:#0f172a;background:#fff;border:1.5px solid #cbd5e1;border-radius:.6rem;width:100%;padding:.75rem .9rem;font-family:inherit;font-size:.95rem;transition:all .2s}.form-group input:focus,.form-group select:focus,.form-group textarea:focus{background:#fff;border-color:#4f46e5;outline:none;box-shadow:0 0 0 3px #4f46e526}.amount-input-wrapper{position:relative}.amount-input-wrapper input{color:#0f172a;padding-right:3.5rem;font-size:1.05rem;font-weight:700}.amount-currency-tag{color:#64748b;pointer-events:none;font-size:.85rem;font-weight:700;position:absolute;top:50%;right:.85rem;transform:translateY(-50%)}.amount-preview-badge{color:#4338ca;background:#eef2ff;border-radius:.4rem;align-items:center;gap:.35rem;margin-top:.45rem;padding:.35rem .65rem;font-size:.825rem;font-weight:700;display:none}.quick-amounts{flex-wrap:wrap;gap:.35rem;margin-top:.5rem;display:flex}.btn-chip{color:#475569;cursor:pointer;user-select:none;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:.4rem;padding:.3rem .6rem;font-size:.775rem;font-weight:600;transition:all .15s}.btn-chip:hover{color:#0f172a;background:#e2e8f0;border-color:#cbd5e1}.btn-chip.chip-reset{color:#991b1b;background:#fee2e2;border-color:#fecaca}.btn-chip.chip-reset:hover{background:#fecaca}.modal-footer{background:#f8fafc;border-top:1px solid #f1f5f9;justify-content:flex-end;gap:.75rem;padding:1.25rem 2rem;display:flex}.btn-cancel{color:#64748b;cursor:pointer;background:#fff;border:1.5px solid #cbd5e1;border-radius:.6rem;padding:.75rem 1.5rem;font-size:.95rem;font-weight:600;transition:all .2s}.btn-cancel:hover{color:#1e293b;background:#f1f5f9}.submit-btn{background:var(--ai-gradient,linear-gradient(135deg, #4f46e5, #7c3aed));color:#fff;cursor:pointer;border:none;border-radius:.6rem;justify-content:center;align-items:center;gap:.5rem;padding:.75rem 2rem;font-size:1rem;font-weight:700;transition:all .2s;display:inline-flex;box-shadow:0 4px 12px #4f46e540}.submit-btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px #4f46e559}.submit-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}@media screen and (width<=640px){.modal-content{border-radius:1rem;width:100%}.modal-header{padding:1.25rem 1.25rem 1rem}.modal-body{padding:1.25rem}.modal-footer{padding:1rem 1.25rem}.type-selector-grid{grid-template-columns:repeat(2,1fr);gap:.5rem}.form-grid-2{grid-template-columns:1fr;gap:1rem}.modal-footer{flex-direction:column-reverse}.btn-cancel,.submit-btn{text-align:center;width:100%}}.top-nav{z-index:50;background:#fff;justify-content:space-between;align-items:center;padding:1rem 2rem;display:flex;position:sticky;top:0;box-shadow:0 4px 6px -1px #0000000d}.top-nav h1{color:var(--ai-primary,#4f46e5);margin:0;font-size:1.5rem;font-weight:800}.top-nav ul{gap:2rem;margin:0;padding:0;list-style:none;display:flex}.top-nav a{color:var(--text-muted,#64748b);font-size:.95rem;font-weight:600;text-decoration:none;transition:color .2s}.top-nav a:hover,.top-nav a.active{color:var(--ai-primary,#4f46e5)}.dropdown{margin-top:2px;display:inline-block;position:relative}.dropdown-content{z-index:1000;background-color:#fff;border:1px solid #e2e8f0;border-radius:.5rem;min-width:180px;display:none;position:absolute;top:100%;left:0;overflow:hidden;box-shadow:0 10px 25px #0000001a}.dropdown-content a{white-space:nowrap;border-bottom:1px solid #f1f5f9;font-size:.95rem;font-weight:500;text-decoration:none;transition:all .2s;display:block;color:#334155!important;padding:.8rem 1rem!important}.dropdown-content a:last-child{border-bottom:none}.dropdown-content a:hover{background-color:#f8fafc;color:#4f46e5!important;padding-left:1.25rem!important}.dropdown:hover .dropdown-content{animation:.2s ease-out fadeInUp;display:block}.dropbtn{color:#475569;cursor:pointer;border-radius:.5rem;padding:.5rem .75rem;font-weight:600;transition:background .2s;display:inline-block}.dropdown:hover .dropbtn{color:#4f46e5;background:#4f46e50d}@keyframes fadeInUp{0%{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}</style>
 
     <!-- FORCE CSS -->
-<style>.top-nav{flex-wrap:nowrap;justify-content:space-between;align-items:center;display:flex;position:relative;overflow:visible}.logo-container{width:auto!important}.top-nav ul{align-items:center;gap:1rem;margin:0;padding:0;list-style:none;display:flex;flex-wrap:nowrap!important}.top-nav ul li a{white-space:nowrap!important}.mobile-only-btn{display:none!important}@media screen and (width<=900px){.mobile-only-btn{display:block!important}.logo-container{justify-content:space-between!important;width:100%!important}.top-nav{flex-direction:column!important;align-items:flex-start!important}.top-nav ul,.top-nav>div:last-child{display:none!important}.top-nav.menu-open ul{background:#fff;border-radius:.5rem;width:100%;max-height:70vh;margin-top:1rem;overflow-y:auto;box-shadow:0 10px 15px -3px #0000001a;flex-direction:column!important;gap:0!important;padding:.5rem 0!important;display:flex!important}.top-nav.menu-open ul li{text-align:center;border-bottom:1px solid #f1f5f9;width:100%}.top-nav.menu-open ul li a{padding:1rem!important;display:block!important}.metric-cards,.dashboard-grid,.client-summary,.finance-summary,.stats-grid,.summary-container{grid-template-columns:1fr!important;gap:1rem!important;display:grid!important}}</style>
-  <script type="module" crossorigin src="/assets/admin_finance-lrJQSMrJ.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/firebase-config-DeRfEPu4.js">
-  <link rel="modulepreload" crossorigin href="/assets/auth-DVCcixJ2.js">
+<style>.top-nav{flex-wrap:nowrap;justify-content:space-between;align-items:center;display:flex;position:relative;overflow:visible}.logo-container{width:auto!important}.top-nav ul{align-items:center;gap:1rem;margin:0;padding:0;list-style:none;display:flex;flex-wrap:nowrap!important}.top-nav ul li a{white-space:nowrap!important}.mobile-only-btn{display:none!important}@media screen and (width<=900px){.mobile-only-btn{display:block!important}.logo-container{justify-content:space-between!important;width:100%!important}.top-nav{flex-direction:column!important;align-items:flex-start!important}.top-nav ul,.top-nav>div:last-child{display:none!important}.top-nav.menu-open ul{background:#fff;border-radius:.5rem;width:100%;max-height:70vh;margin-top:1rem;overflow-y:auto;box-shadow:0 10px 15px -3px #0000001a;flex-direction:column!important;gap:0!important;padding:.5rem 0!important;display:flex!important}.top-nav.menu-open ul li{text-align:center;border-bottom:1px solid #f1f5f9;width:100%}.top-nav.menu-open ul li a{padding:1rem!important;display:block!important}.metric-cards,.dashboard-grid,.client-summary,.finance-summary,.stats-grid,.summary-container{grid-template-columns:1fr!important;gap:1rem!important;display:grid!important}}</style>
+  <script type="module" crossorigin src="/assets/admin_finance-DCjp2wkQ.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-DK3Fl9T5.js">
+  <link rel="modulepreload" crossorigin href="/assets/firebase-config-ReYqfKTP.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-CgNlXpBM.js">
+  <link rel="modulepreload" crossorigin href="/assets/aiApi-wOuE581d.js">
   <link rel="stylesheet" crossorigin href="/assets/admin-CCpgtoVo.css">
   <link rel="stylesheet" crossorigin href="/assets/style-CTsXkP_6.css">
 </head>
@@ -73,8 +75,18 @@
 
     <div class="main-container">
         <div class="header-action">
-            <h2>AI 재무/현금흐름 DB</h2>
-            <button class="btn-add" id="openModalBtn">+ 새 재무 데이터 등록</button>
+            <div>
+                <h2>AI 재무/현금흐름 DB</h2>
+                <p style="margin:0.25rem 0 0 0; font-size:0.875rem; color:var(--text-muted);">
+                    가맹점주 및 직원의 지출 영수증 사진을 AI가 자동 판독하여 지출 내역으로 정리합니다.
+                </p>
+            </div>
+            <div style="display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center;">
+                <button type="button" class="btn-receipt-ocr" id="openReceiptOcrBtn" style="background:#10B981; color:white; border:none; border-radius:0.5rem; padding:0.75rem 1.35rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; box-shadow:0 4px 12px rgba(16,185,129,0.3); transition:all 0.2s;">
+                    <span style="font-size:1.15rem;">📸</span> AI 영수증 자동 지출 등록
+                </button>
+                <button class="btn-add" id="openModalBtn">+ 새 재무 데이터 등록</button>
+            </div>
         </div>
 
         <div class="finance-summary">
@@ -129,6 +141,45 @@
             </div>
             <form id="financeForm">
                 <div class="modal-body">
+                    <!-- 📸 Receipt OCR Upload Box -->
+                    <div id="receiptOcrDropArea" style="background:linear-gradient(135deg, #ECFDF5 0%, #EFF6FF 100%); border:2px dashed #10B981; border-radius:0.9rem; padding:1rem 1.25rem; margin-bottom:1.25rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+                        <div style="display:flex; align-items:center; gap:0.75rem;">
+                            <div style="width:44px; height:44px; border-radius:50%; background:white; display:flex; align-items:center; justify-content:center; font-size:1.4rem; box-shadow:0 2px 6px rgba(0,0,0,0.06); flex-shrink:0;">
+                                📸
+                            </div>
+                            <div>
+                                <strong style="color:#065F46; font-size:0.925rem; display:block;">영수증 사진 올리기 (지출 자동 정리)</strong>
+                                <span style="font-size:0.775rem; color:#047857;">식당·식자재 영수증 사진을 올리면 AI가 일자·금액·상호·품목을 1초 만에 자동 채웁니다.</span>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:0.5rem; align-items:center;">
+                            <label for="receiptFileInput" style="background:#10B981; color:white; padding:0.55rem 1.1rem; border-radius:0.5rem; font-size:0.825rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 2px 6px rgba(16,185,129,0.25); white-space:nowrap; transition:all 0.15s;">
+                                <span>📷</span> 사진 촬영 / 파일 선택
+                            </label>
+                            <input type="file" id="receiptFileInput" accept="image/*" capture="environment" style="display:none;">
+                        </div>
+                    </div>
+
+                    <!-- Receipt Preview & Analysis Progress -->
+                    <div id="receiptPreviewBox" style="display:none; margin-bottom:1.25rem; background:#F8FAFC; border:1.5px solid #CBD5E1; border-radius:0.75rem; padding:0.85rem; align-items:center; gap:0.85rem; position:relative;">
+                        <div style="width:68px; height:68px; border-radius:0.5rem; overflow:hidden; border:1px solid #94A3B8; flex-shrink:0; background:#000;">
+                            <img id="receiptThumbImg" src="" style="width:100%; height:100%; object-fit:cover;" alt="영수증 사진">
+                        </div>
+                        <div style="flex:1; min-width:0;">
+                            <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
+                                <span id="receiptOcrBadge" style="background:#DCFCE7; color:#166534; font-size:0.75rem; font-weight:800; padding:0.2rem 0.5rem; border-radius:0.3rem;">
+                                    ✅ AI 영수증 분석 완료
+                                </span>
+                                <span id="receiptFileName" style="font-size:0.75rem; color:#64748B;"></span>
+                            </div>
+                            <p id="receiptItemSummaryText" style="margin:0.25rem 0 0 0; font-size:0.825rem; color:#1E293B; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></p>
+                            <div id="receiptOcrProgress" style="display:none; font-size:0.775rem; color:#4F46E5; font-weight:700; margin-top:0.25rem;">
+                                ⏳ AI가 영수증 텍스트와 금액을 정밀 판독 중입니다...
+                            </div>
+                        </div>
+                        <button type="button" id="btnRemoveReceipt" style="background:#F1F5F9; border:none; width:28px; height:28px; border-radius:50%; color:#64748B; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;" title="영수증 사진 취소">✕</button>
+                    </div>
+
                     <!-- Type Selection Segmented Cards -->
                     <div>
                         <label class="type-label">거래 성격 (유형)<span class="required-mark" style="color:#ef4444;"> *</span></label>
@@ -260,6 +311,16 @@
                 });
             }
             document.addEventListener('DOMContentLoaded', highlightActiveMenu);
-        </script></body>
+        </script>    <!-- Fullscreen Receipt Viewer Modal -->
+    <div id="receiptImageModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:11000; align-items:center; justify-content:center; padding:1rem;" onclick="this.style.display='none'">
+        <div style="position:relative; max-width:92%; max-height:92%; display:flex; flex-direction:column; align-items:center;" onclick="event.stopPropagation()">
+            <img id="receiptModalFullImg" src="" style="max-width:100%; max-height:82vh; border-radius:0.75rem; box-shadow:0 20px 25px -5px rgba(0,0,0,0.5); object-fit:contain;">
+            <div style="margin-top:0.75rem; display:flex; gap:0.5rem;">
+                <a id="receiptDownloadLink" href="" download="receipt.jpg" style="background:#4F46E5; color:white; padding:0.45rem 1rem; border-radius:0.4rem; text-decoration:none; font-size:0.8rem; font-weight:700;">💾 원본 사진 다운로드</a>
+                <button type="button" onclick="document.getElementById('receiptImageModal').style.display='none'" style="background:#EF4444; color:white; border:none; padding:0.45rem 1rem; border-radius:0.4rem; font-size:0.8rem; font-weight:700; cursor:pointer;">✕ 닫기</button>
+            </div>
+        </div>
+    </div>
+</body>
 
 </html>

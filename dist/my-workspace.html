@@ -7,11 +7,12 @@
     <title>나의 워크스페이스 - AI-ERM</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>.grid-layout{grid-template-columns:2fr 1fr;gap:2rem;margin-top:1.5rem;display:grid}.task-list-item{border-bottom:1px solid var(--border-color);justify-content:space-between;align-items:center;padding:1rem 0;display:flex}.task-list-item:last-child{border-bottom:none}.status-badge{border-radius:9999px;padding:.25rem .6rem;font-size:.75rem;font-weight:600}.status-pending{color:#92400e;background:#fef3c7}.status-active{color:#1e40af;background:#dbeafe}.status-done{color:#065f46;background:#d1fae5}</style>
-  <script type="module" crossorigin src="/assets/my-workspace-DV6ZfE-w.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/firebase-config-DeRfEPu4.js">
-  <link rel="modulepreload" crossorigin href="/assets/auth-DVCcixJ2.js">
+  <script type="module" crossorigin src="/assets/my-workspace-wI6h4Y_5.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-DK3Fl9T5.js">
+  <link rel="modulepreload" crossorigin href="/assets/firebase-config-ReYqfKTP.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-CgNlXpBM.js">
   <link rel="modulepreload" crossorigin href="/assets/preload-helper-BZ1Pz5am.js">
-  <link rel="modulepreload" crossorigin href="/assets/ai-chat-KfKrpitD.js">
+  <link rel="modulepreload" crossorigin href="/assets/ai-chat-D5eeJAS8.js">
   <link rel="stylesheet" crossorigin href="/assets/style-CTsXkP_6.css">
 </head>
 
@@ -39,8 +40,11 @@
                 <h2 id="greetingTitle" style="font-size: 1.8rem; margin-bottom: 0.5rem;">안녕하세요!</h2>
                 <p style="color: var(--text-secondary); margin: 0;">현재 할당된 업무와 대기 중인 결재 내역을 확인하세요.</p>
             </div>
-            <div>
-                <button class="btn-primary">+ 오늘의 업무 보고 작성</button>
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                <button class="btn-primary" onclick="location.href='admin/finance.html?action=receipt'" style="background:#10B981; border:none; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 3px 8px rgba(16,185,129,0.3);">
+                    <span>📸</span> 영수증 지출 자동등록
+                </button>
+                <button class="btn-primary" onclick="location.href='admin/tasks.html'">+ 오늘의 업무 보고 작성</button>
             </div>
         </div>
 

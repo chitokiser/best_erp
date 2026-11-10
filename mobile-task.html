@@ -267,9 +267,14 @@
 <body>
     <div class="mobile-container">
         <!-- Header -->
-        <header class="mobile-header">
-            <h1 class="header-title">오늘의 현장 업무</h1>
-            <div class="header-subtitle" id="currentDate">2026.09.27 (목)</div>
+        <header class="mobile-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <h1 class="header-title">오늘의 현장 업무</h1>
+                <div class="header-subtitle" id="currentDate">2026.09.27 (목)</div>
+            </div>
+            <a href="admin/finance.html?action=receipt" style="display:inline-flex; align-items:center; gap:0.35rem; padding:0.45rem 0.8rem; border-radius:8px; background:linear-gradient(135deg, #2563eb, #1d4ed8); color:#ffffff; font-size:0.8rem; font-weight:600; text-decoration:none; box-shadow:0 2px 4px rgba(37,99,235,0.25);">
+                <span>🧾</span> 영수증 등록
+            </a>
         </header>
 
         <!-- Main Content -->
@@ -329,7 +334,10 @@
             <a href="#" class="nav-item active">
                 <span style="font-size:1.25rem;">📋</span>홈
             </a>
-            <a href="#" class="nav-item">
+            <a href="admin/finance.html?action=receipt" class="nav-item">
+                <span style="font-size:1.25rem;">🧾</span>영수증지출
+            </a>
+            <a href="materials.html" class="nav-item">
                 <span style="font-size:1.25rem;">📦</span>자재현황
             </a>
             <a href="index.html" class="nav-item">
