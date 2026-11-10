@@ -200,7 +200,9 @@ async function loadFinanceData() {
 
         records.sort((a, b) => new Date(b.date) - new Date(a.date));
 
+        window.__financeRecordsMap = {};
         records.forEach(data => {
+            if (data.id) window.__financeRecordsMap[data.id] = data;
             const type = data.type || 'INCOME';
             const amount = Number(data.amount) || 0;
 
@@ -231,9 +233,9 @@ async function loadFinanceData() {
                         <div>${data.memo || '-'}</div>
                         ${data.receiptUrl ? `
                             <div style="margin-top:0.35rem;">
-                                <a href="javascript:void(0)" onclick="openReceiptImageModal('${data.receiptUrl}')" style="display:inline-flex; align-items:center; gap:0.25rem; font-size:0.75rem; background:#ECFDF5; color:#047857; border:1px solid #A7F3D0; padding:0.2rem 0.5rem; border-radius:0.35rem; font-weight:800; text-decoration:none;">
-                                    <span>📸</span> 영수증 확인
-                                </a>
+                                <button type="button" class="btn-inspect-receipt" data-record-id="${data.id}" style="display:inline-flex; align-items:center; gap:0.35rem; font-size:0.75rem; background:#ECFDF5; color:#047857; border:1px solid #A7F3D0; padding:0.25rem 0.65rem; border-radius:0.4rem; font-weight:800; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.05); transition:all 0.15s;">
+                                    <span>📸</span> 영수증 검토
+                                </button>
                             </div>
                         ` : ''}
                     </td>
@@ -253,12 +255,35 @@ async function loadFinanceData() {
     }
 }
 
+// Client-side image compression helper
+function compressImage(dataUrl, maxWidth = 1400, maxHeight = 1800, quality = 0.82) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            let { width, height } = img;
+            if (width > maxWidth || height > maxHeight) {
+                const ratio = Math.min(maxWidth / width, maxHeight / height);
+                width = Math.round(width * ratio);
+                height = Math.round(height * ratio);
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => resolve(dataUrl);
+        img.src = dataUrl;
+    });
+}
+
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btnSubmit');
     const span = btn.querySelector('span');
     const prevText = span ? span.textContent : '저장하기';
-    if (span) span.textContent = '저장 중...';
+    if (span) span.textContent = '영수증 및 지출 저장 중...';
     btn.disabled = true;
 
     try {
@@ -267,14 +292,19 @@ form.addEventListener('submit', async (e) => {
         let receiptUrl = '';
         if (currentReceiptDataUrl && currentReceiptDataUrl.startsWith('data:image')) {
             try {
+                // Compress photo before uploading for fast transfer and crisp archival
+                const compressedDataUrl = await compressImage(currentReceiptDataUrl, 1400, 1800, 0.82);
                 if (storage) {
                     const storageRef = ref(storage, `receipts/${tId}/${Date.now()}_receipt.jpg`);
-                    const uploadRes = await uploadString(storageRef, currentReceiptDataUrl, 'data_url');
+                    const uploadRes = await uploadString(storageRef, compressedDataUrl, 'data_url');
                     receiptUrl = await getDownloadURL(uploadRes.ref);
                 }
+                if (!receiptUrl) {
+                    receiptUrl = compressedDataUrl;
+                }
             } catch (storageErr) {
-                console.warn('Receipt upload to storage failed, using data fallback:', storageErr);
-                receiptUrl = currentReceiptDataUrl;
+                console.warn('Receipt upload to storage failed, using compressed data fallback:', storageErr);
+                receiptUrl = await compressImage(currentReceiptDataUrl, 1000, 1400, 0.7);
             }
         }
 
@@ -340,16 +370,117 @@ function playSuccessChime() {
     } catch (e) {}
 }
 
-window.openReceiptImageModal = (url) => {
-    const modal = document.getElementById('receiptImageModal');
+// Receipt Inspector Viewer State
+let currentReceiptRotation = 0;
+let currentReceiptZoom = 1;
+
+function updateReceiptViewerTransform() {
+    const img = document.getElementById('receiptModalFullImg');
+    if (img) {
+        img.style.transform = `rotate(${currentReceiptRotation}deg) scale(${currentReceiptZoom})`;
+    }
+}
+
+document.getElementById('btnZoomIn')?.addEventListener('click', () => {
+    currentReceiptZoom = Math.min(currentReceiptZoom + 0.25, 3.5);
+    updateReceiptViewerTransform();
+});
+document.getElementById('btnZoomOut')?.addEventListener('click', () => {
+    currentReceiptZoom = Math.max(currentReceiptZoom - 0.25, 0.5);
+    updateReceiptViewerTransform();
+});
+document.getElementById('btnRotateReceipt')?.addEventListener('click', () => {
+    currentReceiptRotation = (currentReceiptRotation + 90) % 360;
+    updateReceiptViewerTransform();
+});
+document.getElementById('btnResetZoom')?.addEventListener('click', () => {
+    currentReceiptZoom = 1;
+    currentReceiptRotation = 0;
+    updateReceiptViewerTransform();
+});
+
+window.openReceiptInspectionModal = (record) => {
+    currentReceiptRotation = 0;
+    currentReceiptZoom = 1;
+    updateReceiptViewerTransform();
+
+    const inspectModal = document.getElementById('receiptImageModal');
     const img = document.getElementById('receiptModalFullImg');
     const dlLink = document.getElementById('receiptDownloadLink');
-    if (modal && img) {
-        img.src = url;
-        if (dlLink) dlLink.href = url;
-        modal.style.display = 'flex';
+
+    if (!inspectModal || !img) return;
+
+    img.src = record.receiptUrl || '';
+    if (dlLink) {
+        dlLink.href = record.receiptUrl || '#';
+        dlLink.setAttribute('download', `receipt_${record.date || 'date'}.jpg`);
     }
+
+    const storeEl = document.getElementById('auditStoreName');
+    if (storeEl) storeEl.textContent = record.partner || record.storeName || '영수증 거래처';
+
+    const dateEl = document.getElementById('auditDate');
+    if (dateEl) dateEl.textContent = `결제일자: ${record.date || '-'}`;
+
+    const amountEl = document.getElementById('auditAmount');
+    if (amountEl) amountEl.textContent = `${formatCurrency(record.amount || 0)} VND`;
+
+    const catEl = document.getElementById('auditCategory');
+    if (catEl) catEl.textContent = record.category || '식자재/원부자재';
+
+    const typeEl = document.getElementById('auditTypeBadge');
+    if (typeEl) {
+        typeEl.textContent = record.type === 'INCOME' ? '수입' : '지출';
+        typeEl.style.color = record.type === 'INCOME' ? '#059669' : '#DC2626';
+    }
+
+    const memoEl = document.getElementById('auditMemo');
+    if (memoEl) memoEl.textContent = record.memo || '기록된 메모 없음';
+
+    // Populate itemized list
+    const itemsListEl = document.getElementById('auditItemsList');
+    const itemsCountEl = document.getElementById('auditItemsCount');
+    const items = record.receiptItems || [];
+
+    if (itemsCountEl) itemsCountEl.textContent = `${items.length}개 품목`;
+
+    if (itemsListEl) {
+        if (items.length === 0) {
+            itemsListEl.innerHTML = '<div style="color:#94A3B8; text-align:center; padding:1.5rem;">단일 지출 내역 (세부 품목 없음)</div>';
+        } else {
+            itemsListEl.innerHTML = items.map((it, idx) => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.45rem 0.6rem; background:#F8FAFC; border-radius:0.4rem; border:1px solid #F1F5F9;">
+                    <div style="font-weight:600; color:#1E293B; max-width:65%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                        <span style="color:#64748B; font-size:0.75rem; margin-right:0.3rem;">#${idx + 1}</span>${it.name || '품목'}
+                        ${it.quantity > 1 ? `<span style="font-size:0.75rem; color:#4F46E5; background:#EEF2FF; padding:0.1rem 0.35rem; border-radius:0.2rem; margin-left:0.25rem;">x${it.quantity}</span>` : ''}
+                    </div>
+                    <div style="font-weight:700; color:#0F172A;">
+                        ${it.price ? formatCurrency(it.price) + ' VND' : '-'}
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+
+    inspectModal.style.display = 'flex';
 };
+
+window.closeReceiptInspector = () => {
+    const inspectModal = document.getElementById('receiptImageModal');
+    if (inspectModal) inspectModal.style.display = 'none';
+};
+
+// Table event delegation for receipt inspector
+tbody.addEventListener('click', (e) => {
+    const btn = e.target.closest('.btn-inspect-receipt');
+    if (btn) {
+        const recordId = btn.dataset.recordId;
+        const record = window.__financeRecordsMap?.[recordId];
+        if (record) {
+            openReceiptInspectionModal(record);
+        }
+    }
+});
 
 function clearReceiptPreview() {
     currentReceiptDataUrl = '';
@@ -360,6 +491,23 @@ function clearReceiptPreview() {
     if (receiptItemSummaryText) receiptItemSummaryText.textContent = '';
     if (receiptOcrProgress) receiptOcrProgress.style.display = 'none';
 }
+
+const triggerPreviewInspect = () => {
+    if (!currentReceiptDataUrl) return;
+    openReceiptInspectionModal({
+        receiptUrl: currentReceiptDataUrl,
+        partner: document.getElementById('finPartner')?.value || '작성 중 거래처',
+        date: document.getElementById('finDate')?.value || new Date().toISOString().split('T')[0],
+        amount: Number(document.getElementById('finAmount')?.value) || 0,
+        category: document.getElementById('finCategory')?.value || '식자재/원부자재',
+        type: document.getElementById('finType')?.value || 'EXPENSE',
+        receiptItems: currentReceiptItems || [],
+        memo: document.getElementById('finMemo')?.value || '영수증 등록 전 사전 검토'
+    });
+};
+
+document.getElementById('receiptThumbContainer')?.addEventListener('click', triggerPreviewInspect);
+document.getElementById('linkPreviewInspect')?.addEventListener('click', triggerPreviewInspect);
 
 if (btnRemoveReceipt) {
     btnRemoveReceipt.addEventListener('click', clearReceiptPreview);

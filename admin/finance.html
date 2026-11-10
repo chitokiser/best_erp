@@ -807,8 +807,11 @@
 
                     <!-- Receipt Preview & Analysis Progress -->
                     <div id="receiptPreviewBox" style="display:none; margin-bottom:1.25rem; background:#F8FAFC; border:1.5px solid #CBD5E1; border-radius:0.75rem; padding:0.85rem; align-items:center; gap:0.85rem; position:relative;">
-                        <div style="width:68px; height:68px; border-radius:0.5rem; overflow:hidden; border:1px solid #94A3B8; flex-shrink:0; background:#000;">
+                        <div id="receiptThumbContainer" style="width:68px; height:68px; border-radius:0.5rem; overflow:hidden; border:2px solid #3B82F6; flex-shrink:0; background:#000; cursor:pointer; position:relative;" title="🔍 클릭하여 영수증 원본 크게보기/검토">
                             <img id="receiptThumbImg" src="" style="width:100%; height:100%; object-fit:cover;" alt="영수증 사진">
+                            <div style="position:absolute; inset:0; background:rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; color:white; font-size:1.1rem; opacity:0; transition:opacity 0.2s;" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='0'">
+                                🔍
+                            </div>
                         </div>
                         <div style="flex:1; min-width:0;">
                             <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
@@ -820,6 +823,9 @@
                             <p id="receiptItemSummaryText" style="margin:0.25rem 0 0 0; font-size:0.825rem; color:#1E293B; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></p>
                             <div id="receiptOcrProgress" style="display:none; font-size:0.775rem; color:#4F46E5; font-weight:700; margin-top:0.25rem;">
                                 ⏳ AI가 영수증 텍스트와 금액을 정밀 판독 중입니다...
+                            </div>
+                            <div style="font-size:0.72rem; color:#2563EB; margin-top:0.25rem; font-weight:600; cursor:pointer;" id="linkPreviewInspect">
+                                🔍 [사진 클릭] 영수증 원본 및 항목 검토
                             </div>
                         </div>
                         <button type="button" id="btnRemoveReceipt" style="background:#F1F5F9; border:none; width:28px; height:28px; border-radius:50%; color:#64748B; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;" title="영수증 사진 취소">✕</button>
@@ -981,13 +987,87 @@
                 });
             }
             document.addEventListener('DOMContentLoaded', highlightActiveMenu);
-        </script>    <!-- Fullscreen Receipt Viewer Modal -->
-    <div id="receiptImageModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:11000; align-items:center; justify-content:center; padding:1rem;" onclick="this.style.display='none'">
-        <div style="position:relative; max-width:92%; max-height:92%; display:flex; flex-direction:column; align-items:center;" onclick="event.stopPropagation()">
-            <img id="receiptModalFullImg" src="" style="max-width:100%; max-height:82vh; border-radius:0.75rem; box-shadow:0 20px 25px -5px rgba(0,0,0,0.5); object-fit:contain;">
-            <div style="margin-top:0.75rem; display:flex; gap:0.5rem;">
-                <a id="receiptDownloadLink" href="" download="receipt.jpg" style="background:#4F46E5; color:white; padding:0.45rem 1rem; border-radius:0.4rem; text-decoration:none; font-size:0.8rem; font-weight:700;">💾 원본 사진 다운로드</a>
-                <button type="button" onclick="document.getElementById('receiptImageModal').style.display='none'" style="background:#EF4444; color:white; border:none; padding:0.45rem 1rem; border-radius:0.4rem; font-size:0.8rem; font-weight:700; cursor:pointer;">✕ 닫기</button>
+        </script>    <!-- Fullscreen Receipt & Expense Audit Modal -->
+    <div id="receiptImageModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.85); backdrop-filter:blur(6px); z-index:11000; align-items:center; justify-content:center; padding:1rem;" onclick="closeReceiptInspector()">
+        <div style="position:relative; width:1040px; max-width:96%; max-height:92vh; background:#ffffff; border-radius:1rem; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); display:flex; flex-direction:column; overflow:hidden;" onclick="event.stopPropagation()">
+            <!-- Modal Header -->
+            <div style="padding:1rem 1.5rem; border-bottom:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center; background:#F8FAFC;">
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                    <span style="font-size:1.3rem;">🧾</span>
+                    <div>
+                        <h3 id="receiptModalTitle" style="margin:0; font-size:1.1rem; font-weight:800; color:#0F172A;">영수증 원본 및 지출 증빙 검토</h3>
+                        <p id="receiptModalSubtitle" style="margin:0.15rem 0 0 0; font-size:0.75rem; color:#64748B;">서버에 안전 보관된 영수증 원본 사진과 AI 추출 지출 내역입니다.</p>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                    <a id="receiptDownloadLink" href="" download="receipt.jpg" target="_blank" style="background:#4F46E5; color:white; padding:0.4rem 0.85rem; border-radius:0.4rem; text-decoration:none; font-size:0.8rem; font-weight:700; display:inline-flex; align-items:center; gap:0.3rem;">
+                        <span>💾</span> 원본 다운로드
+                    </a>
+                    <button type="button" onclick="closeReceiptInspector()" style="background:#F1F5F9; border:none; width:32px; height:32px; border-radius:50%; font-size:1.2rem; cursor:pointer; color:#64748B; display:flex; align-items:center; justify-content:center;">✕</button>
+                </div>
+            </div>
+
+            <!-- Modal Content (2 Column on Desktop) -->
+            <div style="flex:1; overflow-y:auto; display:grid; grid-template-columns: 1.1fr 1fr; gap:1.25rem; padding:1.25rem;" id="receiptModalBodyGrid">
+                <!-- Left: Receipt Image Viewer with Zoom & Rotate -->
+                <div style="display:flex; flex-direction:column; align-items:center; background:#0F172A; border-radius:0.75rem; padding:1rem; position:relative; overflow:hidden; min-height:420px;">
+                    <!-- Image toolbar -->
+                    <div style="position:absolute; top:1rem; left:1rem; z-index:10; display:flex; gap:0.35rem; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); padding:0.3rem 0.5rem; border-radius:0.5rem;">
+                        <button type="button" id="btnZoomIn" style="background:transparent; border:none; color:white; font-size:0.85rem; cursor:pointer; padding:0.2rem 0.4rem;" title="확대">🔍+</button>
+                        <button type="button" id="btnZoomOut" style="background:transparent; border:none; color:white; font-size:0.85rem; cursor:pointer; padding:0.2rem 0.4rem;" title="축소">🔍-</button>
+                        <button type="button" id="btnRotateReceipt" style="background:transparent; border:none; color:white; font-size:0.85rem; cursor:pointer; padding:0.2rem 0.4rem;" title="90도 회전">🔄 회전</button>
+                        <button type="button" id="btnResetZoom" style="background:transparent; border:none; color:white; font-size:0.85rem; cursor:pointer; padding:0.2rem 0.4rem;" title="화면맞춤">↩️ 초기화</button>
+                    </div>
+
+                    <div style="flex:1; width:100%; display:flex; align-items:center; justify-content:center; overflow:auto; max-height:65vh;">
+                        <img id="receiptModalFullImg" src="" style="max-width:100%; max-height:100%; transition:transform 0.2s ease; transform-origin:center center; object-fit:contain;" alt="영수증 원본">
+                    </div>
+                </div>
+
+                <!-- Right: Expense Audit Sheet & Items Breakdown -->
+                <div style="display:flex; flex-direction:column; gap:1rem; overflow-y:auto; max-height:65vh; padding-right:0.25rem;">
+                    <!-- Summary Card -->
+                    <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:0.75rem; padding:1rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem;">
+                            <div>
+                                <span id="auditStoreName" style="font-size:1.15rem; font-weight:800; color:#0F172A; display:block;">-</span>
+                                <span id="auditDate" style="font-size:0.8rem; color:#64748B;">-</span>
+                            </div>
+                            <div style="text-align:right;">
+                                <div id="auditAmount" style="font-size:1.3rem; font-weight:900; color:#EF4444;">-</div>
+                                <span id="auditCategory" style="display:inline-block; font-size:0.75rem; background:#EFF6FF; color:#1D4ED8; padding:0.15rem 0.5rem; border-radius:0.3rem; font-weight:700;">-</span>
+                            </div>
+                        </div>
+
+                        <div style="font-size:0.825rem; color:#334155; line-height:1.5; border-top:1px dashed #CBD5E1; padding-top:0.6rem;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+                                <span style="color:#64748B;">거래 성격:</span>
+                                <strong id="auditTypeBadge" style="color:#0F172A;">지출</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+                                <span style="color:#64748B;">서버 보관 상태:</span>
+                                <span style="color:#059669; font-weight:700;">🔒 영수증 영구 보관 완료</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Items Breakdown List -->
+                    <div style="border:1px solid #E2E8F0; border-radius:0.75rem; padding:1rem; background:#ffffff;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
+                            <strong style="font-size:0.9rem; color:#0F172A;">🛒 품목별 세부 지출 내역 (AI 추출)</strong>
+                            <span id="auditItemsCount" style="font-size:0.75rem; background:#ECFDF5; color:#047857; font-weight:700; padding:0.15rem 0.45rem; border-radius:0.3rem;">0개 품목</span>
+                        </div>
+                        <div id="auditItemsList" style="max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:0.4rem; font-size:0.8rem;">
+                            <!-- populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Memo / Notes -->
+                    <div style="background:#FFFBEB; border:1px solid #FDE68A; border-radius:0.75rem; padding:0.85rem; font-size:0.8rem; color:#92400E;">
+                        <strong>📝 지출 적요 / 메모:</strong>
+                        <div id="auditMemo" style="margin-top:0.25rem; color:#78350F; white-space:pre-wrap; line-height:1.4;">-</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
