@@ -178,8 +178,15 @@ export const scanReceiptAI = async (base64Image, mimeType = 'image/jpeg') => {
 
     const data = await response.json();
     const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const cleanText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-    const parsed = JSON.parse(cleanText);
+    
+    // Robustly extract JSON object block from response
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+        console.error("Gemini raw text output without JSON:", rawText);
+        throw new Error("영수증 분석 응답에서 유효한 JSON을 찾을 수 없습니다.");
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]);
 
     // Ensure safe numbers and dates
     if (!parsed.date || !/^\d{4}-\d{2}-\d{2}$/.test(parsed.date)) {

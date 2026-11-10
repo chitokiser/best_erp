@@ -482,7 +482,10 @@ tbody.addEventListener('click', (e) => {
     }
 });
 
+let isReceiptAnalyzing = false;
+
 function clearReceiptPreview() {
+    isReceiptAnalyzing = false;
     currentReceiptDataUrl = '';
     currentReceiptItems = [];
     if (receiptFileInput) receiptFileInput.value = '';
@@ -494,6 +497,21 @@ function clearReceiptPreview() {
 
 const triggerPreviewInspect = () => {
     if (!currentReceiptDataUrl) return;
+
+    if (isReceiptAnalyzing) {
+        openReceiptInspectionModal({
+            receiptUrl: currentReceiptDataUrl,
+            partner: '⏳ AI 정밀 분석 진행 중... (2~4초)',
+            date: document.getElementById('finDate')?.value || new Date().toISOString().split('T')[0],
+            amount: 0,
+            category: '식자재/원부자재',
+            type: 'EXPENSE',
+            receiptItems: [],
+            memo: '⏳ AI가 영수증의 상호명, 결제일자, 총 결제금액 및 세부 품목을 정밀 분석하고 있습니다.\n분석이 완료되면 이 화면에 자동으로 즉시 채워집니다. 잠시만 기다려주세요.'
+        });
+        return;
+    }
+
     openReceiptInspectionModal({
         receiptUrl: currentReceiptDataUrl,
         partner: document.getElementById('finPartner')?.value || '작성 중 거래처',
@@ -528,88 +546,118 @@ if (receiptFileInput) {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        currentReceiptMimeType = file.type || 'image/jpeg';
+        isReceiptAnalyzing = true;
         if (receiptFileName) receiptFileName.textContent = file.name;
 
         // Display progress
         if (receiptPreviewBox) receiptPreviewBox.style.display = 'flex';
         if (receiptOcrProgress) receiptOcrProgress.style.display = 'block';
         if (receiptOcrBadge) {
-            receiptOcrBadge.textContent = '⏳ AI 판독 진행 중...';
+            receiptOcrBadge.textContent = '⏳ AI 영수증 분석 중... (2~4초)';
             receiptOcrBadge.style.background = '#EFF6FF';
             receiptOcrBadge.style.color = '#1E40AF';
         }
-        if (receiptItemSummaryText) receiptItemSummaryText.textContent = '영수증 이미지를 분석하여 지출 내역을 정리하고 있습니다...';
+        if (receiptItemSummaryText) {
+            receiptItemSummaryText.textContent = '영수증 이미지를 분석하여 총액과 세부 품목을 추출하고 있습니다...';
+        }
 
-        const reader = new FileReader();
-        reader.onload = async (ev) => {
-            const dataUrl = ev.target.result;
-            currentReceiptDataUrl = dataUrl;
-            if (receiptThumbImg) receiptThumbImg.src = dataUrl;
+        try {
+            // Read file into Data URL
+            const rawDataUrl = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
 
-            try {
-                // Extract base64 payload
-                const base64Data = dataUrl.split(',')[1];
-                const ocrResult = await scanReceiptAI(base64Data, currentReceiptMimeType);
+            currentReceiptDataUrl = rawDataUrl;
+            if (receiptThumbImg) receiptThumbImg.src = rawDataUrl;
 
-                // Auto-fill form fields
-                setType('EXPENSE');
+            // Compress & standardize to clean JPEG (~1500px, 0.85 quality)
+            // Fixes HEIC/PNG/WebP, eliminates mobile payload timeouts, and cuts processing time in half
+            const optimizedJpegDataUrl = await compressImage(rawDataUrl, 1600, 2000, 0.85);
+            currentReceiptDataUrl = optimizedJpegDataUrl;
+            currentReceiptMimeType = 'image/jpeg';
+            if (receiptThumbImg) receiptThumbImg.src = optimizedJpegDataUrl;
 
-                const dateInput = document.getElementById('finDate');
-                if (dateInput && ocrResult.date) dateInput.value = ocrResult.date;
+            // Extract base64 payload
+            const base64Data = optimizedJpegDataUrl.split(',')[1];
+            const ocrResult = await scanReceiptAI(base64Data, 'image/jpeg');
 
-                if (ocrResult.totalAmount && amountInput) {
-                    amountInput.value = ocrResult.totalAmount;
-                    updateAmountPreview(ocrResult.totalAmount);
-                }
+            isReceiptAnalyzing = false;
 
-                const catInput = document.getElementById('finCategory');
-                if (catInput && ocrResult.category) catInput.value = ocrResult.category;
+            // Auto-fill form fields
+            setType('EXPENSE');
 
-                const partnerInput = document.getElementById('finPartner');
-                if (partnerInput && ocrResult.storeName) partnerInput.value = ocrResult.storeName;
+            const dateInput = document.getElementById('finDate');
+            if (dateInput && ocrResult.date) dateInput.value = ocrResult.date;
 
-                const projectInput = document.getElementById('finProject');
-                if (projectInput && !projectInput.value) {
-                    projectInput.value = '가맹점 매장 운영';
-                }
-
-                currentReceiptItems = ocrResult.items || [];
-                const memoInput = document.getElementById('finMemo');
-                if (memoInput) {
-                    const itemsDesc = currentReceiptItems.length > 0 
-                        ? currentReceiptItems.map(it => `${it.name}${it.quantity > 1 ? ' x' + it.quantity : ''}${it.price ? ' (' + formatCurrency(it.price) + ')' : ''}`).join(', ')
-                        : '';
-                    memoInput.value = `[AI 영수증 자동정리] ${ocrResult.summary || ''}${itemsDesc ? '\n품목: ' + itemsDesc : ''}`;
-                }
-
-                // Update UI badges
-                if (receiptOcrBadge) {
-                    receiptOcrBadge.textContent = '✅ AI 영수증 분석 완료';
-                    receiptOcrBadge.style.background = '#DCFCE7';
-                    receiptOcrBadge.style.color = '#166534';
-                }
-                if (receiptOcrProgress) receiptOcrProgress.style.display = 'none';
-                if (receiptItemSummaryText) {
-                    receiptItemSummaryText.textContent = `🏬 ${ocrResult.storeName || '상호명'} | 💰 ${formatCurrency(ocrResult.totalAmount)} ${ocrResult.currency || 'VND'} | ${ocrResult.summary || '지출 항목 정리 완료'}`;
-                }
-
-                playSuccessChime();
-
-            } catch (scanErr) {
-                console.error("Receipt OCR error:", scanErr);
-                if (receiptOcrProgress) receiptOcrProgress.style.display = 'none';
-                if (receiptOcrBadge) {
-                    receiptOcrBadge.textContent = '⚠️ 수동 검토 필요';
-                    receiptOcrBadge.style.background = '#FEF3C7';
-                    receiptOcrBadge.style.color = '#92400E';
-                }
-                if (receiptItemSummaryText) {
-                    receiptItemSummaryText.textContent = '사진이 첨부되었습니다. 금액 및 항목을 확인해 주세요.';
-                }
+            if (ocrResult.totalAmount && amountInput) {
+                amountInput.value = ocrResult.totalAmount;
+                updateAmountPreview(ocrResult.totalAmount);
             }
-        };
-        reader.readAsDataURL(file);
+
+            const catInput = document.getElementById('finCategory');
+            if (catInput && ocrResult.category) catInput.value = ocrResult.category;
+
+            const partnerInput = document.getElementById('finPartner');
+            if (partnerInput && ocrResult.storeName) partnerInput.value = ocrResult.storeName;
+
+            const projectInput = document.getElementById('finProject');
+            if (projectInput && !projectInput.value) {
+                projectInput.value = '가맹점 매장 운영';
+            }
+
+            currentReceiptItems = ocrResult.items || [];
+            const memoInput = document.getElementById('finMemo');
+            if (memoInput) {
+                const itemsDesc = currentReceiptItems.length > 0 
+                    ? currentReceiptItems.map(it => `${it.name}${it.quantity > 1 ? ' x' + it.quantity : ''}${it.price ? ' (' + formatCurrency(it.price) + ')' : ''}`).join(', ')
+                    : '';
+                memoInput.value = `[AI 영수증 자동정리] ${ocrResult.summary || ''}${itemsDesc ? '\n품목: ' + itemsDesc : ''}`;
+            }
+
+            // Update UI badges
+            if (receiptOcrBadge) {
+                receiptOcrBadge.textContent = '✅ AI 영수증 분석 완료';
+                receiptOcrBadge.style.background = '#DCFCE7';
+                receiptOcrBadge.style.color = '#166534';
+            }
+            if (receiptOcrProgress) receiptOcrProgress.style.display = 'none';
+            if (receiptItemSummaryText) {
+                receiptItemSummaryText.textContent = `🏬 ${ocrResult.storeName || '상호명'} | 💰 ${formatCurrency(ocrResult.totalAmount)} ${ocrResult.currency || 'VND'} | ${ocrResult.summary || '지출 항목 정리 완료'}`;
+            }
+
+            // If user has the inspector modal already open, live-update it with extracted data!
+            const inspectModal = document.getElementById('receiptImageModal');
+            if (inspectModal && inspectModal.style.display === 'flex') {
+                openReceiptInspectionModal({
+                    receiptUrl: currentReceiptDataUrl,
+                    partner: ocrResult.storeName || '영수증 거래처',
+                    date: ocrResult.date,
+                    amount: ocrResult.totalAmount,
+                    category: ocrResult.category,
+                    type: 'EXPENSE',
+                    receiptItems: currentReceiptItems,
+                    memo: `[AI 영수증 자동정리] ${ocrResult.summary || ''}`
+                });
+            }
+
+            playSuccessChime();
+
+        } catch (scanErr) {
+            isReceiptAnalyzing = false;
+            console.error("Receipt OCR error:", scanErr);
+            if (receiptOcrProgress) receiptOcrProgress.style.display = 'none';
+            if (receiptOcrBadge) {
+                receiptOcrBadge.textContent = '⚠️ 수동 검토 필요';
+                receiptOcrBadge.style.background = '#FEF3C7';
+                receiptOcrBadge.style.color = '#92400E';
+            }
+            if (receiptItemSummaryText) {
+                receiptItemSummaryText.textContent = `분석 중 오류 발생 (${scanErr.message || '네트워크 확인 필요'}). 사진은 저장 가능하며 금액을 직접 입력할 수 있습니다.`;
+            }
+        }
     });
 }
 
