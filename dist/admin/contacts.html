@@ -11,7 +11,7 @@
 
     <!-- FORCE CSS -->
 <style>.top-nav{flex-wrap:nowrap;justify-content:space-between;align-items:center;display:flex;position:relative;overflow:visible}.logo-container{width:auto!important}.top-nav ul{align-items:center;gap:1rem;margin:0;padding:0;list-style:none;display:flex;flex-wrap:nowrap!important}.top-nav ul li a{white-space:nowrap!important}.mobile-only-btn{display:none!important}@media screen and (width<=900px){.mobile-only-btn{display:block!important}.logo-container{justify-content:space-between!important;width:100%!important}.top-nav{flex-direction:column!important;align-items:flex-start!important}.top-nav ul,.top-nav>div:last-child{display:none!important}.top-nav.menu-open ul{background:#fff;border-radius:.5rem;width:100%;max-height:70vh;margin-top:1rem;overflow-y:auto;box-shadow:0 10px 15px -3px #0000001a;flex-direction:column!important;gap:0!important;padding:.5rem 0!important;display:flex!important}.top-nav.menu-open ul li{text-align:center;border-bottom:1px solid #f1f5f9;width:100%}.top-nav.menu-open ul li a{padding:1rem!important;display:block!important}.metric-cards,.dashboard-grid,.client-summary,.finance-summary,.stats-grid,.summary-container{grid-template-columns:1fr!important;gap:1rem!important;display:grid!important}}</style>
-  <script type="module" crossorigin src="/assets/admin_contacts-DqWqNlFF.js"></script>
+  <script type="module" crossorigin src="/assets/admin_contacts-CHza68Zs.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-DK3Fl9T5.js">
   <link rel="modulepreload" crossorigin href="/assets/firebase-config-BCglRgn-.js">
   <link rel="modulepreload" crossorigin href="/assets/auth-Douk_74h.js">
@@ -103,13 +103,35 @@
         </div>
 
         <div class="data-card">
+            <!-- Store Filter & Search Toolbar (Superadmin multi-franchise support) -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; flex-wrap:wrap; gap:0.75rem; padding-bottom:1rem; border-bottom:1.5px solid #F1F5F9;">
+                <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+                    <div id="superAdminBadge" style="display:none; align-items:center; gap:0.35rem; background:#FEF3C7; color:#92400E; font-size:0.78rem; font-weight:800; padding:0.3rem 0.75rem; border-radius:0.4rem; border:1px solid #FDE68A; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                        <span>👑</span> 최고 관리자 모드 (전체 가맹점 인맥 통합 열람)
+                    </div>
+                    <div id="storeFilterContainer" style="display:none; align-items:center; gap:0.5rem;">
+                        <span style="font-size:0.85rem; font-weight:700; color:#475569;">🏬 가맹점 필터:</span>
+                        <select id="storeFilterSelect" style="padding:0.4rem 0.85rem; border:1.5px solid #CBD5E1; border-radius:0.4rem; font-size:0.85rem; font-weight:700; color:#0F172A; background:#FFFFFF; outline:none; cursor:pointer;">
+                            <option value="ALL">전체 가맹점 인맥 모아보기 (ALL)</option>
+                        </select>
+                    </div>
+                    <div id="contactCountBadge" style="font-size:0.85rem; font-weight:700; color:#64748B;">
+                        총 <span id="displayedCount" style="color:#4F46E5;">0</span>명
+                    </div>
+                </div>
+                <!-- Real-time search box -->
+                <div style="position:relative; min-width:260px;">
+                    <input type="text" id="contactSearchInput" placeholder="🔍 인맥 이름, 상호, 가맹점, Zalo 검색..." style="width:100%; padding:0.45rem 0.85rem; border:1.5px solid #CBD5E1; border-radius:0.4rem; font-size:0.85rem; outline:none; box-sizing:border-box;">
+                </div>
+            </div>
+
             <table>
                 <thead>
                     <tr>
-                        <th>이름</th>
+                        <th>이름 / Zalo</th>
                         <th>소속 / 직급</th>
+                        <th>가맹점 / 등록자</th>
                         <th>연락처</th>
-                        <th>등록자(최초)</th>
                         <th>사내 인맥 라인 (소개)</th>
                         <th>관리</th>
                     </tr>
