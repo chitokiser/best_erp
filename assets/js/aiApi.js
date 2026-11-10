@@ -1,6 +1,14 @@
+export const getGeminiApiKey = () => {
+    return (
+        import.meta.env?.VITE_GEMINI_API_KEY ||
+        window.__GEMINI_API_KEY__ ||
+        localStorage.getItem('VITE_GEMINI_API_KEY') ||
+        "AQ.Ab8RN6LmECGSvAk-Pu0P5b8lhg-W77-XWNsKHB9vDuEGex8pWw"
+    );
+};
+
 export const callGeminiAI = async (contextData, customPrompt) => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) throw new Error("VITE_GEMINI_API_KEY 환경변수가 설정되지 않았습니다.");
+    const apiKey = getGeminiApiKey();
 
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
@@ -41,8 +49,7 @@ export const callGeminiAI = async (contextData, customPrompt) => {
 };
 
 export const analyzeBusinessQuery = async (query) => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) throw new Error("VITE_GEMINI_API_KEY 환경변수가 설정되지 않았습니다.");
+    const apiKey = getGeminiApiKey();
 
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
     const payload = {
@@ -63,8 +70,7 @@ export const analyzeBusinessQuery = async (query) => {
 };
 
 export const scanBusinessCardAI = async (base64Image, mimeType) => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) throw new Error("VITE_GEMINI_API_KEY 환경변수가 설정되지 않았습니다.");
+    const apiKey = getGeminiApiKey();
 
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
@@ -117,10 +123,7 @@ export const scanBusinessCardAI = async (base64Image, mimeType) => {
 };
 
 export const scanReceiptAI = async (base64Image, mimeType = 'image/jpeg') => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) {
-        throw new Error("VITE_GEMINI_API_KEY 환경변수가 설정되지 않았습니다.");
-    }
+    const apiKey = getGeminiApiKey();
 
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 

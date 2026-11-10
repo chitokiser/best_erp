@@ -2,6 +2,11 @@ const { resolve } = require('path');
 const { defineConfig } = require('vite');
 
 module.exports = defineConfig({
+  define: {
+    'import.meta.env.VITE_GEMINI_API_KEY': JSON.stringify(
+      process.env.VITE_GEMINI_API_KEY || 'AQ.Ab8RN6LmECGSvAk-Pu0P5b8lhg-W77-XWNsKHB9vDuEGex8pWw'
+    )
+  },
   build: {
     target: 'esnext',
     outDir: 'dist',

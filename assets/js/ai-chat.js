@@ -1,4 +1,4 @@
-﻿import { db } from './firebase-config.js';
+import { db } from './firebase-config.js';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 
 async function loadTenantDataForAI() {
@@ -19,7 +19,7 @@ async function loadTenantDataForAI() {
     return dataContext;
 }
 
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "AQ.Ab8RN6LmECGSvAk-Pu0P5b8lhg-W77-XWNsKHB9vDuEGex8pWw";
 const btnAiAnalyze = document.getElementById('btnAiAnalyze');
 const aiQueryInput = document.getElementById('aiQueryInput');
 const aiResponseArea = document.getElementById('aiResponseArea');
