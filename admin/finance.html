@@ -264,10 +264,19 @@
             color: #0f172a;
         }
 
+        #financeForm {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
         .modal-body {
             padding: 1.5rem 2rem;
             overflow-y: auto;
             flex: 1;
+            min-height: 0;
         }
 
         /* Type Segmented Cards */
@@ -493,12 +502,16 @@
 
         /* Modal Footer */
         .modal-footer {
-            padding: 1.25rem 2rem;
-            border-top: 1px solid #f1f5f9;
+            padding: 1.15rem 2rem;
+            border-top: 1.5px solid #e2e8f0;
             display: flex;
             justify-content: flex-end;
+            align-items: center;
             gap: 0.75rem;
-            background: #f8fafc;
+            background: #ffffff;
+            flex-shrink: 0;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+            z-index: 10;
         }
 
         .btn-cancel {
@@ -824,8 +837,13 @@
                             <div id="receiptOcrProgress" style="display:none; font-size:0.775rem; color:#4F46E5; font-weight:700; margin-top:0.25rem;">
                                 ⏳ AI가 영수증 텍스트와 금액을 정밀 판독 중입니다...
                             </div>
-                            <div style="font-size:0.72rem; color:#2563EB; margin-top:0.25rem; font-weight:600; cursor:pointer;" id="linkPreviewInspect">
-                                🔍 [사진 클릭] 영수증 원본 및 항목 검토
+                            <div style="display:flex; align-items:center; gap:0.6rem; margin-top:0.35rem; flex-wrap:wrap;">
+                                <div style="font-size:0.75rem; color:#2563EB; font-weight:700; cursor:pointer;" id="linkPreviewInspect">
+                                    🔍 [사진 클릭] 영수증 원본/항목 검토
+                                </div>
+                                <button type="button" id="btnQuickSubmitReceipt" style="display:none; background:linear-gradient(135deg, #10B981, #059669); color:white; border:none; padding:0.35rem 0.85rem; border-radius:0.4rem; font-weight:800; font-size:0.78rem; cursor:pointer; align-items:center; gap:0.3rem; box-shadow:0 2px 6px rgba(16,185,129,0.3);">
+                                    <span>💾</span> 바로 지출 등록하기
+                                </button>
                             </div>
                         </div>
                         <button type="button" id="btnRemoveReceipt" style="background:#F1F5F9; border:none; width:28px; height:28px; border-radius:50%; color:#64748B; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;" title="영수증 사진 취소">✕</button>
@@ -932,8 +950,8 @@
                 <!-- Footer Action Buttons -->
                 <div class="modal-footer">
                     <button type="button" class="btn-cancel" id="btnCancelModal">취소</button>
-                    <button type="submit" class="submit-btn" id="btnSubmit">
-                        <span>저장하기</span>
+                    <button type="submit" class="submit-btn" id="btnSubmit" style="background:linear-gradient(135deg, #10B981, #059669); font-size:1rem; padding:0.85rem 2.2rem; font-weight:800; box-shadow:0 4px 14px rgba(16,185,129,0.35);">
+                        <span>💾 지출 내역 장부 저장 (등록)</span>
                     </button>
                 </div>
             </form>
@@ -1000,8 +1018,11 @@
                     </div>
                 </div>
                 <div style="display:flex; align-items:center; gap:0.5rem;">
-                    <a id="receiptDownloadLink" href="" download="receipt.jpg" target="_blank" style="background:#4F46E5; color:white; padding:0.4rem 0.85rem; border-radius:0.4rem; text-decoration:none; font-size:0.8rem; font-weight:700; display:inline-flex; align-items:center; gap:0.3rem;">
-                        <span>💾</span> 원본 다운로드
+                    <button type="button" id="btnAuditConfirmSubmit" style="background:#10B981; color:white; border:none; padding:0.42rem 1rem; border-radius:0.4rem; font-size:0.825rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 2px 6px rgba(16,185,129,0.3);">
+                        <span>💾</span> 바로 지출 등록 (저장)
+                    </button>
+                    <a id="receiptDownloadLink" href="" download="receipt.jpg" target="_blank" style="background:#4F46E5; color:white; padding:0.42rem 0.85rem; border-radius:0.4rem; text-decoration:none; font-size:0.8rem; font-weight:700; display:inline-flex; align-items:center; gap:0.3rem;">
+                        <span>📥</span> 다운로드
                     </a>
                     <button type="button" onclick="closeReceiptInspector()" style="background:#F1F5F9; border:none; width:32px; height:32px; border-radius:50%; font-size:1.2rem; cursor:pointer; color:#64748B; display:flex; align-items:center; justify-content:center;">✕</button>
                 </div>

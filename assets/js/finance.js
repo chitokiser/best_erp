@@ -82,6 +82,7 @@ function openModal() {
 
 function closeModal() {
     modal.style.display = 'none';
+    clearReceiptPreview();
 }
 
 function setType(type) {
@@ -462,6 +463,15 @@ window.openReceiptInspectionModal = (record) => {
         }
     }
 
+    const auditSubmitBtn = document.getElementById('btnAuditConfirmSubmit');
+    if (auditSubmitBtn) {
+        if (record.id) {
+            auditSubmitBtn.style.display = 'none';
+        } else {
+            auditSubmitBtn.style.display = 'inline-flex';
+        }
+    }
+
     inspectModal.style.display = 'flex';
 };
 
@@ -493,6 +503,8 @@ function clearReceiptPreview() {
     if (receiptThumbImg) receiptThumbImg.src = '';
     if (receiptItemSummaryText) receiptItemSummaryText.textContent = '';
     if (receiptOcrProgress) receiptOcrProgress.style.display = 'none';
+    const quickBtn = document.getElementById('btnQuickSubmitReceipt');
+    if (quickBtn) quickBtn.style.display = 'none';
 }
 
 const triggerPreviewInspect = () => {
@@ -526,6 +538,15 @@ const triggerPreviewInspect = () => {
 
 document.getElementById('receiptThumbContainer')?.addEventListener('click', triggerPreviewInspect);
 document.getElementById('linkPreviewInspect')?.addEventListener('click', triggerPreviewInspect);
+
+document.getElementById('btnQuickSubmitReceipt')?.addEventListener('click', () => {
+    if (form) form.requestSubmit();
+});
+
+document.getElementById('btnAuditConfirmSubmit')?.addEventListener('click', () => {
+    window.closeReceiptInspector();
+    if (form) form.requestSubmit();
+});
 
 if (btnRemoveReceipt) {
     btnRemoveReceipt.addEventListener('click', clearReceiptPreview);
@@ -626,6 +647,19 @@ if (receiptFileInput) {
             if (receiptOcrProgress) receiptOcrProgress.style.display = 'none';
             if (receiptItemSummaryText) {
                 receiptItemSummaryText.textContent = `🏬 ${ocrResult.storeName || '상호명'} | 💰 ${formatCurrency(ocrResult.totalAmount)} ${ocrResult.currency || 'VND'} | ${ocrResult.summary || '지출 항목 정리 완료'}`;
+            }
+
+            // Show quick submit button in receipt card
+            const quickBtn = document.getElementById('btnQuickSubmitReceipt');
+            if (quickBtn) quickBtn.style.display = 'inline-flex';
+
+            // Also update the main submit button label dynamically for clear visibility
+            const submitBtn = document.getElementById('btnSubmit');
+            if (submitBtn) {
+                const span = submitBtn.querySelector('span');
+                if (span) {
+                    span.textContent = `💾 ${formatCurrency(ocrResult.totalAmount)} VND 지출 등록 (저장)`;
+                }
             }
 
             // If user has the inspector modal already open, live-update it with extracted data!
