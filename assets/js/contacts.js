@@ -1,9 +1,11 @@
-﻿import { db } from './firebase-config.js';
-import { collection, getDocs, addDoc, updateDoc, doc, serverTimestamp, query, orderBy, getDoc } from 'firebase/firestore';
+import { db } from './firebase-config.js';
+import { collection, getDocs, addDoc, updateDoc, doc, serverTimestamp, query, orderBy, getDoc, writeBatch } from 'firebase/firestore';
+import { zaloFriendsData } from './zaloFriendsData.js';
 
 const tbody = document.getElementById('contactsTableBody');
 const addModal = document.getElementById('addContactModal');
 const shareModal = document.getElementById('shareContactModal');
+const zaloModal = document.getElementById('zaloImportModal');
 
 const addForm = document.getElementById('addContactForm');
 const shareForm = document.getElementById('shareContactForm');
@@ -16,11 +18,11 @@ const toggleGraphBtn = document.getElementById('toggleGraphBtn');
 const graphContainer = document.getElementById('networkGraphContainer');
 let networkGraph = null;
 
-document.getElementById('openAddModalBtn').addEventListener('click', () => {
+document.getElementById('openAddModalBtn')?.addEventListener('click', () => {
     addModal.style.display = 'flex';
 });
 
-toggleGraphBtn.addEventListener('click', () => {
+toggleGraphBtn?.addEventListener('click', () => {
     if (graphContainer.style.display === 'none') {
         graphContainer.style.display = 'block';
         toggleGraphBtn.innerHTML = '🕸️ 그래프 뷰어 닫기';
@@ -37,11 +39,11 @@ async function loadContacts() {
         // Load employees first for mapping and sharing options
         const empSnap = await getDocs(collection(db, 'employees'));
         allEmployees = [];
-        empSelect.innerHTML = '<option value="">소개/연결할 직원을 선택하세요</option>';
+        if (empSelect) empSelect.innerHTML = '<option value="">소개/연결할 직원을 선택하세요</option>';
         empSnap.forEach(e => {
             const data = e.data();
             allEmployees.push({ id: e.id, name: data.name, position: data.position, dept: data.department });
-            empSelect.innerHTML += `<option value="${e.id}">${data.name} (${data.position || data.department})</option>`;
+            if (empSelect) empSelect.innerHTML += `<option value="${e.id}">${data.name} (${data.position || data.department})</option>`;
         });
 
         // Load Contacts
@@ -49,7 +51,7 @@ async function loadContacts() {
         const snap = await getDocs(q);
 
         if (snap.empty) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted);">등록된 인맥이 없습니다.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted);">등록된 인맥이 없습니다. [Zalo 친구 일괄 가져오기]를 눌러보세요!</td></tr>';
             return;
         }
 
@@ -77,14 +79,35 @@ async function loadContacts() {
                 networkHtml = '<span style="color:#94a3b8; font-size:0.85rem;">사내 연결 라인 없음</span>';
             }
 
+            const avatarHtml = data.avatar 
+                ? `<img src="${data.avatar}" style="width:34px; height:34px; border-radius:50%; object-fit:cover; border:1px solid #E2E8F0; flex-shrink:0;">`
+                : `<div style="width:34px; height:34px; border-radius:50%; background:#EEF2FF; color:#4F46E5; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.85rem; flex-shrink:0;">${(data.name || '?').charAt(0)}</div>`;
+
+            const zaloBadge = data.zaloId 
+                ? `<div style="margin-top:0.15rem;">
+                    <span style="display:inline-flex; align-items:center; gap:0.25rem; background:#E0F2FE; color:#0369A1; font-size:0.72rem; padding:0.1rem 0.4rem; border-radius:0.25rem; font-weight:700;">
+                        <span style="background:#0068FF; color:white; border-radius:0.2rem; padding:0 0.25rem; font-size:0.65rem;">Zalo</span>
+                        ${data.aliasName ? `<span style="color:#64748B; font-weight:500;">(${data.zName})</span>` : ''}
+                    </span>
+                   </div>`
+                : '';
+
             html += `
                 <tr>
-                    <td style="font-weight:700;">${data.name}</td>
+                    <td style="font-weight:700;">
+                        <div style="display:flex; align-items:center; gap:0.65rem;">
+                            ${avatarHtml}
+                            <div>
+                                <div style="color:#0F172A; font-size:0.95rem;">${data.name}</div>
+                                ${zaloBadge}
+                            </div>
+                        </div>
+                    </td>
                     <td>
-                        <div style="color:var(--text-dark); font-weight:600;">${data.company}</div>
+                        <div style="color:var(--text-dark); font-weight:600;">${data.company || '기타 인맥'}</div>
                         <div style="font-size:0.85rem; color:var(--text-muted);">${data.position || ''}</div>
                     </td>
-                    <td>${data.phone}</td>
+                    <td>${data.phone || '<span style="color:#94a3b8; font-size:0.85rem;">Zalo 메신저</span>'}</td>
                     <td style="font-size:0.9rem;">
                         <span style="background:#f1f5f9; padding:0.3rem 0.5rem; border-radius:1rem;">
                             👤 ${data.initialRegistrar || '알수없음'}
@@ -92,7 +115,7 @@ async function loadContacts() {
                     </td>
                     <td>${networkHtml}</td>
                     <td>
-                        <button onclick="window.openShareModal('${docSnap.id}', '${data.name}', '${data.company}')" style="padding:0.4rem 0.8rem; background:var(--ai-gradient); color:white; border:none; border-radius:0.5rem; font-size:0.8rem; cursor:pointer;" class="hover-btn">
+                        <button onclick="window.openShareModal('${docSnap.id}', '${data.name}', '${data.company || ''}')" style="padding:0.4rem 0.8rem; background:var(--ai-gradient); color:white; border:none; border-radius:0.5rem; font-size:0.8rem; cursor:pointer;" class="hover-btn">
                             🤝 소개하기
                         </button>
                     </td>
@@ -113,7 +136,7 @@ async function loadContacts() {
 }
 
 // Add New Contact
-addForm.addEventListener('submit', async (e) => {
+addForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btnAddSubmit');
     btn.disabled = true;
@@ -148,7 +171,7 @@ window.openShareModal = (id, name, company) => {
     shareModal.style.display = 'flex';
 };
 
-shareForm.addEventListener('submit', async (e) => {
+shareForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btnShareSubmit');
     btn.disabled = true;
@@ -161,7 +184,6 @@ shareForm.addEventListener('submit', async (e) => {
 
         const empObj = allEmployees.find(emp => emp.id === empId);
 
-        // Fetch current document to arrayUnion (safely, since we don't import arrayUnion we'll do read/write)
         const docRef = doc(db, 'contacts', contactId);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
@@ -213,7 +235,6 @@ function renderGraph() {
 
     // 2. Add contacts and connections
     allContactsData.forEach(contact => {
-        // Add external contact node
         if (!addedNodeIds.has(contact.id)) {
             nodesData.push({
                 id: contact.id,
@@ -226,7 +247,6 @@ function renderGraph() {
             addedNodeIds.add(contact.id);
         }
 
-        // Add edges based on sharedWith
         if (contact.sharedWith && contact.sharedWith.length > 0) {
             contact.sharedWith.forEach(conn => {
                 edgesData.push({
@@ -274,6 +294,179 @@ function renderGraph() {
     networkGraph = new vis.Network(container, data, options);
 }
 
+// -------------------------------------------------------------
+// Zalo Friends Import Modal & Batch Execution
+// -------------------------------------------------------------
+const openZaloBtn = document.getElementById('openZaloImportBtn');
+const closeZaloBtn = document.getElementById('closeZaloModalBtn');
+const cancelZaloBtn = document.getElementById('btnCancelZaloModal');
+const btnConfirmZalo = document.getElementById('btnConfirmZaloImport');
+const zaloPreviewList = document.getElementById('zaloPreviewList');
+const zaloFriendCount = document.getElementById('zaloFriendCount');
+const zaloDuplicateNotice = document.getElementById('zaloDuplicateNotice');
+const csvFileInput = document.getElementById('csvFileInput');
+
+let currentZaloQueue = [];
+
+function openZaloModal() {
+    if (!zaloModal) return;
+
+    // Check which items are already in allContactsData
+    currentZaloQueue = zaloFriendsData.map(fr => {
+        const alreadyExists = allContactsData.some(c => 
+            c.name === fr.name || (fr.zaloId && c.zaloId === fr.zaloId)
+        );
+        return { ...fr, isRegistered: alreadyExists };
+    });
+
+    const unregCount = currentZaloQueue.filter(f => !f.isRegistered).length;
+    if (zaloFriendCount) zaloFriendCount.textContent = currentZaloQueue.length;
+    if (zaloDuplicateNotice) {
+        zaloDuplicateNotice.textContent = unregCount < currentZaloQueue.length 
+            ? `(${currentZaloQueue.length - unregCount}명 이미 등록됨, ${unregCount}명 신규 등록 가능)`
+            : '(134명 모두 신규 등록 대기)';
+    }
+
+    renderZaloPreviewList(currentZaloQueue);
+    zaloModal.style.display = 'flex';
+}
+
+function renderZaloPreviewList(list) {
+    if (!zaloPreviewList) return;
+    zaloPreviewList.innerHTML = list.map(item => `
+        <div style="background:#F8FAFC; border:1px solid ${item.isRegistered ? '#E2E8F0' : '#BAE6FD'}; border-radius:0.6rem; padding:0.65rem 0.8rem; display:flex; align-items:center; gap:0.65rem; ${item.isRegistered ? 'opacity:0.6;' : ''}">
+            ${item.avatar 
+                ? `<img src="${item.avatar}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:1px solid #CBD5E1; flex-shrink:0;">`
+                : `<div style="width:36px; height:36px; border-radius:50%; background:#E0F2FE; color:#0284C7; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.85rem; flex-shrink:0;">${item.name.charAt(0)}</div>`
+            }
+            <div style="min-width:0; flex:1;">
+                <div style="font-weight:700; color:#0F172A; font-size:0.875rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                    ${item.name}
+                </div>
+                <div style="display:flex; align-items:center; gap:0.35rem; margin-top:0.15rem; font-size:0.75rem;">
+                    <span style="background:#E2E8F0; color:#475569; padding:0.1rem 0.35rem; border-radius:0.25rem; font-weight:600;">${item.company}</span>
+                    ${item.isRegistered 
+                        ? '<span style="color:#059669; font-weight:700;">✓ 등록됨</span>'
+                        : '<span style="color:#0284C7; font-weight:600;">대기</span>'
+                    }
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+openZaloBtn?.addEventListener('click', openZaloModal);
+closeZaloBtn?.addEventListener('click', () => { if (zaloModal) zaloModal.style.display = 'none'; });
+cancelZaloBtn?.addEventListener('click', () => { if (zaloModal) zaloModal.style.display = 'none'; });
+
+// Batch import execution
+btnConfirmZalo?.addEventListener('click', async () => {
+    const toImport = currentZaloQueue.filter(f => !f.isRegistered);
+
+    if (toImport.length === 0) {
+        alert('모든 Zalo 인맥이 이미 등록되어 있습니다.');
+        return;
+    }
+
+    if (!confirm(`총 ${toImport.length}명의 Zalo 인맥을 인맥 DB에 일괄 등록하시겠습니까?`)) {
+        return;
+    }
+
+    btnConfirmZalo.disabled = true;
+    btnConfirmZalo.innerHTML = '<span>⏳</span> DB 등록 중...';
+
+    try {
+        const colRef = collection(db, 'contacts');
+        const chunkSize = 400; // Firestore writeBatch limit is 500
+
+        for (let i = 0; i < toImport.length; i += chunkSize) {
+            const chunk = toImport.slice(i, i + chunkSize);
+            const batch = writeBatch(db);
+
+            chunk.forEach(fr => {
+                const docRef = doc(colRef);
+                batch.set(docRef, {
+                    name: fr.name,
+                    company: fr.company || 'Zalo 인맥',
+                    position: fr.position || '',
+                    phone: fr.phone || '',
+                    zaloId: fr.zaloId || '',
+                    avatar: fr.avatar || '',
+                    zName: fr.zName || '',
+                    aliasName: fr.aliasName || '',
+                    initialRegistrar: 'Zalo 동기화 (Bestwinner)',
+                    sharedWith: [],
+                    createdAt: serverTimestamp()
+                });
+            });
+
+            await batch.commit();
+        }
+
+        alert(`🎉 축하합니다! ${toImport.length}명의 Zalo 인맥이 성공적으로 인맥 DB에 등록되었습니다.`);
+        if (zaloModal) zaloModal.style.display = 'none';
+        await loadContacts();
+
+    } catch (err) {
+        console.error(err);
+        alert('일괄 등록 중 오류 발생: ' + err.message);
+    } finally {
+        btnConfirmZalo.disabled = false;
+        btnConfirmZalo.innerHTML = '<span>🚀</span> 전체 일괄 등록하기';
+    }
+});
+
+// CSV file upload handler
+csvFileInput?.addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+        const text = await file.text();
+        const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+        if (lines.length <= 1) {
+            alert('CSV 파일에 데이터가 없습니다.');
+            return;
+        }
+
+        // Header check
+        const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+        const nameIdx = headers.findIndex(h => /name|이름|성명/i.test(h));
+        const companyIdx = headers.findIndex(h => /company|회사|소속/i.test(h));
+        const phoneIdx = headers.findIndex(h => /phone|전화|연락처|mobile/i.test(h));
+
+        const parsed = [];
+        for (let i = 1; i < lines.length; i++) {
+            const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+            const name = cols[nameIdx !== -1 ? nameIdx : 0];
+            if (!name) continue;
+            parsed.push({
+                name: name,
+                company: companyIdx !== -1 ? cols[companyIdx] : 'CSV 가져오기',
+                phone: phoneIdx !== -1 ? cols[phoneIdx] : '',
+                position: '',
+                avatar: '',
+                isRegistered: false
+            });
+        }
+
+        if (parsed.length === 0) {
+            alert('유효한 연락처 데이터를 찾을 수 없습니다.');
+            return;
+        }
+
+        currentZaloQueue = parsed;
+        if (zaloFriendCount) zaloFriendCount.textContent = parsed.length;
+        if (zaloDuplicateNotice) zaloDuplicateNotice.textContent = `(외부 CSV 파일 ${parsed.length}건 불러옴)`;
+        renderZaloPreviewList(parsed);
+        alert(`CSV 파일에서 ${parsed.length}건의 연락처를 성공적으로 불러왔습니다. [전체 일괄 등록하기]를 눌러 저장하세요.`);
+
+    } catch (err) {
+        console.error(err);
+        alert('CSV 파싱 오류: ' + err.message);
+    }
+});
+
 loadContacts();
 
 // Handle OCR
@@ -289,7 +482,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 ocrLoading.style.display = 'block';
 
                 try {
-                    // Convert to base64
                     const reader = new FileReader();
                     reader.onloadend = () => {
                         const img = new Image();
@@ -318,7 +510,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const { scanBusinessCardAI } = await import('./aiApi.js');
                                 const result = await scanBusinessCardAI(base64Data, mimeType);
 
-                                // Fill form
                                 if (result.name) document.getElementById('addName').value = result.name;
                                 if (result.company) document.getElementById('addCompany').value = result.company;
                                 if (result.position) document.getElementById('addPosition').value = result.position;
@@ -329,7 +520,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 alert(err.message);
                             } finally {
                                 ocrLoading.style.display = 'none';
-                                input.value = ''; // reset
+                                input.value = '';
                             }
                         };
                         img.src = reader.result;
@@ -343,5 +534,4 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     });
-
 });
