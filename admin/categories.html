@@ -122,6 +122,7 @@
                 <div>
                     <label style="font-size:0.8rem; font-weight:700; color:#475569;">분류 유형</label>
                     <select id="catType" style="width:100%; padding:0.6rem; border:1px solid #cbd5e1; border-radius:0.5rem; margin-top:0.25rem; box-sizing:border-box;">
+                        <option value="food_ingredient">식자재 / 원부자재 (식품·식당)</option>
                         <option value="menu">F&B 식음료 메뉴</option>
                         <option value="physical_product">실물 상품 / 배송</option>
                         <option value="service">시공 / 현장 서비스</option>
@@ -172,9 +173,17 @@
                 // 기본 카테고리가 없는 경우 기본 프리셋 제공
                 if (categories.length === 0) {
                     categories = [
-                        { id: 'preset_1', nameKo: '대표 추천 세트', nameEn: 'Signature Sets', type: 'menu', order: 1, isPreset: true },
-                        { id: 'preset_2', nameKo: '메인 식사류', nameEn: 'Main Dishes', type: 'menu', order: 2, isPreset: true },
-                        { id: 'preset_3', nameKo: '음료 및 주류', nameEn: 'Beverages & Drinks', type: 'menu', order: 3, isPreset: true }
+                        { id: 'preset_1', nameKo: '육류/축산물', nameEn: 'Meat & Poultry', type: 'food_ingredient', order: 1, isPreset: true },
+                        { id: 'preset_2', nameKo: '수산물/해산물', nameEn: 'Seafood & Fish', type: 'food_ingredient', order: 2, isPreset: true },
+                        { id: 'preset_3', nameKo: '농산물/채소·야채', nameEn: 'Vegetables & Produce', type: 'food_ingredient', order: 3, isPreset: true },
+                        { id: 'preset_4', nameKo: '양념/소스/조미료', nameEn: 'Sauces & Seasonings', type: 'food_ingredient', order: 4, isPreset: true },
+                        { id: 'preset_5', nameKo: '쌀/곡류/면류', nameEn: 'Grains & Noodles', type: 'food_ingredient', order: 5, isPreset: true },
+                        { id: 'preset_6', nameKo: '유제품/계란', nameEn: 'Dairy & Eggs', type: 'food_ingredient', order: 6, isPreset: true },
+                        { id: 'preset_7', nameKo: '가공/냉동식품', nameEn: 'Processed & Frozen', type: 'food_ingredient', order: 7, isPreset: true },
+                        { id: 'preset_8', nameKo: '음료/주류/커피·원두', nameEn: 'Beverages & Coffee', type: 'food_ingredient', order: 8, isPreset: true },
+                        { id: 'preset_9', nameKo: '주방소모품/포장재', nameEn: 'Kitchen & Packaging', type: 'food_ingredient', order: 9, isPreset: true },
+                        { id: 'preset_10', nameKo: '대표 추천 세트', nameEn: 'Signature Sets', type: 'menu', order: 10, isPreset: true },
+                        { id: 'preset_11', nameKo: '메인 식사류', nameEn: 'Main Dishes', type: 'menu', order: 11, isPreset: true }
                     ];
                 }
 
@@ -199,7 +208,7 @@
                     <td style="padding:0.75rem 1rem; font-weight:700; color:#1e293b;">${c.nameKo || c.name || '-'}</td>
                     <td style="padding:0.75rem 1rem; color:#64748b;">${c.nameEn || '-'}</td>
                     <td style="padding:0.75rem 1rem;">
-                        <span class="badge-pill" style="background:#e0e7ff; color:#4338ca;">${c.type === 'service' ? '시공/서비스' : c.type === 'physical_product' ? '실물상품' : 'F&B 메뉴'}</span>
+                        <span class="badge-pill" style="background:#e0e7ff; color:#4338ca;">${c.type === 'food_ingredient' ? '식자재/원자재' : c.type === 'service' ? '시공/서비스' : c.type === 'physical_product' ? '실물상품' : 'F&B 메뉴'}</span>
                     </td>
                     <td style="padding:0.75rem 1rem;">
                         <span style="color:#10b981; font-weight:700; font-size:0.8rem;">● 사용중</span>

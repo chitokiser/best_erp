@@ -108,20 +108,43 @@
                             <label>카테고리 *</label>
                             <select id="selCategory" class="search-input" style="width: 100%;" required>
                                 <option value="">선택하세요</option>
-                                <option value="석재">석재</option>
-                                <option value="목재">목재</option>
-                                <option value="조명">조명</option>
-                                <option value="IT">IT (네트워크/하드웨어)</option>
+                                <optgroup label="🍱 식품/식당 식자재 (F&B Ingredients)">
+                                    <option value="육류/축산물">육류/축산물 (소고기, 돼지고기, 닭/오리, 가공육)</option>
+                                    <option value="수산물/해산물">수산물/해산물 (생선, 새우, 조개, 해조류)</option>
+                                    <option value="농산물/채소·야채">농산물/채소·야채 (양파, 마늘, 대파, 잎채소, 버섯)</option>
+                                    <option value="과일/신선청과">과일/신선청과 (과일류, 레몬/라임, 냉동과일)</option>
+                                    <option value="쌀/곡류/면류">쌀/곡류/면류 (쌀, 찹쌀, 밀가루, 생면/건면, 파스타)</option>
+                                    <option value="유제품/계란">유제품/계란 (우유, 치즈, 버터, 생크림, 계란)</option>
+                                    <option value="양념/소스/조미료">양념/소스/조미료 (간장, 고추장, 된장, 오일, 소스, 향신료)</option>
+                                    <option value="가공식품/냉동식품">가공식품/냉동식품 (냉동패티, 만두, 튀김류, 통조림)</option>
+                                    <option value="음료/주류/커피·원두">음료/주류/커피·원두 (원두, 시럽, 차류, 탄산, 주류)</option>
+                                    <option value="베이커리/디저트">베이커리/디저트 (제과제빵 믹스, 초콜릿, 토핑)</option>
+                                    <option value="주방소모품/포장재">주방소모품/포장재 (배달용기, 포장재, 일회용품, 위생용품)</option>
+                                </optgroup>
+                                <optgroup label="🏢 시설/건축/IT 자재">
+                                    <option value="석재">석재</option>
+                                    <option value="목재">목재</option>
+                                    <option value="조명">조명</option>
+                                    <option value="인테리어">인테리어</option>
+                                    <option value="엘리베이터">엘리베이터</option>
+                                    <option value="소방">소방</option>
+                                    <option value="스마트주차장">스마트주차장</option>
+                                    <option value="사무용품">사무용품</option>
+                                    <option value="생활용품">생활용품</option>
+                                    <option value="전자제품">전자제품</option>
+                                    <option value="IT">IT (네트워크/하드웨어)</option>
+                                    <option value="기타">기타</option>
+                                </optgroup>
                             </select>
                         </div>
                         <div>
                             <label>세부카테고리</label>
-                            <input type="text" id="txtSubCategory" class="search-input" style="width: 100%;">
+                            <input type="text" id="txtSubCategory" class="search-input" style="width: 100%;" placeholder="예: 소고기 등심, 삼겹살, 양파, 식용유, 바닥타일">
                         </div>
                         <div>
                             <label>용도 *</label>
                             <input type="text" id="txtApplications" class="search-input" style="width: 100%;"
-                                placeholder="예: 바닥, 벽체" required>
+                                placeholder="예: 구이용, 찌개/육수용, 토핑, 마감, 바닥, 벽체" required>
                         </div>
                     </div>
                 </fieldset>
@@ -145,11 +168,11 @@
                         <div>
                             <label>규격 *</label>
                             <input type="text" id="txtSpecification" class="search-input" style="width: 100%;"
-                                placeholder="예: 600x600x20mm" required>
+                                placeholder="예: 1kg/팩, 10kg/Box, 1.8L/병, 600x600x20mm" required>
                         </div>
                         <div>
                             <label>단위 *</label>
-                            <input type="text" id="txtUnit" class="search-input" style="width: 100%;" placeholder="예: ㎡"
+                            <input type="text" id="txtUnit" class="search-input" style="width: 100%;" placeholder="예: kg, g, L, 박스, 캔, ㎡, EA"
                                 required>
                         </div>
                     </div>
