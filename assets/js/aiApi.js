@@ -88,7 +88,15 @@ export const scanBusinessCardAI = async (base64Image, mimeType) => {
                     }
                 }
             ]
-        }]
+        }],
+        generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 1024,
+            responseMimeType: "application/json",
+            thinkingConfig: {
+                thinkingBudget: 0
+            }
+        }
     };
 
     const response = await fetch(endpoint, {
@@ -111,27 +119,28 @@ export const scanBusinessCardAI = async (base64Image, mimeType) => {
 export const scanReceiptAI = async (base64Image, mimeType = 'image/jpeg') => {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (!apiKey) {
-        console.warn("VITE_GEMINI_API_KEY 미설정 - 스마트 영수증 분석 모드로 진행");
-        return fallbackReceiptAnalysis();
+        throw new Error("VITE_GEMINI_API_KEY 환경변수가 설정되지 않았습니다.");
     }
 
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
     const prompt = `이 이미지는 지출 영수증(Receipt, Hóa đơn) 사진입니다.
-한국어, 베트남어(Hóa đơn), 또는 영어로 작성된 영수증일 수 있습니다.
-다음 정보를 추출하여 마크다운이나 다른 설명 없이 오직 정확한 JSON 형식으로만 응답하세요:
+한국어, 베트남어(Hóa đơn), 영어 등으로 작성된 영수증일 수 있습니다.
+영수증의 모든 텍스트를 정확하게 판독하여 오직 유효한 JSON 형식으로만 응답하세요:
 {
-  "storeName": "상호명/가맹점/거래처 (예: 이마트, WinMart, 백다방, 농협하나로마트 등)",
-  "date": "결제일자 (YYYY-MM-DD 형식, 연도가 명시되지 않은 경우 올해 연도 사용)",
-  "totalAmount": 125000,
+  "storeName": "영수증 상단 상호명/가맹점/거래처 (예: AEON - HÀ ĐÔNG, WinMart, 백다방, 농협 등)",
+  "date": "결제일자 (YYYY-MM-DD 형식. 베트남 및 영미권 영수증의 일/월/연도 DD/MM/YYYY 또는 MM/DD/YYYY 표기를 식별하여 연-월-일 YYYY-MM-DD 형식으로 변환)",
+  "totalAmount": 1070200,
   "currency": "VND 또는 KRW",
   "category": "추천 지출 항목 (식자재/원부자재, 매장운영비, 소모품비, 외식/식대, 임대료/공과금, 자재비/원가, 기타경비 중 하나)",
   "items": [
     { "name": "품목명", "quantity": 1, "price": 50000 }
   ],
-  "summary": "지출 요약 (예: 삼겹살, 대파, 양파 등 식자재 구매)",
-  "paymentMethod": "결제수단 (신용카드, 현금, 계좌이체 등)"
-}`;
+  "summary": "지출 요약 (예: 식음료 및 식자재 구매)",
+  "paymentMethod": "결제수단 (신용카드, 체크카드/DEBIT, 현금, 계좌이체 등)"
+}
+주의사항:
+- totalAmount는 할인/세금 등이 반영된 최종 실제 결제 총액(Total Payment, TỔNG THANH TOÁN)을 숫자로만 정확히 기재하세요.`;
 
     const payload = {
         contents: [{
@@ -147,53 +156,39 @@ export const scanReceiptAI = async (base64Image, mimeType = 'image/jpeg') => {
         }],
         generationConfig: {
             temperature: 0.1,
-            maxOutputTokens: 1200
+            maxOutputTokens: 3500,
+            responseMimeType: "application/json",
+            thinkingConfig: {
+                thinkingBudget: 0
+            }
         }
     };
 
-    try {
-        const response = await fetch(endpoint, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
+    const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
 
-        if (!response.ok) {
-            throw new Error(`AI 영수증 분석 오류 (${response.status})`);
-        }
-
-        const data = await response.json();
-        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        const cleanText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-        const parsed = JSON.parse(cleanText);
-
-        // Ensure safe numbers and dates
-        if (!parsed.date || !/^\d{4}-\d{2}-\d{2}$/.test(parsed.date)) {
-            parsed.date = new Date().toISOString().split('T')[0];
-        }
-        parsed.totalAmount = Number(String(parsed.totalAmount).replace(/[^0-9]/g, '')) || 0;
-        if (!parsed.category) parsed.category = '식자재/원부자재';
-        if (!parsed.storeName) parsed.storeName = '영수증 거래처';
-
-        return parsed;
-    } catch (err) {
-        console.warn("Gemini Receipt Scan Warning, fallback to smart analysis:", err);
-        return fallbackReceiptAnalysis();
+    if (!response.ok) {
+        const errorText = await response.text();
+        console.error("AI 영수증 분석 오류 응답:", errorText);
+        throw new Error(`AI 영수증 분석 오류 (${response.status})`);
     }
+
+    const data = await response.json();
+    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const cleanText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+    const parsed = JSON.parse(cleanText);
+
+    // Ensure safe numbers and dates
+    if (!parsed.date || !/^\d{4}-\d{2}-\d{2}$/.test(parsed.date)) {
+        parsed.date = new Date().toISOString().split('T')[0];
+    }
+    parsed.totalAmount = Number(String(parsed.totalAmount).replace(/[^0-9]/g, '')) || 0;
+    if (!parsed.category) parsed.category = '식자재/원부자재';
+    if (!parsed.storeName) parsed.storeName = '영수증 거래처';
+
+    return parsed;
 };
 
-function fallbackReceiptAnalysis() {
-    const today = new Date().toISOString().split('T')[0];
-    return {
-        storeName: "영수증 가맹점",
-        date: today,
-        totalAmount: 185000,
-        currency: "VND",
-        category: "식자재/원부자재",
-        items: [
-            { name: "식자재 및 식음료 부자재", quantity: 1, price: 185000 }
-        ],
-        summary: "매장 식자재 및 운영비 지출 영수증",
-        paymentMethod: "신용카드"
-    };
-}
