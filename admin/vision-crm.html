@@ -485,6 +485,10 @@
                     <span style="background:#ecfdf5; border:1px solid #a7f3d0; color:#065f46; font-size:0.75rem; font-weight:800; padding:0.4rem 0.75rem; border-radius:999px; display:inline-flex; align-items:center; gap:0.35rem;">
                         <span>🛡️</span> 베트남 개인정보보호법 (Law No. 91/2025/QH15) 준수
                     </span>
+                    <span id="nvrModeBadge" title="매장 AI NVR(Frigate) 연동 상태" style="display:none; background:#EEF2FF; border:1px solid #A5B4FC; color:#3730A3; font-size:0.75rem; font-weight:800; padding:0.4rem 0.75rem; border-radius:999px; align-items:center; gap:0.35rem;">
+                        <span id="nvrModeDot" style="width:8px; height:8px; border-radius:50%; background:#10B981; display:inline-block;"></span>
+                        <span id="nvrModeText">NVR 연동</span>
+                    </span>
                     <button onclick="openStoreQrModal()" style="background:#0068FF; color:white; border:none; padding:0.5rem 0.95rem; border-radius:0.5rem; font-size:0.825rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; box-shadow:0 3px 8px rgba(0,104,255,0.3);">
                         <span>🖨️</span> Zalo 2단계 친구추가 QR 생성기
                     </button>
@@ -545,12 +549,12 @@
             <div class="stat-card">
                 <h3>👥 시간대별 방문객 수 (Footfall)</h3>
                 <p class="value" id="kpiFootfall" style="color:var(--crm-primary);">152 명</p>
-                <div class="trend trend-up">피크 타임 유입 집중 (정상)</div>
+                <div class="trend trend-up" id="kpiFootfallSub">피크 타임 유입 집중 (정상)</div>
             </div>
             <div class="stat-card">
-                <h3>🎯 AI 회원 인식/매칭률 (CRM)</h3>
+                <h3 id="kpiRecognitionTitle">🎯 AI 회원 인식/매칭률 (CRM)</h3>
                 <p class="value" id="kpiRecognition" style="color:#10b981;">98.2 %</p>
-                <div class="trend trend-up">등록 회원 실시간 자동 식별 가동중</div>
+                <div class="trend trend-up" id="kpiRecognitionSub">등록 회원 실시간 자동 식별 가동중</div>
             </div>
             <div class="stat-card">
                 <h3>⏰ 직원 출근 현황 (Attendance)</h3>
@@ -787,7 +791,7 @@
                     <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:0.5rem; margin-bottom:0.85rem;">
                         <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:0.5rem; padding:0.6rem; text-align:center;">
                             <span style="font-size:0.7rem; color:#64748B; display:block;">총 직원</span>
-                            <strong style="font-size:1.15rem; color:#1E293B;">5명</strong>
+                            <strong id="empStatTotal" style="font-size:1.15rem; color:#1E293B;">5명</strong>
                         </div>
                         <div style="background:#EEF2FF; border:1px solid #C7D2FE; border-radius:0.5rem; padding:0.6rem; text-align:center;">
                             <span style="font-size:0.7rem; color:#4F46E5; display:block;">현재 근무중</span>
@@ -1046,6 +1050,9 @@
                 </div>
                 <button onclick="closeProfileModal()" style="background:none; border:none; font-size:1.5rem; color:#94A3B8; cursor:pointer;">✕</button>
             </div>
+
+            <!-- 매장 AI NVR 얼굴 인식 등록 (동의 필수) -->
+            <div id="nvrCustomerPanel" style="display:none; margin-bottom:1.25rem;"></div>
 
             <!-- 4 Core Metric Tiles -->
             <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:0.75rem; margin-bottom:1.25rem;">
@@ -1613,7 +1620,7 @@
         import { db, auth, storage } from '../assets/js/firebase-config.js';
         import { checkAdminAuth } from '../assets/js/auth.js';
         import { initNotificationHub, playNotificationSound } from '../assets/js/notification-hub.js';
-        import { collection, addDoc, getDocs, doc, setDoc, onSnapshot, deleteDoc, serverTimestamp, query, where, orderBy, limit } from 'firebase/firestore';
+        import { collection, addDoc, getDocs, doc, setDoc, onSnapshot, deleteDoc, serverTimestamp, query, where, orderBy, limit, updateDoc, Timestamp } from 'firebase/firestore';
         import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 
         initNotificationHub();
@@ -2592,6 +2599,7 @@
                             <span style="font-size:0.75rem; color:#64748B; font-family:monospace;">${c.customerId}</span>
                             ${(c.descriptor || c.photoURL) ? `<span style="background:#dcfce7; border:1px solid #86efac; color:#166534; font-size:0.65rem; font-weight:800; padding:0.1rem 0.4rem; border-radius:0.25rem;">📷 실물 얼굴 등록 완료</span>` : `<span style="background:#fef3c7; border:1px solid #fcd34d; color:#b45309; font-size:0.65rem; font-weight:800; padding:0.1rem 0.4rem; border-radius:0.25rem;">⚠️ 얼굴 미등록 (등록 필요)</span>`}
                             ${hasBt ? `<span style="background:#FFFBEB; border:1px solid #FCD34D; color:#B45309; font-size:0.65rem; font-weight:800; padding:0.1rem 0.4rem; border-radius:0.25rem;">🎫 1 BT 발급 (${c.btTicketCode || 'BT-지급'})</span>` : ''}
+                            ${window.__nvrCustomerBadge ? window.__nvrCustomerBadge(c) : ''}
                         </div>
                         <p style="margin:0; font-size:0.775rem; color:#64748B;">
                             • 방문 <strong>${c.visitCount}회</strong> | 누적 <strong>${c.totalSpent.toLocaleString()} ₫</strong> | 선호: <strong>${c.favMenu}</strong>
@@ -2685,6 +2693,7 @@
             });
 
             document.getElementById('customerProfileModal').style.display = 'flex';
+            window.__nvrRenderCustomerPanel?.(customer);
         };
 
         // 방식 B: 3자 VIP 전담 단톡방 열기
@@ -3122,7 +3131,8 @@
                     lastInferenceTime = now;
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                    if (isFaceApiLoaded && typeof faceapi !== 'undefined' && video.readyState >= 2) {
+                    // NVR 연동 모드에서는 얼굴 인식을 매장 NVR이 수행하므로 브라우저 인식을 중지
+                    if (!window.__nvrModeActive && isFaceApiLoaded && typeof faceapi !== 'undefined' && video.readyState >= 2) {
                         try {
                             const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.20 });
                             const detections = await faceapi.detectAllFaces(video, options).withFaceLandmarks(true).withFaceDescriptors().withFaceExpressions();
@@ -3380,6 +3390,7 @@
         window.searchCustomerByCameraFace = async () => {
             const resEl = document.getElementById('cameraFaceSearchResult');
             const statusBadge = document.getElementById('faceSearchStatusBadge');
+            if (window.__nvrModeActive) { window.__nvrExplainBrowserOff?.(resEl); return; }
 
             if (!isWebcamOn) {
                 if (resEl) {
@@ -4153,6 +4164,10 @@
         };
 
         function startAutoCollection() {
+            if (window.__nvrModeActive) {
+                alert('🛰️ 매장 AI NVR 연동 중입니다.\n\n방문객 수 · 출퇴근 · 침입 감지는 NVR이 24시간 자동으로 수집하므로 브라우저 무인 관제는 사용하지 않습니다.');
+                return;
+            }
             const merchantId = document.getElementById('merchantIdInput')?.value.trim() || '1791605366';
             const btn = document.getElementById('btnAutoCollect');
             const icon = document.getElementById('autoCollectIcon');
@@ -4198,6 +4213,7 @@
         // (언제 방문했는지 + 만족도는 어땠는지 + 뭘 시켜서 먹었는지)
         // ==========================================
                 window.captureAndAnalyzeCurrentFace = async (silent = false) => {
+            if (window.__nvrModeActive) return; // NVR 연동 중에는 브라우저 얼굴 분석 중지
             if (!silent) playNotificationSound();
             const merchantId = document.getElementById('merchantIdInput')?.value.trim() || '1791605366';
 
@@ -4551,6 +4567,7 @@
         window.checkEmployeeCommuteByCamera = async () => {
             const resEl = document.getElementById('employeePunchResult');
             const statusBadge = document.getElementById('employeePunchStatusBadge');
+            if (window.__nvrModeActive) { window.__nvrExplainBrowserOff?.(resEl); return; }
 
             if (!isWebcamOn) {
                 alert('먼저 상단 [📷 웹캠 연결] 또는 [카메라 셋팅] 버튼을 눌러 카메라를 가동해 주세요.');
@@ -5091,6 +5108,12 @@
                         snapshot.forEach(docSnap => {
                             const data = docSnap.data();
                             firestoreCustomers.push({
+                                docId: docSnap.id,
+                                photoURL: data.photoURL || '',
+                                nvrEnroll: data.nvrEnroll === true,
+                                consentGivenAt: data.consentGivenAt || null,
+                                consentVersion: data.consentVersion || '',
+                                consentWithdrawnAt: data.consentWithdrawnAt || null,
                                 customerId: data.customerId || docSnap.id,
                                 name: data.name || '방문 고객',
                                 email: data.email || '',
@@ -5180,8 +5203,528 @@
             }
         }
 
+        // ==========================================
+        // 🛰️ 매장 AI NVR (Frigate + NVR 미들웨어) 연동 모드
+        //  - nvr_status/{merchantId} 하트비트가 살아 있으면 자동 전환
+        //  - KPI · 직원 근태 · 방범 이력 · VIP 방문을 NVR 실측 데이터로 표시 (하드코딩 수치 제거)
+        //  - NVR 연동 중에는 브라우저(face-api.js) 얼굴 인식을 실행하지 않음
+        //  - 얼굴 이미지·벡터·스냅샷은 Firestore로 오지 않음 (매장 NVR에만 보관)
+        // ==========================================
+        const NVR_STALE_MS = 90 * 1000;
+        const nvr = {
+            merchantId: null, status: null, active: false,
+            statusUnsub: null, dataUnsubs: [], staleTimer: null, workDate: null,
+            employees: [], attendance: [], incidents: [], vipVisits: [], footfall: null,
+            seenIncidents: null, seenVips: null, savedIncidents: null, saved: {}
+        };
+        window.__nvrModeActive = false;
+
+        const nvrEsc = (s) => String(s ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+        const nvrToDate = (v) => (v && typeof v.toDate === 'function') ? v.toDate() : (v ? new Date(v) : null);
+        const nvrTz = () => nvr.status?.timezone || 'Asia/Ho_Chi_Minh';
+        const nvrTime = (d) => d ? d.toLocaleTimeString('ko-KR', { timeZone: nvrTz(), hour: '2-digit', minute: '2-digit', hour12: false }) : '-';
+        const nvrDateTime = (d) => d ? d.toLocaleString('ko-KR', { timeZone: nvrTz(), month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }) : '-';
+        const NVR_ENROLL_LABEL = {
+            enrolled: ['🛰️ NVR 등록됨', '#EEF2FF', '#3730A3', '#A5B4FC'],
+            pending: ['⏳ NVR 등록 중', '#FFFBEB', '#B45309', '#FCD34D'],
+            error: ['⚠️ NVR 등록 오류', '#FEF2F2', '#B91C1C', '#FECACA'],
+            blocked: ['⚠️ NVR 등록 불가', '#FEF2F2', '#B91C1C', '#FECACA'],
+            removed: ['○ NVR 해제됨', '#F1F5F9', '#64748B', '#E2E8F0']
+        };
+        const NVR_BLOCK_REASON = { no_photo: '사진 없음', no_consent: '동의 정보 없음', consent_withdrawn: '동의 철회됨', not_requested: '등록 해제', deleted: '원장 삭제' };
+
+        function nvrIsOnline(st) {
+            if (!st || st.online !== true) return false;
+            const hb = nvrToDate(st.lastHeartbeat) || nvrToDate(st.heartbeatAt);
+            const limit = Math.max(NVR_STALE_MS, (st.heartbeatSeconds || 30) * 3000);
+            return !!hb && (Date.now() - hb.getTime()) < limit;
+        }
+
+        function nvrEnrollment(kind, docId) {
+            return (docId && nvr.status?.enrollments) ? nvr.status.enrollments[`${kind}_${docId}`] || null : null;
+        }
+
+        function nvrChip(entry) {
+            if (!entry || !NVR_ENROLL_LABEL[entry.state]) return '';
+            const [label, bg, color, border] = NVR_ENROLL_LABEL[entry.state];
+            const extra = entry.state === 'enrolled' && entry.images ? ` (${entry.images}장)`
+                : (entry.message ? ` · ${NVR_BLOCK_REASON[entry.message] || entry.message}` : '');
+            return `<span style="font-size:0.65rem; font-weight:800; background:${bg}; color:${color}; border:1px solid ${border}; padding:0.1rem 0.35rem; border-radius:0.25rem;">${nvrEsc(label + extra)}</span>`;
+        }
+
+        function nvrUpdateBadge() {
+            const badge = document.getElementById('nvrModeBadge');
+            if (!badge) return;
+            if (!nvr.status) { badge.style.display = 'none'; return; }
+            const online = nvrIsOnline(nvr.status);
+            const hb = nvrToDate(nvr.status.lastHeartbeat) || nvrToDate(nvr.status.heartbeatAt);
+            const cams = (nvr.status.cameras || []).filter(c => c.online).length;
+            badge.style.display = 'inline-flex';
+            badge.style.background = online ? '#EEF2FF' : '#F1F5F9';
+            badge.style.borderColor = online ? '#A5B4FC' : '#CBD5E1';
+            document.getElementById('nvrModeDot').style.background = online ? '#10B981' : '#94A3B8';
+            document.getElementById('nvrModeText').textContent = online
+                ? `🛰️ NVR 연동 중 · 카메라 ${cams}대 · 최근 신호 ${nvrTime(hb)}`
+                : `NVR 오프라인 · 마지막 신호 ${hb ? nvrDateTime(hb) : '-'}`;
+        }
+
+        // --- 직원: store_employees (가맹점 원장) + nvr_attendance (NVR 출퇴근) -----------------
+        function nvrEmployeeGroups() {
+            const groups = new Map();
+            nvr.employees.forEach(e => {
+                const key = e.employeeId || e.docId;
+                if (!groups.has(key)) groups.set(key, []);
+                groups.get(key).push(e);
+            });
+            return [...groups.entries()].map(([key, docs]) => {
+                docs.sort((a, b) => (nvrToDate(b.updatedAt)?.getTime() || 0) - (nvrToDate(a.updatedAt)?.getTime() || 0));
+                const primary = docs.find(d => d.nvrEnroll === true) || docs[0];
+                const docIds = docs.map(d => d.docId);
+                const att = nvr.attendance.find(a => docIds.includes(a.employeeDocId) || (a.employeeId && a.employeeId === key)) || null;
+                return {
+                    key, docIds, docId: primary.docId,
+                    name: primary.employeeName || primary.name || key,
+                    role: primary.role || '직원',
+                    photoURL: docs.map(d => d.photoURL).find(Boolean) || '',
+                    nvrEnroll: primary.nvrEnroll === true,
+                    enrollment: nvrEnrollment('employee', primary.docId),
+                    att
+                };
+            });
+        }
+
+        function nvrRenderEmployeeList() {
+            const container = document.getElementById('employeeListContainer');
+            if (!container) return;
+            const q = document.getElementById('employeeSearchInput')?.value.toLowerCase().trim() || '';
+            const list = nvrEmployeeGroups().filter(e => !q || e.name.toLowerCase().includes(q) || e.role.toLowerCase().includes(q) || String(e.key).toLowerCase().includes(q));
+            container.innerHTML = '';
+            if (list.length === 0) {
+                container.innerHTML = '<div style="padding:1.5rem; text-align:center; color:#94A3B8; font-size:0.8rem;">이 가맹점의 등록 직원(store_employees)이 없습니다.<br>[📸 직원 얼굴 등록]으로 직원을 먼저 등록해 주세요.</div>';
+            }
+            list.forEach(emp => {
+                const isOn = emp.att?.onDuty === true;
+                const inAt = nvrToDate(emp.att?.checkInAt);
+                const outAt = emp.att?.finalized ? nvrToDate(emp.att?.checkOutAt) : null;
+                const hours = (inAt && (outAt || isOn)) ? (((outAt || new Date()).getTime() - inAt.getTime()) / 3600000).toFixed(1) + '시간' : '-';
+                const card = document.createElement('div');
+                card.className = 'employee-card-item';
+                card.innerHTML = `
+                    <div style="width:46px; height:46px; border-radius:50%; overflow:hidden; border:2px solid ${isOn ? '#10B981' : '#CBD5E1'}; flex-shrink:0; background:#EEF2FF; display:flex; align-items:center; justify-content:center;">
+                        ${emp.photoURL ? `<img src="${nvrEsc(emp.photoURL)}" style="width:100%; height:100%; object-fit:cover;" alt="">` : '<span style="font-size:1.35rem;">👤</span>'}
+                    </div>
+                    <div style="flex:1; min-width:0;">
+                        <div style="display:flex; align-items:center; gap:0.4rem; margin-bottom:0.15rem; flex-wrap:wrap;">
+                            <strong style="font-size:0.85rem; color:#1E293B;">${nvrEsc(emp.name)}</strong>
+                            <span style="font-size:0.68rem; font-weight:800; padding:0.15rem 0.4rem; border-radius:0.25rem; background:${isOn ? '#ECFDF5' : '#F1F5F9'}; color:${isOn ? '#047857' : '#64748B'}; border:1px solid ${isOn ? '#A7F3D0' : '#E2E8F0'};">
+                                ${isOn ? '● 근무중 (출근)' : (emp.att ? '○ 퇴근' : '○ 미출근/휴무')}
+                            </span>
+                            ${nvrChip(emp.enrollment)}
+                        </div>
+                        <div style="font-size:0.72rem; color:#64748B;">${nvrEsc(emp.role)} · ${nvrEsc(emp.key)}</div>
+                        <div style="font-size:0.7rem; color:#475569; margin-top:0.2rem; font-family:monospace;">
+                            출근: ${nvrTime(inAt)} | 퇴근: ${outAt ? nvrTime(outAt) : '-'} | 누적: ${hours}
+                        </div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:0.3rem; align-items:stretch;">
+                        <button type="button" onclick="nvrToggleEmployeeEnroll('${nvrEsc(emp.key)}')" ${emp.photoURL ? '' : 'disabled title="얼굴 사진이 없습니다. [📸 얼굴 등록]으로 먼저 사진을 등록해 주세요."'} style="background:${emp.nvrEnroll ? '#4F46E5' : 'white'}; color:${emp.nvrEnroll ? 'white' : '#3730A3'}; border:1px solid #4F46E5; padding:0.35rem 0.6rem; border-radius:0.35rem; font-size:0.7rem; font-weight:800; cursor:${emp.photoURL ? 'pointer' : 'not-allowed'}; opacity:${emp.photoURL ? 1 : 0.5};">
+                            ${emp.nvrEnroll ? '🛰️ NVR 등록 ON' : '🛰️ NVR 등록 OFF'}
+                        </button>
+                        <button type="button" onclick="openFaceEnrollModal('EMPLOYEE')" style="background:#F1F5F9; color:#334155; border:1px solid #CBD5E1; padding:0.3rem 0.6rem; border-radius:0.35rem; font-size:0.68rem; font-weight:800; cursor:pointer;">
+                            📸 얼굴 등록
+                        </button>
+                    </div>`;
+                container.appendChild(card);
+            });
+            nvrUpdateEmployeeStats();
+        }
+
+        function nvrUpdateEmployeeStats() {
+            const groups = nvrEmployeeGroups();
+            const total = groups.length;
+            const onDuty = groups.filter(g => g.att?.onDuty === true).length;
+            const present = groups.filter(g => g.att).length;
+            const rate = total > 0 ? Math.round((present / total) * 100) : 0;
+            const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+            set('empStatTotal', `${total}명`);
+            set('empStatOnDuty', `${onDuty}명`);
+            set('empStatOffDuty', `${total - onDuty}명`);
+            set('empStatRate', `${rate}%`);
+            set('kpiEmployeeAttendance', `${onDuty} / ${total} 명`);
+            set('kpiEmployeeAttendanceSub', total === 0 ? 'NVR 등록 직원 없음'
+                : `오늘 출근 ${present}명 (${rate}%) · 근무중 ${onDuty}명 · NVR 얼굴 인식`);
+        }
+
+        function nvrRenderAttendanceLogs() {
+            const container = document.getElementById('employeeAttendanceLogsContainer');
+            if (!container) return;
+            const roles = new Map(nvrEmployeeGroups().flatMap(g => g.docIds.map(id => [id, g.role])));
+            const logs = [];
+            nvr.attendance.forEach(a => {
+                const name = a.employeeName || '직원';
+                const role = roles.get(a.employeeDocId) || '직원';
+                const camIn = a.checkInCamera ? `NVR 얼굴 인식 · ${a.checkInCamera}` : 'NVR 얼굴 인식';
+                if (a.checkInAt) logs.push({ at: nvrToDate(a.checkInAt), name, role, type: '출근 (PUNCH-IN)', method: `${camIn} · ${Math.round((a.checkInScore || 0) * 100)}%` });
+                if (a.finalized && a.checkOutAt) logs.push({ at: nvrToDate(a.checkOutAt), name, role, type: '퇴근 (PUNCH-OUT)', method: `NVR 얼굴 인식 · ${a.checkOutCamera || ''}` });
+            });
+            logs.sort((x, y) => y.at - x.at);
+            container.innerHTML = '';
+            if (logs.length === 0) {
+                container.innerHTML = '<div style="padding:1rem; text-align:center; color:#94A3B8;">오늘 NVR 출퇴근 인증 기록이 없습니다.</div>';
+                return;
+            }
+            logs.slice(0, 20).forEach(log => {
+                const isIn = log.type.includes('출근');
+                const item = document.createElement('div');
+                item.className = 'security-incident-row';
+                item.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:0.45rem;">
+                        <span style="font-weight:700; color:#64748B; font-family:monospace;">${nvrTime(log.at)}</span>
+                        <strong style="color:#1E293B;">${nvrEsc(log.name)}</strong>
+                        <span style="color:#64748B;">(${nvrEsc(log.role)})</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:0.4rem;">
+                        <span style="font-weight:800; color:${isIn ? '#059669' : '#DC2626'}; font-size:0.7rem; background:${isIn ? '#ECFDF5' : '#FEF2F2'}; padding:0.15rem 0.4rem; border-radius:0.25rem;">${log.type}</span>
+                        <span style="color:#64748B; font-size:0.68rem;">${nvrEsc(log.method)}</span>
+                    </div>`;
+                container.appendChild(item);
+            });
+        }
+
+        window.nvrToggleEmployeeEnroll = async (key) => {
+            const g = nvrEmployeeGroups().find(x => String(x.key) === String(key));
+            if (!g) return;
+            const turnOn = !g.nvrEnroll;
+            if (turnOn && !confirm(`🛰️ [${g.name}] 직원을 매장 NVR 얼굴 인식(출퇴근)에 등록합니다.\n\n• 직원 본인의 얼굴 인식 출퇴근 동의를 받았는지 확인해 주세요.\n• 등록 사진은 매장 NVR로만 전송되며 클라우드에 얼굴 벡터를 저장하지 않습니다.`)) return;
+            try {
+                // 같은 직원의 다른 문서는 해제하고 대표 문서 1개만 등록 (중복 얼굴 방지)
+                for (const id of g.docIds) {
+                    await updateDoc(doc(db, 'store_employees', id), { nvrEnroll: turnOn && id === g.docId, updatedAt: serverTimestamp() });
+                }
+                playNotificationSound();
+            } catch (err) {
+                alert(`NVR 등록 변경 실패: ${err.message || err}`);
+            }
+        };
+
+        // --- 고객: NVR 등록 / 동의 정보 ----------------------------------------------------
+        window.__nvrCustomerBadge = (c) => {
+            if (!nvr.status || !c.docId) return '';
+            const vip = nvr.vipVisits.find(v => v.customerDocId === c.docId);
+            return nvrChip(nvrEnrollment('customer', c.docId))
+                + (vip ? ` <span style="font-size:0.65rem; font-weight:800; background:#FEF3C7; color:#92400E; border:1px solid #FCD34D; padding:0.1rem 0.35rem; border-radius:0.25rem;">⭐ 오늘 방문 ${nvrTime(nvrToDate(vip.visitedAt))}</span>` : '');
+        };
+
+        window.__nvrRenderCustomerPanel = (c) => {
+            const panel = document.getElementById('nvrCustomerPanel');
+            if (!panel) return;
+            if (!nvr.status) { panel.style.display = 'none'; return; }
+            panel.style.display = 'block';
+            if (!c.docId) {
+                panel.innerHTML = '<div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:0.65rem; padding:0.75rem; font-size:0.775rem; color:#64748B;">🛰️ 이 고객은 서버(store_customers)에 저장되지 않아 NVR 얼굴 인식에 등록할 수 없습니다.</div>';
+                return;
+            }
+            const given = nvrToDate(c.consentGivenAt);
+            const withdrawn = nvrToDate(c.consentWithdrawnAt);
+            const today = new Date().toISOString().slice(0, 10);
+            const on = c.nvrEnroll === true && !withdrawn;
+            panel.innerHTML = `
+                <div style="background:linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%); border:1.5px solid #818CF8; border-radius:0.65rem; padding:0.85rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.5rem;">
+                        <strong style="color:#3730A3; font-size:0.85rem;">🛰️ 매장 NVR VIP 얼굴 인식 등록</strong>
+                        <span>${nvrChip(nvrEnrollment('customer', c.docId))}</span>
+                    </div>
+                    <p style="margin:0 0 0.6rem 0; font-size:0.72rem; color:#4338CA; line-height:1.45;">
+                        고객의 <strong>명시적 동의</strong>(동의서 서명)가 있어야 등록할 수 있습니다. 등록 사진은 매장 NVR로만 전송되며, 동의 철회 시 NVR의 얼굴 사진과 인식 기록이 즉시 삭제됩니다.
+                        ${withdrawn ? `<br><strong style="color:#B91C1C;">동의 철회됨: ${nvrDateTime(withdrawn)}</strong>` : ''}
+                    </p>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin-bottom:0.5rem;">
+                        <label style="font-size:0.72rem; color:#334155; font-weight:700;">동의 일자
+                            <input type="date" id="nvrConsentDate" value="${given ? given.toISOString().slice(0, 10) : today}" max="${today}" ${on ? 'disabled' : ''} style="width:100%; padding:0.35rem; border:1px solid #CBD5E1; border-radius:0.35rem; box-sizing:border-box;">
+                        </label>
+                        <label style="font-size:0.72rem; color:#334155; font-weight:700;">동의서 버전
+                            <input type="text" id="nvrConsentVersion" value="${nvrEsc(c.consentVersion || 'face-v1')}" ${on ? 'disabled' : ''} style="width:100%; padding:0.35rem; border:1px solid #CBD5E1; border-radius:0.35rem; box-sizing:border-box;">
+                        </label>
+                    </div>
+                    ${on ? '' : `<label style="display:flex; gap:0.4rem; align-items:center; font-size:0.72rem; color:#334155; margin-bottom:0.5rem;"><input type="checkbox" id="nvrConsentConfirm"> 고객이 얼굴 인식(VIP 응대) 동의서에 서명했음을 확인합니다.</label>`}
+                    ${c.photoURL ? '' : '<div style="font-size:0.72rem; color:#B91C1C; margin-bottom:0.5rem;">⚠️ 얼굴 사진이 없습니다. [📸 얼굴 등록]으로 사진을 먼저 등록해 주세요.</div>'}
+                    <button type="button" onclick="nvrSetCustomerEnroll('${nvrEsc(c.docId)}', ${on ? 'false' : 'true'})" ${(!on && !c.photoURL) ? 'disabled' : ''} style="width:100%; background:${on ? '#EF4444' : '#4F46E5'}; color:white; border:none; padding:0.5rem; border-radius:0.4rem; font-size:0.8rem; font-weight:800; cursor:pointer; opacity:${(!on && !c.photoURL) ? 0.5 : 1};">
+                        ${on ? '🗑️ NVR 등록 해제 (동의 철회 · 얼굴 삭제)' : '🛰️ NVR 얼굴 인식 등록'}
+                    </button>
+                </div>`;
+        };
+
+        window.nvrSetCustomerEnroll = async (docId, turnOn) => {
+            try {
+                if (turnOn) {
+                    const dateStr = document.getElementById('nvrConsentDate')?.value;
+                    const version = document.getElementById('nvrConsentVersion')?.value.trim();
+                    if (!dateStr || !version) { alert('동의 일자와 동의서 버전을 입력해 주세요.'); return; }
+                    if (!document.getElementById('nvrConsentConfirm')?.checked) { alert('고객 동의서 서명 확인에 체크해 주세요.'); return; }
+                    await updateDoc(doc(db, 'store_customers', docId), {
+                        nvrEnroll: true,
+                        consentGivenAt: Timestamp.fromDate(new Date(`${dateStr}T00:00:00`)),
+                        consentVersion: version,
+                        consentWithdrawnAt: null,
+                        updatedAt: serverTimestamp()
+                    });
+                } else {
+                    if (!confirm('고객의 NVR 얼굴 인식 동의를 철회합니다.\n\n매장 NVR의 얼굴 사진, 인식 기록, VIP 알림이 삭제됩니다. 계속할까요?')) return;
+                    await updateDoc(doc(db, 'store_customers', docId), {
+                        nvrEnroll: false,
+                        consentWithdrawnAt: serverTimestamp(),
+                        updatedAt: serverTimestamp()
+                    });
+                }
+                playNotificationSound();
+                window.closeProfileModal?.();
+            } catch (err) {
+                alert(`NVR 등록 변경 실패: ${err.message || err}`);
+            }
+        };
+
+        // --- KPI 카드 (NVR 실측) ---------------------------------------------------------------
+        function nvrRenderKpis() {
+            const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+            const ff = nvr.footfall;
+            set('kpiFootfall', `${ff?.footfallCount || 0} 명`);
+            if (ff && ff.hourly && Object.keys(ff.hourly).length) {
+                const [peakH, peakN] = Object.entries(ff.hourly).sort((a, b) => b[1] - a[1])[0];
+                set('kpiFootfallSub', `오늘 출입구 입장 · 피크 ${peakH}시 (${peakN}명) · NVR 실측`);
+            } else {
+                set('kpiFootfallSub', '오늘 출입구 입장 기록 없음 · NVR 실측');
+            }
+            set('kpiRecognitionTitle', '⭐ 오늘 VIP 방문 (NVR 얼굴 인식)');
+            const enrolledCust = Object.values(nvr.status?.enrollments || {}).filter(e => e.kind === 'customer' && e.state === 'enrolled').length;
+            set('kpiRecognition', `${nvr.vipVisits.length} 명`);
+            set('kpiRecognitionSub', `동의 고객 ${enrolledCust}명 등록 · 미등록 얼굴은 저장 안 함`);
+            nvrUpdateEmployeeStats();
+            const todayIntrusions = nvr.incidents.filter(i => i.workDate === nvr.workDate).length;
+            const kpiStatus = document.getElementById('kpiSecurityStatus');
+            if (kpiStatus && !isSecurityArmed) {
+                kpiStatus.textContent = todayIntrusions > 0 ? `침입 경보 (${todayIntrusions}건)` : '안전 (SAFE)';
+                kpiStatus.style.color = todayIntrusions > 0 ? '#EF4444' : '#10B981';
+            }
+            set('kpiSecuritySubtext', `오늘 침입 감지 ${todayIntrusions}건 · 영업시간 외 NVR 자동 감시 (${nvr.status?.storeHours || '-'})`);
+        }
+
+        function nvrApplyIncidents() {
+            const weekAgo = Date.now() - 7 * 86400000;
+            securityIncidents = nvr.incidents
+                .filter(i => (nvrToDate(i.createdAt)?.getTime() || 0) >= weekAgo)
+                .map(i => ({
+                    time: nvrDateTime(nvrToDate(i.createdAt)),
+                    location: nvrEsc(i.location || i.camera || '-'),
+                    type: nvrEsc(i.type || '무단 침입자 감지'),
+                    action: nvrEsc(i.action || '침입 경보'),
+                    level: 'DANGER',
+                    snapshotURL: null
+                }));
+            if (securityIncidents.length === 0) {
+                securityIncidents = [{ time: '-', location: 'NVR 방범 감시', type: '최근 7일간 침입 감지 기록이 없습니다.', action: '정상', level: 'INFO' }];
+            }
+            window.renderSecurityIncidents();
+        }
+
+        function nvrRaiseIntrusion(inc) {
+            if (!isSecurityAlarmActive) {
+                isSecurityAlarmActive = true;
+                document.getElementById('camViewport')?.classList.add('security-alarm-active');
+                const alertEl = document.getElementById('aiSecurityIntruderAlert');
+                const sub = document.getElementById('aiSecurityIntruderAlertSub');
+                if (sub) sub.textContent = `${inc.location || inc.camera} 무단 침입 (NVR 감지 ${nvrTime(nvrToDate(inc.createdAt))}) · 경보 사이렌 작동 중`;
+                if (alertEl) alertEl.style.display = 'flex';
+                window.startSirenAlarmAudio();
+            }
+            // 같은 침입이 여러 건으로 들어와도 알림은 30초에 1번
+            if (Date.now() - (nvr.lastIntrusionToast || 0) > 30000) {
+                nvr.lastIntrusionToast = Date.now();
+                playNotificationSound();
+                nvrToast(`🚨 [NVR 침입 감지] ${inc.location || inc.camera} · ${nvrTime(nvrToDate(inc.createdAt))}`, '#B91C1C');
+            }
+        }
+
+        function nvrToast(text, color = '#3730A3') {
+            let box = document.getElementById('nvrToastBox');
+            if (!box) {
+                box = document.createElement('div');
+                box.id = 'nvrToastBox';
+                box.style.cssText = 'position:fixed; right:16px; bottom:16px; z-index:9999; display:flex; flex-direction:column; gap:0.5rem; max-width:min(360px, calc(100vw - 32px));';
+                document.body.appendChild(box);
+            }
+            const t = document.createElement('div');
+            t.style.cssText = `background:white; border-left:5px solid ${color}; color:#1E293B; padding:0.75rem 0.9rem; border-radius:0.6rem; box-shadow:0 10px 25px rgba(15,23,42,0.18); font-size:0.825rem; font-weight:700; animation:popUp 0.3s ease;`;
+            t.textContent = text;
+            box.appendChild(t);
+            setTimeout(() => t.remove(), 9000);
+        }
+
+        function nvrShowVip(v) {
+            const name = v.customerName || '등록 고객';
+            nvrToast(`⭐ VIP 방문: ${name} 고객님 (${v.camera} · ${Math.round((v.score || 0) * 100)}%) ${nvrTime(nvrToDate(v.visitedAt))}`, '#D97706');
+            const banner = document.getElementById('aiLiveMatchAlert');
+            const text = document.getElementById('aiLiveMatchAlertText');
+            if (banner && text) {
+                text.textContent = `⭐ VIP ${name} 고객님 방문 (NVR)`;
+                banner.style.display = 'flex';
+                setTimeout(() => { banner.style.display = 'none'; }, 8000);
+            }
+            playNotificationSound();
+        }
+
+        window.__nvrExplainBrowserOff = (resEl) => {
+            if (!resEl) return;
+            resEl.style.display = 'block';
+            resEl.style.background = '#EEF2FF';
+            resEl.style.border = '1px solid #A5B4FC';
+            resEl.style.color = '#3730A3';
+            resEl.innerHTML = '🛰️ 매장 AI NVR 연동 중입니다. 출입구 카메라가 등록 직원·동의 고객을 자동으로 인식하므로 브라우저 얼굴 인식은 사용하지 않습니다.';
+        };
+
+        // --- 구독 관리 ---------------------------------------------------------------------------
+        function nvrRefreshAll() {
+            if (!nvr.active) return;
+            nvrRenderKpis();
+            window.renderEmployeeList();
+            window.renderEmployeeAttendanceLogs();
+            renderCustomerList();
+        }
+
+        function nvrUnsubData() {
+            nvr.dataUnsubs.forEach(u => { try { u(); } catch (e) {} });
+            nvr.dataUnsubs = [];
+        }
+
+        function nvrSubscribeData() {
+            nvrUnsubData();
+            const m = nvr.merchantId;
+            const wd = nvr.workDate;
+            const warn = (what) => (err) => console.warn(`NVR ${what} 구독 오류:`, err.code || err.message);
+            nvr.seenIncidents = null;
+            nvr.seenVips = null;
+            nvr.dataUnsubs.push(onSnapshot(query(collection(db, 'store_employees'), where('merchantId', '==', m)), snap => {
+                nvr.employees = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+                nvrRefreshAll();
+            }, warn('store_employees')));
+            nvr.dataUnsubs.push(onSnapshot(query(collection(db, 'nvr_attendance'), where('merchantId', '==', m), where('workDate', '==', wd)), snap => {
+                nvr.attendance = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                nvrRefreshAll();
+            }, warn('nvr_attendance')));
+            nvr.dataUnsubs.push(onSnapshot(doc(db, 'merchant_traffic_logs', `nvr_${m}_${wd}`), snap => {
+                nvr.footfall = snap.exists() ? snap.data() : null;
+                nvrRenderKpis();
+            }, warn('merchant_traffic_logs')));
+            nvr.dataUnsubs.push(onSnapshot(query(collection(db, 'security_incident_logs'), where('merchantId', '==', m), where('source', '==', 'nvr')), snap => {
+                const list = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+                    .sort((a, b) => (nvrToDate(b.createdAt)?.getTime() || 0) - (nvrToDate(a.createdAt)?.getTime() || 0));
+                if (nvr.seenIncidents) {
+                    list.filter(i => !nvr.seenIncidents.has(i.id) && (Date.now() - (nvrToDate(i.createdAt)?.getTime() || 0)) < 10 * 60000)
+                        .forEach(nvrRaiseIntrusion);
+                }
+                nvr.seenIncidents = new Set(list.map(i => i.id));
+                nvr.incidents = list;
+                nvrApplyIncidents();
+                nvrRenderKpis();
+            }, warn('security_incident_logs')));
+            nvr.dataUnsubs.push(onSnapshot(query(collection(db, 'nvr_vip_visits'), where('merchantId', '==', m), where('workDate', '==', wd)), snap => {
+                const list = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+                    .sort((a, b) => (nvrToDate(b.visitedAt)?.getTime() || 0) - (nvrToDate(a.visitedAt)?.getTime() || 0));
+                if (nvr.seenVips) list.filter(v => !nvr.seenVips.has(v.id)).forEach(nvrShowVip);
+                nvr.seenVips = new Set(list.map(v => v.id));
+                nvr.vipVisits = list;
+                nvrRenderKpis();
+                renderCustomerList();
+            }, warn('nvr_vip_visits')));
+        }
+
+        function nvrActivate() {
+            nvr.active = true;
+            window.__nvrModeActive = true;
+            nvr.workDate = nvr.status.workDate;
+            // 브라우저 무인 관제(가상 카운팅)·얼굴 인식 중지, 시뮬레이션 수치 대신 NVR 실측 표시
+            if (typeof autoCollectionInterval !== 'undefined' && autoCollectionInterval) stopAutoCollection();
+            nvr.savedIncidents = securityIncidents;
+            ['kpiFootfallSub', 'kpiRecognitionTitle', 'kpiRecognitionSub', 'kpiRecognition', 'kpiFootfall', 'empStatTotal'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) nvr.saved[id] = el.textContent;
+            });
+            ['faceSearchStatusBadge', 'employeePunchStatusBadge'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) { nvr.saved[id] = el.textContent; el.textContent = '🛰️ NVR 자동 인식'; }
+            });
+            nvr.employees = []; nvr.attendance = []; nvr.incidents = []; nvr.vipVisits = []; nvr.footfall = null;
+            nvrRenderKpis();
+            nvrSubscribeData();
+            console.log(`🛰️ NVR 연동 모드 시작 (가맹점 ${nvr.merchantId}, 근무일 ${nvr.workDate})`);
+        }
+
+        function nvrDeactivate() {
+            nvrUnsubData();
+            nvr.active = false;
+            window.__nvrModeActive = false;
+            Object.entries(nvr.saved).forEach(([id, text]) => { const el = document.getElementById(id); if (el) el.textContent = text; });
+            nvr.saved = {};
+            if (nvr.savedIncidents) securityIncidents = nvr.savedIncidents;
+            window.renderEmployeeList();
+            window.renderEmployeeAttendanceLogs();
+            window.renderSecurityIncidents();
+            renderCustomerList();
+            console.log('NVR 연동 모드 종료 (브라우저 관제로 복귀)');
+        }
+
+        function nvrEvaluate() {
+            const online = nvrIsOnline(nvr.status);
+            if (online && !nvr.active) nvrActivate();
+            else if (!online && nvr.active) nvrDeactivate();
+            else if (online && nvr.status.workDate !== nvr.workDate) { nvr.workDate = nvr.status.workDate; nvrSubscribeData(); }
+            nvrUpdateBadge();
+            if (nvr.active) nvrRefreshAll();
+        }
+
+        function startNvrWatch() {
+            const merchantId = document.getElementById('merchantIdInput')?.value.trim() || '1791605366';
+            if (merchantId === nvr.merchantId) return;
+            if (nvr.statusUnsub) nvr.statusUnsub();
+            if (nvr.active) nvrDeactivate();
+            nvr.merchantId = merchantId;
+            nvr.status = null;
+            nvrUpdateBadge();
+            nvr.statusUnsub = onSnapshot(doc(db, 'nvr_status', merchantId), snap => {
+                nvr.status = snap.exists() ? snap.data() : null;
+                nvrEvaluate();
+            }, err => {
+                // 규칙 미배포·미로그인·타 가맹점이면 조용히 기존(브라우저) 모드 유지
+                console.warn('NVR 상태 구독 불가:', err.code || err.message);
+                nvr.status = null;
+                if (nvr.active) nvrDeactivate();
+                nvrUpdateBadge();
+            });
+            if (!nvr.staleTimer) nvr.staleTimer = setInterval(nvrEvaluate, 15000);  // 하트비트 끊김 감지
+        }
+
+        // NVR 모드에서는 직원 목록·출퇴근 로그를 NVR/원장 데이터로 표시 (오프라인이면 기존 화면)
+        {
+            const origRenderEmployeeList = window.renderEmployeeList;
+            const origRenderLogs = window.renderEmployeeAttendanceLogs;
+            const origStats = window.updateEmployeeStatsKpi;
+            window.renderEmployeeList = () => nvr.active ? nvrRenderEmployeeList() : origRenderEmployeeList();
+            window.renderEmployeeAttendanceLogs = () => nvr.active ? nvrRenderAttendanceLogs() : origRenderLogs();
+            window.updateEmployeeStatsKpi = () => nvr.active ? nvrUpdateEmployeeStats() : origStats();
+        }
+
+        function initNvrIntegration() {
+            if (!db) return;
+            startNvrWatch();
+            document.getElementById('merchantIdInput')?.addEventListener('change', startNvrWatch);
+        }
+
         // 초기 실행
         document.addEventListener('DOMContentLoaded', () => {
+            const urlMerchant = new URLSearchParams(location.search).get('merchantId');
+            if (urlMerchant && /^[\w-]{1,64}$/.test(urlMerchant)) {
+                const input = document.getElementById('merchantIdInput');
+                if (input) input.value = urlMerchant;
+            }
             scanUsbCameraDevices(false);
             initCharts();
             renderCustomerList();
@@ -5191,6 +5734,7 @@
             renderSecurityIncidents();
             updateEmployeeStatsKpi();
             initMerchantAndCustomersSync();
+            initNvrIntegration();
             initFaceApiModels();
         });
     </script>

@@ -889,6 +889,38 @@ service cloud.firestore {
       allow read, write: if isAuthenticated();
     }
 
+    // ── AI NVR (매장 Frigate NVR 미들웨어 연동) ──────────────────────────────────
+    // nvr_* 문서는 매장 NVR 미들웨어가 Admin SDK로만 기록한다 (클라이언트 쓰기 금지).
+    // 얼굴 이미지·임베딩·스냅샷은 저장하지 않는다.
+    match /nvr_status/{merchantId} {
+      allow read: if belongsToTenant(merchantId);
+      allow write: if false;
+    }
+
+    match /nvr_attendance/{docId} {
+      allow read: if belongsToTenant(resource.data.merchantId);
+      allow write: if false;
+    }
+
+    match /nvr_vip_visits/{docId} {
+      allow read: if belongsToTenant(resource.data.merchantId);
+      allow write: if false;
+    }
+
+    // 방범 이력: 가맹점 소속 사용자 조회 허용 (쓰기는 기존대로 superadmin / Admin SDK)
+    match /security_incident_logs/{docId} {
+      allow read: if belongsToTenant(resource.data.merchantId);
+    }
+
+    // 매장 직원 원장: 가맹점 소속 사용자가 자기 가맹점 직원만 관리 (merchantId 변경 금지)
+    match /store_employees/{docId} {
+      allow read: if belongsToTenant(resource.data.merchantId);
+      allow create: if belongsToTenant(request.resource.data.merchantId);
+      allow update: if belongsToTenant(resource.data.merchantId)
+        && request.resource.data.merchantId == resource.data.merchantId;
+      allow delete: if belongsToTenant(resource.data.merchantId);
+    }
+
     // ── Table QR & AI Smart CRM Collections ────────────────────────────────────
     match /store_customers/{document=**} {
       allow read, write: if true;
