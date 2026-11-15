@@ -1,4 +1,4 @@
-import { db } from './firebase-config.js';
+import { db, auth } from './firebase-config.js';
 import {
     collection,
     getDocs,
@@ -6,396 +6,506 @@ import {
     updateDoc,
     deleteDoc,
     doc,
+    getDoc,
     serverTimestamp
 } from 'firebase/firestore';
-import { checkAdminAuth } from './auth.js';
+import { onAuthStateChanged } from 'firebase/auth';
 
-let allProducts = [];
-let currentEditId = null;
-let currentEditSource = 'merchant_products';
-let currentUser = null;
+const SUPER_ADMIN_EMAILS = ['daguri75@gmail.com'];
 let isSuperAdmin = false;
-let activeMerchantId = null;
+let activeMerchantId = 'ALL';
+let editingDocId = null;
+let editingSourceCollection = 'merchant_products';
+let cachedItems = [];
+let dynamicMerchantNames = {};
 
-// BEST ERP는 베스트위너 전용 — 다른 가맹점(대한김치 등) 상품은 최고관리자에게도 노출하지 않음
-const ERP_MERCHANT_ID = '1791605366';
-
-// 가맹점 ID/영문별칭 상호 호환 매핑 테이블 (BestClubVN 표준)
 const KNOWN_MERCHANT_ALIASES = {
-    "daehan_kimchi": ["1791002036", "daehan_kimchi"],
-    "1791002036": ["1791002036", "daehan_kimchi"],
+    "1794710386": ["1794710386", "baekje_galbi", "baekjegalbi", "baekje"],
+    "baekje_galbi": ["1794710386", "baekje_galbi", "baekjegalbi", "baekje"],
+    "1791605366": ["1791605366", "bestwinner", "best_winner"],
     "bestwinner": ["1791605366", "bestwinner", "best_winner"],
-    "1791605366": ["1791605366", "bestwinner", "best_winner"]
+    "1791002036": ["1791002036", "daehankimchi", "daehan_kimchi"],
+    "daehankimchi": ["1791002036", "daehankimchi", "daehan_kimchi"],
+    "1793671043": ["1793671043", "bestmario", "best_mario"],
+    "1793776651": ["1793776651", "sunvietnam", "sun_vietnam"]
 };
+
+function normalizeMerchantId(id) {
+    const s = String(id || '').trim();
+    if (s === 'baekje_galbi' || s === 'baekjegalbi' || s === 'baekje') return '1794710386';
+    if (s === 'bestwinner' || s === 'best_winner') return '1791605366';
+    if (s === 'daehankimchi' || s === 'daehan_kimchi') return '1791002036';
+    return s;
+}
 
 function getMerchantName(id) {
     const s = String(id || '').trim();
-    if (s === '1791605366' || s === 'bestwinner' || s === 'best_winner') return '베스트위너';
-    if (s === '1791002036' || s === 'daehan_kimchi') return '대한김치';
-    return s ? `가맹점(${s})` : '공통';
+    const norm = normalizeMerchantId(s);
+    if (norm === '1794710386') return '백제갈비';
+    if (norm === '1791605366') return '베스트위너';
+    if (norm === '1791002036') return '대한김치';
+    if (norm === '1793671043') return '베스트마리오';
+    if (norm === '1793776651') return 'sunvietnam';
+    if (dynamicMerchantNames[norm]) return dynamicMerchantNames[norm];
+    if (dynamicMerchantNames[s]) return dynamicMerchantNames[s];
+    return s || '미지정';
 }
 
-function matchesMerchant(productMerchantId, filterMerchantId) {
-    if (!filterMerchantId || filterMerchantId === 'ALL' || filterMerchantId === 'all') return true;
-    const pStr = String(productMerchantId || '').trim();
-    const fStr = String(filterMerchantId || '').trim();
-    if (pStr === fStr) return true;
-    const aliases = KNOWN_MERCHANT_ALIASES[fStr] || [fStr];
-    return aliases.some(a => String(a).trim() === pStr);
+function matchesMerchant(docMerchantId, selectedFilter) {
+    if (!selectedFilter || selectedFilter === 'ALL') return true;
+    const target = String(docMerchantId || '').trim();
+    const filter = String(selectedFilter || '').trim();
+    if (target === filter) return true;
+    if (normalizeMerchantId(target) === normalizeMerchantId(filter)) return true;
+    const aliases = KNOWN_MERCHANT_ALIASES[filter] || KNOWN_MERCHANT_ALIASES[normalizeMerchantId(filter)];
+    if (aliases && aliases.includes(target)) return true;
+    return false;
 }
 
-function escapeHtml(str) {
-    return String(str || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+function getTypeLabel(type) {
+    switch (type) {
+        case 'menu': return '🍽️ 메뉴(F&B)';
+        case 'physical_product': return '📦 실물상품';
+        case 'service': return '🎫 서비스/티켓';
+        case 'booking': return '📅 예약형';
+        default: return '📦 일반상품';
+    }
 }
 
-async function fetchProducts() {
-    const grid = document.getElementById('menuGrid');
-    if (!grid) return;
-    grid.innerHTML = '<p style="color:#64748b; padding:2rem; grid-column:1/-1; text-align:center;">가맹점 상품 카탈로그를 불러오는 중입니다...</p>';
+function getStatusBadge(status) {
+    switch (status) {
+        case 'published':
+            return `<span style="font-size:0.72rem; background:#dcfce7; color:#15803d; padding:0.2rem 0.5rem; border-radius:999px; font-weight:700;">판매중</span>`;
+        case 'draft':
+            return `<span style="font-size:0.72rem; background:#f1f5f9; color:#475569; padding:0.2rem 0.5rem; border-radius:999px; font-weight:700;">임시저장</span>`;
+        case 'sold_out':
+            return `<span style="font-size:0.72rem; background:#fee2e2; color:#b91c1c; padding:0.2rem 0.5rem; border-radius:999px; font-weight:700;">품절</span>`;
+        default:
+            return `<span style="font-size:0.72rem; background:#dcfce7; color:#15803d; padding:0.2rem 0.5rem; border-radius:999px; font-weight:700;">판매중</span>`;
+    }
+}
 
+async function syncMerchantsDropdown() {
     try {
-        isSuperAdmin = window.currentUserRole === 'SUPER_ADMIN' ||
-            (currentUser && currentUser.email && currentUser.email.toLowerCase() === 'daguri75@gmail.com');
-
-        // 가맹점 식별
-        activeMerchantId = ERP_MERCHANT_ID;
-
-        // 최고관리자일 경우 가맹점 필터 및 모달 가맹점 선택창 노출
-        const filterMerchantEl = document.getElementById('filterMerchant');
-        const modalMerchantRow = document.getElementById('modalMerchantRow');
-        if (filterMerchantEl) filterMerchantEl.style.display = 'none';
-        if (modalMerchantRow) modalMerchantRow.style.display = 'none';
-
-        allProducts = [];
-
-        // 1. Single Source of Truth: merchant_products 컬렉션 로드
-        try {
-            const mpSnap = await getDocs(collection(db, 'merchant_products'));
-            mpSnap.forEach(d => {
-                const data = d.data();
-                allProducts.push({
-                    id: d.id,
-                    source: 'merchant_products',
-                    name: data.product_name || data.name || '무제 상품',
-                    type: data.product_type || 'menu',
-                    price: Number(data.price || 0),
-                    desc: data.description || data.desc || '',
-                    imageUrl: data.image_url || (Array.isArray(data.images) && data.images[0]) || '',
-                    status: data.sale_status || data.status || 'published',
-                    merchantId: String(data.merchant_id || data.tenantId || ''),
-                    createdAt: data.created_at || data.updated_at || null,
-                    raw: data
-                });
-            });
-        } catch (mpErr) {
-            console.warn('merchant_products 컬렉션 로드 실패:', mpErr);
-        }
-
-        // 2. 레거시 menus 컬렉션 호환 로드 (중복 ID 제외)
-        try {
-            const mSnap = await getDocs(collection(db, 'menus'));
-            mSnap.forEach(d => {
-                if (!allProducts.some(p => p.id === d.id)) {
-                    const data = d.data();
-                    allProducts.push({
-                        id: d.id,
-                        source: 'menus',
-                        name: data.name || '무제 메뉴',
-                        type: data.product_type || (data.category ? 'menu' : 'menu'),
-                        price: Number(data.price || 0),
-                        desc: data.desc || data.description || '',
-                        imageUrl: data.imageUrl || data.image_url || '',
-                        status: data.status === '판매중' ? 'published' : (data.sale_status || 'draft'),
-                        merchantId: String(data.tenantId || data.merchant_id || ''),
-                        createdAt: data.createdAt || null,
-                        raw: data
-                    });
+        const snap = await getDocs(collection(db, "merchants"));
+        const filterEl = document.getElementById('filterMerchant');
+        const modalEl = document.getElementById('mMerchantId');
+        snap.forEach(d => {
+            const data = d.data() || {};
+            const id = String(data.merchantId || d.id).trim();
+            const name = String(data.name || id).trim();
+            if (!id) return;
+            dynamicMerchantNames[id] = name;
+            [filterEl, modalEl].forEach(sel => {
+                if (!sel) return;
+                const exists = Array.from(sel.options).some(opt => opt.value === id);
+                if (!exists) {
+                    const opt = document.createElement('option');
+                    opt.value = id;
+                    opt.textContent = `🏪 ${name} (${id})`;
+                    sel.appendChild(opt);
                 }
             });
-        } catch (mErr) {
-            console.warn('menus 레거시 컬렉션 로드 스킵:', mErr);
-        }
-
-        // 최신 등록순 정렬
-        allProducts.sort((a, b) => {
-            const tA = a.createdAt?.toMillis?.() || (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
-            const tB = b.createdAt?.toMillis?.() || (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
-            return tB - tA;
         });
-
-        window.loadMenus();
     } catch (e) {
-        console.error('fetchProducts 에러:', e);
-        grid.innerHTML = `<p style="color:#ef4444; padding:2rem; grid-column:1/-1; text-align:center;">데이터 로드 실패: ${escapeHtml(e.message)}</p>`;
+        console.warn("merchants 컬렉션 로드 건너뜀:", e.message);
     }
 }
 
-window.loadMenus = () => {
+function updateCategoryFilterOptions() {
+    const catSelect = document.getElementById('filterCategory');
+    if (!catSelect) return;
+    const prevValue = catSelect.value || 'ALL';
+    const categories = new Set();
+
+    cachedItems.forEach(item => {
+        if (activeMerchantId !== 'ALL' && !matchesMerchant(item.merchantId, activeMerchantId)) return;
+        const cat = String(item.category || '').trim();
+        if (cat) categories.add(cat);
+    });
+
+    catSelect.innerHTML = `<option value="ALL">전체 세부 카테고리 (${categories.size})</option>`;
+    Array.from(categories).sort((a, b) => a.localeCompare(b, 'ko')).forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = cat;
+        catSelect.appendChild(opt);
+    });
+
+    if (Array.from(catSelect.options).some(o => o.value === prevValue)) {
+        catSelect.value = prevValue;
+    } else {
+        catSelect.value = 'ALL';
+    }
+}
+
+window.onMerchantFilterChange = function (val) {
+    activeMerchantId = val || 'ALL';
+    const modalSelect = document.getElementById('mMerchantId');
+    if (modalSelect && activeMerchantId !== 'ALL') {
+        modalSelect.value = normalizeMerchantId(activeMerchantId);
+    }
+    updateCategoryFilterOptions();
+    loadMenus(false);
+};
+
+onAuthStateChanged(auth, async (user) => {
+    const email = (user?.email || '').toLowerCase();
+    isSuperAdmin = SUPER_ADMIN_EMAILS.includes(email) || window.tenantId === 'system_master';
+
+    await syncMerchantsDropdown();
+
+    const urlMerchant = new URLSearchParams(window.location.search).get('merchant');
+    let resolvedTenant = window.tenantId;
+
+    // 만약 일반 가맹점 계정으로 로그인했는데 window.tenantId가 아직 기본값이면 users/{uid}에서 가맹점 ID 확인
+    if (user && (!resolvedTenant || resolvedTenant === '1791605366') && !isSuperAdmin) {
+        try {
+            const uSnap = await getDoc(doc(db, "users", user.uid));
+            if (uSnap.exists() && uSnap.data().merchantId) {
+                resolvedTenant = String(uSnap.data().merchantId);
+                window.tenantId = resolvedTenant;
+            }
+        } catch (_) { /* ignore */ }
+    }
+
+    const filterEl = document.getElementById('filterMerchant');
+    const modalMerchantRow = document.getElementById('modalMerchantRow');
+    const modalMerchantSelect = document.getElementById('mMerchantId');
+
+    if (urlMerchant) {
+        activeMerchantId = normalizeMerchantId(urlMerchant);
+    } else if (isSuperAdmin) {
+        activeMerchantId = 'ALL';
+    } else if (resolvedTenant && resolvedTenant !== 'system_master') {
+        activeMerchantId = normalizeMerchantId(resolvedTenant);
+    } else {
+        activeMerchantId = 'ALL';
+    }
+
+    if (filterEl) {
+        filterEl.style.display = 'inline-block';
+        if (Array.from(filterEl.options).some(o => o.value === activeMerchantId)) {
+            filterEl.value = activeMerchantId;
+        } else {
+            filterEl.value = 'ALL';
+        }
+    }
+    if (modalMerchantRow) {
+        modalMerchantRow.style.display = 'block';
+    }
+    if (modalMerchantSelect && activeMerchantId !== 'ALL') {
+        modalMerchantSelect.value = activeMerchantId;
+    }
+
+    loadMenus(true);
+});
+
+async function fetchAllCatalogItems() {
+    const itemsMap = new Map();
+
+    // 1. 주 컬렉션: merchant_products (BestClubVN 및 백제갈비 공식 연동 컬렉션)
+    try {
+        const mpSnap = await getDocs(collection(db, "merchant_products"));
+        mpSnap.forEach((docSnap) => {
+            const d = docSnap.data();
+            const mId = normalizeMerchantId(d.merchant_id || d.merchantId || '1791605366');
+            const name = d.product_name || d.name || '이름 없음';
+            const imageUrl = (Array.isArray(d.images) && d.images.length > 0) ? d.images[0] : (d.imageUrl || d.image || '');
+            itemsMap.set(docSnap.id, {
+                id: docSnap.id,
+                sourceCollection: 'merchant_products',
+                merchantId: mId,
+                name: name,
+                nameVi: d.product_name_vi || '',
+                menuCode: d.menu_code || '',
+                category: d.category || '',
+                type: d.product_type || (d.category ? 'menu' : 'physical_product'),
+                price: Number(d.price) || 0,
+                status: d.sale_status || 'published',
+                description: d.description || '',
+                imageUrl: imageUrl,
+                inventory: d.inventory ?? 999
+            });
+        });
+    } catch (e) {
+        console.warn("merchant_products 조회 실패:", e);
+    }
+
+    // 2. 레거시 컬렉션: menus (하위 호환)
+    try {
+        const legacySnap = await getDocs(collection(db, "menus"));
+        legacySnap.forEach((docSnap) => {
+            if (itemsMap.has(docSnap.id)) return;
+            const d = docSnap.data();
+            const mId = normalizeMerchantId(d.merchantId || d.merchant_id || '1791605366');
+            itemsMap.set(docSnap.id, {
+                id: docSnap.id,
+                sourceCollection: 'menus',
+                merchantId: mId,
+                name: d.name || d.product_name || '이름 없음',
+                nameVi: d.product_name_vi || '',
+                menuCode: d.menu_code || '',
+                category: d.category || '',
+                type: d.product_type || 'menu',
+                price: Number(d.price) || 0,
+                status: d.sale_status || 'published',
+                description: d.description || '',
+                imageUrl: d.imageUrl || (Array.isArray(d.images) && d.images[0]) || '',
+                inventory: d.inventory ?? 999
+            });
+        });
+    } catch (e) {
+        console.warn("menus 레거시 조회 건너뜀:", e.message);
+    }
+
+    return Array.from(itemsMap.values());
+}
+
+window.loadMenus = async function (forceRefresh = false) {
     const grid = document.getElementById('menuGrid');
     if (!grid) return;
 
-    const filterTypeVal = document.getElementById('filterType')?.value || 'ALL';
-    const filterStatusVal = document.getElementById('filterStatus')?.value || 'ALL';
-    const searchVal = (document.getElementById('filterSearch')?.value || '').trim().toLowerCase();
-
-    const filtered = allProducts.filter(item => {
-        // 1. 가맹점 격리 필터
-        if (!matchesMerchant(item.merchantId, ERP_MERCHANT_ID)) {
-            return false;
-        }
-
-        // 2. 상품 타입 필터
-        if (filterTypeVal !== 'ALL' && item.type !== filterTypeVal) {
-            return false;
-        }
-
-        // 3. 상태 필터
-        if (filterStatusVal !== 'ALL') {
-            const isLive = item.status === 'published' || item.status === '판매중';
-            if (filterStatusVal === 'published' && !isLive) return false;
-            if (filterStatusVal === 'draft' && (isLive || item.status === 'sold_out' || item.status === '품절')) return false;
-            if (filterStatusVal === 'sold_out' && item.status !== 'sold_out' && item.status !== '품절') return false;
-        }
-
-        // 4. 검색 필터
-        if (searchVal) {
-            const matchName = item.name.toLowerCase().includes(searchVal);
-            const matchDesc = item.desc.toLowerCase().includes(searchVal);
-            const matchMerchant = item.merchantId.toLowerCase().includes(searchVal);
-            if (!matchName && !matchDesc && !matchMerchant) return false;
-        }
-
-        return true;
-    });
-
-    if (filtered.length === 0) {
-        grid.innerHTML = '<p style="color:#64748b; padding:3rem; grid-column:1/-1; text-align:center; font-weight:500;">조건에 해당하는 등록 상품이 없습니다.</p>';
-        return;
+    const filterEl = document.getElementById('filterMerchant');
+    if (filterEl && filterEl.value) {
+        activeMerchantId = filterEl.value;
     }
+    const typeFilter = document.getElementById('filterType')?.value || 'ALL';
+    const categoryFilter = document.getElementById('filterCategory')?.value || 'ALL';
+    const statusFilter = document.getElementById('filterStatus')?.value || 'ALL';
+    const searchKeyword = (document.getElementById('filterSearch')?.value || '').trim().toLowerCase();
 
-    grid.innerHTML = filtered.map(m => {
-        const isLive = m.status === 'published' || m.status === '판매중';
-        const checked = isLive ? 'checked' : '';
-        const priceStr = Number(m.price || 0).toLocaleString();
-
-        // 타입 뱃지
-        let typeBadgeHtml = '';
-        if (m.type === 'physical_product') {
-            typeBadgeHtml = '<span class="smart-tag" style="background:#e0f2fe; color:#0369a1;">📦 실물상품</span>';
-        } else if (m.type === 'service') {
-            typeBadgeHtml = '<span class="smart-tag" style="background:#f3e8ff; color:#6b21a8;">🎫 서비스/티켓</span>';
-        } else if (m.type === 'booking') {
-            typeBadgeHtml = '<span class="smart-tag" style="background:#ecfdf5; color:#047857;">📅 예약형</span>';
-        } else {
-            typeBadgeHtml = '<span class="smart-tag" style="background:#fef3c7; color:#b45309;">🍽️ 메뉴</span>';
+    try {
+        if (forceRefresh || cachedItems.length === 0) {
+            grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:#64748b;">데이터를 불러오는 중...</div>`;
+            cachedItems = await fetchAllCatalogItems();
+            updateCategoryFilterOptions();
         }
 
-        // 가맹점 뱃지
-        const merchantBadge = `<span class="smart-tag" style="background:#f8fafc; border:1px solid #cbd5e1; color:#475569;">🏪 ${escapeHtml(getMerchantName(m.merchantId))}</span>`;
+        const filtered = cachedItems.filter(item => {
+            if (activeMerchantId !== 'ALL' && !matchesMerchant(item.merchantId, activeMerchantId)) {
+                return false;
+            }
+            if (typeFilter !== 'ALL' && item.type !== typeFilter) {
+                return false;
+            }
+            if (categoryFilter !== 'ALL' && String(item.category || '').trim() !== categoryFilter) {
+                return false;
+            }
+            if (statusFilter !== 'ALL' && item.status !== statusFilter) {
+                return false;
+            }
+            if (searchKeyword) {
+                const hay = `${item.name} ${item.nameVi || ''} ${item.category || ''} ${item.description} ${item.merchantId} ${getMerchantName(item.merchantId)}`.toLowerCase();
+                if (!hay.includes(searchKeyword)) return false;
+            }
+            return true;
+        });
 
-        // 이미지 HTML
-        const imgHtml = m.imageUrl
-            ? `<img src="${escapeHtml(m.imageUrl)}" alt="${escapeHtml(m.name)}" class="menu-img" style="object-fit:cover;" onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('div'),{className:'menu-img',textContent:'📷 이미지 없음'}));"/>`
-            : `<div class="menu-img">📷 이미지 없음</div>`;
+        // 백제갈비 등 메뉴 코드 순 + 가맹점별 깔끔한 정렬
+        filtered.sort((a, b) => {
+            if (a.merchantId !== b.merchantId) {
+                if (a.merchantId === '1794710386') return -1;
+                if (b.merchantId === '1794710386') return 1;
+            }
+            return String(a.name || '').localeCompare(String(b.name || ''), 'ko');
+        });
 
-        return `
-        <div class="menu-card">
-            <div style="position:relative; width:100%; height:160px; background:#f1f5f9; overflow:hidden;">
+        grid.innerHTML = '';
+
+        if (filtered.length === 0) {
+            grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 3rem; color:#94a3b8;">
+                조건에 맞는 등록된 상품/메뉴가 없습니다. 우측 상단 <b>[+ 신규 상품/메뉴 등록]</b> 버튼으로 추가해 보세요.
+            </div>`;
+            return;
+        }
+
+        filtered.forEach((item) => {
+            const card = document.createElement('div');
+            card.className = 'menu-card';
+
+            const imgHtml = item.imageUrl
+                ? `<div class="menu-img" style="background-image: url('${item.imageUrl}'); background-size: cover; background-position: center;"></div>`
+                : `<div class="menu-img">🍽️ 이미지 없음</div>`;
+
+            const merchantBadge = `<span style="font-size:0.7rem; background:#e0e7ff; color:#3730a3; padding:0.15rem 0.45rem; border-radius:0.25rem; font-weight:700;">🏪 ${getMerchantName(item.merchantId)} (${item.merchantId})</span>`;
+            const categoryBadge = item.category
+                ? `<span style="font-size:0.7rem; background:#fef3c7; color:#92400e; padding:0.15rem 0.45rem; border-radius:0.25rem; font-weight:700;">📂 ${item.category}</span>`
+                : '';
+
+            card.innerHTML = `
                 ${imgHtml}
-                <div style="position:absolute; top:8px; left:8px; display:flex; gap:4px; flex-wrap:wrap; z-index:2;">
-                    ${typeBadgeHtml}
-                    ${merchantBadge}
-                </div>
-            </div>
-            <div class="menu-body">
-                <h3 class="menu-title" title="${escapeHtml(m.name)}">${escapeHtml(m.name)}</h3>
-                <p class="menu-price">₫ ${priceStr}</p>
-                <p class="menu-desc">${escapeHtml(m.desc || '상세 설명이 등록되지 않았습니다.')}</p>
-                
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1.25rem; padding-top:1rem; border-top:1px solid #f1f5f9;">
-                    <div style="display:flex; align-items:center; gap:0.5rem;">
-                        <label class="toggle-switch">
-                            <input type="checkbox" ${checked} onchange="toggleStatus('${m.id}', this.checked, '${m.source}')">
-                            <span class="slider"></span>
-                        </label>
-                        <span style="font-size:0.8rem; font-weight:600; color:${isLive ? '#166534' : '#94a3b8'};">
-                            ${isLive ? '판매중 (공개)' : '비공개'}
-                        </span>
+                <div class="menu-body">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:0.4rem; margin-bottom:0.4rem; flex-wrap:wrap;">
+                        <span style="font-size:0.75rem; background:#eef2ff; color:#4F46E5; padding:0.2rem 0.5rem; border-radius:0.25rem; font-weight:700;">${getTypeLabel(item.type)}</span>
+                        ${getStatusBadge(item.status)}
                     </div>
-                    <div>
-                        <button onclick="editMenu('${m.id}')" style="background:none; border:none; cursor:pointer; color:#4F46E5; font-size:0.85rem; font-weight:600; margin-right:0.5rem;">수정</button>
-                        <button onclick="deleteMenu('${m.id}', '${m.source}')" style="background:none; border:none; cursor:pointer; color:#ef4444; font-size:0.85rem; font-weight:600;">삭제</button>
+                    <div style="margin-bottom:0.45rem; display:flex; gap:0.35rem; flex-wrap:wrap;">${merchantBadge}${categoryBadge}</div>
+                    <h3 class="menu-title">${item.name}</h3>
+                    ${item.nameVi ? `<div style="font-size:0.8rem; color:#b45309; font-weight:600; margin-bottom:0.35rem;">🇻🇳 ${item.nameVi}</div>` : ''}
+                    <p class="menu-desc">${item.description || '상세 설명이 없습니다.'}</p>
+                    <div class="menu-footer">
+                        <span class="menu-price">${Number(item.price).toLocaleString()} VND</span>
+                        <div style="display:flex; gap:0.35rem;">
+                            <button onclick="editItem('${item.id}')" style="background:#e0e7ff; color:#4338ca; border:none; padding:0.4rem 0.75rem; border-radius:0.4rem; cursor:pointer; font-weight:600; font-size:0.82rem;">✏️ 수정</button>
+                            <button onclick="deleteMenu('${item.id}', '${item.sourceCollection}')" style="background:#fee2e2; color:#ef4444; border:none; padding:0.4rem 0.75rem; border-radius:0.4rem; cursor:pointer; font-weight:600; font-size:0.82rem;">삭제</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>`;
-    }).join('');
+            `;
+            grid.appendChild(card);
+        });
+    } catch (error) {
+        console.error("Error loading menus:", error);
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:2rem; color:#ef4444;">데이터 로드 오류: ${error.message}</div>`;
+    }
 };
 
-window.openMenuModal = () => {
-    currentEditId = null;
-    currentEditSource = 'merchant_products';
-
+window.openMenuModal = function () {
+    editingDocId = null;
+    editingSourceCollection = 'merchant_products';
     document.getElementById('modalTitle').textContent = '신규 상품/메뉴 등록';
+    document.getElementById('mType').value = 'menu';
+    const catInput = document.getElementById('mCategory');
+    if (catInput) catInput.value = '';
     document.getElementById('mName').value = '';
+    document.getElementById('mImageUrl').value = '';
     document.getElementById('mDesc').value = '';
     document.getElementById('mPrice').value = '';
-    document.getElementById('mImageUrl').value = '';
-    document.getElementById('mType').value = 'menu';
     document.getElementById('mStatus').value = 'published';
 
-    // 가맹점 기본값 세팅
     const mSelect = document.getElementById('mMerchantId');
     if (mSelect) {
-        const filterVal = document.getElementById('filterMerchant')?.value;
-        if (filterVal && filterVal !== 'ALL') {
-            mSelect.value = filterVal;
-        } else if (activeMerchantId && activeMerchantId !== 'ALL') {
-            mSelect.value = activeMerchantId;
-        } else {
-            mSelect.value = '1791605366';
-        }
+        const targetM = (activeMerchantId && activeMerchantId !== 'ALL')
+            ? normalizeMerchantId(activeMerchantId)
+            : '1794710386';
+        mSelect.value = targetM;
     }
 
     const delBtn = document.getElementById('btnDeleteInModal');
     if (delBtn) delBtn.style.display = 'none';
 
-    document.getElementById('btnSaveMenu').textContent = '상품 등록';
     document.getElementById('menuModal').style.display = 'flex';
 };
 
-window.editMenu = (id) => {
-    const item = allProducts.find(x => x.id === id);
+window.editItem = function (id) {
+    const item = cachedItems.find(x => x.id === id);
     if (!item) return;
 
-    currentEditId = id;
-    currentEditSource = item.source || 'merchant_products';
+    editingDocId = item.id;
+    editingSourceCollection = item.sourceCollection || 'merchant_products';
 
-    document.getElementById('modalTitle').textContent = '상품 정보 수정';
-    document.getElementById('mName').value = item.name;
-    document.getElementById('mDesc').value = item.desc;
-    document.getElementById('mPrice').value = item.price;
-    document.getElementById('mImageUrl').value = item.imageUrl || '';
+    document.getElementById('modalTitle').textContent = '상품/메뉴 수정';
     document.getElementById('mType').value = item.type || 'menu';
-    document.getElementById('mStatus').value = (item.status === '판매중' ? 'published' : item.status) || 'published';
+    const catInput = document.getElementById('mCategory');
+    if (catInput) catInput.value = item.category || '';
+    document.getElementById('mName').value = item.name || '';
+    document.getElementById('mImageUrl').value = item.imageUrl || '';
+    document.getElementById('mDesc').value = item.description || '';
+    document.getElementById('mPrice').value = item.price || 0;
+    document.getElementById('mStatus').value = item.status || 'published';
 
     const mSelect = document.getElementById('mMerchantId');
-    if (mSelect && item.merchantId) {
-        mSelect.value = item.merchantId;
+    if (mSelect) {
+        const normId = normalizeMerchantId(item.merchantId);
+        if (!Array.from(mSelect.options).some(opt => opt.value === normId)) {
+            const opt = document.createElement('option');
+            opt.value = normId;
+            opt.textContent = `${getMerchantName(normId)} (${normId})`;
+            mSelect.appendChild(opt);
+        }
+        mSelect.value = normId;
     }
 
     const delBtn = document.getElementById('btnDeleteInModal');
     if (delBtn) {
-        delBtn.style.display = 'block';
-        delBtn.onclick = () => window.deleteMenu(id, currentEditSource);
+        delBtn.style.display = 'inline-block';
+        delBtn.onclick = async () => {
+            await window.deleteMenu(item.id, editingSourceCollection);
+            document.getElementById('menuModal').style.display = 'none';
+        };
     }
 
-    document.getElementById('btnSaveMenu').textContent = '수정 완료';
     document.getElementById('menuModal').style.display = 'flex';
 };
 
 document.getElementById('btnSaveMenu')?.addEventListener('click', async () => {
+    const type = document.getElementById('mType').value || 'menu';
+    const category = (document.getElementById('mCategory')?.value || '').trim();
     const name = document.getElementById('mName').value.trim();
-    if (!name) return alert('상품/메뉴명을 입력하세요.');
-
-    const price = Number(document.getElementById('mPrice').value) || 0;
-    const desc = document.getElementById('mDesc').value.trim();
-    const type = document.getElementById('mType').value;
-    const status = document.getElementById('mStatus').value;
     const imageUrl = document.getElementById('mImageUrl').value.trim();
+    const desc = document.getElementById('mDesc').value.trim();
+    const price = parseInt(document.getElementById('mPrice').value, 10) || 0;
+    const status = document.getElementById('mStatus').value || 'published';
 
-    const merchantId = ERP_MERCHANT_ID;
+    if (!name || price <= 0) {
+        alert("상품/메뉴명과 판매가(VND)를 올바르게 입력해주세요.");
+        return;
+    }
 
-    const saveBtn = document.getElementById('btnSaveMenu');
-    saveBtn.disabled = true;
-    saveBtn.textContent = '처리 중...';
+    const selectedMerchant = document.getElementById('mMerchantId')?.value
+        || (activeMerchantId !== 'ALL' ? activeMerchantId : '1794710386');
+    const merchantId = normalizeMerchantId(selectedMerchant);
 
-    // BestClubVN & BestERP 공통 스키마 규격
-    const data = {
+    const payload = {
         merchant_id: String(merchantId),
+        merchantId: String(merchantId),
+        merchant_name: getMerchantName(merchantId),
         product_name: name,
+        category: category,
         product_type: type,
         price: price,
-        description: desc,
+        currency: 'VND',
+        inventory: 999,
         sale_status: status,
-        image_url: imageUrl,
+        description: desc,
+        images: imageUrl ? [imageUrl] : [],
         updated_at: serverTimestamp()
     };
 
+    const btn = document.getElementById('btnSaveMenu');
+    const origText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '저장 중...';
+
     try {
-        if (currentEditId) {
-            await updateDoc(doc(db, 'merchant_products', currentEditId), data);
-            alert('✅ 상품 정보가 성공적으로 수정되었습니다.');
+        if (editingDocId) {
+            if (editingSourceCollection === 'merchant_products') {
+                await updateDoc(doc(db, "merchant_products", editingDocId), payload);
+            } else {
+                await addDoc(collection(db, "merchant_products"), {
+                    ...payload,
+                    created_at: serverTimestamp()
+                });
+                await deleteDoc(doc(db, "menus", editingDocId));
+            }
         } else {
-            data.created_at = serverTimestamp();
-            await addDoc(collection(db, 'merchant_products'), data);
-            alert('✅ BestERP 카탈로그에 신규 상품이 등록되었습니다.\n가맹점 쇼핑몰 및 BestClubVN 통합몰(/mall.html)에 실시간 노출됩니다.');
+            await addDoc(collection(db, "merchant_products"), {
+                ...payload,
+                created_at: serverTimestamp()
+            });
         }
+
         document.getElementById('menuModal').style.display = 'none';
-        await fetchProducts();
+        await loadMenus(true);
     } catch (e) {
-        console.error('상품 저장 오류:', e);
-        alert('저장 실패: ' + e.message);
+        console.error("Save error:", e);
+        alert("저장 중 오류가 발생했습니다: " + e.message);
     } finally {
-        saveBtn.disabled = false;
-        saveBtn.textContent = currentEditId ? '수정 완료' : '상품 등록';
+        btn.disabled = false;
+        btn.textContent = origText;
     }
 });
 
-window.toggleStatus = async (id, isChecked, source) => {
-    const newStatus = isChecked ? 'published' : 'draft';
-    const targetColl = source === 'menus' ? 'menus' : 'merchant_products';
-
+window.deleteMenu = async function (id, sourceCollection = 'merchant_products') {
+    if (!confirm("정말 이 상품/메뉴를 삭제하시겠습니까?\n삭제 시 가맹점 홈페이지 및 BestClubVN 쇼핑몰에서도 즉시 제거됩니다.")) return;
     try {
-        const updatePayload = {
-            sale_status: newStatus,
-            status: isChecked ? '판매중' : '품절',
-            updated_at: serverTimestamp()
-        };
-        await updateDoc(doc(db, targetColl, id), updatePayload);
-
-        const idx = allProducts.findIndex(x => x.id === id);
-        if (idx !== -1) {
-            allProducts[idx].status = newStatus;
+        await deleteDoc(doc(db, sourceCollection, id));
+        if (sourceCollection === 'merchant_products') {
+            try { await deleteDoc(doc(db, "menus", id)); } catch (_) { /* ignore */ }
         }
-        window.loadMenus();
+        await loadMenus(true);
     } catch (e) {
-        alert('상태 변경 실패: ' + e.message);
-        window.loadMenus();
+        alert("삭제 실패: " + e.message);
     }
 };
-
-window.deleteMenu = async (id, source) => {
-    if (!confirm('정말 이 상품을 삭제하시겠습니까?\n삭제 후 복구할 수 없습니다.')) return;
-
-    const targetColl = source === 'menus' ? 'menus' : 'merchant_products';
-
-    try {
-        await deleteDoc(doc(db, targetColl, id));
-        alert('✅ 상품이 삭제되었습니다.');
-        allProducts = allProducts.filter(x => x.id !== id);
-        document.getElementById('menuModal').style.display = 'none';
-        window.loadMenus();
-    } catch (e) {
-        alert('삭제 실패: ' + e.message);
-    }
-};
-
-// 권한 확인 및 초기화
-checkAdminAuth(
-    (user) => {
-        currentUser = user;
-        fetchProducts();
-    },
-    (errMsg) => {
-        const grid = document.getElementById('menuGrid');
-        if (grid) {
-            grid.innerHTML = `<p style="color:#ef4444; padding:3rem; grid-column:1/-1; text-align:center;">${escapeHtml(errMsg || '로그인이 필요한 화면입니다.')}</p>`;
-        }
-    }
-);

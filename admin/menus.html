@@ -280,10 +280,14 @@
         <!-- Filter -->
         <div style="margin-top:2rem; display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;">
             <select id="filterMerchant"
-                style="padding:0.75rem; border-radius:0.5rem; border:1px solid #cbd5e1; outline:none; font-weight:600; display:none;"
-                onchange="loadMenus()">
+                style="padding:0.75rem; border-radius:0.5rem; border:1px solid #cbd5e1; outline:none; font-weight:700; color:#1e293b; background:#f8fafc;"
+                onchange="onMerchantFilterChange(this.value)">
                 <option value="ALL">== 전체 가맹점 (모든 상품) ==</option>
-                <option value="1791605366">베스트위너 (1791605366)</option>
+                <option value="1794710386">🥩 백제갈비 (1794710386)</option>
+                <option value="1791605366">🏆 베스트위너 (1791605366)</option>
+                <option value="1791002036">🥬 대한김치 (1791002036)</option>
+                <option value="1793671043">🎮 베스트마리오 (1793671043)</option>
+                <option value="1793776651">☀️ sunvietnam (1793776651)</option>
             </select>
             <select id="filterType"
                 style="padding:0.75rem; border-radius:0.5rem; border:1px solid #e2e8f0; outline:none; font-weight:500;"
@@ -294,6 +298,11 @@
                 <option value="service">🎫 서비스 / 티켓 / 바우쳐</option>
                 <option value="booking">📅 예약형 서비스</option>
             </select>
+            <select id="filterCategory"
+                style="padding:0.75rem; border-radius:0.5rem; border:1px solid #e2e8f0; outline:none; font-weight:500;"
+                onchange="loadMenus()">
+                <option value="ALL">전체 세부 카테고리</option>
+            </select>
             <select id="filterStatus"
                 style="padding:0.75rem; border-radius:0.5rem; border:1px solid #e2e8f0; outline:none; font-weight:500;"
                 onchange="loadMenus()">
@@ -302,7 +311,7 @@
                 <option value="draft">임시저장 (비공개)</option>
                 <option value="sold_out">품절</option>
             </select>
-            <input type="text" id="filterSearch" placeholder="상품명, 설명 검색..."
+            <input type="text" id="filterSearch" placeholder="상품명, 카테고리, 설명 검색..."
                 style="padding:0.75rem 1rem; border:1px solid #e2e8f0; border-radius:0.5rem; outline:none; flex:1; min-width:200px; max-width:320px;"
                 oninput="loadMenus()">
         </div>
@@ -319,25 +328,39 @@
             style="background:white; padding:2rem; border-radius:1rem; width:100%; max-width:540px; max-height:90vh; overflow-y:auto;">
             <h2 id="modalTitle" style="margin:0 0 1.5rem 0;">신규 상품/메뉴 등록</h2>
 
-            <div id="modalMerchantRow" style="display:none; margin-bottom:1rem;">
-                <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#ef4444;">가맹점 선택 (최고관리자 전용)</label>
-                <select id="mMerchantId" style="width:100%; padding:0.75rem; border:1px solid #fca5a5; background:#fff5f5; border-radius:0.5rem; outline:none;">
-                    <option value="1791605366">베스트위너 (1791605366)</option>
+            <div id="modalMerchantRow" style="margin-bottom:1rem;">
+                <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#4F46E5;">소속 가맹점 선택</label>
+                <select id="mMerchantId" style="width:100%; padding:0.75rem; border:1px solid #c7d2fe; background:#eef2ff; border-radius:0.5rem; outline:none; font-weight:600;">
+                    <option value="1794710386">🥩 백제갈비 (1794710386)</option>
+                    <option value="1791605366">🏆 베스트위너 (1791605366)</option>
+                    <option value="1791002036">🥬 대한김치 (1791002036)</option>
+                    <option value="1793671043">🎮 베스트마리오 (1793671043)</option>
+                    <option value="1793776651">☀️ sunvietnam (1793776651)</option>
                 </select>
             </div>
 
-            <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#334155;">상품 분류 <span style="color:red">*</span></label>
-            <select id="mType" style="width:100%; padding:0.75rem; border:1px solid #e2e8f0; border-radius:0.5rem; margin-bottom:1rem; outline:none;">
-                <option value="menu">🍽️ 메뉴 (음식/식음료)</option>
-                <option value="physical_product">📦 일반 실물 상품 (배송/식자재)</option>
-                <option value="service">🎫 서비스 / 티켓 / 바우쳐</option>
-                <option value="booking">📅 예약형 서비스</option>
-            </select>
+            <div style="display:flex; gap:0.75rem; margin-bottom:1rem;">
+                <div style="flex:1;">
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#334155;">상품 분류 <span style="color:red">*</span></label>
+                    <select id="mType" style="width:100%; padding:0.75rem; border:1px solid #e2e8f0; border-radius:0.5rem; outline:none;">
+                        <option value="menu">🍽️ 메뉴 (음식/식음료)</option>
+                        <option value="physical_product">📦 일반 실물 상품 (배송/식자재)</option>
+                        <option value="service">🎫 서비스 / 티켓 / 바우쳐</option>
+                        <option value="booking">📅 예약형 서비스</option>
+                    </select>
+                </div>
+                <div style="flex:1;">
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#334155;">세부 카테고리</label>
+                    <input type="text" id="mCategory"
+                        style="width:100%; padding:0.75rem; border:1px solid #e2e8f0; border-radius:0.5rem; outline:none;"
+                        placeholder="예: 소고기 구이 / 점심 메뉴">
+                </div>
+            </div>
 
             <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#334155;">상품/메뉴명 <span style="color:red">*</span></label>
             <input type="text" id="mName"
                 style="width:100%; padding:0.75rem; border:1px solid #e2e8f0; border-radius:0.5rem; margin-bottom:1rem; outline:none;"
-                placeholder="예: 보너스티켓 5000장 / 프리미엄 김치 세트">
+                placeholder="예: [16] 토마호크 스테이크 / 양념 소갈비">
 
             <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#334155;">대표 이미지 URL</label>
             <input type="url" id="mImageUrl"

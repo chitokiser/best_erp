@@ -109,7 +109,15 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                     window.tenantId = String(data.merchantId || data.merchant_id || data.tenantId || data.tenant_id || data.company_id || '1791605366');
 
                     // Fetch dynamic store name for Multi-tenant UI
-                    let sName = data.merchantName || data.brandName || data.company_name || data.companyName || data.storeName || data.company || data.name || 'BEST WINNER';
+                    const KNOWN_STORE_NAMES = {
+                        '1794710386': '백제갈비',
+                        'baekje_galbi': '백제갈비',
+                        '1791605366': 'BEST WINNER',
+                        '1791002036': '대한김치',
+                        '1793671043': '베스트마리오',
+                        '1793776651': 'sunvietnam'
+                    };
+                    let sName = KNOWN_STORE_NAMES[window.tenantId] || data.merchantName || data.brandName || data.company_name || data.companyName || data.storeName || data.company || data.name || 'BEST WINNER';
                     if (sName) {
                         window.currentStoreName = sName;
                         document.querySelectorAll('.dynamic-brand-text, #dynamicStoreName').forEach(el => el.textContent = sName);
@@ -121,6 +129,13 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                                 sName = storeSnap.data().storeName;
                                 window.currentStoreName = sName;
                                 document.querySelectorAll('.dynamic-brand-text, #dynamicStoreName').forEach(el => el.textContent = sName);
+                            } else {
+                                const mSnap = await getDoc(doc(db, 'merchants', String(window.tenantId)));
+                                if (mSnap.exists() && mSnap.data().name) {
+                                    sName = mSnap.data().name;
+                                    window.currentStoreName = sName;
+                                    document.querySelectorAll('.dynamic-brand-text, #dynamicStoreName').forEach(el => el.textContent = sName);
+                                }
                             }
                         } catch (err) { console.warn("Failed to load store branding", err); }
                     }
@@ -197,7 +212,14 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                     window.tenantId = '1791605366';
                 }
                 if (!window.currentStoreName || window.currentStoreName === '미등록 가맹점') {
-                    window.currentStoreName = window.tenantId === '1791002036' ? '대한김치' : 'BEST WINNER';
+                    const fallbackMap = {
+                        '1794710386': '백제갈비',
+                        'baekje_galbi': '백제갈비',
+                        '1791002036': '대한김치',
+                        '1793671043': '베스트마리오',
+                        '1793776651': 'sunvietnam'
+                    };
+                    window.currentStoreName = fallbackMap[window.tenantId] || 'BEST WINNER';
                 }
                 document.querySelectorAll('.dynamic-brand-text, #dynamicStoreName').forEach(el => {
                     el.textContent = window.currentStoreName;
