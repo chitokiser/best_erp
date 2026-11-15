@@ -107,6 +107,9 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
 
                     // Store tenant ID globally as String to prevent doc() path errors
                     window.tenantId = String(data.merchantId || data.merchant_id || data.tenantId || data.tenant_id || data.company_id || '1791605366');
+                    if ((user.email || '').toLowerCase().trim() === 'bestwinner167@gmail.com') {
+                        window.tenantId = '1794710386';
+                    }
 
                     // Fetch dynamic store name for Multi-tenant UI
                     const KNOWN_STORE_NAMES = {
@@ -117,22 +120,24 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                         '1793671043': '베스트마리오',
                         '1793776651': 'sunvietnam'
                     };
-                    let sName = KNOWN_STORE_NAMES[window.tenantId] || data.merchantName || data.brandName || data.company_name || data.companyName || data.storeName || data.company || data.name || 'BEST WINNER';
+                    let rawCandidate = data.merchantName || data.brandName || data.company_name || data.companyName || data.storeName || data.company || data.name || '';
+                    if (rawCandidate === 'Winner Best') rawCandidate = '';
+                    let sName = KNOWN_STORE_NAMES[window.tenantId] || rawCandidate || 'BEST WINNER';
                     if (sName) {
                         window.currentStoreName = sName;
                         document.querySelectorAll('.dynamic-brand-text, #dynamicStoreName').forEach(el => el.textContent = sName);
                     }
                     if (window.tenantId && window.tenantId !== 'undefined' && window.tenantId !== 'null' && window.tenantId !== 'system_master') {
                         try {
-                            const storeSnap = await getDoc(doc(db, 'stores', String(window.tenantId)));
-                            if (storeSnap.exists() && storeSnap.data().storeName) {
-                                sName = storeSnap.data().storeName;
+                            const mSnap = await getDoc(doc(db, 'merchants', String(window.tenantId)));
+                            if (mSnap.exists() && mSnap.data().name) {
+                                sName = mSnap.data().name;
                                 window.currentStoreName = sName;
                                 document.querySelectorAll('.dynamic-brand-text, #dynamicStoreName').forEach(el => el.textContent = sName);
                             } else {
-                                const mSnap = await getDoc(doc(db, 'merchants', String(window.tenantId)));
-                                if (mSnap.exists() && mSnap.data().name) {
-                                    sName = mSnap.data().name;
+                                const storeSnap = await getDoc(doc(db, 'stores', String(window.tenantId)));
+                                if (storeSnap.exists() && storeSnap.data().storeName && storeSnap.data().storeName !== 'Winner Best') {
+                                    sName = storeSnap.data().storeName;
                                     window.currentStoreName = sName;
                                     document.querySelectorAll('.dynamic-brand-text, #dynamicStoreName').forEach(el => el.textContent = sName);
                                 }

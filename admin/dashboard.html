@@ -455,7 +455,15 @@
             const userUid = window.currentUserUid || auth.currentUser?.uid || '';
 
             // 0. Set Real Dynamic Brand Title immediately so it never stays '가맹점(로딩중)'
-            const storeTitle = window.currentStoreName || (tenantId === '1791002036' ? '대한김치' : 'BEST WINNER');
+            const storeTitleMap = {
+                '1794710386': '백제갈비',
+                'baekje_galbi': '백제갈비',
+                '1791002036': '대한김치',
+                '1793671043': '베스트마리오',
+                '1793776651': 'sunvietnam'
+            };
+            const storeTitle = storeTitleMap[tenantId] || (window.currentStoreName && window.currentStoreName !== 'Winner Best' ? window.currentStoreName : 'BEST WINNER');
+            window.currentStoreName = storeTitle;
             const storeEl = document.getElementById('dynamicStoreName');
             if (storeEl) storeEl.textContent = storeTitle;
 
@@ -495,7 +503,9 @@
                 ordersSnap.forEach(docSnap => {
                     const o = docSnap.data();
                     const mId = String(o.merchant_id || o.merchantId || o.tenantId || o.storeId || '').trim();
-                    const matchMerchant = isSuperAdmin || mId === tenantId || (tenantId === '1791605366' && (mId === 'bestwinner' || mId === 'best_winner'));
+                    const matchMerchant = isSuperAdmin || mId === tenantId
+                        || (tenantId === '1794710386' && (mId === 'baekje_galbi' || mId === 'baekjegalbi'))
+                        || (tenantId === '1791605366' && (mId === 'bestwinner' || mId === 'best_winner'));
                     if (!matchMerchant) return;
 
                     if (o.status !== '취소' && o.status !== 'cancelled') {
@@ -526,8 +536,10 @@
                     const mpSnap = await getDocs(collection(db, 'merchant_products'));
                     mpSnap.forEach(docSnap => {
                         const d = docSnap.data();
-                        const mId = String(d.merchant_id || d.tenantId || '').trim();
-                        if (mId === tenantId || (tenantId === '1791605366' && (mId === 'bestwinner' || mId === 'best_winner'))) {
+                        const mId = String(d.merchant_id || d.merchantId || d.tenantId || '').trim();
+                        if (mId === tenantId
+                            || (tenantId === '1794710386' && (mId === 'baekje_galbi' || mId === 'baekjegalbi'))
+                            || (tenantId === '1791605366' && (mId === 'bestwinner' || mId === 'best_winner'))) {
                             seenIds.add(docSnap.id);
                             menuItems.push({
                                 id: docSnap.id,
