@@ -334,8 +334,11 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                         });
                     }
 
-                    // 🔒 RBAC: 고객관리 하위 'SaaS 회원관리' 메뉴는 daguri75@gmail.com 최고관리자에게만 노출
+                    // 🔒 RBAC: 역할별 메뉴 노출 통제
                     const isSuperAdmin = userEmailLower === 'daguri75@gmail.com';
+                    const isStaff = ['STAFF', 'EMPLOYEE'].includes(role);
+
+                    // 1) SaaS 회원관리는 최고관리자(daguri75@gmail.com)에게만 노출
                     document.querySelectorAll('a[href="users.html"], .saas-admin-only').forEach(el => {
                         if (isSuperAdmin) {
                             el.style.display = 'block';
@@ -343,6 +346,38 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                             el.remove();
                         }
                     });
+
+                    // 2) 직원(STAFF) 권한 격리: 시스템/API 설정 및 직원목록 관리 메뉴 비노출
+                    if (isStaff) {
+                        document.querySelectorAll('a[href="api-settings.html"], a[href="employees.html"]').forEach(el => {
+                            el.remove();
+                        });
+                        // 시스템 ▾ 드롭다운 통째로 제거
+                        document.querySelectorAll('#navMenuList .dropdown, .top-nav .dropdown').forEach(dropdown => {
+                            const dropbtn = dropdown.querySelector('.dropbtn');
+                            if (dropbtn && dropbtn.textContent.includes('시스템')) {
+                                dropdown.remove();
+                            }
+                        });
+
+                        // 대시보드 페이지 내 CEO 전용 요소 은닉
+                        const dashTitle = document.getElementById('dashboardMainTitle');
+                        if (dashTitle) dashTitle.innerHTML = '📋 매장 운영 & 직원 대시보드';
+                        const btnAi = document.getElementById('btnAiCopilot');
+                        if (btnAi) btnAi.style.display = 'none';
+                        const btnSys = document.getElementById('btnSysSettings');
+                        if (btnSys) btnSys.style.display = 'none';
+                        const btnTasks = document.getElementById('btnStaffTasks');
+                        if (btnTasks) btnTasks.style.display = 'inline-flex';
+
+                        // 보안 가드: 직원이 브라우저 주소창으로 직접 민감 페이지 접근 시 차단
+                        const currPage = window.location.pathname.split('/').pop();
+                        if (['api-settings.html', 'users.html', 'employees.html'].includes(currPage)) {
+                            alert('접근 권한이 없습니다. (관리자 또는 가맹점 대표 전용 페이지)');
+                            window.location.href = 'dashboard.html';
+                            return;
+                        }
+                    }
 
                     // 현재 활성화된 메뉴 탭 자동 하이라이트
                     const currentFile = window.location.pathname.split('/').pop() || 'dashboard.html';

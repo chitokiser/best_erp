@@ -102,8 +102,12 @@
     <div class="admin-container">
         <!-- Title & Action Bar -->
         <div class="admin-header-row">
-            <h2 class="admin-header-title">📊 CEO 실시간 대시보드</h2>
+            <h2 class="admin-header-title" id="dashboardMainTitle">📊 CEO 실시간 대시보드</h2>
             <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                <a href="tasks.html" id="btnStaffTasks"
+                    style="display:none; background:#4F46E5; color:white; padding:0.55rem 1rem; border-radius:0.5rem; font-weight:800; text-decoration:none; font-size:0.875rem; align-items:center; gap:0.35rem; box-shadow:0 4px 10px rgba(79,70,229,0.3); transition:all 0.2s;">
+                    <span>📝</span> 업무/사진보고 작성
+                </a>
                 <a href="vision-crm.html"
                     style="background:#0284c7; color:white; padding:0.55rem 1rem; border-radius:0.5rem; font-weight:800; text-decoration:none; font-size:0.875rem; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 4px 10px rgba(2,132,199,0.3); transition:all 0.2s;"
                     onmouseover="this.style.background='#0369a1'"
@@ -116,13 +120,13 @@
                     onmouseout="this.style.background='#10b981'">
                     <span>🎫</span> 1초 쿠폰 검증
                 </a>
-                <button onclick="openAiCopilotDrawer()"
+                <button onclick="openAiCopilotDrawer()" id="btnAiCopilot"
                     style="background:var(--ai-gradient); color:white; border:none; padding:0.55rem 1.1rem; border-radius:0.5rem; font-weight:700; cursor:pointer; font-size:0.875rem; display:inline-flex; align-items:center; gap:0.4rem; box-shadow:0 4px 12px rgba(79,70,229,0.25); transition:all 0.2s;"
                     onmouseover="this.style.opacity='0.92'; this.style.transform='translateY(-1px)'"
                     onmouseout="this.style.opacity='1'; this.style.transform='none'">
                     <span>💡</span> AI 경영참모 브리핑
                 </button>
-                <a href="api-settings.html"
+                <a href="api-settings.html" id="btnSysSettings"
                     style="background:#f1f5f9; border:1px solid #cbd5e1; color:#475569; padding:0.55rem 0.9rem; border-radius:0.5rem; font-weight:700; text-decoration:none; font-size:0.875rem; transition:background 0.2s;"
                     onmouseover="this.style.background='#e2e8f0'"
                     onmouseout="this.style.background='#f1f5f9'">
@@ -600,7 +604,7 @@
                 console.warn("메뉴 데이터 로딩 에러:", menuErr);
             }
 
-            // 4. Total Managed Customers (내 가맹점 직속 멘티)
+            // 4. Total Managed Customers (내 가맹점 직속 멘티 - 순수 고객/멘티 회원만 필터링)
             try {
                 const menteeQueries = [];
                 if (userEmail) {
@@ -616,12 +620,47 @@
                 const seenUids = new Set();
                 const mentees = [];
 
+                // 🚨 수퍼관리자, 가맹점 대표, 내부 직원, 타 매장 점주 계정은 일반 고객(멘티) 목록에서 철저히 제외
+                const EXCLUDED_EMAILS = [
+                    'daguri75@gmail.com',
+                    'hexttokenopbnb@gmail.com',
+                    'bestwinner167@gmail.com',
+                    'bestwinner187@gmail.com',
+                    'caterwilliam55@gmail.com'
+                ];
+                const EXCLUDED_ROLES = [
+                    'SUPER_ADMIN', 'CEO', 'STAFF', 'EMPLOYEE', 'ADMIN', 'FRANCHISE', 'MERCHANT', 'STORE_ADMIN', 'SYSTEM_MASTER'
+                ];
+
                 snaps.forEach(s => {
                     (s.docs || []).forEach(d => {
                         if (seenUids.has(d.id)) return;
                         const data = d.data();
                         const dEmail = (data.email || '').toLowerCase().trim();
+                        const dRole = (data.role || data.tier || '').toUpperCase().trim();
+
+                        // 1. 본인 계정 제외
                         if (d.id === userUid || (userEmail && dEmail === userEmail)) return;
+
+                        // 2. 최고관리자, 대표, 가맹점주, 내부직원 계정 완전 제외
+                        if (EXCLUDED_EMAILS.includes(dEmail)) return;
+                        if (EXCLUDED_ROLES.includes(dRole)) return;
+                        if (data.isMerchantOwner === true || data.is_merchant_applicant === true) return;
+                        if (dEmail.includes('admin') && (dEmail === 'daguri75@gmail.com' || dRole === 'SUPER_ADMIN')) return;
+
+                        // 3. 타 가맹점 계정 유입 차단 (멀티테넌트)
+                        const userTenant = String(data.registeredMerchantId || data.merchantId || data.tenantId || '').trim();
+                        if (tenantId && userTenant && userTenant !== tenantId) {
+                            return;
+                        }
+                        const nameLower = (data.name || '').toLowerCase();
+                        if (tenantId === '1791605366') {
+                            if (nameLower.includes('백제갈비') || userTenant === '1794710386') return;
+                            if (nameLower.includes('대한김치') || userTenant === '1791002036') return;
+                        } else if (tenantId === '1794710386') {
+                            if (nameLower.includes('베스트위너') || userTenant === '1791605366') return;
+                        }
+
                         seenUids.add(d.id);
                         mentees.push({ id: d.id, ...data });
                     });
@@ -630,7 +669,7 @@
                 document.getElementById('kpiNewCustomers').textContent = `${mentees.length} 명`;
                 const custTrend = document.getElementById('kpiNewCustomers').nextElementSibling;
                 if (custTrend) {
-                    custTrend.textContent = mentees.length > 0 ? '내 직속 멘티 회원' : '이벤트 생성 대기중';
+                    custTrend.textContent = mentees.length > 0 ? '내 직속 멘티 회원' : '멘티 회원 등록 대기중';
                 }
 
                 let totalP = 0;
@@ -649,10 +688,28 @@
 
                 if (mentees.length > 0) {
                     document.getElementById('quickClientControl').innerHTML = clientHtml;
+                } else {
+                    document.getElementById('quickClientControl').innerHTML = '<p style="text-align:center; color:#94a3b8; font-size:0.9rem; padding:1.5rem 0;">아직 등록된 멘티/고객이 없습니다.</p>';
                 }
                 document.getElementById('kpiChurn').textContent = `${totalP.toLocaleString()} P`;
             } catch (custErr) {
                 console.warn("고객/멘티 데이터 로딩 에러:", custErr);
+            }
+
+            // 5. 직원(STAFF) 권한별 대시보드 맞춤화
+            const isStaff = window.currentUserRole === 'STAFF' || window.currentUserRole === 'EMPLOYEE';
+            if (isStaff) {
+                const titleEl = document.getElementById('dashboardMainTitle');
+                if (titleEl) titleEl.innerHTML = '📋 매장 운영 & 직원 대시보드';
+
+                const btnAi = document.getElementById('btnAiCopilot');
+                if (btnAi) btnAi.style.display = 'none';
+
+                const btnSys = document.getElementById('btnSysSettings');
+                if (btnSys) btnSys.style.display = 'none';
+
+                const btnTasks = document.getElementById('btnStaffTasks');
+                if (btnTasks) btnTasks.style.display = 'inline-flex';
             }
         }
 

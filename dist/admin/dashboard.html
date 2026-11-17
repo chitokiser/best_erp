@@ -8,10 +8,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>.brand-edit-badge{cursor:pointer;align-items:center;gap:.35rem;transition:opacity .2s;display:inline-flex}.brand-edit-badge:hover{opacity:.85}.chart-container{width:100%;height:200px;position:relative}@media (width<=640px){.chart-container{height:180px}}</style>
-  <script type="module" crossorigin src="/assets/admin_dashboard-D3NlW-_D.js"></script>
+  <script type="module" crossorigin src="/assets/admin_dashboard-Ct5o9FzL.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-DK3Fl9T5.js">
   <link rel="modulepreload" crossorigin href="/assets/firebase-config-BWFrQkzL.js">
-  <link rel="modulepreload" crossorigin href="/assets/auth-4qnw-l1z.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-Bi04jXEp.js">
   <link rel="modulepreload" crossorigin href="/assets/notification-hub-ChDr8WD_.js">
   <link rel="stylesheet" crossorigin href="/assets/admin-CCpgtoVo.css">
   <link rel="stylesheet" crossorigin href="/assets/style-CTsXkP_6.css">
@@ -86,8 +86,12 @@
     <div class="admin-container">
         <!-- Title & Action Bar -->
         <div class="admin-header-row">
-            <h2 class="admin-header-title">📊 CEO 실시간 대시보드</h2>
+            <h2 class="admin-header-title" id="dashboardMainTitle">📊 CEO 실시간 대시보드</h2>
             <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                <a href="tasks.html" id="btnStaffTasks"
+                    style="display:none; background:#4F46E5; color:white; padding:0.55rem 1rem; border-radius:0.5rem; font-weight:800; text-decoration:none; font-size:0.875rem; align-items:center; gap:0.35rem; box-shadow:0 4px 10px rgba(79,70,229,0.3); transition:all 0.2s;">
+                    <span>📝</span> 업무/사진보고 작성
+                </a>
                 <a href="vision-crm.html"
                     style="background:#0284c7; color:white; padding:0.55rem 1rem; border-radius:0.5rem; font-weight:800; text-decoration:none; font-size:0.875rem; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 4px 10px rgba(2,132,199,0.3); transition:all 0.2s;"
                     onmouseover="this.style.background='#0369a1'"
@@ -100,13 +104,13 @@
                     onmouseout="this.style.background='#10b981'">
                     <span>🎫</span> 1초 쿠폰 검증
                 </a>
-                <button onclick="openAiCopilotDrawer()"
+                <button onclick="openAiCopilotDrawer()" id="btnAiCopilot"
                     style="background:var(--ai-gradient); color:white; border:none; padding:0.55rem 1.1rem; border-radius:0.5rem; font-weight:700; cursor:pointer; font-size:0.875rem; display:inline-flex; align-items:center; gap:0.4rem; box-shadow:0 4px 12px rgba(79,70,229,0.25); transition:all 0.2s;"
                     onmouseover="this.style.opacity='0.92'; this.style.transform='translateY(-1px)'"
                     onmouseout="this.style.opacity='1'; this.style.transform='none'">
                     <span>💡</span> AI 경영참모 브리핑
                 </button>
-                <a href="api-settings.html"
+                <a href="api-settings.html" id="btnSysSettings"
                     style="background:#f1f5f9; border:1px solid #cbd5e1; color:#475569; padding:0.55rem 0.9rem; border-radius:0.5rem; font-weight:700; text-decoration:none; font-size:0.875rem; transition:background 0.2s;"
                     onmouseover="this.style.background='#e2e8f0'"
                     onmouseout="this.style.background='#f1f5f9'">

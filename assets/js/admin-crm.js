@@ -113,18 +113,34 @@ async function loadClients() {
 
                     const ud = docSnap.data();
                     const email = (ud.email || '').toLowerCase().trim();
-                    // 가맹점주 본인 계정은 멘티 목록에서 제외
-                    if (!isSuperAdmin && (docSnap.id === myUid || (myEmail && email === myEmail))) return;
+                    const role = (ud.role || ud.tier || '').toUpperCase().trim();
 
-                    const key = email || docSnap.id;
+                    // 1. 본인 계정 제외
+                    if (docSnap.id === myUid || (myEmail && email === myEmail)) return;
 
-                    // 백제갈비 등 가맹점주/매장 ID 매핑
+                    // 2. 최고관리자, 대표, 가맹점주, 내부직원 계정 완전 제외
+                    const EXCLUDED_EMAILS = [
+                        'daguri75@gmail.com',
+                        'hexttokenopbnb@gmail.com',
+                        'bestwinner167@gmail.com',
+                        'bestwinner187@gmail.com'
+                    ];
+                    const EXCLUDED_ROLES = [
+                        'SUPER_ADMIN', 'CEO', 'STAFF', 'EMPLOYEE', 'ADMIN', 'FRANCHISE', 'MERCHANT', 'STORE_ADMIN', 'SYSTEM_MASTER'
+                    ];
+                    if (EXCLUDED_EMAILS.includes(email)) return;
+                    if (EXCLUDED_ROLES.includes(role)) return;
+                    if (ud.isMerchantOwner === true || ud.is_merchant_applicant === true) return;
+                    if (email.includes('admin') && (email === 'daguri75@gmail.com' || role === 'SUPER_ADMIN')) return;
+
+                    // 3. 타 가맹점 계정 유입 차단 (멀티테넌트)
                     let mId = String(ud.registeredMerchantId || ud.merchantId || ud.registeredStoreId || ud.storeId || '').trim();
-                    const isOwner = email === 'bestwinner167@gmail.com' || ud.isMerchantOwner === true || ud.role === 'CEO' || ud.role === 'MERCHANT' || ud.role === 'STORE_ADMIN';
-                    if (email === 'bestwinner167@gmail.com') {
-                        mId = '1794710386';
+                    if (!isSuperAdmin && activeMerchantId && activeMerchantId !== 'ALL') {
+                        if (mId && !matchesMerchant(mId, activeMerchantId)) return;
                     }
                     if (!mId) mId = activeMerchantId;
+
+                    const key = email || docSnap.id;
 
                     const client = {
                         id: docSnap.id,
