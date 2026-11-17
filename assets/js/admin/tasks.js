@@ -16,13 +16,20 @@ let editingTaskId = null;
 let activeTaskId = null;
 
 function getIsSuperAdmin() {
-    if (!currentUserInfo) return (window.currentUserRole === 'SUPER_ADMIN') || (window.tenantId === 'system_master');
-    return (currentUserInfo.email === 'daguri75@gmail.com') || (currentUserInfo.role === 'SUPER_ADMIN') || (window.tenantId === 'system_master');
+    const email = currentUserInfo?.email || auth.currentUser?.email || '';
+    const role = currentUserInfo?.role || window.currentUserRole || '';
+    if (email === 'daguri75@gmail.com') return true;
+    if (role === 'SUPER_ADMIN') return true;
+    if (window.tenantId === 'system_master') return true;
+    return false;
 }
 
 function getMyMerchantId() {
-    if (!currentUserInfo) return String(window.tenantId || '1791605366');
-    return String(currentUserInfo.merchantId || window.tenantId || '1791605366').trim();
+    const mId = currentUserInfo?.merchantId || currentUserInfo?.tenantId || window.tenantId;
+    if (mId && mId !== 'undefined' && mId !== 'null' && mId !== 'system_master') {
+        return String(mId).trim();
+    }
+    return '1791605366';
 }
 
 const taskListContainer = document.getElementById('taskListContainer');
@@ -43,25 +50,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const userDoc = await getDoc(doc(db, 'users', user.uid));
-            if (userDoc.exists()) {
-                currentUserInfo = { uid: user.uid, ...userDoc.data() };
-            } else {
-                currentUserInfo = {
-                    uid: user.uid,
-                    role: 'EMPLOYEE',
-                    name: user.displayName || user.email.split('@')[0],
-                    email: user.email,
-                    teamId: 'SALES'
-                };
-            }
-        } catch (e) {
-            console.warn("User profile fetch error:", e);
+            const uData = userDoc.exists() ? userDoc.data() : {};
+            const resolvedEmail = user.email || uData.email || '';
+            const resolvedName = uData.name || uData.displayName || user.displayName || (resolvedEmail ? resolvedEmail.split('@')[0] : '직원');
+            const resolvedRole = uData.role || window.currentUserRole || 'STAFF';
+            const resolvedPosition = uData.position || window.currentUserPosition || '직원';
+            const resolvedTeam = uData.teamId || uData.department || 'SALES';
+            const resolvedMerchantId = String(uData.merchantId || uData.tenantId || window.tenantId || '1791605366').trim();
+
             currentUserInfo = {
                 uid: user.uid,
-                role: 'EMPLOYEE',
-                name: user.displayName || user.email.split('@')[0],
-                email: user.email,
-                teamId: 'SALES'
+                email: resolvedEmail,
+                name: resolvedName,
+                role: resolvedRole,
+                position: resolvedPosition,
+                teamId: resolvedTeam,
+                merchantId: resolvedMerchantId,
+                tenantId: resolvedMerchantId,
+                ...uData
+            };
+        } catch (e) {
+            console.warn("User profile fetch error:", e);
+            const resolvedEmail = user.email || '';
+            const resolvedName = user.displayName || (resolvedEmail ? resolvedEmail.split('@')[0] : '직원');
+            currentUserInfo = {
+                uid: user.uid,
+                email: resolvedEmail,
+                name: resolvedName,
+                role: window.currentUserRole || 'STAFF',
+                position: window.currentUserPosition || '직원',
+                teamId: 'SALES',
+                merchantId: String(window.tenantId || '1791605366').trim(),
+                tenantId: String(window.tenantId || '1791605366').trim()
             };
         }
 
@@ -126,8 +146,8 @@ function initTaskBoard() {
         });
     }
 
-    const isSuperAdmin = (currentUserInfo.email === 'daguri75@gmail.com') || (currentUserInfo.role === 'SUPER_ADMIN') || (window.tenantId === 'system_master');
-    const myMerchantId = String(currentUserInfo.merchantId || window.tenantId || '').trim();
+    const isSuperAdmin = getIsSuperAdmin();
+    const myMerchantId = getMyMerchantId();
 
     // Setup Super Admin Merchant Filter
     const filterMerchant = document.getElementById('filterMerchant');
@@ -153,8 +173,8 @@ function initTaskBoard() {
     let q;
     if (isSuperAdmin) {
         q = query(collection(db, 'tasks'), orderBy('createdAt', 'desc'));
-    } else if (currentUserInfo.role === 'TEAM_LEADER') {
-        q = query(collection(db, 'tasks'), where('teamId', '==', currentUserInfo.teamId || ''), orderBy('createdAt', 'desc'));
+    } else if (currentUserInfo?.role === 'TEAM_LEADER') {
+        q = query(collection(db, 'tasks'), where('teamId', '==', currentUserInfo?.teamId || ''), orderBy('createdAt', 'desc'));
     } else {
         q = query(collection(db, 'tasks'), orderBy('createdAt', 'desc'));
     }
@@ -227,8 +247,10 @@ function populateRelatedTasksSelect() {
 function applyFiltersAndRender() {
     taskListContainer.innerHTML = '';
 
-    const isSuperAdmin = (currentUserInfo.email === 'daguri75@gmail.com') || (currentUserInfo.role === 'SUPER_ADMIN') || (window.tenantId === 'system_master');
-    const myMerchantId = String(currentUserInfo.merchantId || window.tenantId || '').trim();
+    const isSuperAdmin = getIsSuperAdmin();
+    const myMerchantId = getMyMerchantId();
+    const userEmailLower = (currentUserInfo?.email || auth.currentUser?.email || '').toLowerCase().trim();
+    const userUid = currentUserInfo?.uid || auth.currentUser?.uid || '';
 
     const filtered = allTasks.filter(item => {
         const isMeeting = item.type === 'MEETING' || item.type === 'FIELD' || item.category === 'MEETING_REPORT';
@@ -237,8 +259,8 @@ function applyFiltersAndRender() {
 
         // 0. Multi-Tenant Franchise Isolation
         const taskMerchant = String(item.merchantId || item.tenantId || '').trim();
-        const isAssignedToMe = (item.assignedTo && item.assignedTo.toLowerCase() === currentUserInfo.email.toLowerCase());
-        const isCreatedByMe = (item.creatorEmail && item.creatorEmail.toLowerCase() === currentUserInfo.email.toLowerCase()) || (item.createdBy === currentUserInfo.uid);
+        const isAssignedToMe = (item.assignedTo && userEmailLower && item.assignedTo.toLowerCase() === userEmailLower);
+        const isCreatedByMe = (item.creatorEmail && userEmailLower && item.creatorEmail.toLowerCase() === userEmailLower) || (userUid && item.createdBy === userUid);
 
         if (isSuperAdmin) {
             // Super Admin Merchant Scope Filter
@@ -528,10 +550,14 @@ function showTaskDetail(taskId, data, shouldScroll = true) {
     const btnCreateSub = document.getElementById('btnCreateSubTask');
     const btnReject = document.getElementById('btnRejectProcess');
 
-    let isManager = ['SUPER_ADMIN', 'CEO'].includes(currentUserInfo.role) || currentUserInfo.email === 'daguri75@gmail.com';
-    const isAuthor = (currentUserInfo.uid && currentUserInfo.uid === data.createdBy) ||
-                     (currentUserInfo.email && data.creatorEmail && currentUserInfo.email.toLowerCase() === data.creatorEmail.toLowerCase()) ||
-                     (currentUserInfo.email && data.assignedTo && currentUserInfo.email.toLowerCase() === data.assignedTo.toLowerCase());
+    const userUid = currentUserInfo?.uid || auth.currentUser?.uid || '';
+    const userEmailLower = (currentUserInfo?.email || auth.currentUser?.email || '').toLowerCase().trim();
+    const userName = currentUserInfo?.name || currentUserInfo?.displayName || auth.currentUser?.displayName || (userEmailLower ? userEmailLower.split('@')[0] : '직원');
+
+    let isManager = getIsSuperAdmin() || ['SUPER_ADMIN', 'CEO'].includes(currentUserInfo?.role);
+    const isAuthor = (userUid && userUid === data.createdBy) ||
+                     (userEmailLower && data.creatorEmail && userEmailLower === data.creatorEmail.toLowerCase()) ||
+                     (userEmailLower && data.assignedTo && userEmailLower === data.assignedTo.toLowerCase());
 
     // Configure Edit & Delete Buttons for Author or Managers
     const btnEdit = document.getElementById('btnEditTaskOrReport');
@@ -559,28 +585,28 @@ function showTaskDetail(taskId, data, shouldScroll = true) {
             }
         };
     }
-    if (currentUserInfo.role === 'TEAM_LEADER' && currentUserInfo.teamId === data.teamId) {
+    if (currentUserInfo?.role === 'TEAM_LEADER' && currentUserInfo?.teamId === data.teamId) {
         isManager = true;
     }
 
     if (isManager && !isMeeting && !isReport) {
         actionBlock.style.display = 'flex';
-        btnCreateSub.addEventListener('click', () => {
+        btnCreateSub.onclick = () => {
             showTaskForm(taskId);
-        });
+        };
 
         if (data.status === 'COMPLETED') {
             btnReject.style.display = 'block';
-            btnReject.addEventListener('click', async () => {
+            btnReject.onclick = async () => {
                 if (confirm("이 업무를 반려하고 다시 진행중(IN_PROGRESS) 상태로 돌리겠습니까?")) {
-                    await updateTask(taskId, currentUserInfo.uid, {
+                    await updateTask(taskId, userUid, {
                         status: 'IN_PROGRESS',
                         progress: 0
                     });
-                    await logTaskAction(taskId, currentUserInfo.uid, 'REJECTED', '100', '0', '팀장/CEO에 의한 반려 처리');
+                    await logTaskAction(taskId, userUid, 'REJECTED', '100', '0', '팀장/CEO에 의한 반려 처리');
                     alert("반려 처리되었습니다.");
                 }
-            });
+            };
         }
     }
 
@@ -591,23 +617,26 @@ function showTaskDetail(taskId, data, shouldScroll = true) {
     const reportProgress = document.getElementById('reportProgress');
     const btnSubmitReport = document.getElementById('btnSubmitReport');
 
-    const isAssignee = currentUserInfo.email === data.assignedTo || (currentUserInfo.name && currentUserInfo.name === data.assigneeName);
-    if (isAssignee && !isMeeting && !isReport) {
+    const isAssignee = (userEmailLower && data.assignedTo && userEmailLower === data.assignedTo.toLowerCase()) ||
+                       (currentUserInfo?.name && currentUserInfo.name === data.assigneeName);
+    const canStaffReport = isAssignee || ['STAFF', 'EMPLOYEE'].includes(currentUserInfo?.role);
+
+    if (canStaffReport && !isMeeting && !isReport) {
         employeeActionSection.style.display = 'block';
         reportProgress.value = data.progress || 0;
 
         // Toggle Meeting Extra Fields
         document.querySelectorAll('input[name="empReportMode"]').forEach(radio => {
-            radio.addEventListener('change', (e) => {
+            radio.onchange = (e) => {
                 if (e.target.value === 'MEETING') {
                     empMeetingExtraFields.style.display = 'flex';
                 } else {
                     empMeetingExtraFields.style.display = 'none';
                 }
-            });
+            };
         });
 
-        btnSubmitReport.addEventListener('click', async () => {
+        btnSubmitReport.onclick = async () => {
             const content = reportContent.value.trim();
             const prog = parseInt(reportProgress.value, 10);
             const isMeetingMode = document.querySelector('input[name="empReportMode"]:checked')?.value === 'MEETING';
@@ -642,11 +671,11 @@ function showTaskDetail(taskId, data, shouldScroll = true) {
                 await submitTaskReport(taskId, {
                     content: finalContent,
                     progress: prog,
-                    submittedBy: currentUserInfo.uid,
-                    submittedByName: currentUserInfo.name || currentUserInfo.email
+                    submittedBy: userUid,
+                    submittedByName: userName
                 });
 
-                await updateTask(taskId, currentUserInfo.uid, {
+                await updateTask(taskId, userUid, {
                     status: newStatus,
                     progress: prog
                 });
@@ -660,7 +689,7 @@ function showTaskDetail(taskId, data, shouldScroll = true) {
                 btnSubmitReport.disabled = false;
                 btnSubmitReport.innerText = '보고 제출';
             }
-        });
+        };
     }
 
     // Load Feedback & Comments
@@ -820,49 +849,48 @@ function initMeetingReportModal() {
 
     if (!modal) return;
 
-    // Open Modal
+    // Open Modal (Idempotent onclick)
     if (btnOpen) {
-        btnOpen.addEventListener('click', () => {
+        btnOpen.onclick = () => {
             openMeetingReportModal();
-        });
+        };
     }
 
-    // Close Modal
-    if (btnClose) btnClose.addEventListener('click', () => closeMeetingReportModal());
-    if (btnCancel) btnCancel.addEventListener('click', () => closeMeetingReportModal());
+    // Close Modal (Idempotent onclick)
+    if (btnClose) btnClose.onclick = () => closeMeetingReportModal();
+    if (btnCancel) btnCancel.onclick = () => closeMeetingReportModal();
 
     // Trigger Photo Upload
     if (btnTriggerPhoto && photoInput) {
-        btnTriggerPhoto.addEventListener('click', () => {
+        btnTriggerPhoto.onclick = () => {
             photoInput.click();
-        });
-
-        photoInput.addEventListener('change', handlePhotoSelection);
+        };
+        photoInput.onchange = handlePhotoSelection;
     }
 
     // Lightbox close handler
     const lightbox = document.getElementById('imageLightbox');
     if (lightbox) {
-        lightbox.addEventListener('click', () => {
+        lightbox.onclick = () => {
             lightbox.style.display = 'none';
-        });
+        };
     }
 
-    // Form Submit
+    // Form Submit (Idempotent onsubmit)
     if (form) {
-        form.addEventListener('submit', async (e) => {
+        form.onsubmit = async (e) => {
             e.preventDefault();
 
-            const type = document.getElementById('mReportType').value;
-            const title = document.getElementById('mReportTitle').value.trim();
-            const partner = document.getElementById('mReportPartner').value.trim();
-            const location = document.getElementById('mReportLocation').value.trim();
-            const date = document.getElementById('mReportDate').value;
-            const attendees = document.getElementById('mReportAttendees').value.trim();
-            const teamId = document.getElementById('mReportTeam').value;
-            const relatedTaskId = document.getElementById('mReportRelatedTask').value;
-            const content = document.getElementById('mReportContent').value.trim();
-            const followUp = document.getElementById('mReportFollowUp').value.trim();
+            const type = document.getElementById('mReportType')?.value || 'MEETING';
+            const title = document.getElementById('mReportTitle')?.value.trim() || '';
+            const partner = document.getElementById('mReportPartner')?.value.trim() || '';
+            const location = document.getElementById('mReportLocation')?.value.trim() || '';
+            const date = document.getElementById('mReportDate')?.value || new Date().toISOString().slice(0, 16);
+            const attendees = document.getElementById('mReportAttendees')?.value.trim() || '';
+            const teamId = document.getElementById('mReportTeam')?.value || currentUserInfo?.teamId || 'SALES';
+            const relatedTaskId = document.getElementById('mReportRelatedTask')?.value || '';
+            const content = document.getElementById('mReportContent')?.value.trim() || '';
+            const followUp = document.getElementById('mReportFollowUp')?.value.trim() || '';
 
             if (!title) {
                 alert("보고 제목을 입력해주세요.");
@@ -874,12 +902,19 @@ function initMeetingReportModal() {
             }
 
             const btnSubmit = document.getElementById('btnSubmitMeetingReport');
-            btnSubmit.disabled = true;
-            btnSubmit.innerHTML = '<span>⏳</span> 등록 중...';
+            if (btnSubmit) {
+                btnSubmit.disabled = true;
+                btnSubmit.innerHTML = '<span>⏳</span> 등록 중...';
+            }
 
             try {
                 const isMeeting = type === 'MEETING' || type === 'FIELD';
                 const category = isMeeting ? 'MEETING_REPORT' : 'WORK_REPORT';
+
+                const safeUid = currentUserInfo?.uid || auth.currentUser?.uid || 'anonymous';
+                const safeEmail = currentUserInfo?.email || auth.currentUser?.email || '';
+                const safeName = currentUserInfo?.name || currentUserInfo?.displayName || auth.currentUser?.displayName || (safeEmail ? safeEmail.split('@')[0] : '직원');
+                const safeTeam = teamId || currentUserInfo?.teamId || 'SALES';
 
                 if (editingTaskId) {
                     // Update / Refine existing report
@@ -893,15 +928,15 @@ function initMeetingReportModal() {
                         meetingDate: date,
                         dueDate: date,
                         attendees: attendees,
-                        teamId: teamId || currentUserInfo.teamId || 'SALES',
+                        teamId: safeTeam,
                         parentTaskId: relatedTaskId || null,
                         followUp: followUp,
-                        photos: selectedPhotosBase64,
+                        photos: selectedPhotosBase64 || [],
                         updatedAt: serverTimestamp(),
-                        lastModifiedByName: currentUserInfo.name || currentUserInfo.email
+                        lastModifiedByName: safeName
                     });
 
-                    await logTaskAction(editingTaskId, currentUserInfo.uid, 'UPDATE', null, `보고서 수정보완 완료 (${currentUserInfo.name || currentUserInfo.email})`);
+                    await logTaskAction(editingTaskId, safeUid, 'UPDATE', '', `보고서 수정보완 완료 (${safeName})`);
 
                     alert("✅ 보고서가 성공적으로 수정보완되었습니다.");
                     closeMeetingReportModal();
@@ -924,12 +959,6 @@ function initMeetingReportModal() {
                     }
                 }
 
-                // If content/partner mentions Baekje Galbi, bond to Baekje Galbi
-                if (partner.includes('백제갈비') || title.includes('백제갈비')) {
-                    reportMerchantId = '1794710386';
-                    reportStoreName = '백제갈비';
-                }
-
                 const reportPayload = {
                     type,
                     category,
@@ -940,19 +969,19 @@ function initMeetingReportModal() {
                     meetingDate: date,
                     attendees: attendees,
                     followUp: followUp,
-                    photos: selectedPhotosBase64,
-                    teamId: teamId || currentUserInfo.teamId || 'SALES',
+                    photos: selectedPhotosBase64 || [],
+                    teamId: safeTeam,
                     merchantId: String(reportMerchantId),
                     tenantId: String(reportMerchantId),
                     storeName: reportStoreName,
-                    assignedTo: currentUserInfo.email,
-                    assigneeName: currentUserInfo.name || currentUserInfo.email,
+                    assignedTo: safeEmail,
+                    assigneeName: safeName,
                     dueDate: date,
                     priority: type === 'ISSUE' ? 'URGENT' : (isMeeting ? 'HIGH' : 'NORMAL'),
                     parentTaskId: relatedTaskId || null,
-                    createdBy: currentUserInfo.uid,
-                    creatorName: currentUserInfo.name || currentUserInfo.email,
-                    creatorEmail: currentUserInfo.email,
+                    createdBy: safeUid,
+                    creatorName: safeName,
+                    creatorEmail: safeEmail,
                     progress: 100,
                     status: 'COMPLETED'
                 };
@@ -961,31 +990,33 @@ function initMeetingReportModal() {
                 const newTaskId = await createTask(reportPayload);
 
                 // 2. Log Action
-                await logTaskAction(newTaskId, currentUserInfo.uid, 'REPORT', null, `${isMeeting ? '외부 미팅' : '업무'} 보고서 등록: ${title}`);
+                await logTaskAction(newTaskId, safeUid, 'REPORT', '', `${isMeeting ? '외부 미팅' : '업무'} 보고서 등록: ${title}`);
 
                 // 3. If tied to related task, also append to that task's reports
                 if (relatedTaskId) {
                     await submitTaskReport(relatedTaskId, {
                         content: `[${isMeeting ? '외부 미팅 결과' : '업무보고 연계'}] ${title}\n• 대상: ${partner || '-'}\n• 장소: ${location || '-'}\n• 내용: ${content}\n• 후속과제: ${followUp || '-'}`,
                         progress: 100,
-                        submittedBy: currentUserInfo.uid,
-                        submittedByName: currentUserInfo.name || currentUserInfo.email
+                        submittedBy: safeUid,
+                        submittedByName: safeName
                     });
                 }
 
                 alert("✅ 외부 미팅 및 업무 보고서가 성공적으로 등록되었습니다. CEO 및 팀장에게 실시간 공유됩니다.");
                 closeMeetingReportModal();
-                form.reset();
+                if (form) form.reset();
                 selectedPhotosBase64 = [];
                 renderPhotoPreviews();
             } catch (err) {
                 console.error("보고서 등록 에러:", err);
                 alert("보고서 등록 중 오류가 발생했습니다: " + err.message);
             } finally {
-                btnSubmit.disabled = false;
-                btnSubmit.innerHTML = '<span>✓</span> 보고서 제출하기';
+                if (btnSubmit) {
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = '<span>✓</span> 보고서 제출하기';
+                }
             }
-        });
+        };
     }
 }
 
@@ -1154,35 +1185,46 @@ function showTaskForm(parentTaskId = '', initialAssignee = null) {
         }
     });
 
-    document.getElementById('btnCancelForm').addEventListener('click', () => {
-        detailContainer.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; height:100%; color:#94a3b8;">취소되었습니다.</div>`;
-    });
+    const btnCancel = document.getElementById('btnCancelForm');
+    if (btnCancel) {
+        btnCancel.onclick = () => {
+            detailContainer.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; height:100%; color:#94a3b8;">취소되었습니다.</div>`;
+        };
+    }
 
-    form.addEventListener('submit', async (e) => {
+    form.onsubmit = async (e) => {
         e.preventDefault();
 
-        let assignedTo = assigneeSelect.value;
+        let assignedTo = assigneeSelect.value || '';
         let assigneeName = '';
-        if (assignedTo) {
-            assigneeName = assigneeSelect.options[assigneeSelect.selectedIndex].dataset.name;
+        if (assignedTo && assigneeSelect.selectedIndex >= 0) {
+            assigneeName = assigneeSelect.options[assigneeSelect.selectedIndex]?.dataset.name || assignedTo;
         } else {
             assigneeName = '해당 없음 (일괄배정)';
         }
 
+        const safeUid = currentUserInfo?.uid || auth.currentUser?.uid || 'anonymous';
+        const safeEmail = currentUserInfo?.email || auth.currentUser?.email || '';
+        const safeName = currentUserInfo?.name || currentUserInfo?.displayName || auth.currentUser?.displayName || (safeEmail ? safeEmail.split('@')[0] : '직원');
+        const myMerchantId = getMyMerchantId();
+
         const taskData = {
             type: 'TASK',
             category: 'GENERAL_TASK',
-            title: document.getElementById('taskTitle').value,
-            description: document.getElementById('taskDesc').value,
-            teamId: document.getElementById('taskTeam').value,
+            title: document.getElementById('taskTitle')?.value || '',
+            description: document.getElementById('taskDesc')?.value || '',
+            teamId: document.getElementById('taskTeam')?.value || 'SALES',
             assignedTo: assignedTo,
             assigneeName: assigneeName,
-            dueDate: document.getElementById('taskDueDate').value,
-            priority: document.getElementById('taskPriority').value,
-            parentTaskId: document.getElementById('taskParentId').value || null,
-            createdBy: currentUserInfo.uid,
-            creatorName: currentUserInfo.name || currentUserInfo.email,
-            creatorEmail: currentUserInfo.email,
+            dueDate: document.getElementById('taskDueDate')?.value || '',
+            priority: document.getElementById('taskPriority')?.value || 'NORMAL',
+            parentTaskId: document.getElementById('taskParentId')?.value || null,
+            merchantId: String(myMerchantId),
+            tenantId: String(myMerchantId),
+            storeName: window.currentStoreName || 'BEST WINNER',
+            createdBy: safeUid,
+            creatorName: safeName,
+            creatorEmail: safeEmail,
             progress: 0,
             status: 'PENDING'
         };
@@ -1195,5 +1237,5 @@ function showTaskForm(parentTaskId = '', initialAssignee = null) {
             console.error(err);
             alert("처리 중 오류가 발생했습니다: " + err.message);
         }
-    });
+    };
 }

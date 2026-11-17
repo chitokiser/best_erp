@@ -9,13 +9,13 @@ export const createTask = async (taskData) => {
         const docRef = await addDoc(collection(db, 'tasks'), {
             ...taskData,
             status: taskData.status || 'PENDING',
-            progress: 0,
+            progress: (taskData.progress !== undefined) ? taskData.progress : 0,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
         });
 
         // 타임라인 로그 기록
-        await logTaskAction(docRef.id, taskData.createdBy, 'CREATE', null, 'Task Created');
+        await logTaskAction(docRef.id, taskData.createdBy || '', 'CREATE', '', 'Task Created');
 
         return docRef.id;
     } catch (error) {
@@ -64,7 +64,7 @@ export const updateTask = async (taskId, userId, updates) => {
         await updateDoc(taskRef, updates);
 
         // 로그 기록
-        await logTaskAction(taskId, userId, 'UPDATE', null, JSON.stringify(updates));
+        await logTaskAction(taskId, userId || '', 'UPDATE', '', JSON.stringify(updates));
 
         return true;
     } catch (error) {
@@ -79,6 +79,8 @@ export const submitTaskReport = async (taskId, reportData) => {
         await addDoc(collection(db, 'task_reports'), {
             ...reportData,
             taskId,
+            submittedBy: reportData.submittedBy || '',
+            submittedByName: reportData.submittedByName || '직원',
             createdAt: serverTimestamp()
         });
 
@@ -102,9 +104,9 @@ export const submitTaskReport = async (taskId, reportData) => {
 export const logTaskAction = async (taskId, userId, action, prevValue, newValue) => {
     try {
         await addDoc(collection(db, 'task_logs'), {
-            taskId,
-            userId,
-            action,
+            taskId: taskId || '',
+            userId: userId || '',
+            action: action || '',
             previousValue: prevValue || '',
             newValue: newValue || '',
             createdAt: serverTimestamp()
