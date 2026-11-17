@@ -15,6 +15,16 @@ let selectedPhotosBase64 = [];
 let editingTaskId = null;
 let activeTaskId = null;
 
+function getIsSuperAdmin() {
+    if (!currentUserInfo) return (window.currentUserRole === 'SUPER_ADMIN') || (window.tenantId === 'system_master');
+    return (currentUserInfo.email === 'daguri75@gmail.com') || (currentUserInfo.role === 'SUPER_ADMIN') || (window.tenantId === 'system_master');
+}
+
+function getMyMerchantId() {
+    if (!currentUserInfo) return String(window.tenantId || '1791605366');
+    return String(currentUserInfo.merchantId || window.tenantId || '1791605366').trim();
+}
+
 const taskListContainer = document.getElementById('taskListContainer');
 const detailContainer = document.getElementById('taskDetailContainer');
 const tplTaskForm = document.getElementById('tplTaskForm');
@@ -900,12 +910,15 @@ function initMeetingReportModal() {
                 }
 
                 // Determine Franchise Merchant ID
+                const isSuperAdmin = getIsSuperAdmin();
+                const myMerchantId = getMyMerchantId();
+
                 let reportMerchantId = myMerchantId || '1791605366';
                 let reportStoreName = window.currentStoreName || 'BEST WINNER';
 
                 if (isSuperAdmin) {
                     const mSelect = document.getElementById('mReportMerchant');
-                    if (mSelect) {
+                    if (mSelect && mSelect.value) {
                         reportMerchantId = mSelect.value;
                         reportStoreName = mSelect.options[mSelect.selectedIndex]?.dataset.name || '본사';
                     }
