@@ -302,6 +302,25 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                     return;
                 }
 
+                // Synchronize franchise URL slug
+                const SLUG_MAP = {
+                    '1794710386': 'baekje',
+                    '1791605366': 'bestwinner',
+                    '1791002036': 'daehankimchi',
+                    '1793671043': 'bestmario',
+                    '1793776651': 'sunvietnam'
+                };
+                const storeSlug = SLUG_MAP[window.tenantId] || window.tenantId;
+                if (storeSlug && userEmailLower !== 'daguri75@gmail.com') {
+                    try {
+                        const url = new URL(window.location.href);
+                        if (url.searchParams.get('store') !== storeSlug) {
+                            url.searchParams.set('store', storeSlug);
+                            window.history.replaceState({}, '', url.toString());
+                        }
+                    } catch (e) {}
+                }
+
                 if (onAuthSuccess) onAuthSuccess(user);
 
                 // Globally enhance the user badge in the navbar on all admin pages

@@ -1,8 +1,9 @@
 import { auth, db } from '../firebase-config.js';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, query, where, orderBy, onSnapshot, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { createTask, createSubTask, updateTask, submitTaskReport, logTaskAction, addTaskComment } from '../task-manager.js';
 import { checkAdminAuth } from '../auth.js';
+import { getCurrentStoreInfo, getStoreSubcollection, getStoreDocRef, syncUrlStoreSlug, TENANT_MAP } from '../tenant-router.js';
 
 let currentUserInfo = null;
 let allTasks = [];
@@ -194,14 +195,82 @@ function initTaskBoard() {
     const isSuperAdmin = getIsSuperAdmin();
     const myMerchantId = getMyMerchantId();
 
+    let unsubscribeTasks = null;
+
+    function subscribeToStoreTasks(targetStoreId) {
+        if (unsubscribeTasks) {
+            unsubscribeTasks();
+            unsubscribeTasks = null;
+        }
+
+        const sInfo = getCurrentStoreInfo();
+        const effectiveStoreId = (isSuperAdmin && targetStoreId && targetStoreId !== 'ALL') ? String(targetStoreId) : sInfo.storeId;
+
+        const currentSlug = TENANT_MAP[effectiveStoreId]?.slug || effectiveStoreId;
+        syncUrlStoreSlug(currentSlug);
+
+        const storeTasksRef = getStoreSubcollection('tasks', effectiveStoreId);
+
+        // Auto-migrate legacy Best Winner tasks if storeTasksRef is empty
+        if (effectiveStoreId === '1791605366') {
+            getDocs(storeTasksRef).then(async (snap) => {
+                if (snap.empty) {
+                    try {
+                        const legacySnap = await getDocs(collection(db, 'tasks'));
+                        legacySnap.forEach(async (lDoc) => {
+                            const ld = lDoc.data();
+                            const isBW = ld.merchantId === '1791605366' || ld.tenantId === '1791605366' || (!ld.merchantId && !String(ld.title||'').includes('백제갈비') && !String(ld.title||'').includes('대한김치'));
+                            if (isBW) {
+                                await setDoc(doc(storeTasksRef, lDoc.id), {
+                                    ...ld,
+                                    merchantId: '1791605366',
+                                    tenantId: '1791605366',
+                                    storeName: 'BEST WINNER'
+                                }, { merge: true });
+                            }
+                        });
+                    } catch (migErr) {
+                        console.warn("Tasks auto-migration notice:", migErr);
+                    }
+                }
+            }).catch(() => {});
+        }
+
+        unsubscribeTasks = onSnapshot(storeTasksRef, (snapshot) => {
+            allTasks = [];
+            snapshot.forEach(docSnap => {
+                allTasks.push({ id: docSnap.id, ...docSnap.data() });
+            });
+
+            // Sort descending by createdAt
+            allTasks.sort((a, b) => {
+                let t1 = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
+                let t2 = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
+                return t2 - t1;
+            });
+
+            populateRelatedTasksSelect();
+            applyFiltersAndRender();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const taskIdParam = urlParams.get('taskId') || urlParams.get('id');
+            if (taskIdParam && !activeTaskId) {
+                showTaskDetail(taskIdParam);
+            }
+        }, (err) => {
+            console.error("Store tasks subscription error:", err);
+        });
+    }
+
     // Setup Super Admin Merchant Filter
     const filterMerchant = document.getElementById('filterMerchant');
     if (filterMerchant) {
         if (isSuperAdmin) {
             filterMerchant.style.display = 'inline-block';
+            filterMerchant.value = getCurrentStoreInfo().storeId;
             filterMerchant.addEventListener('change', (e) => {
                 currentFilterMerchant = e.target.value;
-                applyFiltersAndRender();
+                subscribeToStoreTasks(e.target.value);
             });
         } else {
             filterMerchant.style.display = 'none';
@@ -214,95 +283,8 @@ function initTaskBoard() {
         mWrap.style.display = isSuperAdmin ? 'block' : 'none';
     }
 
-    // Realtime Listener for Tasks
-    const q = collection(db, 'tasks');
-
-    onSnapshot(q, (snapshot) => {
-        allTasks = [];
-        snapshot.forEach(docSnap => {
-            const d = docSnap.data();
-            const creator = (d.creatorEmail || '').toLowerCase().trim();
-            const assignee = (d.assignedTo || '').toLowerCase().trim();
-
-            // Auto-heal tasks created by or assigned to store members
-            if (creator === 'caterwilliam55@gmail.com' || assignee === 'caterwilliam55@gmail.com' || creator === 'hexttokenopbnb@gmail.com') {
-                if (d.merchantId !== '1791605366' || d.tenantId !== '1791605366' || d.storeName !== 'BEST WINNER') {
-                    d.merchantId = '1791605366';
-                    d.tenantId = '1791605366';
-                    d.storeName = 'BEST WINNER';
-                    updateDoc(doc(db, 'tasks', docSnap.id), {
-                        merchantId: '1791605366',
-                        tenantId: '1791605366',
-                        storeName: 'BEST WINNER'
-                    }).catch(() => {});
-                }
-            } else if (creator === 'bestwinner167@gmail.com' || assignee === 'bestwinner167@gmail.com') {
-                if (d.merchantId !== '1794710386' || d.tenantId !== '1794710386' || d.storeName !== '백제갈비') {
-                    d.merchantId = '1794710386';
-                    d.tenantId = '1794710386';
-                    d.storeName = '백제갈비';
-                    updateDoc(doc(db, 'tasks', docSnap.id), {
-                        merchantId: '1794710386',
-                        tenantId: '1794710386',
-                        storeName: '백제갈비'
-                    }).catch(() => {});
-                }
-            } else if (!d.merchantId && !d.tenantId) {
-                const combined = `${d.title || ''} ${d.meetingPartner || ''} ${d.description || ''}`;
-                if (combined.includes('백제갈비') && !combined.includes('베스트위너')) {
-                    d.merchantId = '1794710386';
-                    d.tenantId = '1794710386';
-                    d.storeName = '백제갈비';
-                    updateDoc(doc(db, 'tasks', docSnap.id), { merchantId: '1794710386', tenantId: '1794710386', storeName: '백제갈비' }).catch(() => {});
-                } else {
-                    d.merchantId = '1791605366';
-                    d.tenantId = '1791605366';
-                    d.storeName = 'BEST WINNER';
-                    updateDoc(doc(db, 'tasks', docSnap.id), { merchantId: '1791605366', tenantId: '1791605366', storeName: 'BEST WINNER' }).catch(() => {});
-                }
-            }
-            allTasks.push({ id: docSnap.id, ...d });
-        });
-
-        // Sort descending by createdAt
-        allTasks.sort((a, b) => {
-            let t1 = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
-            let t2 = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
-            return t2 - t1;
-        });
-
-        // Update related tasks dropdown in meeting report modal
-        populateRelatedTasksSelect();
-
-        applyFiltersAndRender();
-
-        // Auto-select task if URL has taskId parameter
-        if (taskIdParam && !activeTaskId) {
-            const foundTask = allTasks.find(t => t.id === taskIdParam);
-            if (foundTask) {
-                activeTaskId = foundTask.id;
-                showTaskDetail(foundTask.id, foundTask, true);
-            } else {
-                getDoc(doc(db, 'tasks', taskIdParam)).then(dSnap => {
-                    if (dSnap.exists()) {
-                        const directTask = { id: dSnap.id, ...dSnap.data() };
-                        activeTaskId = directTask.id;
-                        showTaskDetail(directTask.id, directTask, true);
-                    }
-                }).catch(err => console.warn("Failed to load deep-linked task:", err));
-            }
-        }
-
-        // Refresh detail view if currently open
-        if (activeTaskId) {
-            const currentItem = allTasks.find(t => t.id === activeTaskId);
-            if (currentItem) {
-                showTaskDetail(currentItem.id, currentItem, false);
-            }
-        }
-    }, (error) => {
-        console.error("Firestore tasks onSnapshot error:", error);
-    });
+    // Initial subscription to the store's dedicated tasks table
+    subscribeToStoreTasks(getCurrentStoreInfo().storeId);
 }
 
 function populateRelatedTasksSelect() {
@@ -685,7 +667,9 @@ function showTaskDetail(taskId, data, shouldScroll = true) {
         btnDelete.onclick = async () => {
             if (confirm(`정말로 이 보고서/업무 [${data.title}]을(를) 삭제하시겠습니까?`)) {
                 try {
-                    await deleteDoc(doc(db, 'tasks', taskId));
+                    const sId = getMyMerchantId();
+                    try { await deleteDoc(getStoreDocRef('tasks', taskId, sId)); } catch (e) {}
+                    try { await deleteDoc(doc(db, 'tasks', taskId)); } catch (e) {}
                     alert("성공적으로 삭제되었습니다.");
                     activeTaskId = null;
                     detailContainer.innerHTML = '<div style="display:flex; justify-content:center; align-items:center; height:100%; color:#94a3b8;">삭제되었습니다. 다른 업무 또는 보고서를 선택하세요.</div>';
@@ -1028,7 +1012,8 @@ function initMeetingReportModal() {
 
                 if (editingTaskId) {
                     // Update / Refine existing report
-                    await updateDoc(doc(db, 'tasks', editingTaskId), {
+                    const sId = getMyMerchantId();
+                    const reportUpdates = {
                         type,
                         category,
                         title,
@@ -1044,9 +1029,11 @@ function initMeetingReportModal() {
                         photos: selectedPhotosBase64 || [],
                         updatedAt: serverTimestamp(),
                         lastModifiedByName: safeName
-                    });
+                    };
+                    try { await updateDoc(getStoreDocRef('tasks', editingTaskId, sId), reportUpdates); } catch (e) {}
+                    try { await updateDoc(doc(db, 'tasks', editingTaskId), reportUpdates); } catch (e) {}
 
-                    await logTaskAction(editingTaskId, safeUid, 'UPDATE', '', `보고서 수정보완 완료 (${safeName})`);
+                    await logTaskAction(editingTaskId, safeUid, 'UPDATE', '', `보고서 수정보완 완료 (${safeName})`, sId);
 
                     alert("✅ 보고서가 성공적으로 수정보완되었습니다.");
                     closeMeetingReportModal();

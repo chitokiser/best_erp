@@ -1,12 +1,13 @@
 import { db, storage } from '../assets/js/firebase-config.js';
-import { collection, addDoc, doc, updateDoc, getDoc, getDocs, query, where, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, getDoc, getDocs, query, where, serverTimestamp, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { auth } from '../assets/js/firebase-config.js'; // to get currentUser 
+import { auth } from '../assets/js/firebase-config.js';
+import { getCurrentStoreInfo, getStoreSubcollection, getStoreDocRef } from '../assets/js/tenant-router.js';
 
 const COLLECTION_NAME = 'materials';
 const HISTORY_COLLECTION = 'priceHistory';
 
-export const createMaterial = async (materialData, imageFiles) => {
+export const createMaterial = async (materialData, imageFiles, explicitStoreId) => {
     try {
         const currentUser = auth.currentUser;
         if (!currentUser) throw new Error("Unauthorized");
@@ -22,8 +23,9 @@ export const createMaterial = async (materialData, imageFiles) => {
             imageUrls = imageUrls.concat(uploadedUrls);
         }
 
-        const curTenant = materialData.tenantId || window.tenantId || '1791605366';
-        const curStore = materialData.storeName || window.currentStoreName || 'BEST WINNER';
+        const storeInfo = getCurrentStoreInfo();
+        const curTenant = explicitStoreId || materialData.tenantId || window.tenantId || storeInfo.storeId;
+        const curStore = materialData.storeName || window.currentStoreName || storeInfo.name;
 
         const newMaterial = {
             ...materialData,
@@ -39,7 +41,14 @@ export const createMaterial = async (materialData, imageFiles) => {
             updatedBy: currentUser.uid
         };
 
-        const docRef = await addDoc(collection(db, COLLECTION_NAME), newMaterial);
+        // 1. Save to store dedicated table: merchants/{curTenant}/materials
+        const storeMatRef = getStoreSubcollection('materials', curTenant);
+        const docRef = await addDoc(storeMatRef, newMaterial);
+
+        // 2. Mirror to root collection for backwards compatibility
+        try {
+            await setDoc(doc(db, COLLECTION_NAME, docRef.id), newMaterial);
+        } catch (e) {}
 
         // Record initial price history if available
         if (materialData.ourPurchasePrice) {
@@ -55,15 +64,38 @@ export const createMaterial = async (materialData, imageFiles) => {
 
 export const getAllMaterials = async (filterTenantId) => {
     try {
-        const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
-        const materials = [];
-        querySnapshot.forEach((doc) => {
-            const d = doc.data();
-            if (filterTenantId && filterTenantId !== 'ALL') {
-                const mTenant = String(d.tenantId || d.merchantId || '').trim();
-                if (mTenant && mTenant !== filterTenantId) return;
+        const storeInfo = getCurrentStoreInfo();
+        const curStoreId = (filterTenantId && filterTenantId !== 'ALL') ? String(filterTenantId) : storeInfo.storeId;
+
+        // 1. Query dedicated store subcollection
+        const storeMatRef = getStoreSubcollection('materials', curStoreId);
+        let querySnapshot = await getDocs(storeMatRef);
+
+        // One-time auto-migration for Best Winner legacy materials if empty
+        if (curStoreId === '1791605366' && querySnapshot.empty) {
+            try {
+                const legacySnap = await getDocs(collection(db, COLLECTION_NAME));
+                for (const lDoc of legacySnap.docs) {
+                    const ld = lDoc.data();
+                    const isBW = ld.tenantId === '1791605366' || ld.merchantId === '1791605366' || (!ld.tenantId && !String(ld.name||'').includes('김치') && !String(ld.name||'').includes('갈비'));
+                    if (isBW) {
+                        await setDoc(doc(storeMatRef, lDoc.id), {
+                            ...ld,
+                            tenantId: '1791605366',
+                            merchantId: '1791605366',
+                            storeName: 'BEST WINNER'
+                        }, { merge: true });
+                    }
+                }
+                querySnapshot = await getDocs(storeMatRef);
+            } catch (migErr) {
+                console.warn("Materials legacy migration note:", migErr);
             }
-            materials.push({ id: doc.id, ...d });
+        }
+
+        const materials = [];
+        querySnapshot.forEach((docSnap) => {
+            materials.push({ id: docSnap.id, ...docSnap.data() });
         });
         return materials;
     } catch (error) {
@@ -72,15 +104,21 @@ export const getAllMaterials = async (filterTenantId) => {
     }
 };
 
-export const getMaterialById = async (id) => {
+export const getMaterialById = async (id, explicitStoreId) => {
     try {
-        const docRef = doc(db, COLLECTION_NAME, id);
-        const docSnap = await getDoc(docRef);
+        const storeInfo = getCurrentStoreInfo();
+        const curStoreId = explicitStoreId || storeInfo.storeId;
+        const storeDocRef = getStoreDocRef('materials', id, curStoreId);
+        const docSnap = await getDoc(storeDocRef);
         if (docSnap.exists()) {
             return { id: docSnap.id, ...docSnap.data() };
-        } else {
-            return null;
         }
+        // Fallback to root collection
+        const rootSnap = await getDoc(doc(db, COLLECTION_NAME, id));
+        if (rootSnap.exists()) {
+            return { id: rootSnap.id, ...rootSnap.data() };
+        }
+        return null;
     } catch (error) {
         console.error("Error getting material: ", error);
         throw error;
@@ -98,11 +136,7 @@ const uploadMaterialImages = async (files, materialId) => {
     return urls;
 };
 
-// [가격 비교를 위한 확장 API]
-// 실제 외부 API 연동 전까지 Mock(가상 데이터)을 반환하거나 externalPrices 컬렉션을 바라보게 합니다.
 export const getExternalPrices = async (materialId) => {
-    // 향후 Firestore 'externalPrices' 컬렉션에서 가져오도록 수정
-    // 현재는 플랫폼 시연을 위해 Mock Data 반환
     return [
         { source: "BXD (공공가격)", price: 850000, type: "PUBLIC" },
         { source: "Vatgia (시장가격)", price: 820000, type: "MARKET" }
@@ -110,7 +144,6 @@ export const getExternalPrices = async (materialId) => {
 };
 
 export const getSupplierPrices = async (materialId) => {
-    // 향후 자재-공급업체 연결 브릿지 테이블이나 Array 필드에서 동적으로 계산
     return [
         { supplierName: "ABC Stone", price: 780000 },
         { supplierName: "XYZ Stone", price: 800000 },

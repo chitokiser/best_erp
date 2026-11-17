@@ -4,25 +4,14 @@ import { collection, doc, setDoc, getDocs, addDoc, serverTimestamp, query, order
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { scanReceiptAI } from './aiApi.js';
 
+import { getCurrentStoreInfo, getStoreSubcollection, getStoreDocRef } from './tenant-router.js';
+
 function getCurrentStoreId() {
-    const isSuper = (window.currentUserRole === 'SUPER_ADMIN') || (auth.currentUser?.email === 'daguri75@gmail.com') || (window.tenantId === 'system_master');
-    const filterSelect = document.getElementById('filterMerchant');
-    if (isSuper && filterSelect && filterSelect.value && filterSelect.value !== 'ALL') {
-        return filterSelect.value;
-    }
-    const myTenant = String(window.tenantId || '').trim();
-    if (myTenant && myTenant !== 'system_master' && myTenant !== 'undefined' && myTenant !== 'null') {
-        return myTenant;
-    }
-    if ((auth.currentUser?.email || '').toLowerCase().trim() === 'bestwinner167@gmail.com') {
-        return '1794710386'; // 백제갈비
-    }
-    return '1791605366'; // 기본 베스트위너
+    return getCurrentStoreInfo().storeId;
 }
 
 function getStoreFinanceCollection(storeId) {
-    const sId = storeId || getCurrentStoreId();
-    return collection(db, 'merchants', sId, 'financeRecords');
+    return getStoreSubcollection('financeRecords', storeId);
 }
 
 const modal = document.getElementById('financeModal');

@@ -807,13 +807,13 @@
                     if (isSuperAdmin) {
                         filterMerchant.style.display = 'inline-block';
                         filterMerchant.addEventListener('change', () => {
-                            if (window.applyMaterialFilters) window.applyMaterialFilters();
+                            if (window.loadMaterials) window.loadMaterials();
                         });
                     } else {
                         filterMerchant.style.display = 'none';
                     }
                 }
-                if (window.applyMaterialFilters) window.applyMaterialFilters();
+                if (window.loadMaterials) window.loadMaterials();
             },
             () => {
                 const current = window.location.pathname + window.location.search;

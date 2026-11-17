@@ -357,8 +357,20 @@ service cloud.firestore {
                   && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.merchantId == merchantId)
             ));
 
-      // Separate DB Table per Store for Finance Records
+      // Dedicated DB Tables per Store for Finance, Tasks, Materials, Employees, etc.
       match /financeRecords/{docId} {
+        allow read, write: if isSuperAdmin() || belongsToTenant(merchantId);
+      }
+      match /tasks/{docId} {
+        allow read, write: if isSuperAdmin() || belongsToTenant(merchantId);
+      }
+      match /materials/{docId} {
+        allow read, write: if isSuperAdmin() || belongsToTenant(merchantId);
+      }
+      match /employees/{docId} {
+        allow read, write: if isSuperAdmin() || belongsToTenant(merchantId);
+      }
+      match /{subCollection}/{docId} {
         allow read, write: if isSuperAdmin() || belongsToTenant(merchantId);
       }
     }
@@ -802,6 +814,12 @@ service cloud.firestore {
       allow write: if isCEO() || isStaff() || belongsToTenant(storeId);
 
       match /financeRecords/{docId} {
+        allow read, write: if isSuperAdmin() || belongsToTenant(storeId);
+      }
+      match /tasks/{docId} {
+        allow read, write: if isSuperAdmin() || belongsToTenant(storeId);
+      }
+      match /{subCollection}/{docId} {
         allow read, write: if isSuperAdmin() || belongsToTenant(storeId);
       }
     }
