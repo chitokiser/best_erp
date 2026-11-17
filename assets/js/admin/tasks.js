@@ -44,7 +44,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Auth State Changed
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
-            window.location.href = '../login.html';
+            const redirectUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            window.location.href = '../login.html?redirect=' + redirectUrl;
             return;
         }
 
@@ -98,6 +99,8 @@ document.addEventListener('DOMContentLoaded', () => {
 function initTaskBoard() {
     const urlParams = new URLSearchParams(window.location.search);
     const assigneeParam = urlParams.get('assignee');
+    const taskIdParam = urlParams.get('taskId') || urlParams.get('id');
+
     if (assigneeParam) {
         setTimeout(() => showTaskForm('', assigneeParam), 500);
     }
@@ -212,6 +215,23 @@ function initTaskBoard() {
         populateRelatedTasksSelect();
 
         applyFiltersAndRender();
+
+        // Auto-select task if URL has taskId parameter
+        if (taskIdParam && !activeTaskId) {
+            const foundTask = allTasks.find(t => t.id === taskIdParam);
+            if (foundTask) {
+                activeTaskId = foundTask.id;
+                showTaskDetail(foundTask.id, foundTask, true);
+            } else {
+                getDoc(doc(db, 'tasks', taskIdParam)).then(dSnap => {
+                    if (dSnap.exists()) {
+                        const directTask = { id: dSnap.id, ...dSnap.data() };
+                        activeTaskId = directTask.id;
+                        showTaskDetail(directTask.id, directTask, true);
+                    }
+                }).catch(err => console.warn("Failed to load deep-linked task:", err));
+            }
+        }
 
         // Refresh detail view if currently open
         if (activeTaskId) {
@@ -558,6 +578,28 @@ function showTaskDetail(taskId, data, shouldScroll = true) {
     const isAuthor = (userUid && userUid === data.createdBy) ||
                      (userEmailLower && data.creatorEmail && userEmailLower === data.creatorEmail.toLowerCase()) ||
                      (userEmailLower && data.assignedTo && userEmailLower === data.assignedTo.toLowerCase());
+
+    // Configure External Share URL Button
+    const btnShare = document.getElementById('btnShareTaskOrReport');
+    if (btnShare) {
+        btnShare.onclick = () => {
+            const shareUrl = `${window.location.origin}/admin/tasks.html?taskId=${taskId}`;
+            const isStoreBestWinner = (data.merchantId === '1791605366' || data.storeName === 'BEST WINNER' || getMyMerchantId() === '1791605366');
+            const storeName = isStoreBestWinner ? '베스트위너' : (data.storeName || '가맹점');
+
+            const copySuccess = () => {
+                alert(`📋 [보고서 외부 공유 URL 복사 완료]\n\n• 공유 URL:\n${shareUrl}\n\n• 외부인 열람 절차 안내:\n1. 위 URL을 외부인(열람 대상자)에게 전달합니다.\n2. 외부인은 링크 접속 후 [회원가입]을 진행합니다.\n3. ${storeName} 가맹점 대표님께서 [직원 관리] 메뉴에서 해당 외부인의 이메일을 직원으로 등록/승인합니다.\n4. 승인 후 외부인이 다시 로그인하면 본 보고서(${data.title})를 즉시 열람할 수 있습니다.`);
+            };
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(shareUrl).then(copySuccess).catch(() => {
+                    prompt('아래 공유 URL을 복사하여 외부인에게 전달하세요:', shareUrl);
+                });
+            } else {
+                prompt('아래 공유 URL을 복사하여 외부인에게 전달하세요:', shareUrl);
+            }
+        };
+    }
 
     // Configure Edit & Delete Buttons for Author or Managers
     const btnEdit = document.getElementById('btnEditTaskOrReport');

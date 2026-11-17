@@ -287,15 +287,16 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                 if (!isMerchant && !allowedRoles.includes(role) && userEmailLower !== 'daguri75@gmail.com') {
                     await signOut(auth);
                     const d = (snap && snap.exists()) ? snap.data() : {};
-                    let errMsg = 'ERP 시스템 접근 권한이 없습니다. (가맹 승인 또는 직원 등록 필요)';
+                    let errMsg = '가맹점 대표님의 직원 등록/승인 대기 중입니다. 대표님(가맹점주)께서 직원 등록을 완료해주시면 보고서를 열람할 수 있습니다.';
                     if (d.status === 'pending' || d.status === '대기중' || d.role === 'FRANCHISE' || d.role === 'franchise' || d.is_merchant_applicant) {
-                        errMsg = '승인 대기 중인 계정입니다. 심사 후 이용 가능합니다.';
+                        errMsg = '가맹점 대표님의 승인 대기 중인 계정입니다. 대표님께서 직원으로 등록해주시면 보고서를 열람할 수 있습니다.';
                     }
                     if (onAuthFail) {
                         onAuthFail(errMsg);
                     } else if (window.location.pathname.includes('/admin/')) {
+                        const redirectUrl = encodeURIComponent(window.location.pathname + window.location.search);
                         alert(errMsg);
-                        window.location.href = '../login.html';
+                        window.location.href = '../login.html?redirect=' + redirectUrl;
                     }
                     return;
                 }

@@ -528,8 +528,11 @@
                     <div style="font-size:0.8rem; color:#64748b;" id="dtlDateLabel">마감 기한</div>
                     <div id="dtlDueDate" style="font-weight:600; color:#b91c1c;"></div>
                 </div>
-                <!-- Action Buttons: Edit & Delete -->
-                <div style="display:flex; gap:0.35rem; margin-top:0.25rem;">
+                <!-- Action Buttons: Share, Edit & Delete -->
+                <div style="display:flex; gap:0.35rem; margin-top:0.25rem; flex-wrap:wrap; justify-content:flex-end;">
+                    <button id="btnShareTaskOrReport" style="background:#0284c7; color:white; border:none; padding:0.45rem 0.85rem; border-radius:6px; font-size:0.82rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 2px 4px rgba(2,132,199,0.25);" title="외부인 열람용 공유 링크 복사">
+                        <span>🔗</span> 외부 공유 URL 생성/복사
+                    </button>
                     <button id="btnEditTaskOrReport" style="display:none; background:#4F46E5; color:white; border:none; padding:0.45rem 0.85rem; border-radius:6px; font-size:0.82rem; font-weight:700; cursor:pointer; align-items:center; gap:0.35rem; box-shadow:0 2px 4px rgba(79,70,229,0.25);">
                         <span>✏️</span> 보고서 수정보완
                     </button>

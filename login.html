@@ -131,6 +131,7 @@
             try {
                 if (mode === 'register') {
                     await registerUser(email, password, name);
+                    alert(`🎉 회원가입이 완료되었습니다!\n\n가맹점 대표님(점주)께서 [직원 관리] 메뉴에서 회원님의 이메일(${email})을 직원으로 등록/승인해주시면 해당 보고서를 바로 확인하실 수 있습니다.`);
                 } else {
                     await loginAdmin(email, password);
                 }
