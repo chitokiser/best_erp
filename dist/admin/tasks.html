@@ -6,10 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI-ERM 업무 지시 및 관리 (CEO / 팀장)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>.board-container{grid-template-columns:1fr 2fr;gap:2rem;max-width:1400px;margin:2rem auto;padding:0 1.5rem;display:grid}.task-list,.task-detail{background:#fff;border:1px solid #e2e8f0;border-radius:12px;min-height:500px;padding:1.5rem;box-shadow:0 4px 6px -1px #0000000d}.task-item{cursor:pointer;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:1rem;padding:1rem;transition:all .2s}.task-item:hover{border-color:var(--ai-primary);box-shadow:0 2px 4px #0000000d}.task-item.overdue{background:#fef2f2;border-color:#ef4444}.priority-badge{color:#fff;border-radius:12px;padding:.2rem .5rem;font-size:.75rem;font-weight:600}.pri-HIGH,.pri-URGENT{background:#ef4444}.pri-NORMAL{background:#3b82f6}.pri-LOW{background:#10b981}.status-badge{border-radius:12px;padding:.2rem .5rem;font-size:.75rem;font-weight:600}.stat-PENDING{color:#475569;background:#f1f5f9}.stat-ACCEPTED{color:#4f46e5;background:#e0e7ff}.stat-IN_PROGRESS{color:#b45309;background:#fef3c7}.stat-COMPLETED{color:#047857;background:#d1fae5}.stat-OVERDUE{color:#b91c1c;background:#fee2e2}.form-group{margin-bottom:1rem}.form-group label{margin-bottom:.5rem;font-size:.9rem;font-weight:600;display:block}.form-group input,.form-group select,.form-group textarea{border:1px solid #cbd5e1;border-radius:8px;width:100%;padding:.75rem;font-family:inherit}.header-actions{border-bottom:2px solid #f1f5f9;justify-content:space-between;align-items:center;margin-bottom:1.5rem;padding-bottom:1rem;display:flex}.timeline{padding-left:1.5rem;position:relative}.timeline:before{content:"";background:#e2e8f0;width:2px;position:absolute;top:0;bottom:0;left:0}.timeline-item{margin-bottom:1rem;position:relative}.timeline-item:before{content:"";background:var(--ai-primary);border:2px solid #fff;border-radius:50%;width:12px;height:12px;position:absolute;top:.25rem;left:-1.75rem}.timeline-date{color:#64748b;font-size:.75rem}.timeline-content{color:#334155;background:#f8fafc;border-radius:6px;margin-top:.25rem;padding:.5rem;font-size:.9rem}.dropdown{margin-top:2px;display:inline-block;position:relative}.dropdown-content{z-index:1000;background-color:#fff;border:1px solid #e2e8f0;border-radius:.5rem;min-width:180px;display:none;position:absolute;top:100%;left:0;overflow:hidden;box-shadow:0 10px 25px #0000001a}.dropdown-content a{white-space:nowrap;border-bottom:1px solid #f1f5f9;font-size:.95rem;font-weight:500;text-decoration:none;transition:all .2s;display:block;color:#334155!important;padding:.8rem 1rem!important}.dropdown-content a:last-child{border-bottom:none}.dropdown-content a:hover{background-color:#f8fafc;color:#4f46e5!important;padding-left:1.25rem!important}.dropdown:hover .dropdown-content{animation:.2s ease-out fadeInUp;display:block}.dropbtn{color:#475569;cursor:pointer;border-radius:.5rem;padding:.5rem .75rem;font-weight:600;transition:background .2s;display:inline-block}.dropdown:hover .dropbtn{color:#4f46e5;background:#4f46e50d}@keyframes fadeInUp{0%{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}</style>
-  <script type="module" crossorigin src="/assets/admin_tasks-ew8zhv2h.js"></script>
+    <style>.board-container{grid-template-columns:1fr 2fr;gap:2rem;max-width:1400px;margin:2rem auto;padding:0 1.5rem;display:grid}.task-list,.task-detail{background:#fff;border:1px solid #e2e8f0;border-radius:12px;min-height:500px;padding:1.5rem;box-shadow:0 4px 6px -1px #0000000d}.task-item{cursor:pointer;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:1rem;padding:1rem;transition:all .2s}.task-item:hover{border-color:var(--ai-primary);box-shadow:0 2px 4px #0000000d}.task-item.overdue{background:#fef2f2;border-color:#ef4444}.priority-badge{color:#fff;border-radius:12px;padding:.2rem .5rem;font-size:.75rem;font-weight:600}.pri-HIGH,.pri-URGENT{background:#ef4444}.pri-NORMAL{background:#3b82f6}.pri-LOW{background:#10b981}.status-badge{border-radius:12px;padding:.2rem .5rem;font-size:.75rem;font-weight:600}.stat-PENDING{color:#475569;background:#f1f5f9}.stat-ACCEPTED{color:#4f46e5;background:#e0e7ff}.stat-IN_PROGRESS{color:#b45309;background:#fef3c7}.stat-COMPLETED{color:#047857;background:#d1fae5}.stat-OVERDUE{color:#b91c1c;background:#fee2e2}.form-group{margin-bottom:1rem}.form-group label{margin-bottom:.5rem;font-size:.9rem;font-weight:600;display:block}.form-group input,.form-group select,.form-group textarea{border:1px solid #cbd5e1;border-radius:8px;width:100%;padding:.75rem;font-family:inherit}.header-actions{border-bottom:2px solid #f1f5f9;justify-content:space-between;align-items:center;margin-bottom:1.5rem;padding-bottom:1rem;display:flex}.timeline{padding-left:1.5rem;position:relative}.timeline:before{content:"";background:#e2e8f0;width:2px;position:absolute;top:0;bottom:0;left:0}.timeline-item{margin-bottom:1rem;position:relative}.timeline-item:before{content:"";background:var(--ai-primary);border:2px solid #fff;border-radius:50%;width:12px;height:12px;position:absolute;top:.25rem;left:-1.75rem}.timeline-date{color:#64748b;font-size:.75rem}.timeline-content{color:#334155;background:#f8fafc;border-radius:6px;margin-top:.25rem;padding:.5rem;font-size:.9rem}.dropdown{margin-top:2px;display:inline-block;position:relative}.dropdown-content{z-index:1000;background-color:#fff;border:1px solid #e2e8f0;border-radius:.5rem;min-width:180px;display:none;position:absolute;top:100%;left:0;overflow:hidden;box-shadow:0 10px 25px #0000001a}.dropdown-content a{white-space:nowrap;border-bottom:1px solid #f1f5f9;font-size:.95rem;font-weight:500;text-decoration:none;transition:all .2s;display:block;color:#334155!important;padding:.8rem 1rem!important}.dropdown-content a:last-child{border-bottom:none}.dropdown-content a:hover{background-color:#f8fafc;color:#4f46e5!important;padding-left:1.25rem!important}.dropdown:hover .dropdown-content{animation:.2s ease-out fadeInUp;display:block}.dropbtn{color:#475569;cursor:pointer;border-radius:.5rem;padding:.5rem .75rem;font-weight:600;transition:background .2s;display:inline-block}.dropdown:hover .dropbtn{color:#4f46e5;background:#4f46e50d}@keyframes fadeInUp{0%{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}.badge-type-meeting{color:#047857;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:12px;padding:.2rem .5rem;font-size:.75rem;font-weight:700}.badge-type-report{color:#1d4ed8;background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:.2rem .5rem;font-size:.75rem;font-weight:700}.btn-meeting{color:#fff;cursor:pointer;background:linear-gradient(135deg,#10b981 0%,#059669 100%);border:none;border-radius:8px;align-items:center;gap:.35rem;padding:.5rem .85rem;font-size:.85rem;font-weight:700;transition:all .2s;display:inline-flex;box-shadow:0 2px 4px #10b98140}.btn-meeting:hover{transform:translateY(-1px);box-shadow:0 4px 8px #10b98159}.filter-tab{color:#64748b;cursor:pointer;background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:.35rem .75rem;font-size:.8rem;font-weight:600;transition:all .15s}.filter-tab.active{background:var(--ai-primary,#4f46e5);color:#fff;border-color:var(--ai-primary,#4f46e5)}.photo-preview-grid{grid-template-columns:repeat(auto-fill,minmax(75px,1fr));gap:.5rem;margin-top:.5rem;display:grid}.photo-thumb-wrap{aspect-ratio:1;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:.5rem;width:100%;position:relative;overflow:hidden}.photo-thumb-wrap img{object-fit:cover;width:100%;height:100%}.photo-thumb-remove{color:#fff;cursor:pointer;background:#000000a6;border:none;border-radius:50%;justify-content:center;align-items:center;width:20px;height:20px;font-size:.75rem;display:flex;position:absolute;top:2px;right:2px}.report-photo-gallery{grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:.5rem;margin-top:.5rem;display:grid}.gallery-item{aspect-ratio:4/3;cursor:pointer;background:#000;border:1px solid #e2e8f0;border-radius:.5rem;overflow:hidden}.gallery-item img{object-fit:cover;width:100%;height:100%;transition:transform .2s}.gallery-item:hover img{transform:scale(1.05)}@media (width<=900px){.board-container{grid-template-columns:1fr!important}}</style>
+  <script type="module" crossorigin src="/assets/admin_tasks-D8BnSCou.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-DK3Fl9T5.js">
   <link rel="modulepreload" crossorigin href="/assets/firebase-config-BWFrQkzL.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-DFmZ7EPR.js">
   <link rel="modulepreload" crossorigin href="/assets/task-manager--MFD9tyD.js">
   <link rel="stylesheet" crossorigin href="/assets/admin-CCpgtoVo.css">
   <link rel="stylesheet" crossorigin href="/assets/style-CTsXkP_6.css">
@@ -51,6 +52,7 @@
                 <span class="dropbtn">내부운영(HR) ▾</span>
                 <div class="dropdown-content">
                     <a href="tasks.html">업무지시/보고</a>
+                    <a href="field-reports.html">📸 현장/안건 사진보고</a>
                     <a href="finance.html">재무/회계</a>
                     <a href="employees.html">직원목록</a>
                 </div>
@@ -71,25 +73,45 @@
     <div class="board-container">
         <!-- 업무 리스트 -->
         <div class="task-list">
-            <div class="header-actions">
-                <h2 style="margin:0; font-size:1.25rem;">전체 / 부서 업무</h2>
-                <button id="btnNewTask" class="btn-primary" style="padding:0.5rem 1rem; font-size:0.875rem;">+ 새 업무
-                    지시</button>
+            <div class="header-actions" style="flex-wrap: wrap; gap: 0.5rem;">
+                <div>
+                    <h2 style="margin:0; font-size:1.25rem;">업무 & 외근/미팅 보고</h2>
+                    <span style="font-size:0.8rem; color:#64748b;">업무 지시 및 직원 외근·미팅·업무보고 통합 관리</span>
+                </div>
+                <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+                    <button id="btnNewMeetingReport" class="btn-meeting" title="직원 외부 미팅 및 업무보고서 작성">
+                        <span>🤝</span> 외근/미팅 & 업무보고 작성
+                    </button>
+                    <button id="btnNewTask" class="btn-primary" style="padding:0.5rem 0.85rem; font-size:0.85rem;">
+                        + 새 업무 지시
+                    </button>
+                </div>
             </div>
 
-            <!-- 필터부 -->
-            <div style="margin-bottom:1rem; display:flex; gap:0.5rem;">
-                <select id="filterStatus" style="padding:0.25rem; border-radius:4px; border:1px solid #ccc;">
+            <!-- 탭 필터부 -->
+            <div style="display:flex; gap:0.35rem; margin-bottom:0.75rem; flex-wrap:wrap;">
+                <button type="button" class="filter-tab active" data-tab="ALL">전체 보기</button>
+                <button type="button" class="filter-tab" data-tab="MEETING">🤝 외근/미팅 보고</button>
+                <button type="button" class="filter-tab" data-tab="REPORT">📝 업무 보고</button>
+                <button type="button" class="filter-tab" data-tab="TASK">📋 업무 지시</button>
+            </div>
+
+            <!-- 검색 및 조건 필터부 -->
+            <div style="margin-bottom:1rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+                <input type="text" id="taskSearchInput" placeholder="제목, 고객사/미팅대상, 작성자 검색..." style="flex:1; min-width:140px; padding:0.4rem 0.6rem; border-radius:6px; border:1px solid #cbd5e1; font-size:0.85rem;">
+                <select id="filterStatus" style="padding:0.4rem; border-radius:6px; border:1px solid #cbd5e1; font-size:0.85rem;">
                     <option value="">모든 상태</option>
                     <option value="PENDING">대기</option>
                     <option value="IN_PROGRESS">진행중</option>
-                    <option value="COMPLETED">완료</option>
+                    <option value="COMPLETED">완료/보고됨</option>
+                    <option value="OVERDUE">지연</option>
                 </select>
-                <select id="filterTeam" style="padding:0.25rem; border-radius:4px; border:1px solid #ccc;">
+                <select id="filterTeam" style="padding:0.4rem; border-radius:6px; border:1px solid #cbd5e1; font-size:0.85rem;">
                     <option value="">모든 팀</option>
                     <option value="SALES">영업팀</option>
                     <option value="DEV">개발팀</option>
                     <option value="MARKETING">마케팅</option>
+                    <option value="HR">인사총무팀</option>
                 </select>
             </div>
 
@@ -101,7 +123,7 @@
         <!-- 업무 상세 / 등록 폼 -->
         <div class="task-detail" id="taskDetailContainer">
             <div style="display:flex; justify-content:center; align-items:center; height:100%; color:#94a3b8;">
-                좌측에서 업무를 선택하거나 '새 업무 지시'를 클릭하세요.
+                좌측에서 업무를 선택하거나 상단 '외근/미팅 & 업무보고 작성'을 클릭하세요.
             </div>
         </div>
     </div>
@@ -169,50 +191,106 @@
 
     <!-- Template for Task Detail View -->
     <template id="tplTaskDetailView">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
             <div>
+                <span id="dtlTypeBadge" class="priority-badge" style="display:none; margin-right:0.35rem;"></span>
                 <span id="dtlPriority" class="priority-badge"></span>
-                <span id="dtlStatus" class="status-badge" style="margin-left:0.5rem;"></span>
-                <h2 id="dtlTitle" style="margin: 0.5rem 0 0.25rem 0; font-size:1.5rem;"></h2>
-                <div style="font-size:0.85rem; color:#64748b;">담당: <span id="dtlTeam"></span> / <strong
-                        id="dtlAssignee"></strong></div>
+                <span id="dtlStatus" class="status-badge" style="margin-left:0.35rem;"></span>
+                <h2 id="dtlTitle" style="margin: 0.5rem 0 0.25rem 0; font-size:1.4rem;"></h2>
+                <div style="font-size:0.85rem; color:#64748b;">
+                    부서/담당: <span id="dtlTeam"></span> / <strong id="dtlAssignee"></strong>
+                    <span id="dtlCreatorWrap" style="margin-left:0.5rem;">(작성: <span id="dtlCreator"></span>)</span>
+                </div>
             </div>
             <div style="text-align:right;">
-                <div style="font-size:0.8rem; color:#64748b;">마감 기한</div>
+                <div style="font-size:0.8rem; color:#64748b;" id="dtlDateLabel">마감 기한</div>
                 <div id="dtlDueDate" style="font-weight:600; color:#b91c1c;"></div>
             </div>
         </div>
 
-        <div style="background:#f8fafc; padding:1rem; border-radius:8px; margin-bottom:2rem; font-size:0.95rem; white-space:pre-wrap;"
-            id="dtlDesc"></div>
-
-        <div
-            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-top:1px solid #e2e8f0; padding-top:1.5rem;">
-            <h3 style="margin:0; font-size:1.1rem;">진행 상황: <span id="dtlProgress">0</span>%</h3>
-            <!-- CEO/Team Leader Actions -->
-            <div id="actionButtons" style="display:none; gap:0.5rem;">
-                <button id="btnCreateSubTask" class="btn-primary"
-                    style="background:#6366f1; padding:0.4rem 0.8rem; font-size:0.8rem;">팀원에게 업무 배정</button>
-                <button id="btnRejectProcess" class="btn-primary"
-                    style="background:#ef4444; padding:0.4rem 0.8rem; font-size:0.8rem; display:none;">반려 (재지시)</button>
+        <!-- External Meeting / Field Report Info Card -->
+        <div id="dtlMeetingBox" style="display:none; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:8px; padding:1rem; margin-bottom:1.5rem;">
+            <h4 style="margin:0 0 0.5rem 0; color:#065f46; font-size:0.95rem; display:flex; align-items:center; gap:0.35rem;">
+                <span>🤝</span> 외부 미팅 / 외근 정보
+            </h4>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:0.6rem; font-size:0.85rem;">
+                <div><strong style="color:#047857;">🏢 미팅 대상:</strong> <span id="dtlMeetingPartner" style="font-weight:600; color:#1e293b;">-</span></div>
+                <div><strong style="color:#047857;">📍 미팅 장소:</strong> <span id="dtlMeetingLocation" style="color:#1e293b;">-</span></div>
+                <div><strong style="color:#047857;">📅 미팅 일시:</strong> <span id="dtlMeetingDate" style="color:#1e293b;">-</span></div>
+                <div><strong style="color:#047857;">👥 참석자:</strong> <span id="dtlMeetingAttendees" style="color:#1e293b;">-</span></div>
             </div>
         </div>
 
-        
-          <!-- Employee Report Action -->
-          <div id="employeeActionSection" style="display:none; background:#e0e7ff; padding:1.5rem; border-radius:8px; margin-bottom:2rem;">
-              <h3 style="margin-top:0; color:#4338ca;">진행 상황 보고하기</h3>
-              <textarea id="reportContent" rows="3" style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px; margin-bottom:1rem; resize:vertical;" placeholder="금일 진행 내용, 이슈 사항, 결과 등을 입력하세요."></textarea>
-              <div style="display:flex; gap:1rem; align-items:center;">
-                  <label style="font-weight:600; color:#334155;">진행률 (%):</label>
-                  <input type="number" id="reportProgress" min="0" max="100" style="width:80px; padding:0.4rem; border:1px solid #cbd5e1; border-radius:4px;">
-                  <button id="btnSubmitReport" style="background:#4f46e5; color:white; padding:0.5rem 1rem; border:none; border-radius:4px; cursor:pointer; font-weight:600;">보고 제출</button>
-              </div>
-          </div>
-          <!-- Progress Bar Visual -->
-        <div
-            style="width:100%; background:#e2e8f0; height:12px; border-radius:6px; margin-bottom:2rem; overflow:hidden;">
-            <div id="dtlProgressBar" style="width: 0%; background:var(--success); height:100%; transition: width 0.3s;">
+        <!-- Main Description / Notes -->
+        <div style="margin-bottom:1.5rem;">
+            <h4 style="margin:0 0 0.5rem 0; font-size:0.95rem; color:#334155;">📋 상세 내용 및 협의 사항</h4>
+            <div style="background:#f8fafc; padding:1rem; border-radius:8px; border:1px solid #e2e8f0; font-size:0.95rem; white-space:pre-wrap; line-height:1.6;" id="dtlDesc"></div>
+        </div>
+
+        <!-- Follow-up / Next Action Box -->
+        <div id="dtlFollowUpBox" style="display:none; background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:1rem; margin-bottom:1.5rem;">
+            <h4 style="margin:0 0 0.5rem 0; color:#92400e; font-size:0.95rem; display:flex; align-items:center; gap:0.35rem;">
+                <span>🚀</span> 향후 조치 계획 및 후속 과제 (Next Action)
+            </h4>
+            <div id="dtlFollowUpContent" style="font-size:0.9rem; color:#78350f; white-space:pre-wrap; line-height:1.5;"></div>
+        </div>
+
+        <!-- Attached Photos Gallery -->
+        <div id="dtlPhotoSection" style="display:none; margin-bottom:1.5rem;">
+            <h4 style="margin:0 0 0.5rem 0; font-size:0.95rem; color:#334155; display:flex; align-items:center; gap:0.35rem;">
+                <span>📷</span> 현장/미팅 첨부 사진 (<span id="dtlPhotoCount">0</span>장)
+            </h4>
+            <div id="dtlPhotoGallery" class="report-photo-gallery"></div>
+        </div>
+
+        <!-- Progress and Actions -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-top:1px solid #e2e8f0; padding-top:1.5rem;">
+            <h3 style="margin:0; font-size:1.1rem;">진행 상황: <span id="dtlProgress">0</span>%</h3>
+            <!-- CEO/Team Leader Actions -->
+            <div id="actionButtons" style="display:none; gap:0.5rem;">
+                <button id="btnCreateSubTask" class="btn-primary" style="background:#6366f1; padding:0.4rem 0.8rem; font-size:0.8rem;">팀원에게 업무 배정</button>
+                <button id="btnRejectProcess" class="btn-primary" style="background:#ef4444; padding:0.4rem 0.8rem; font-size:0.8rem; display:none;">반려 (재지시)</button>
+            </div>
+        </div>
+
+        <!-- Progress Bar Visual -->
+        <div style="width:100%; background:#e2e8f0; height:12px; border-radius:6px; margin-bottom:2rem; overflow:hidden;">
+            <div id="dtlProgressBar" style="width: 0%; background:var(--success); height:100%; transition: width 0.3s;"></div>
+        </div>
+
+        <!-- Employee Reporting Section -->
+        <div id="employeeActionSection" style="display:none; background:#f0fdf4; border:1px solid #bbf7d0; padding:1.25rem; border-radius:8px; margin-bottom:2rem;">
+            <h3 style="margin-top:0; color:#166534; font-size:1rem; display:flex; align-items:center; gap:0.35rem;">
+                <span>✍️</span> 업무 진행 / 외부 미팅 결과 보고하기
+            </h3>
+            
+            <div style="margin-bottom:0.75rem; display:flex; gap:1rem; font-size:0.85rem; font-weight:600;">
+                <label style="cursor:pointer; display:flex; align-items:center; gap:0.3rem;">
+                    <input type="radio" name="empReportMode" value="PROGRESS" checked> 📝 일반 업무 진행 보고
+                </label>
+                <label style="cursor:pointer; display:flex; align-items:center; gap:0.3rem;">
+                    <input type="radio" name="empReportMode" value="MEETING"> 🤝 외부 미팅/상담 결과 보고
+                </label>
+            </div>
+
+            <div id="empMeetingExtraFields" style="display:none; margin-bottom:0.75rem; padding:0.75rem; background:white; border:1px solid #dcfce7; border-radius:6px; display:none; flex-direction:column; gap:0.5rem;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+                    <input type="text" id="empMeetingPartner" placeholder="미팅 대상사 및 담당자 (예: 베스트마리오 대표)" style="padding:0.45rem; border:1px solid #cbd5e1; border-radius:4px; font-size:0.85rem;">
+                    <input type="text" id="empMeetingLocation" placeholder="미팅 장소 (예: 고객사 매장)" style="padding:0.45rem; border:1px solid #cbd5e1; border-radius:4px; font-size:0.85rem;">
+                </div>
+                <input type="text" id="empMeetingFollowUp" placeholder="향후 조치 계획 (예: 다음주 월요일 견적 송부)" style="padding:0.45rem; border:1px solid #cbd5e1; border-radius:4px; font-size:0.85rem;">
+            </div>
+
+            <textarea id="reportContent" rows="3" style="width:100%; padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px; margin-bottom:0.75rem; resize:vertical; font-family:inherit; box-sizing:border-box;" placeholder="금일 진행 내용, 미팅 협의 사항, 특이점 등을 입력하세요."></textarea>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                <div style="display:flex; gap:0.5rem; align-items:center;">
+                    <label style="font-weight:600; color:#334155; font-size:0.85rem;">진행률 (%):</label>
+                    <input type="number" id="reportProgress" min="0" max="100" style="width:70px; padding:0.4rem; border:1px solid #cbd5e1; border-radius:4px;">
+                </div>
+                <button id="btnSubmitReport" style="background:#16a34a; color:white; padding:0.5rem 1.2rem; border:none; border-radius:4px; cursor:pointer; font-weight:700; font-size:0.85rem;">
+                    보고 제출
+                </button>
             </div>
         </div>
 
@@ -221,11 +299,131 @@
             <!-- Reports go here -->
         </div>
 
+        <!-- Feedback & Comments from CEO / Managers -->
+        <h3 style="font-size:1.1rem; margin-bottom:0.75rem;">💬 피드백 및 업무 코멘트</h3>
+        <div id="dtlCommentsContainer" style="margin-bottom:1rem;">
+            <!-- Comments loaded here -->
+        </div>
+        <div style="display:flex; gap:0.5rem; margin-bottom:2rem;">
+            <input type="text" id="dtlNewComment" placeholder="확인 내용 또는 피드백 코멘트를 입력하세요..." style="flex:1; padding:0.5rem; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem;">
+            <button type="button" id="btnSubmitComment" style="padding:0.5rem 1rem; background:var(--ai-primary, #4f46e5); color:white; border:none; border-radius:6px; font-weight:700; font-size:0.85rem; cursor:pointer;">
+                등록
+            </button>
+        </div>
+
         <h3 style="font-size:1.1rem; margin-bottom:1rem;">업무 이력 (Timeline)</h3>
         <div class="timeline" id="dtlTimeline">
             <!-- Timeline items -->
         </div>
     </template>
+
+    
+    <!-- New External Meeting & Work Report Modal -->
+    <div id="meetingReportModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.55); backdrop-filter:blur(3px); z-index:10000; align-items:center; justify-content:center; overflow-y:auto; padding:1rem; box-sizing:border-box;">
+        <div style="background:white; border-radius:1rem; max-width:640px; width:100%; max-height:92vh; display:flex; flex-direction:column; box-shadow:0 25px 35px -5px rgba(0,0,0,0.25);">
+            <!-- Modal Header -->
+            <div style="padding:1.25rem 1.5rem; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0; font-size:1.2rem; color:#1e293b; font-weight:800; display:flex; align-items:center; gap:0.5rem;">
+                    <span>🤝</span> 외부 미팅 및 기타 업무보고 작성
+                </h3>
+                <button type="button" id="btnCloseMeetingModal" style="background:none; border:none; font-size:1.25rem; cursor:pointer; color:#94a3b8; font-weight:700;">✕</button>
+            </div>
+
+            <!-- Modal Form Body -->
+            <form id="meetingReportForm" style="padding:1.5rem; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:1rem; margin:0;">
+                <div>
+                    <label style="font-size:0.85rem; font-weight:700; color:#334155;">보고 유형 *</label>
+                    <select id="mReportType" style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:0.5rem; margin-top:0.25rem; font-weight:600; font-family:inherit;">
+                        <option value="MEETING">🤝 고객사 / 협력사 / 가맹점 외부 미팅 보고</option>
+                        <option value="FIELD">🚗 외근 및 현장 출장 / 실사 보고</option>
+                        <option value="WORK_REPORT">📝 일일 / 주간 정기 업무보고</option>
+                        <option value="ISSUE">🚨 긴급 현안 / 이슈 / 클레임 보고</option>
+                        <option value="IDEA">💡 기타 업무보고 및 건의사항</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="font-size:0.85rem; font-weight:700; color:#334155;">보고 제목 *</label>
+                    <input type="text" id="mReportTitle" placeholder="예: [외부미팅] 베스트마리오 POS 연동 및 매장 정산 협의" required style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:0.5rem; margin-top:0.25rem; box-sizing:border-box;">
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+                    <div>
+                        <label style="font-size:0.85rem; font-weight:700; color:#334155;">미팅 / 외근 대상 (고객사/협력사/담당자)</label>
+                        <input type="text" id="mReportPartner" placeholder="예: 베스트마리오 김대표님, 박점장" style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:0.5rem; margin-top:0.25rem; box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.85rem; font-weight:700; color:#334155;">미팅 / 외근 장소</label>
+                        <input type="text" id="mReportLocation" placeholder="예: 고객사 본사 회의실 / 매장" style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:0.5rem; margin-top:0.25rem; box-sizing:border-box;">
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+                    <div>
+                        <label style="font-size:0.85rem; font-weight:700; color:#334155;">미팅 / 업무 일시 *</label>
+                        <input type="datetime-local" id="mReportDate" required style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:0.5rem; margin-top:0.25rem; box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.85rem; font-weight:700; color:#334155;">당사 참석자</label>
+                        <input type="text" id="mReportAttendees" placeholder="예: 영업팀 홍길동 대리, 김철수 책임" style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:0.5rem; margin-top:0.25rem; box-sizing:border-box;">
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+                    <div>
+                        <label style="font-size:0.85rem; font-weight:700; color:#334155;">소속 부서/팀</label>
+                        <select id="mReportTeam" style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:0.5rem; margin-top:0.25rem; font-family:inherit;">
+                            <option value="SALES">영업팀</option>
+                            <option value="DEV">개발팀</option>
+                            <option value="MARKETING">마케팅팀</option>
+                            <option value="HR">인사총무팀</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:0.85rem; font-weight:700; color:#334155;">관련 업무 연결 (선택)</label>
+                        <select id="mReportRelatedTask" style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:0.5rem; margin-top:0.25rem; font-family:inherit;">
+                            <option value="">-- 독립 신규 보고 --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-size:0.85rem; font-weight:700; color:#334155;">핵심 미팅 내용 및 협의 사항 *</label>
+                    <textarea id="mReportContent" rows="5" required placeholder="• 미팅/외근 목적:&#10;• 주요 협의 내용 및 고객 반응:&#10;• 결정 및 합의 사항:" style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:0.5rem; margin-top:0.25rem; font-family:inherit; box-sizing:border-box;"></textarea>
+                </div>
+
+                <div>
+                    <label style="font-size:0.85rem; font-weight:700; color:#334155;">향후 조치 계획 및 후속 과제 (Next Action)</label>
+                    <textarea id="mReportFollowUp" rows="2" placeholder="• 후속 일정: 다음주 월요일 견적서 송부&#10;• 본사 지원 요청: 개발팀 API 연동 검토 필요" style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:0.5rem; margin-top:0.25rem; font-family:inherit; box-sizing:border-box;"></textarea>
+                </div>
+
+                <div>
+                    <label style="font-size:0.85rem; font-weight:700; color:#334155;">현장 사진 / 명함 / 자료 첨부 (선택)</label>
+                    <div style="margin-top:0.35rem; display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                        <input type="file" id="mReportPhotoInput" accept="image/*" multiple style="display:none;">
+                        <button type="button" id="btnTriggerPhoto" style="background:#f1f5f9; border:1px dashed #4F46E5; color:#4F46E5; padding:0.55rem 0.9rem; border-radius:0.5rem; font-weight:700; font-size:0.85rem; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem;">
+                            <span>📷</span> 사진 추가 (촬영/앨범)
+                        </button>
+                        <span id="mPhotoCountNotice" style="font-size:0.8rem; color:#64748b;">선택된 사진: 0장</span>
+                    </div>
+                    <div id="mPhotoPreviewContainer" class="photo-preview-grid"></div>
+                </div>
+
+                <!-- Modal Footer inside Form -->
+                <div style="padding-top:1rem; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:0.5rem; margin-top:0.5rem;">
+                    <button type="button" id="btnCancelMeetingModal" style="padding:0.6rem 1.1rem; border:1px solid #cbd5e1; background:#f8fafc; border-radius:0.5rem; font-weight:600; cursor:pointer;">취소</button>
+                    <button type="submit" id="btnSubmitMeetingReport" style="padding:0.6rem 1.35rem; border:none; background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:white; border-radius:0.5rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; box-shadow:0 4px 10px rgba(16,185,129,0.3);">
+                        <span>✓</span> 보고서 제출하기
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Image Lightbox Modal -->
+    <div id="imageLightbox" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:20000; align-items:center; justify-content:center; padding:1.5rem; cursor:pointer;">
+        <img id="lightboxImg" src="" style="max-width:90%; max-height:90%; border-radius:0.5rem; box-shadow:0 20px 25px rgba(0,0,0,0.5); object-fit:contain;">
+    </div>
 
 <script>
             function highlightActiveMenu() {
