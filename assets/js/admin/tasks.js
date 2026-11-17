@@ -172,29 +172,47 @@ function initTaskBoard() {
         mWrap.style.display = isSuperAdmin ? 'block' : 'none';
     }
 
-    // Realtime Listener for Tasks based on Role
-    let q;
-    if (isSuperAdmin) {
-        q = query(collection(db, 'tasks'), orderBy('createdAt', 'desc'));
-    } else if (currentUserInfo?.role === 'TEAM_LEADER') {
-        q = query(collection(db, 'tasks'), where('teamId', '==', currentUserInfo?.teamId || ''), orderBy('createdAt', 'desc'));
-    } else {
-        q = query(collection(db, 'tasks'), orderBy('createdAt', 'desc'));
-    }
+    // Realtime Listener for Tasks
+    const q = collection(db, 'tasks');
 
     onSnapshot(q, (snapshot) => {
         allTasks = [];
         snapshot.forEach(docSnap => {
             const d = docSnap.data();
-            // Auto-tag Baekje Galbi / Best Winner tasks if missing merchantId
-            if (!d.merchantId && !d.tenantId) {
+            const creator = (d.creatorEmail || '').toLowerCase().trim();
+            const assignee = (d.assignedTo || '').toLowerCase().trim();
+
+            // Auto-heal tasks created by or assigned to store members
+            if (creator === 'caterwilliam55@gmail.com' || assignee === 'caterwilliam55@gmail.com' || creator === 'hexttokenopbnb@gmail.com') {
+                if (d.merchantId !== '1791605366' || d.tenantId !== '1791605366' || d.storeName !== 'BEST WINNER') {
+                    d.merchantId = '1791605366';
+                    d.tenantId = '1791605366';
+                    d.storeName = 'BEST WINNER';
+                    updateDoc(doc(db, 'tasks', docSnap.id), {
+                        merchantId: '1791605366',
+                        tenantId: '1791605366',
+                        storeName: 'BEST WINNER'
+                    }).catch(() => {});
+                }
+            } else if (creator === 'bestwinner167@gmail.com' || assignee === 'bestwinner167@gmail.com') {
+                if (d.merchantId !== '1794710386' || d.tenantId !== '1794710386' || d.storeName !== '백제갈비') {
+                    d.merchantId = '1794710386';
+                    d.tenantId = '1794710386';
+                    d.storeName = '백제갈비';
+                    updateDoc(doc(db, 'tasks', docSnap.id), {
+                        merchantId: '1794710386',
+                        tenantId: '1794710386',
+                        storeName: '백제갈비'
+                    }).catch(() => {});
+                }
+            } else if (!d.merchantId && !d.tenantId) {
                 const combined = `${d.title || ''} ${d.meetingPartner || ''} ${d.description || ''}`;
-                if (combined.includes('백제갈비') || combined.includes('1794710386')) {
+                if (combined.includes('백제갈비') && !combined.includes('베스트위너')) {
                     d.merchantId = '1794710386';
                     d.tenantId = '1794710386';
                     d.storeName = '백제갈비';
                     updateDoc(doc(db, 'tasks', docSnap.id), { merchantId: '1794710386', tenantId: '1794710386', storeName: '백제갈비' }).catch(() => {});
-                } else if (combined.includes('베스트위너') || combined.includes('1791605366')) {
+                } else {
                     d.merchantId = '1791605366';
                     d.tenantId = '1791605366';
                     d.storeName = 'BEST WINNER';
@@ -296,19 +314,22 @@ function applyFiltersAndRender() {
             // Strict Franchise Owner / Staff Isolation
             if (!isAssignedToMe && !isCreatedByMe) {
                 if (myMerchantId) {
-                    // Hide any task belonging to a different franchise
-                    if (taskMerchant && taskMerchant !== myMerchantId) {
-                        return false;
-                    }
-                    // Hide tasks without merchantId that mention another franchise in title/partner/description
-                    const combined = `${item.title || ''} ${item.meetingPartner || ''} ${item.description || ''}`;
-                    if (myMerchantId === '1791605366') {
-                        if (taskMerchant === '1794710386' || combined.includes('백제갈비') || combined.includes('대한김치') || combined.includes('베스트마리오') || combined.includes('sunvietnam')) {
+                    if (taskMerchant) {
+                        // Strict check: Only show tasks/reports of the same store
+                        if (taskMerchant !== myMerchantId) {
                             return false;
                         }
-                    } else if (myMerchantId === '1794710386') {
-                        if (taskMerchant === '1791605366' || combined.includes('베스트위너') || combined.includes('BEST WINNER') || combined.includes('대한김치')) {
-                            return false;
+                    } else {
+                        // Only for legacy tasks without merchantId
+                        const combined = `${item.title || ''} ${item.meetingPartner || ''} ${item.description || ''}`;
+                        if (myMerchantId === '1791605366') {
+                            if (combined.includes('백제갈비') && !combined.includes('베스트위너') && !combined.includes('BEST WINNER')) {
+                                return false;
+                            }
+                        } else if (myMerchantId === '1794710386') {
+                            if ((combined.includes('베스트위너') || combined.includes('BEST WINNER')) && !combined.includes('백제갈비')) {
+                                return false;
+                            }
                         }
                     }
                 }
