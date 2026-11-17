@@ -741,6 +741,7 @@
             </div>
             <div style="display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center;">
                 <select id="filterMerchant" style="display:none; padding:0.65rem 1rem; border-radius:0.5rem; border:1px solid #cbd5e1; background:#fff; font-weight:700; font-size:0.9rem; color:#4338ca; cursor:pointer;">
+                    <option value="ALL">== 전체 가맹점 (통합 재무) ==</option>
                     <option value="1791605366">🏬 BEST WINNER (베스트위너)</option>
                     <option value="1794710386">🏬 백제갈비 (Baekje Galbi)</option>
                     <option value="1791002036">🏬 대한김치</option>
@@ -971,6 +972,7 @@
     <!-- Global Auth Guard -->
     <script type="module">
         import { checkAdminAuth, logoutAdmin } from '../assets/js/auth.js';
+        import { TENANT_MAP, SLUG_TO_TENANT, syncUrlStoreSlug } from '../assets/js/tenant-router.js';
 
         checkAdminAuth(
             (user) => {
@@ -987,7 +989,19 @@
                 if (filterSelect) {
                     if (isSuper) {
                         filterSelect.style.display = 'inline-block';
+                        const params = new URLSearchParams(window.location.search);
+                        const storeParam = (params.get('store') || params.get('m') || '').toLowerCase().trim();
+                        if (storeParam) {
+                            const matchedId = SLUG_TO_TENANT[storeParam] || (storeParam === 'all' ? 'ALL' : storeParam);
+                            if (matchedId) filterSelect.value = matchedId;
+                        }
                         filterSelect.addEventListener('change', () => {
+                            if (filterSelect.value === 'ALL') {
+                                syncUrlStoreSlug('all');
+                            } else {
+                                const slug = TENANT_MAP[filterSelect.value]?.slug || filterSelect.value;
+                                syncUrlStoreSlug(slug);
+                            }
                             if (window.loadFinanceData) window.loadFinanceData();
                         });
                     } else {

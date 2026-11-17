@@ -31,17 +31,22 @@ export function getCurrentStoreInfo() {
     // 1. If Super Admin, allow URL param or dropdown selector to switch stores
     if (isSuper) {
         const filterSelect = document.getElementById('filterMerchant');
-        let selectedId = filterSelect && filterSelect.value && filterSelect.value !== 'ALL' ? filterSelect.value : '';
+        let selectedId = '';
 
-        if (!selectedId && storeParam) {
-            selectedId = SLUG_TO_TENANT[storeParam] || storeParam;
+        if (storeParam) {
+            selectedId = SLUG_TO_TENANT[storeParam] || (TENANT_MAP[storeParam] ? storeParam : (storeParam === 'all' ? 'ALL' : storeParam));
+            if (filterSelect && selectedId && filterSelect.value !== selectedId) {
+                filterSelect.value = selectedId;
+            }
+        } else if (filterSelect && filterSelect.value) {
+            selectedId = filterSelect.value;
         }
 
         if (!selectedId) {
             selectedId = '1791605366'; // Default for Super Admin
         }
 
-        const info = TENANT_MAP[selectedId] || { slug: selectedId, name: window.currentStoreName || 'BEST WINNER' };
+        const info = TENANT_MAP[selectedId] || { slug: selectedId === 'ALL' ? 'all' : selectedId, name: window.currentStoreName || 'BEST WINNER' };
         syncUrlStoreSlug(info.slug);
         return { storeId: selectedId, ...info };
     }

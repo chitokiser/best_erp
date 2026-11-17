@@ -4,7 +4,7 @@ import { collection, doc, setDoc, getDocs, addDoc, serverTimestamp, query, order
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { scanReceiptAI } from './aiApi.js';
 
-import { getCurrentStoreInfo, getStoreSubcollection, getStoreDocRef } from './tenant-router.js';
+import { getCurrentStoreInfo, getStoreSubcollection, getStoreDocRef, TENANT_MAP, isSuperAdminUser } from './tenant-router.js';
 
 function getCurrentStoreId() {
     return getCurrentStoreInfo().storeId;
@@ -163,49 +163,137 @@ if (btnResetAmount) {
 }
 
 async function loadFinanceData() {
+    const sums = {
+        INCOME: 0,
+        EXPENSE: 0,
+        RECEIVABLE: 0,
+        PAYABLE: 0
+    };
+    let html = '';
+
     try {
-        const curStoreId = getCurrentStoreId();
+        const curStoreInfo = getCurrentStoreInfo();
+        const curStoreId = curStoreInfo.storeId;
         const myTenant = String(window.tenantId || '').trim();
         const isSuper = window.currentUserRole === 'SUPER_ADMIN' || (auth.currentUser?.email === 'daguri75@gmail.com') || myTenant === 'system_master';
+        const filterSelect = document.getElementById('filterMerchant');
+        const selectedMerchant = filterSelect ? filterSelect.value : curStoreId;
 
-        // 1. Separate DB Table per Store: merchants/{curStoreId}/financeRecords
-        const storeRef = getStoreFinanceCollection(curStoreId);
-        let snap = await getDocs(storeRef);
+        const recordMap = new Map();
 
-        // One-time auto-migration for Best Winner (1791605366) legacy records
-        if (curStoreId === '1791605366' && snap.empty) {
-            try {
-                const legacySnap = await getDocs(collection(db, 'financeRecords'));
-                if (!legacySnap.empty) {
-                    for (const lDoc of legacySnap.docs) {
-                        const lData = lDoc.data();
-                        await setDoc(doc(storeRef, lDoc.id), {
-                            ...lData,
-                            tenantId: '1791605366',
-                            merchantId: '1791605366',
-                            storeName: 'BEST WINNER'
-                        }, { merge: true });
-                    }
-                    snap = await getDocs(storeRef);
+        const addRecordDoc = (d, defaultStoreName = '') => {
+            if (!d) return;
+            const data = d.data ? d.data() : d;
+            const id = d.id || data.id;
+            if (!id || recordMap.has(id)) return;
+            recordMap.set(id, {
+                id: id,
+                ...data,
+                storeName: data.storeName || defaultStoreName || curStoreInfo.name || '가맹점'
+            });
+        };
+
+        if (isSuper && selectedMerchant === 'ALL') {
+            // Super Admin ALL mode: load across all franchise stores
+            const storeIds = ['1791605366', '1794710386', '1791002036', '1793671043', '1793776651'];
+            for (const sId of storeIds) {
+                try {
+                    const snap = await getDocs(collection(db, 'merchants', sId, 'financeRecords'));
+                    snap.forEach(d => addRecordDoc(d, TENANT_MAP[sId]?.name));
+                } catch (e) {
+                    console.warn(`Fetch error for store ${sId}:`, e);
                 }
-            } catch (migErr) {
-                console.warn('Finance legacy migration note:', migErr);
+            }
+            // Also include root financeRecords
+            try {
+                const rootSnap = await getDocs(collection(db, 'financeRecords'));
+                rootSnap.forEach(d => addRecordDoc(d));
+            } catch (e) {
+                console.warn('Root financeRecords fetch error:', e);
+            }
+        } else {
+            // Specific store mode (e.g. 1791605366 Best Winner)
+            const targetStoreId = (isSuper && selectedMerchant && selectedMerchant !== 'ALL') ? selectedMerchant : curStoreId;
+            const targetInfo = TENANT_MAP[targetStoreId] || curStoreInfo;
+
+            // 1. Fetch from merchants/{targetStoreId}/financeRecords
+            try {
+                const storeRef = collection(db, 'merchants', targetStoreId, 'financeRecords');
+                const snap = await getDocs(storeRef);
+                snap.forEach(d => addRecordDoc(d, targetInfo.name));
+            } catch (e) {
+                console.warn('Store financeRecords error:', e);
+            }
+
+            // 2. Best Winner alias checks (bestwinner slug)
+            if (targetStoreId === '1791605366') {
+                try {
+                    const slugSnap = await getDocs(collection(db, 'merchants', 'bestwinner', 'financeRecords'));
+                    slugSnap.forEach(d => {
+                        addRecordDoc(d, 'BEST WINNER');
+                        // Auto-sync into canonical subcollection
+                        try {
+                            setDoc(doc(db, 'merchants', '1791605366', 'financeRecords', d.id), {
+                                ...d.data(),
+                                tenantId: '1791605366',
+                                merchantId: '1791605366',
+                                storeName: 'BEST WINNER'
+                            }, { merge: true });
+                        } catch (err) {}
+                    });
+                } catch (e) {}
+            }
+
+            // 3. Root collection check for any legacy or direct records matching targetStoreId
+            try {
+                const rootSnap = await getDocs(collection(db, 'financeRecords'));
+                rootSnap.forEach(d => {
+                    const data = d.data();
+                    const dTenant = String(data.tenantId || data.merchantId || '').trim();
+                    const dStoreName = String(data.storeName || '').trim();
+
+                    let isMatch = false;
+                    if (targetStoreId === '1791605366') {
+                        isMatch = (dTenant === '1791605366' || dTenant === 'bestwinner' || dStoreName === 'BEST WINNER' || (!dTenant && !dStoreName));
+                    } else if (targetStoreId === '1794710386') {
+                        isMatch = (dTenant === '1794710386' || dTenant === 'baekje' || dTenant === 'baekje_galbi' || dStoreName.includes('백제'));
+                    } else if (targetStoreId === '1791002036') {
+                        isMatch = (dTenant === '1791002036' || dTenant === 'daehankimchi' || dStoreName.includes('대한'));
+                    } else {
+                        isMatch = (dTenant === targetStoreId);
+                    }
+
+                    if (isMatch) {
+                        addRecordDoc(d, targetInfo.name);
+                        // Auto-sync into dedicated store subcollection so it's permanently preserved
+                        try {
+                            setDoc(doc(db, 'merchants', targetStoreId, 'financeRecords', d.id), {
+                                ...data,
+                                tenantId: targetStoreId,
+                                merchantId: targetStoreId,
+                                storeName: targetInfo.name || data.storeName || '가맹점'
+                            }, { merge: true });
+                        } catch (err) {}
+                    }
+                });
+            } catch (e) {
+                console.warn('Root legacy check warning:', e);
             }
         }
 
-        // 2. DYNAMIC VIRTUAL PAYROLL INJECTION!
+        // 4. DYNAMIC VIRTUAL PAYROLL INJECTION!
         let virtualPayrolls = [];
         try {
             const empSnap = await getDocs(collection(db, 'employees'));
             const now = new Date();
             const curYYYYMM = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
             const payDate = curYYYYMM + '-25'; // Assume payday is 25th
+            const activeStoreId = (isSuper && selectedMerchant && selectedMerchant !== 'ALL') ? selectedMerchant : curStoreId;
             
             empSnap.forEach(e => {
                 const edata = e.data();
                 const eTenant = String(edata.tenantId || edata.merchantId || '').trim();
-                // STRICT STORE CHECK: Employee must belong to curStoreId!
-                const isMyStoreEmp = (eTenant === curStoreId) || (!eTenant && curStoreId === '1791605366');
+                const isMyStoreEmp = (selectedMerchant === 'ALL') || (eTenant === activeStoreId) || (!eTenant && activeStoreId === '1791605366');
                 if (!isMyStoreEmp) return;
 
                 if (edata.salary && Number(edata.salary) > 0) {
@@ -218,7 +306,8 @@ async function loadFinanceData() {
                         partner: (edata.name || '직원') + ' (' + (edata.position||'') + ')',
                         project: edata.department || '가맹점 공통',
                         memo: `[시스템 자동생성] ${now.getMonth()+1}월 정기 급여 지급예정`,
-                        tenantId: curStoreId
+                        tenantId: activeStoreId,
+                        storeName: edata.storeName || TENANT_MAP[eTenant]?.name || '가맹점'
                     });
                 }
             });
@@ -226,67 +315,91 @@ async function loadFinanceData() {
             console.warn("Employees payroll fetch warning:", empErr);
         }
 
-        let records = [];
-        snap.forEach(docSnap => {
-            records.push({ id: docSnap.id, ...docSnap.data() });
-        });
-        // merge virtual records
+        let records = Array.from(recordMap.values());
+        // Merge virtual payroll records
         records = records.concat(virtualPayrolls);
 
-        records.sort((a, b) => new Date(b.date) - new Date(a.date));
+        records.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
 
         window.__financeRecordsMap = {};
-        records.forEach(data => {
-            if (data.id) window.__financeRecordsMap[data.id] = data;
-            const type = data.type || 'INCOME';
-            const amount = Number(data.amount) || 0;
-
-            sums[type] += amount;
-
-            let badgeHtml = '';
-            if (type === 'INCOME') badgeHtml = '<span class="type-badge badge-income">수입</span>';
-            else if (type === 'EXPENSE') badgeHtml = '<span class="type-badge badge-expense">지출</span>';
-            else if (type === 'RECEIVABLE') badgeHtml = '<span class="type-badge badge-receivable">받을 돈</span>';
-            else if (type === 'PAYABLE') badgeHtml = '<span class="type-badge badge-payable">지출예정(줄돈)</span>';
-
-            const partner = data.partner || '-';
-            const project = data.project || '-';
-
-            html += `
+        if (records.length === 0) {
+            html = `
                 <tr>
-                    <td style="font-weight:600;">${data.date}</td>
-                    <td>
-                        ${badgeHtml}
-                        <div style="font-size:0.85rem; color:var(--text-dark); margin-top:0.25rem;">${data.category || '기타/미분류'}</div>
-                     </td>
-                    <td style="font-weight:800; font-size:1.1rem;">${formatCurrency(amount)} VND</td>
-                    <td>
-                        <div style="color:var(--text-dark);">${partner}</div>
-                        <div style="font-size:0.85rem; color:var(--text-muted);">${project}</div>
-                    </td>
-                    <td style="color:var(--text-muted);">
-                        <div>${data.memo || '-'}</div>
-                        ${data.receiptUrl ? `
-                            <div style="margin-top:0.35rem;">
-                                <button type="button" class="btn-inspect-receipt" data-record-id="${data.id}" style="display:inline-flex; align-items:center; gap:0.35rem; font-size:0.75rem; background:#ECFDF5; color:#047857; border:1px solid #A7F3D0; padding:0.25rem 0.65rem; border-radius:0.4rem; font-weight:800; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.05); transition:all 0.15s;">
-                                    <span>📸</span> 영수증 검토
-                                </button>
-                            </div>
-                        ` : ''}
+                    <td colspan="5" style="text-align:center; padding:3.5rem 1rem; color:var(--text-muted);">
+                        <div style="font-size:2.5rem; margin-bottom:0.75rem;">🧾</div>
+                        <div style="font-size:1.05rem; font-weight:700; color:#1E293B; margin-bottom:0.35rem;">등록된 수입/지출 내역이 없습니다.</div>
+                        <div style="font-size:0.85rem; color:#64748B;">위의 <b>[📸 AI 영수증 자동 지출 등록]</b> 버튼을 누르면 영수증 사진을 올려 즉시 지출로 등록할 수 있습니다.</div>
                     </td>
                 </tr>
             `;
-        });
+        } else {
+            records.forEach(data => {
+                if (data.id) window.__financeRecordsMap[data.id] = data;
+                const type = data.type || 'INCOME';
+                const amount = Number(data.amount) || 0;
+
+                sums[type] = (sums[type] || 0) + amount;
+
+                let badgeHtml = '';
+                if (type === 'INCOME') badgeHtml = '<span class="type-badge badge-income">수입</span>';
+                else if (type === 'EXPENSE') badgeHtml = '<span class="type-badge badge-expense">지출</span>';
+                else if (type === 'RECEIVABLE') badgeHtml = '<span class="type-badge badge-receivable">받을 돈</span>';
+                else if (type === 'PAYABLE') badgeHtml = '<span class="type-badge badge-payable">지출예정(줄돈)</span>';
+
+                const partner = data.partner || '-';
+                const project = data.project || '-';
+                const receiptImg = data.receiptUrl || data.receiptPhoto || data.imageUrl || data.photoUrl || (Array.isArray(data.photos) && data.photos[0]) || '';
+                const items = data.receiptItems || [];
+                const hasReceipt = Boolean(receiptImg || items.length > 0);
+
+                const storeBadge = (isSuper && selectedMerchant === 'ALL')
+                    ? `<span style="font-size:0.75rem; background:#EEF2FF; color:#4338CA; border:1px solid #C7D2FE; padding:0.15rem 0.45rem; border-radius:0.3rem; font-weight:700; margin-right:0.35rem;">🏬 ${data.storeName || '가맹점'}</span>`
+                    : '';
+
+                let receiptBadgeHtml = '';
+                if (hasReceipt) {
+                    receiptBadgeHtml = `
+                        <div style="margin-top:0.4rem; display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                            ${receiptImg ? `
+                                <img src="${receiptImg}" alt="영수증" style="width:38px; height:38px; object-fit:cover; border-radius:0.35rem; border:1.5px solid #10B981; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.1);" onclick="event.stopPropagation(); window.openReceiptInspectionModal(window.__financeRecordsMap['${data.id}'])" title="🔍 영수증 원본 크게보기">
+                            ` : ''}
+                            <button type="button" class="btn-inspect-receipt" data-record-id="${data.id}" style="display:inline-flex; align-items:center; gap:0.35rem; font-size:0.75rem; background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; padding:0.3rem 0.65rem; border-radius:0.4rem; font-weight:800; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.05); transition:all 0.15s;">
+                                <span>🧾</span> 영수증 검토 ${items.length > 0 ? `<span style="background:#D1FAE5; color:#047857; padding:0.05rem 0.35rem; border-radius:999px; font-size:0.7rem;">${items.length}품목</span>` : ''}
+                            </button>
+                        </div>
+                    `;
+                }
+
+                html += `
+                    <tr>
+                        <td style="font-weight:600;">${data.date || '-'}</td>
+                        <td>
+                            ${badgeHtml}
+                            <div style="font-size:0.85rem; color:var(--text-dark); margin-top:0.25rem;">${data.category || '기타/미분류'}</div>
+                        </td>
+                        <td style="font-weight:800; font-size:1.1rem; color:${type === 'EXPENSE' || type === 'PAYABLE' ? '#DC2626' : '#059669'};">${formatCurrency(amount)} VND</td>
+                        <td>
+                            <div style="color:var(--text-dark); font-weight:600;">${storeBadge}${partner}</div>
+                            <div style="font-size:0.85rem; color:var(--text-muted);">${project}</div>
+                        </td>
+                        <td style="color:var(--text-muted);">
+                            <div style="color:#1E293B;">${data.memo || '-'}</div>
+                            ${receiptBadgeHtml}
+                        </td>
+                    </tr>
+                `;
+            });
+        }
 
         tbody.innerHTML = html;
-        document.getElementById('sumIncome').textContent = formatCurrency(sums.INCOME) + ' VND';
-        document.getElementById('sumExpense').textContent = formatCurrency(sums.EXPENSE) + ' VND';
-        document.getElementById('sumReceivable').textContent = formatCurrency(sums.RECEIVABLE) + ' VND';
-        document.getElementById('sumPayable').textContent = formatCurrency(sums.PAYABLE) + ' VND';
+        document.getElementById('sumIncome').textContent = formatCurrency(sums.INCOME || 0) + ' VND';
+        document.getElementById('sumExpense').textContent = formatCurrency(sums.EXPENSE || 0) + ' VND';
+        document.getElementById('sumReceivable').textContent = formatCurrency(sums.RECEIVABLE || 0) + ' VND';
+        document.getElementById('sumPayable').textContent = formatCurrency(sums.PAYABLE || 0) + ' VND';
 
     } catch (err) {
-        console.error(err);
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:red;">오류가 발생했습니다. (' + (err.message || '권한 문제일 수 있습니다') + ')</td></tr>';
+        console.error('loadFinanceData error:', err);
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:red; padding:2rem;">오류가 발생했습니다: ' + (err.message || '데이터를 불러오는 중 문제가 발생했습니다.') + '</td></tr>';
     }
 }
 
@@ -336,16 +449,16 @@ form.addEventListener('submit', async (e) => {
                     receiptUrl = await getDownloadURL(uploadRes.ref);
                 }
                 if (!receiptUrl) {
-                    receiptUrl = compressedDataUrl;
+                    receiptUrl = await compressImage(currentReceiptDataUrl, 800, 1000, 0.65);
                 }
             } catch (storageErr) {
                 console.warn('Receipt upload to storage failed, using compressed data fallback:', storageErr);
-                receiptUrl = await compressImage(currentReceiptDataUrl, 1000, 1400, 0.7);
+                receiptUrl = await compressImage(currentReceiptDataUrl, 800, 1000, 0.65);
             }
         }
 
         const storeFinanceRef = getStoreFinanceCollection(curStoreId);
-        await addDoc(storeFinanceRef, {
+        const newRecordData = {
             type: document.getElementById('finType').value,
             category: document.getElementById('finCategory').value,
             date: document.getElementById('finDate').value,
@@ -360,7 +473,14 @@ form.addEventListener('submit', async (e) => {
             storeName: sName,
             createdBy: auth.currentUser?.email || auth.currentUser?.uid || 'user',
             createdAt: serverTimestamp()
-        });
+        };
+
+        const addedDocRef = await addDoc(storeFinanceRef, newRecordData);
+
+        // Also save to root financeRecords with tenantId for backward compatibility
+        try {
+            await setDoc(doc(db, 'financeRecords', addedDocRef.id), newRecordData, { merge: true });
+        } catch (rootSaveErr) {}
 
         clearReceiptPreview();
 
@@ -448,10 +568,18 @@ window.openReceiptInspectionModal = (record) => {
 
     if (!inspectModal || !img) return;
 
-    img.src = record.receiptUrl || '';
+    const receiptImg = record.receiptUrl || record.receiptPhoto || record.imageUrl || record.photoUrl || (Array.isArray(record.photos) && record.photos[0]) || '';
+    img.src = receiptImg || '';
+    img.style.display = receiptImg ? 'block' : 'none';
+
     if (dlLink) {
-        dlLink.href = record.receiptUrl || '#';
-        dlLink.setAttribute('download', `receipt_${record.date || 'date'}.jpg`);
+        if (receiptImg) {
+            dlLink.style.display = 'inline-flex';
+            dlLink.href = receiptImg;
+            dlLink.setAttribute('download', `receipt_${record.date || 'date'}.jpg`);
+        } else {
+            dlLink.style.display = 'none';
+        }
     }
 
     const storeEl = document.getElementById('auditStoreName');
