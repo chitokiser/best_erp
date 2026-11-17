@@ -69,11 +69,13 @@ service cloud.firestore {
     function belongsToTenant(tenantId) {
       return signedIn() && (
         isSuperAdmin() ||
-        isCEO() ||
-        getUserData().tenant_id == tenantId ||
-        getUserData().tenantId == tenantId ||
-        getUserData().merchantId == tenantId ||
-        request.auth.uid == tenantId
+        (tenantId != null && (
+          getUserData().tenant_id == tenantId ||
+          getUserData().tenantId == tenantId ||
+          getUserData().merchantId == tenantId ||
+          getUserData().merchant_id == tenantId ||
+          request.auth.uid == tenantId
+        ))
       );
     }
 

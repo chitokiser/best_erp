@@ -164,13 +164,15 @@ async function loadEmployees() {
             const data = d.data();
             window.empDataMap[d.id] = data;
 
-            // In franchise mode, filter by merchantId or tenantId unless super admin
-            if (isSuper || !currentTenant || currentTenant === 'system_master') {
+            // In franchise mode, filter strictly by merchantId or tenantId unless super admin
+            if (isSuper) {
                 records.push({ id: d.id, ...data });
             } else {
-                const docTenant = String(data.tenantId || data.merchantId || '');
-                // Show if belongs to this franchise or has no tenant specified (legacy compatibility)
-                if (!docTenant || docTenant === currentTenant) {
+                const docTenant = String(data.tenantId || data.merchantId || '').trim();
+                if (docTenant === currentTenant) {
+                    records.push({ id: d.id, ...data });
+                } else if (!docTenant && currentTenant === '1791605366') {
+                    // Only Best Winner (default store) inherits untagged legacy records
                     records.push({ id: d.id, ...data });
                 }
             }

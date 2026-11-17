@@ -155,6 +155,9 @@ if (btnResetAmount) {
 async function loadFinanceData() {
     try {
         const snap = await getDocs(collection(db, 'financeRecords'));
+        const myTenant = String(window.tenantId || '').trim();
+        const isSuper = window.currentUserRole === 'SUPER_ADMIN' || (auth.currentUser?.email === 'daguri75@gmail.com') || myTenant === 'system_master';
+
         // DYNAMIC VIRTUAL PAYROLL INJECTION!
         let virtualPayrolls = [];
         try {
@@ -165,6 +168,10 @@ async function loadFinanceData() {
             
             empSnap.forEach(e => {
                 const edata = e.data();
+                const eTenant = String(edata.tenantId || edata.merchantId || '').trim();
+                if (!isSuper && eTenant && eTenant !== myTenant) return;
+                if (!isSuper && !eTenant && myTenant !== '1791605366') return;
+
                 if (edata.salary && Number(edata.salary) > 0) {
                     virtualPayrolls.push({
                         id: 'virtual_payroll_' + e.id,
@@ -173,8 +180,9 @@ async function loadFinanceData() {
                         amount: Number(edata.salary),
                         date: payDate,
                         partner: (edata.name || '직원') + ' (' + (edata.position||'') + ')',
-                        project: edata.department || '가맹점/본사 공통',
-                        memo: `[시스템 자동생성] ${now.getMonth()+1}월 정기 급여 지급예정`
+                        project: edata.department || '가맹점 공통',
+                        memo: `[시스템 자동생성] ${now.getMonth()+1}월 정기 급여 지급예정`,
+                        tenantId: eTenant || myTenant
                     });
                 }
             });
@@ -182,20 +190,14 @@ async function loadFinanceData() {
             console.warn("Employees payroll fetch warning:", empErr);
         }
 
-        if (snap.empty && virtualPayrolls.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:3rem; color:var(--text-muted);">등록된 재무 데이터가 없습니다.</td></tr>';
-            document.getElementById('sumIncome').textContent = '0 VND';
-            document.getElementById('sumExpense').textContent = '0 VND';
-            document.getElementById('sumReceivable').textContent = '0 VND';
-            document.getElementById('sumPayable').textContent = '0 VND';
-            return;
-        }
-
-        let html = '';
-        let sums = { INCOME: 0, EXPENSE: 0, RECEIVABLE: 0, PAYABLE: 0 };
-
         let records = [];
-        snap.forEach(doc => { records.push({ id: doc.id, ...doc.data() }); });
+        snap.forEach(doc => {
+            const data = doc.data();
+            const dTenant = String(data.tenantId || data.merchantId || '').trim();
+            if (isSuper || dTenant === myTenant || (!dTenant && myTenant === '1791605366')) {
+                records.push({ id: doc.id, ...data });
+            }
+        });
         // merge virtual records
         records = records.concat(virtualPayrolls);
 

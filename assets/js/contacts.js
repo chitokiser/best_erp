@@ -67,8 +67,12 @@ function getFilteredContacts() {
 
     // 1. Role-based isolation for non-superadmin franchisees
     if (!isSuperAdmin) {
-        const myTenant = window.tenantId || '';
-        list = list.filter(c => !c.tenantId || c.tenantId === myTenant || c.tenantId === 'system_master');
+        const myTenant = String(window.tenantId || '').trim();
+        list = list.filter(c => {
+            const cTenant = String(c.tenantId || c.merchantId || '').trim();
+            if (cTenant) return cTenant === myTenant;
+            return myTenant === '1791605366';
+        });
     }
 
     // 2. Store filter (for Superadmin)
@@ -184,6 +188,9 @@ async function loadContacts() {
         if (empSelect) empSelect.innerHTML = '<option value="">소개/연결할 직원을 선택하세요</option>';
         empSnap.forEach(e => {
             const data = e.data();
+            const eTenant = String(data.tenantId || data.merchantId || '').trim();
+            if (!isSuperAdmin && eTenant && eTenant !== window.tenantId) return;
+            if (!isSuperAdmin && !eTenant && window.tenantId !== '1791605366') return;
             allEmployees.push({ id: e.id, name: data.name, position: data.position, dept: data.department });
             if (empSelect) empSelect.innerHTML += `<option value="${e.id}">${data.name} (${data.position || data.department})</option>`;
         });

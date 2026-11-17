@@ -17,17 +17,18 @@ window.addEventListener('click', (e) => { if (e.target === modal) modal.style.di
 async function loadClientData() {
     try {
         const snap = await getDocs(collection(db, 'clients'));
-        if (snap.empty) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:3rem; color:var(--text-muted);">등록된 고객 데이터가 없습니다.</td></tr>';
-            return;
-        }
+        const myTenant = String(window.tenantId || '').trim();
+        const isSuper = window.currentUserRole === 'SUPER_ADMIN' || (window.currentUserEmail === 'daguri75@gmail.com') || myTenant === 'system_master';
 
         let html = '';
         let stats = { total: 0, vip: 0, new: 0, risk: 0 };
 
-        // MVP: Fetch and render all records
         snap.forEach(doc => {
             const data = doc.data();
+            const dTenant = String(data.tenantId || data.merchantId || '').trim();
+            if (!isSuper && dTenant && dTenant !== myTenant) return;
+            if (!isSuper && !dTenant && myTenant !== '1791605366') return;
+
             stats.total++;
 
             const grade = data.grade || 'NORMAL';
@@ -75,7 +76,9 @@ form.addEventListener('submit', async (e) => {
     btn.textContent = '저장 중...';
     btn.disabled = true;
 
-    try {
+        const myTenant = window.tenantId || '1791605366';
+        const myStore = window.currentStoreName || '가맹점';
+
         await addDoc(collection(db, 'clients'), {
             name: document.getElementById('cliName').value,
             grade: document.getElementById('cliGrade').value,
@@ -83,6 +86,9 @@ form.addEventListener('submit', async (e) => {
             phone: document.getElementById('cliPhone').value,
             lastContact: document.getElementById('cliLastContact').value,
             memo: document.getElementById('cliMemo').value,
+            tenantId: myTenant,
+            merchantId: myTenant,
+            storeName: myStore,
             createdAt: serverTimestamp()
         });
 

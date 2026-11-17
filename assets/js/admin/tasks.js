@@ -313,6 +313,7 @@ function populateRelatedTasksSelect() {
     sel.innerHTML = '<option value="">-- 독립 신규 보고 (관련 업무 없음) --</option>';
 
     allTasks.forEach(t => {
+        if (!canUserAccessTask(t)) return;
         if (t.status !== 'COMPLETED' || t.type === 'TASK' || !t.type) {
             const opt = document.createElement('option');
             opt.value = t.id;
