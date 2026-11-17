@@ -1,6 +1,6 @@
 import { db, auth, storage } from './firebase-config.js';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, doc, setDoc, getDocs, addDoc, serverTimestamp, query, orderBy, where } from 'firebase/firestore';
+import { collection, doc, setDoc, deleteDoc, getDocs, addDoc, serverTimestamp, query, orderBy, where } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { scanReceiptAI } from './aiApi.js';
 
@@ -172,12 +172,17 @@ async function loadFinanceData() {
     let html = '';
 
     try {
+        const isSuper = isSuperAdminUser();
         const curStoreInfo = getCurrentStoreInfo();
         const curStoreId = curStoreInfo.storeId;
-        const myTenant = String(window.tenantId || '').trim();
-        const isSuper = window.currentUserRole === 'SUPER_ADMIN' || (auth.currentUser?.email === 'daguri75@gmail.com') || myTenant === 'system_master';
         const filterSelect = document.getElementById('filterMerchant');
-        const selectedMerchant = filterSelect ? filterSelect.value : curStoreId;
+
+        // 🚨 ABSOLUTE MULTI-TENANT ISOLATION:
+        // selectedMerchant is ONLY valid for Super Admin!
+        // Regular Franchise Users (e.g. Daehan Kimchi CEO) CANNOT view 'ALL' or other stores!
+        const selectedMerchant = isSuper ? (filterSelect && filterSelect.value ? filterSelect.value : curStoreId) : curStoreId;
+        const targetStoreId = isSuper ? ((selectedMerchant && selectedMerchant !== 'ALL') ? selectedMerchant : curStoreId) : curStoreId;
+        const targetInfo = TENANT_MAP[targetStoreId] || curStoreInfo;
 
         const recordMap = new Map();
 
@@ -186,10 +191,20 @@ async function loadFinanceData() {
             const data = d.data ? d.data() : d;
             const id = d.id || data.id;
             if (!id || recordMap.has(id)) return;
+
+            // 🚨 STRICT DATA BOUNDARY: Reject foreign store records if not Super Admin
+            if (!isSuper) {
+                const recTenant = String(data.tenantId || data.merchantId || '').trim();
+                const recStoreName = String(data.storeName || '').trim();
+                if (recTenant && recTenant !== targetStoreId) return;
+                if (targetStoreId === '1791002036' && (recTenant === '1791605366' || recStoreName === 'BEST WINNER')) return;
+                if (targetStoreId === '1791605366' && (recTenant === '1791002036' || recStoreName.includes('대한김치'))) return;
+            }
+
             recordMap.set(id, {
                 id: id,
                 ...data,
-                storeName: data.storeName || defaultStoreName || curStoreInfo.name || '가맹점'
+                storeName: data.storeName || defaultStoreName || targetInfo.name || '가맹점'
             });
         };
 
@@ -204,97 +219,65 @@ async function loadFinanceData() {
                     console.warn(`Fetch error for store ${sId}:`, e);
                 }
             }
-            // Also include root financeRecords
-            try {
-                const rootSnap = await getDocs(collection(db, 'financeRecords'));
-                rootSnap.forEach(d => addRecordDoc(d));
-            } catch (e) {
-                console.warn('Root financeRecords fetch error:', e);
-            }
         } else {
-            // Specific store mode (e.g. 1791605366 Best Winner)
-            const targetStoreId = (isSuper && selectedMerchant && selectedMerchant !== 'ALL') ? selectedMerchant : curStoreId;
-            const targetInfo = TENANT_MAP[targetStoreId] || curStoreInfo;
-
-            // 1. Fetch from merchants/{targetStoreId}/financeRecords
+            // 🚨 STRICT ISOLATED STORE SUBCOLLECTION:
+            // Load ONLY from merchants/{targetStoreId}/financeRecords
             try {
                 const storeRef = collection(db, 'merchants', targetStoreId, 'financeRecords');
                 const snap = await getDocs(storeRef);
-                snap.forEach(d => addRecordDoc(d, targetInfo.name));
-            } catch (e) {
-                console.warn('Store financeRecords error:', e);
-            }
-
-            // 2. Best Winner alias checks (bestwinner slug)
-            if (targetStoreId === '1791605366') {
-                try {
-                    const slugSnap = await getDocs(collection(db, 'merchants', 'bestwinner', 'financeRecords'));
-                    slugSnap.forEach(d => {
-                        addRecordDoc(d, 'BEST WINNER');
-                        // Auto-sync into canonical subcollection
-                        try {
-                            setDoc(doc(db, 'merchants', '1791605366', 'financeRecords', d.id), {
-                                ...d.data(),
-                                tenantId: '1791605366',
-                                merchantId: '1791605366',
-                                storeName: 'BEST WINNER'
-                            }, { merge: true });
-                        } catch (err) {}
-                    });
-                } catch (e) {}
-            }
-
-            // 3. Root collection check for any legacy or direct records matching targetStoreId
-            try {
-                const rootSnap = await getDocs(collection(db, 'financeRecords'));
-                rootSnap.forEach(d => {
+                snap.forEach(d => {
                     const data = d.data();
                     const dTenant = String(data.tenantId || data.merchantId || '').trim();
                     const dStoreName = String(data.storeName || '').trim();
 
-                    let isMatch = false;
-                    if (targetStoreId === '1791605366') {
-                        isMatch = (dTenant === '1791605366' || dTenant === 'bestwinner' || dStoreName === 'BEST WINNER' || (!dTenant && !dStoreName));
-                    } else if (targetStoreId === '1794710386') {
-                        isMatch = (dTenant === '1794710386' || dTenant === 'baekje' || dTenant === 'baekje_galbi' || dStoreName.includes('백제'));
-                    } else if (targetStoreId === '1791002036') {
-                        isMatch = (dTenant === '1791002036' || dTenant === 'daehankimchi' || dStoreName.includes('대한'));
-                    } else {
-                        isMatch = (dTenant === targetStoreId);
+                    // 🚨 SANITIZATION: Purge any foreign store record that was erroneously synced here in the past
+                    if (dTenant && dTenant !== targetStoreId) {
+                        console.warn(`[DATA ISOLATION PURGE] Removing foreign store record ${d.id} (tenant ${dTenant}) from store ${targetStoreId}`);
+                        try {
+                            deleteDoc(doc(db, 'merchants', targetStoreId, 'financeRecords', d.id));
+                        } catch (delErr) {}
+                        return; // Exclude from display
                     }
 
-                    if (isMatch) {
-                        addRecordDoc(d, targetInfo.name);
-                        // Auto-sync into dedicated store subcollection so it's permanently preserved
+                    if (targetStoreId === '1791002036' && (dStoreName === 'BEST WINNER' || dTenant === '1791605366')) {
+                        console.warn(`[DATA ISOLATION PURGE] Removing Best Winner record ${d.id} from Daehan Kimchi`);
                         try {
-                            setDoc(doc(db, 'merchants', targetStoreId, 'financeRecords', d.id), {
-                                ...data,
-                                tenantId: targetStoreId,
-                                merchantId: targetStoreId,
-                                storeName: targetInfo.name || data.storeName || '가맹점'
-                            }, { merge: true });
-                        } catch (err) {}
+                            deleteDoc(doc(db, 'merchants', targetStoreId, 'financeRecords', d.id));
+                        } catch (delErr) {}
+                        return;
                     }
+
+                    addRecordDoc(d, targetInfo.name);
                 });
             } catch (e) {
-                console.warn('Root legacy check warning:', e);
+                console.warn('Store financeRecords error:', e);
             }
         }
 
-        // 4. DYNAMIC VIRTUAL PAYROLL INJECTION!
+        // 4. DYNAMIC VIRTUAL PAYROLL INJECTION: Strictly isolated per store!
         let virtualPayrolls = [];
         try {
             const empSnap = await getDocs(collection(db, 'employees'));
             const now = new Date();
             const curYYYYMM = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-            const payDate = curYYYYMM + '-25'; // Assume payday is 25th
-            const activeStoreId = (isSuper && selectedMerchant && selectedMerchant !== 'ALL') ? selectedMerchant : curStoreId;
+            const payDate = curYYYYMM + '-25';
             
             empSnap.forEach(e => {
                 const edata = e.data();
                 const eTenant = String(edata.tenantId || edata.merchantId || '').trim();
-                const isMyStoreEmp = (selectedMerchant === 'ALL') || (eTenant === activeStoreId) || (!eTenant && activeStoreId === '1791605366');
-                if (!isMyStoreEmp) return;
+
+                // 🚨 CRITICAL: Employee MUST belong to targetStoreId!
+                let isMyStoreEmp = false;
+                if (isSuper && selectedMerchant === 'ALL') {
+                    isMyStoreEmp = true;
+                } else {
+                    isMyStoreEmp = (eTenant === targetStoreId);
+                    if (!eTenant && targetStoreId === '1791605366') {
+                        isMyStoreEmp = true;
+                    }
+                }
+
+                if (!isMyStoreEmp) return; // REJECT ANY EMPLOYEE FROM OTHER STORES!
 
                 if (edata.salary && Number(edata.salary) > 0) {
                     virtualPayrolls.push({
@@ -306,8 +289,8 @@ async function loadFinanceData() {
                         partner: (edata.name || '직원') + ' (' + (edata.position||'') + ')',
                         project: edata.department || '가맹점 공통',
                         memo: `[시스템 자동생성] ${now.getMonth()+1}월 정기 급여 지급예정`,
-                        tenantId: activeStoreId,
-                        storeName: edata.storeName || TENANT_MAP[eTenant]?.name || '가맹점'
+                        tenantId: targetStoreId,
+                        storeName: edata.storeName || TENANT_MAP[eTenant]?.name || targetInfo.name || '가맹점'
                     });
                 }
             });

@@ -170,7 +170,7 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                     }
                 }
 
-                // 🚨 CRITICAL: hexttokenopbnb@gmail.com은 최고관리자가 아닌 BEST WINNER 가맹점 점주(CEO)
+                // 🚨 CRITICAL: Explicit CEO tenant mappings for each store
                 if (userEmailLower === 'hexttokenopbnb@gmail.com') {
                     role = 'CEO';
                     position = '가맹점 대표 (BEST WINNER)';
@@ -179,7 +179,6 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                     window.tenantId = '1791605366';
                     window.currentStoreName = 'BEST WINNER';
 
-                    // Ensure Firestore user document has CEO role & status so security rules always permit access
                     try {
                         await setDoc(doc(db, 'users', user.uid), {
                             email: user.email,
@@ -188,6 +187,42 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                             position: '가맹점 대표 (BEST WINNER)',
                             merchantId: '1791605366',
                             tenantId: '1791605366'
+                        }, { merge: true });
+                    } catch (err) { console.warn("Failed to sync user doc to firestore", err); }
+                } else if (userEmailLower === 'kfu134252@gmail.com') {
+                    role = 'CEO';
+                    position = '가맹점 대표 (대한김치)';
+                    status = '승인완료';
+                    isMerchant = true;
+                    window.tenantId = '1791002036';
+                    window.currentStoreName = '대한김치';
+
+                    try {
+                        await setDoc(doc(db, 'users', user.uid), {
+                            email: user.email,
+                            role: 'CEO',
+                            status: '승인완료',
+                            position: '가맹점 대표 (대한김치)',
+                            merchantId: '1791002036',
+                            tenantId: '1791002036'
+                        }, { merge: true });
+                    } catch (err) { console.warn("Failed to sync user doc to firestore", err); }
+                } else if (userEmailLower === 'bestwinner167@gmail.com') {
+                    role = 'CEO';
+                    position = '가맹점 대표 (백제갈비)';
+                    status = '승인완료';
+                    isMerchant = true;
+                    window.tenantId = '1794710386';
+                    window.currentStoreName = '백제갈비';
+
+                    try {
+                        await setDoc(doc(db, 'users', user.uid), {
+                            email: user.email,
+                            role: 'CEO',
+                            status: '승인완료',
+                            position: '가맹점 대표 (백제갈비)',
+                            merchantId: '1794710386',
+                            tenantId: '1794710386'
                         }, { merge: true });
                     } catch (err) { console.warn("Failed to sync user doc to firestore", err); }
                 } else if (userEmailLower === 'daguri75@gmail.com') {

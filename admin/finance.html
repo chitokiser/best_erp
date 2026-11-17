@@ -1006,6 +1006,8 @@
                         });
                     } else {
                         filterSelect.style.display = 'none';
+                        filterSelect.disabled = true;
+                        filterSelect.value = window.tenantId || '';
                     }
                 }
 
