@@ -782,13 +782,14 @@
                         <th>유형/항목</th>
                         <th>금액</th>
                         <th>관련 거래처/프로젝트</th>
+                        <th>등록자 / 지출자</th>
                         <th>적요(내용)</th>
                         <th style="text-align:center; width:90px;">관리</th>
                     </tr>
                 </thead>
                 <tbody id="financeTableBody">
                     <tr>
-                        <td colspan="6" style="text-align:center; padding:3rem; color:var(--text-muted);">등록된 재무 데이터가
+                        <td colspan="7" style="text-align:center; padding:3rem; color:var(--text-muted);">등록된 재무 데이터가
                             없습니다.</td>
                     </tr>
                 </tbody>
@@ -809,7 +810,7 @@
             <form id="financeForm">
                 <div class="modal-body">
                     <!-- 📸 Receipt OCR Upload Box -->
-                    <div id="receiptOcrDropArea" style="background:linear-gradient(135deg, #ECFDF5 0%, #EFF6FF 100%); border:2px dashed #10B981; border-radius:0.9rem; padding:1rem 1.25rem; margin-bottom:1.25rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+                    <div id="receiptOcrDropArea" style="background:linear-gradient(135deg, #ECFDF5 0%, #EFF6FF 100%); border:2px dashed #10B981; border-radius:0.9rem; padding:1rem 1.25rem; margin-bottom:1.1rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
                         <div style="display:flex; align-items:center; gap:0.75rem;">
                             <div style="width:44px; height:44px; border-radius:50%; background:white; display:flex; align-items:center; justify-content:center; font-size:1.4rem; box-shadow:0 2px 6px rgba(0,0,0,0.06); flex-shrink:0;">
                                 📸
@@ -828,7 +829,7 @@
                     </div>
 
                     <!-- Receipt Preview & Analysis Progress -->
-                    <div id="receiptPreviewBox" style="display:none; margin-bottom:1.25rem; background:#F8FAFC; border:1.5px solid #CBD5E1; border-radius:0.75rem; padding:0.85rem; align-items:center; gap:0.85rem; position:relative;">
+                    <div id="receiptPreviewBox" style="display:none; margin-bottom:1.1rem; background:#F8FAFC; border:1.5px solid #CBD5E1; border-radius:0.75rem; padding:0.85rem; align-items:center; gap:0.85rem; position:relative;">
                         <div id="receiptThumbContainer" style="width:68px; height:68px; border-radius:0.5rem; overflow:hidden; border:2px solid #3B82F6; flex-shrink:0; background:#000; cursor:pointer; position:relative;" title="🔍 클릭하여 영수증 원본 크게보기/검토">
                             <img id="receiptThumbImg" src="" style="width:100%; height:100%; object-fit:cover;" alt="영수증 사진">
                             <div style="position:absolute; inset:0; background:rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; color:white; font-size:1.1rem; opacity:0; transition:opacity 0.2s;" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='0'">
@@ -856,6 +857,25 @@
                             </div>
                         </div>
                         <button type="button" id="btnRemoveReceipt" style="background:#F1F5F9; border:none; width:28px; height:28px; border-radius:50%; color:#64748B; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;" title="영수증 사진 취소">✕</button>
+                    </div>
+
+                    <!-- 👤 등록자 명시 & 실제 지출자 별도 입력 섹션 -->
+                    <div class="form-grid-2" style="background:#F8FAFC; border:1.5px solid #E2E8F0; border-radius:0.85rem; padding:0.9rem 1.1rem; margin-bottom:1.25rem;">
+                        <div class="form-group">
+                            <label for="finRegistrant">
+                                <span>✍️ 등록자 (명시) <span class="required-mark">*</span></span>
+                                <span style="font-size:0.72rem; background:#EEF2FF; color:#4F46E5; padding:0.12rem 0.45rem; border-radius:0.3rem; font-weight:700;">현재 등록 계정</span>
+                            </label>
+                            <input type="text" id="finRegistrant" required placeholder="등록자 이름 (자동 입력됨)" style="background:#FFFFFF; font-weight:700; color:#1E293B;">
+                        </div>
+                        <div class="form-group">
+                            <label for="finSpender">
+                                <span>💳 실제 지출자 (별도 입력 가능)</span>
+                                <span id="spenderAutoBadge" style="font-size:0.72rem; background:#ECFDF5; color:#047857; padding:0.12rem 0.45rem; border-radius:0.3rem; font-weight:700;">미입력 시 등록자로 등록</span>
+                            </label>
+                            <input type="text" id="finSpender" list="spenderEmpList" placeholder="비워두면 등록자가 지출자로 자동 등록됩니다">
+                            <datalist id="spenderEmpList"></datalist>
+                        </div>
                     </div>
 
                     <!-- Type Selection Segmented Cards -->
@@ -1105,6 +1125,14 @@
                             <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
                                 <span style="color:#64748B;">거래 성격:</span>
                                 <strong id="auditTypeBadge" style="color:#0F172A;">지출</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+                                <span style="color:#64748B;">✍️ 등록자:</span>
+                                <strong id="auditRegistrant" style="color:#4F46E5;">-</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+                                <span style="color:#64748B;">💳 실제 지출자:</span>
+                                <strong id="auditSpender" style="color:#047857;">-</strong>
                             </div>
                             <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
                                 <span style="color:#64748B;">서버 보관 상태:</span>

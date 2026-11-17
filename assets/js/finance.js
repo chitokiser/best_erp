@@ -62,6 +62,60 @@ function formatKoreanNumber(val) {
     return parts.join(' ') + ' 동';
 }
 
+const finRegistrantInput = document.getElementById('finRegistrant');
+const finSpenderInput = document.getElementById('finSpender');
+const spenderAutoBadge = document.getElementById('spenderAutoBadge');
+
+function getDefaultRegistrantName() {
+    const email = (auth.currentUser?.email || window.currentUserEmail || '').trim();
+    const emailLower = email.toLowerCase();
+    if (emailLower === 'daguri75@gmail.com') return '최철웅 (daguri75@gmail.com)';
+    if (emailLower === 'hexttokenopbnb@gmail.com') return 'BEST WINNER 대표 (hexttokenopbnb@gmail.com)';
+    if (emailLower === 'bestwinner167@gmail.com') return '백제갈비 대표 (bestwinner167@gmail.com)';
+    if (emailLower === 'kfu134252@gmail.com') return '대한김치 대표 (kfu134252@gmail.com)';
+
+    const rawName = (window.currentUserName || auth.currentUser?.displayName || '').trim();
+    const cleanName = (rawName && rawName !== 'Winner Best') ? rawName : '';
+    if (cleanName && email) return `${cleanName} (${email})`;
+    if (cleanName) return cleanName;
+    if (email) return email;
+    return window.currentStoreName ? `${window.currentStoreName} 담당자` : '관리자';
+}
+
+function getResolvedRegistrantAndSpender() {
+    const rawReg = (finRegistrantInput?.value || '').trim();
+    const registrant = rawReg || getDefaultRegistrantName();
+    const rawSpender = (finSpenderInput?.value || '').trim();
+    // 지출자를 별도 입력하지 않을 경우 등록자가 지출자로 자동 등록
+    const spender = rawSpender || registrant;
+    return { registrant, spender, isSpenderSeparate: Boolean(rawSpender && rawSpender !== registrant) };
+}
+
+function syncSpenderBadgeUI() {
+    const { registrant, spender, isSpenderSeparate } = getResolvedRegistrantAndSpender();
+    if (finSpenderInput) {
+        finSpenderInput.placeholder = `미입력 시 '${registrant}'(등록자)로 자동 등록`;
+    }
+    if (spenderAutoBadge) {
+        if (isSpenderSeparate) {
+            spenderAutoBadge.textContent = `지출자 별도 지정: ${spender}`;
+            spenderAutoBadge.style.background = '#DBEAFE';
+            spenderAutoBadge.style.color = '#1E40AF';
+        } else {
+            spenderAutoBadge.textContent = '미입력 시 등록자로 자동 등록';
+            spenderAutoBadge.style.background = '#ECFDF5';
+            spenderAutoBadge.style.color = '#047857';
+        }
+    }
+}
+
+if (finRegistrantInput) {
+    finRegistrantInput.addEventListener('input', syncSpenderBadgeUI);
+}
+if (finSpenderInput) {
+    finSpenderInput.addEventListener('input', syncSpenderBadgeUI);
+}
+
 function updateAmountPreview(val) {
     const num = Number(val) || 0;
     if (num > 0) {
@@ -82,6 +136,10 @@ function updateAmountPreview(val) {
 function openModal() {
     const dateInput = document.getElementById('finDate');
     if (dateInput) dateInput.valueAsDate = new Date();
+    if (finRegistrantInput && !finRegistrantInput.value.trim()) {
+        finRegistrantInput.value = getDefaultRegistrantName();
+    }
+    syncSpenderBadgeUI();
     modal.style.display = 'flex';
     setType('INCOME');
     updateAmountPreview(amountInput ? amountInput.value : 0);
@@ -277,8 +335,9 @@ async function loadFinanceData() {
             }
         }
 
-        // 4. DYNAMIC VIRTUAL PAYROLL INJECTION: Strictly isolated per store!
+        // 4. DYNAMIC VIRTUAL PAYROLL INJECTION & EMPLOYEE SPENDER DATALIST: Strictly isolated per store!
         let virtualPayrolls = [];
+        const spenderEmpNames = new Set();
         try {
             const empSnap = await getDocs(collection(db, 'employees'));
             const now = new Date();
@@ -302,6 +361,11 @@ async function loadFinanceData() {
 
                 if (!isMyStoreEmp) return; // REJECT ANY EMPLOYEE FROM OTHER STORES!
 
+                if (edata.name) {
+                    const empLabel = edata.position ? `${edata.name} (${edata.position})` : edata.name;
+                    spenderEmpNames.add(empLabel);
+                }
+
                 if (edata.salary && Number(edata.salary) > 0) {
                     virtualPayrolls.push({
                         id: 'virtual_payroll_' + e.id,
@@ -311,6 +375,8 @@ async function loadFinanceData() {
                         date: payDate,
                         partner: (edata.name || '직원') + ' (' + (edata.position||'') + ')',
                         project: edata.department || '가맹점 공통',
+                        registrant: '시스템 자동생성',
+                        spender: (edata.name || '직원') + (edata.position ? ` (${edata.position})` : ''),
                         memo: `[시스템 자동생성] ${now.getMonth()+1}월 정기 급여 지급예정`,
                         tenantId: targetStoreId,
                         storeName: edata.storeName || TENANT_MAP[eTenant]?.name || targetInfo.name || '가맹점'
@@ -319,6 +385,13 @@ async function loadFinanceData() {
             });
         } catch (empErr) {
             console.warn("Employees payroll fetch warning:", empErr);
+        }
+
+        const spenderDatalist = document.getElementById('spenderEmpList');
+        if (spenderDatalist) {
+            spenderDatalist.innerHTML = Array.from(spenderEmpNames)
+                .map(name => `<option value="${name.replace(/"/g, '&quot;')}"></option>`)
+                .join('');
         }
 
         let records = Array.from(recordMap.values());
@@ -331,7 +404,7 @@ async function loadFinanceData() {
         if (records.length === 0) {
             html = `
                 <tr>
-                    <td colspan="6" style="text-align:center; padding:3.5rem 1rem; color:var(--text-muted);">
+                    <td colspan="7" style="text-align:center; padding:3.5rem 1rem; color:var(--text-muted);">
                         <div style="font-size:2.5rem; margin-bottom:0.75rem;">🧾</div>
                         <div style="font-size:1.05rem; font-weight:700; color:#1E293B; margin-bottom:0.35rem;">등록된 수입/지출 내역이 없습니다.</div>
                         <div style="font-size:0.85rem; color:#64748B;">위의 <b>[📸 AI 영수증 자동 지출 등록]</b> 버튼을 누르면 영수증 사진을 올려 즉시 지출로 등록할 수 있습니다.</div>
@@ -377,6 +450,9 @@ async function loadFinanceData() {
                 }
 
                 const isVirtual = String(data.id || '').startsWith('virtual_payroll_');
+                const registrantDisp = data.registrant || data.createdBy || (isVirtual ? '시스템 자동' : '-');
+                const spenderDisp = data.spender || data.registrant || data.createdBy || (isVirtual ? data.partner : '-');
+
                 const deleteActionHtml = isVirtual
                     ? `<span style="color:#94A3B8; font-size:0.75rem;">자동급여</span>`
                     : `<button type="button" class="btn-delete-row" data-record-id="${data.id}" data-memo="${(data.memo || data.partner || '').replace(/"/g, '&quot;')}" style="display:inline-flex; align-items:center; gap:0.25rem; font-size:0.75rem; background:#FEE2E2; color:#B91C1C; border:1px solid #FECACA; padding:0.32rem 0.65rem; border-radius:0.4rem; font-weight:700; cursor:pointer; transition:all 0.15s;" title="지출 내역 영구 삭제">
@@ -394,6 +470,16 @@ async function loadFinanceData() {
                         <td>
                             <div style="color:var(--text-dark); font-weight:600;">${storeBadge}${partner}</div>
                             <div style="font-size:0.85rem; color:var(--text-muted);">${project}</div>
+                        </td>
+                        <td>
+                            <div style="font-size:0.82rem; font-weight:700; color:#047857; display:flex; align-items:center; gap:0.25rem;">
+                                <span style="background:#ECFDF5; border:1px solid #A7F3D0; padding:0.1rem 0.38rem; border-radius:0.3rem; font-size:0.72rem;">💳 지출자</span>
+                                <span style="color:#0F172A;">${spenderDisp}</span>
+                            </div>
+                            <div style="font-size:0.76rem; color:#64748B; margin-top:0.28rem; display:flex; align-items:center; gap:0.25rem;">
+                                <span style="background:#EEF2FF; color:#4F46E5; padding:0.08rem 0.35rem; border-radius:0.3rem; font-size:0.7rem; font-weight:700;">✍️ 등록자</span>
+                                <span>${registrantDisp}</span>
+                            </div>
                         </td>
                         <td style="color:var(--text-muted);">
                             <div style="color:#1E293B;">${data.memo || '-'}</div>
@@ -415,7 +501,7 @@ async function loadFinanceData() {
 
     } catch (err) {
         console.error('loadFinanceData error:', err);
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red; padding:2rem;">오류가 발생했습니다: ' + (err.message || '데이터를 불러오는 중 문제가 발생했습니다.') + '</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red; padding:2rem;">오류가 발생했습니다: ' + (err.message || '데이터를 불러오는 중 문제가 발생했습니다.') + '</td></tr>';
     }
 }
 
@@ -499,6 +585,9 @@ form.addEventListener('submit', async (e) => {
             }
         }
 
+        // 등록자 명시 & 실제 지출자 (미입력 시 등록자가 지출자로 자동 등록)
+        const { registrant, spender } = getResolvedRegistrantAndSpender();
+
         const storeFinanceRef = getStoreFinanceCollection(curStoreId);
         const newRecordData = {
             type: document.getElementById('finType').value,
@@ -508,6 +597,8 @@ form.addEventListener('submit', async (e) => {
             partner: document.getElementById('finPartner').value,
             project: document.getElementById('finProject').value,
             memo: document.getElementById('finMemo').value,
+            registrant: registrant,
+            spender: spender,
             receiptUrl: receiptUrl,
             receiptItems: currentReceiptItems || [],
             tenantId: curStoreId,
@@ -528,6 +619,8 @@ form.addEventListener('submit', async (e) => {
 
         modal.style.display = 'none';
         form.reset();
+        if (finRegistrantInput) finRegistrantInput.value = getDefaultRegistrantName();
+        syncSpenderBadgeUI();
         updateAmountPreview(0);
         await loadFinanceData();
     } catch (err) {
@@ -541,8 +634,14 @@ form.addEventListener('submit', async (e) => {
 
 // Auth state observer for safe execution
 onAuthStateChanged(auth, (user) => {
-    if (user && (window.tenantId || window.currentUserRole)) {
-        loadFinanceData();
+    if (user) {
+        if (finRegistrantInput && !finRegistrantInput.value.trim()) {
+            finRegistrantInput.value = getDefaultRegistrantName();
+            syncSpenderBadgeUI();
+        }
+        if (window.tenantId || window.currentUserRole) {
+            loadFinanceData();
+        }
     }
 });
 
@@ -642,6 +741,16 @@ window.openReceiptInspectionModal = (record) => {
         typeEl.style.color = record.type === 'INCOME' ? '#059669' : '#DC2626';
     }
 
+    const fallbackPeople = getResolvedRegistrantAndSpender();
+    const resolvedReg = record.registrant || record.createdBy || fallbackPeople.registrant || '-';
+    const resolvedSpd = record.spender || record.registrant || record.createdBy || fallbackPeople.spender || '-';
+
+    const regEl = document.getElementById('auditRegistrant');
+    if (regEl) regEl.textContent = resolvedReg;
+
+    const spdEl = document.getElementById('auditSpender');
+    if (spdEl) spdEl.textContent = resolvedSpd;
+
     const memoEl = document.getElementById('auditMemo');
     if (memoEl) memoEl.textContent = record.memo || '기록된 메모 없음';
 
@@ -727,6 +836,7 @@ function clearReceiptPreview() {
 
 const triggerPreviewInspect = () => {
     if (!currentReceiptDataUrl) return;
+    const { registrant, spender } = getResolvedRegistrantAndSpender();
 
     if (isReceiptAnalyzing) {
         openReceiptInspectionModal({
@@ -736,6 +846,8 @@ const triggerPreviewInspect = () => {
             amount: 0,
             category: '식자재/원부자재',
             type: 'EXPENSE',
+            registrant,
+            spender,
             receiptItems: [],
             memo: '⏳ AI가 영수증의 상호명, 결제일자, 총 결제금액 및 세부 품목을 정밀 분석하고 있습니다.\n분석이 완료되면 이 화면에 자동으로 즉시 채워집니다. 잠시만 기다려주세요.'
         });
@@ -749,6 +861,8 @@ const triggerPreviewInspect = () => {
         amount: Number(document.getElementById('finAmount')?.value) || 0,
         category: document.getElementById('finCategory')?.value || '식자재/원부자재',
         type: document.getElementById('finType')?.value || 'EXPENSE',
+        registrant,
+        spender,
         receiptItems: currentReceiptItems || [],
         memo: document.getElementById('finMemo')?.value || '영수증 등록 전 사전 검토'
     });
@@ -883,6 +997,7 @@ if (receiptFileInput) {
             // If user has the inspector modal already open, live-update it with extracted data!
             const inspectModal = document.getElementById('receiptImageModal');
             if (inspectModal && inspectModal.style.display === 'flex') {
+                const { registrant, spender } = getResolvedRegistrantAndSpender();
                 openReceiptInspectionModal({
                     receiptUrl: currentReceiptDataUrl,
                     partner: ocrResult.storeName || '영수증 거래처',
@@ -890,6 +1005,8 @@ if (receiptFileInput) {
                     amount: ocrResult.totalAmount,
                     category: ocrResult.category,
                     type: 'EXPENSE',
+                    registrant,
+                    spender,
                     receiptItems: currentReceiptItems,
                     memo: `[AI 영수증 자동정리] ${ocrResult.summary || ''}`
                 });

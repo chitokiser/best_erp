@@ -110,6 +110,7 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
 
                 if (snap && snap.exists()) {
                     const data = snap.data();
+                    window.currentUserName = (data.name && data.name !== 'Winner Best') ? data.name : (data.position || '');
                     const rawRole = (data.role || data.tier || 'GUEST').toUpperCase();
                     role = rawRole;
                     position = data.position || data.name || '직원';
