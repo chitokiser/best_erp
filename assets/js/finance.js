@@ -1,8 +1,29 @@
 import { db, auth, storage } from './firebase-config.js';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, getDocs, addDoc, serverTimestamp, query, orderBy, where } from 'firebase/firestore';
+import { collection, doc, setDoc, getDocs, addDoc, serverTimestamp, query, orderBy, where } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { scanReceiptAI } from './aiApi.js';
+
+function getCurrentStoreId() {
+    const isSuper = (window.currentUserRole === 'SUPER_ADMIN') || (auth.currentUser?.email === 'daguri75@gmail.com') || (window.tenantId === 'system_master');
+    const filterSelect = document.getElementById('filterMerchant');
+    if (isSuper && filterSelect && filterSelect.value && filterSelect.value !== 'ALL') {
+        return filterSelect.value;
+    }
+    const myTenant = String(window.tenantId || '').trim();
+    if (myTenant && myTenant !== 'system_master' && myTenant !== 'undefined' && myTenant !== 'null') {
+        return myTenant;
+    }
+    if ((auth.currentUser?.email || '').toLowerCase().trim() === 'bestwinner167@gmail.com') {
+        return '1794710386'; // 백제갈비
+    }
+    return '1791605366'; // 기본 베스트위너
+}
+
+function getStoreFinanceCollection(storeId) {
+    const sId = storeId || getCurrentStoreId();
+    return collection(db, 'merchants', sId, 'financeRecords');
+}
 
 const modal = document.getElementById('financeModal');
 const openBtn = document.getElementById('openModalBtn');
@@ -154,11 +175,36 @@ if (btnResetAmount) {
 
 async function loadFinanceData() {
     try {
-        const snap = await getDocs(collection(db, 'financeRecords'));
+        const curStoreId = getCurrentStoreId();
         const myTenant = String(window.tenantId || '').trim();
         const isSuper = window.currentUserRole === 'SUPER_ADMIN' || (auth.currentUser?.email === 'daguri75@gmail.com') || myTenant === 'system_master';
 
-        // DYNAMIC VIRTUAL PAYROLL INJECTION!
+        // 1. Separate DB Table per Store: merchants/{curStoreId}/financeRecords
+        const storeRef = getStoreFinanceCollection(curStoreId);
+        let snap = await getDocs(storeRef);
+
+        // One-time auto-migration for Best Winner (1791605366) legacy records
+        if (curStoreId === '1791605366' && snap.empty) {
+            try {
+                const legacySnap = await getDocs(collection(db, 'financeRecords'));
+                if (!legacySnap.empty) {
+                    for (const lDoc of legacySnap.docs) {
+                        const lData = lDoc.data();
+                        await setDoc(doc(storeRef, lDoc.id), {
+                            ...lData,
+                            tenantId: '1791605366',
+                            merchantId: '1791605366',
+                            storeName: 'BEST WINNER'
+                        }, { merge: true });
+                    }
+                    snap = await getDocs(storeRef);
+                }
+            } catch (migErr) {
+                console.warn('Finance legacy migration note:', migErr);
+            }
+        }
+
+        // 2. DYNAMIC VIRTUAL PAYROLL INJECTION!
         let virtualPayrolls = [];
         try {
             const empSnap = await getDocs(collection(db, 'employees'));
@@ -169,8 +215,9 @@ async function loadFinanceData() {
             empSnap.forEach(e => {
                 const edata = e.data();
                 const eTenant = String(edata.tenantId || edata.merchantId || '').trim();
-                if (!isSuper && eTenant && eTenant !== myTenant) return;
-                if (!isSuper && !eTenant && myTenant !== '1791605366') return;
+                // STRICT STORE CHECK: Employee must belong to curStoreId!
+                const isMyStoreEmp = (eTenant === curStoreId) || (!eTenant && curStoreId === '1791605366');
+                if (!isMyStoreEmp) return;
 
                 if (edata.salary && Number(edata.salary) > 0) {
                     virtualPayrolls.push({
@@ -182,7 +229,7 @@ async function loadFinanceData() {
                         partner: (edata.name || '직원') + ' (' + (edata.position||'') + ')',
                         project: edata.department || '가맹점 공통',
                         memo: `[시스템 자동생성] ${now.getMonth()+1}월 정기 급여 지급예정`,
-                        tenantId: eTenant || myTenant
+                        tenantId: curStoreId
                     });
                 }
             });
@@ -191,12 +238,8 @@ async function loadFinanceData() {
         }
 
         let records = [];
-        snap.forEach(doc => {
-            const data = doc.data();
-            const dTenant = String(data.tenantId || data.merchantId || '').trim();
-            if (isSuper || dTenant === myTenant || (!dTenant && myTenant === '1791605366')) {
-                records.push({ id: doc.id, ...data });
-            }
+        snap.forEach(docSnap => {
+            records.push({ id: docSnap.id, ...docSnap.data() });
         });
         // merge virtual records
         records = records.concat(virtualPayrolls);
@@ -290,7 +333,8 @@ form.addEventListener('submit', async (e) => {
     btn.disabled = true;
 
     try {
-        const tId = window.tenantId || 'system_master';
+        const curStoreId = getCurrentStoreId();
+        const tId = curStoreId;
         const sName = window.currentStoreName || '';
         let receiptUrl = '';
         if (currentReceiptDataUrl && currentReceiptDataUrl.startsWith('data:image')) {
@@ -311,7 +355,8 @@ form.addEventListener('submit', async (e) => {
             }
         }
 
-        await addDoc(collection(db, 'financeRecords'), {
+        const storeFinanceRef = getStoreFinanceCollection(curStoreId);
+        await addDoc(storeFinanceRef, {
             type: document.getElementById('finType').value,
             category: document.getElementById('finCategory').value,
             date: document.getElementById('finDate').value,
@@ -321,7 +366,8 @@ form.addEventListener('submit', async (e) => {
             memo: document.getElementById('finMemo').value,
             receiptUrl: receiptUrl,
             receiptItems: currentReceiptItems || [],
-            tenantId: tId,
+            tenantId: curStoreId,
+            merchantId: curStoreId,
             storeName: sName,
             createdBy: auth.currentUser?.email || auth.currentUser?.uid || 'user',
             createdAt: serverTimestamp()
@@ -344,12 +390,12 @@ form.addEventListener('submit', async (e) => {
 
 // Auth state observer for safe execution
 onAuthStateChanged(auth, (user) => {
-    if (user) {
+    if (user && (window.tenantId || window.currentUserRole)) {
         loadFinanceData();
     }
 });
 
-if (auth.currentUser) {
+if (auth.currentUser && (window.tenantId || window.currentUserRole)) {
     loadFinanceData();
 }
 

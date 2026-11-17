@@ -740,6 +740,13 @@
                 </p>
             </div>
             <div style="display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center;">
+                <select id="filterMerchant" style="display:none; padding:0.65rem 1rem; border-radius:0.5rem; border:1px solid #cbd5e1; background:#fff; font-weight:700; font-size:0.9rem; color:#4338ca; cursor:pointer;">
+                    <option value="1791605366">🏬 BEST WINNER (베스트위너)</option>
+                    <option value="1794710386">🏬 백제갈비 (Baekje Galbi)</option>
+                    <option value="1791002036">🏬 대한김치</option>
+                    <option value="1793671043">🏬 베스트마리오</option>
+                    <option value="1793776651">🏬 sunvietnam</option>
+                </select>
                 <button type="button" class="btn-receipt-ocr" id="openReceiptOcrBtn" style="background:#10B981; color:white; border:none; border-radius:0.5rem; padding:0.75rem 1.35rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; box-shadow:0 4px 12px rgba(16,185,129,0.3); transition:all 0.2s;">
                     <span style="font-size:1.15rem;">📸</span> AI 영수증 자동 지출 등록
                 </button>
@@ -973,6 +980,23 @@
                 const emailSpan = document.getElementById('navUserEmailSpan');
                 if (emailSpan) {
                     emailSpan.textContent = user.email;
+                }
+
+                const isSuper = (window.currentUserRole === 'SUPER_ADMIN') || (user.email === 'daguri75@gmail.com') || (window.tenantId === 'system_master');
+                const filterSelect = document.getElementById('filterMerchant');
+                if (filterSelect) {
+                    if (isSuper) {
+                        filterSelect.style.display = 'inline-block';
+                        filterSelect.addEventListener('change', () => {
+                            if (window.loadFinanceData) window.loadFinanceData();
+                        });
+                    } else {
+                        filterSelect.style.display = 'none';
+                    }
+                }
+
+                if (window.loadFinanceData) {
+                    window.loadFinanceData();
                 }
             },
             () => {
