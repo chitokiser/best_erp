@@ -18,16 +18,27 @@ let activeMerchantId = '1791605366';
 
 // 가맹점 ID/영문별칭 상호 호환 매핑 테이블 (BestClubVN 표준)
 const KNOWN_MERCHANT_ALIASES = {
-    "daehan_kimchi": ["1791002036", "daehan_kimchi"],
-    "1791002036": ["1791002036", "daehan_kimchi"],
+    "1794710386": ["1794710386", "baekje_galbi", "baekjegalbi"],
+    "baekje_galbi": ["1794710386", "baekje_galbi", "baekjegalbi"],
+    "baekjegalbi": ["1794710386", "baekje_galbi", "baekjegalbi"],
+    "1791605366": ["1791605366", "bestwinner", "best_winner"],
     "bestwinner": ["1791605366", "bestwinner", "best_winner"],
-    "1791605366": ["1791605366", "bestwinner", "best_winner"]
+    "1791002036": ["1791002036", "daehan_kimchi", "daehankimchi"],
+    "daehan_kimchi": ["1791002036", "daehan_kimchi", "daehankimchi"],
+    "daehankimchi": ["1791002036", "daehan_kimchi", "daehankimchi"],
+    "1793671043": ["1793671043", "best_mario", "bestmario"],
+    "best_mario": ["1793671043", "best_mario", "bestmario"],
+    "1793776651": ["1793776651", "sunvietnam"],
+    "sunvietnam": ["1793776651", "sunvietnam"]
 };
 
 function getMerchantName(id) {
     const s = String(id || '').trim();
+    if (s === '1794710386' || s === 'baekje_galbi' || s === 'baekjegalbi') return '백제갈비';
     if (s === '1791605366' || s === 'bestwinner' || s === 'best_winner') return '베스트위너';
-    if (s === '1791002036' || s === 'daehan_kimchi') return '대한김치';
+    if (s === '1791002036' || s === 'daehan_kimchi' || s === 'daehankimchi') return '대한김치';
+    if (s === '1793671043' || s === 'best_mario' || s === 'bestmario') return '베스트마리오';
+    if (s === '1793776651' || s === 'sunvietnam') return 'sunvietnam';
     return s ? `가맹점(${s})` : '공통';
 }
 
@@ -107,13 +118,23 @@ async function loadClients() {
 
                     const key = email || docSnap.id;
 
+                    // 백제갈비 등 가맹점주/매장 ID 매핑
+                    let mId = String(ud.registeredMerchantId || ud.merchantId || ud.registeredStoreId || ud.storeId || '').trim();
+                    const isOwner = email === 'bestwinner167@gmail.com' || ud.role === 'MERCHANT' || ud.role === 'STORE_ADMIN';
+                    if (email === 'bestwinner167@gmail.com') {
+                        mId = '1794710386';
+                    }
+                    if (!mId) mId = activeMerchantId;
+
                     const client = {
                         id: docSnap.id,
                         uid: docSnap.id,
                         email: ud.email || '',
                         name: ud.name || '멘티 고객',
                         phone: ud.phone || '',
-                        merchantId: ud.registeredMerchantId || ud.merchantId || ud.registeredStoreId || activeMerchantId,
+                        merchantId: mId,
+                        isMerchantOwner: isOwner,
+                        merchantStoreName: isOwner ? (getMerchantName(mId) || ud.name) : '',
                         isMentee: true,
                         isBuyer: false,
                         registeredAt: ud.createdAt || ud.registeredAt || null,
@@ -305,7 +326,9 @@ window.renderMentees = function () {
     filtered.forEach(c => {
         // 회원 구분 뱃지
         let relBadge = '';
-        if (c.relationType === 'both') {
+        if (c.isMerchantOwner) {
+            relBadge = `<span class="tag-status" style="background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; font-weight:700;">🏪 가맹점주${c.merchantStoreName ? ` (${escapeHtml(c.merchantStoreName)})` : ''}</span>`;
+        } else if (c.relationType === 'both') {
             relBadge = '<span class="tag-status" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; font-weight:700;">🌟 내 멘티 + 구매</span>';
         } else if (c.relationType === 'affiliate') {
             relBadge = '<span class="tag-status" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-weight:700;">🤝 제휴 회원</span>';
@@ -370,7 +393,8 @@ window.viewOrders = function (clientId) {
 
     // 회원 관계 표시명
     let relLabel = '내 가맹점 직속 멘티 회원';
-    if (client.relationType === 'both') relLabel = '내 멘티 & 상품 구매 고객 (VIP)';
+    if (client.isMerchantOwner) relLabel = `🏪 가맹점 대표/점주 (${client.merchantStoreName || '가맹점'})`;
+    else if (client.relationType === 'both') relLabel = '내 멘티 & 상품 구매 고객 (VIP)';
     else if (client.relationType === 'affiliate') relLabel = '🤝 제휴 회원 (타 가맹점 가입 · 내 가맹점 구매고객)';
 
     custInfoEl.innerHTML = `
