@@ -500,18 +500,34 @@
     <template id="tplTaskDetailView">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
             <div>
-                <span id="dtlTypeBadge" class="priority-badge" style="display:none; margin-right:0.35rem;"></span>
-                <span id="dtlPriority" class="priority-badge"></span>
-                <span id="dtlStatus" class="status-badge" style="margin-left:0.35rem;"></span>
-                <h2 id="dtlTitle" style="margin: 0.5rem 0 0.25rem 0; font-size:1.4rem;"></h2>
+                <div style="display:flex; gap:0.35rem; align-items:center; flex-wrap:wrap; margin-bottom:0.25rem;">
+                    <span id="dtlTypeBadge" class="priority-badge" style="display:none;"></span>
+                    <span id="dtlPriority" class="priority-badge"></span>
+                    <span id="dtlStatus" class="status-badge"></span>
+                    <span id="dtlAuthorTag" class="tag-author" style="background:#e0f2fe; color:#0369a1; padding:0.2rem 0.6rem; border-radius:999px; font-weight:700; font-size:0.8rem; border:1px solid #bae6fd; display:inline-flex; align-items:center; gap:0.25rem;">
+                        ✍️ 작성자: <span id="dtlAuthorName">-</span>
+                    </span>
+                </div>
+                <h2 id="dtlTitle" style="margin: 0.4rem 0 0.25rem 0; font-size:1.4rem;"></h2>
                 <div style="font-size:0.85rem; color:#64748b;">
                     부서/담당: <span id="dtlTeam"></span> / <strong id="dtlAssignee"></strong>
-                    <span id="dtlCreatorWrap" style="margin-left:0.5rem;">(작성: <span id="dtlCreator"></span>)</span>
+                    <span id="dtlCreatorWrap" style="margin-left:0.5rem;">(작성자: <strong id="dtlCreator" style="color:#0369a1;"></strong>)</span>
                 </div>
             </div>
-            <div style="text-align:right;">
-                <div style="font-size:0.8rem; color:#64748b;" id="dtlDateLabel">마감 기한</div>
-                <div id="dtlDueDate" style="font-weight:600; color:#b91c1c;"></div>
+            <div style="text-align:right; display:flex; flex-direction:column; align-items:flex-end; gap:0.4rem;">
+                <div>
+                    <div style="font-size:0.8rem; color:#64748b;" id="dtlDateLabel">마감 기한</div>
+                    <div id="dtlDueDate" style="font-weight:600; color:#b91c1c;"></div>
+                </div>
+                <!-- Action Buttons: Edit & Delete -->
+                <div style="display:flex; gap:0.35rem; margin-top:0.25rem;">
+                    <button id="btnEditTaskOrReport" style="display:none; background:#4F46E5; color:white; border:none; padding:0.45rem 0.85rem; border-radius:6px; font-size:0.82rem; font-weight:700; cursor:pointer; align-items:center; gap:0.35rem; box-shadow:0 2px 4px rgba(79,70,229,0.25);">
+                        <span>✏️</span> 보고서 수정보완
+                    </button>
+                    <button id="btnDeleteTaskOrReport" style="display:none; background:#fee2e2; color:#b91c1c; border:none; padding:0.45rem 0.65rem; border-radius:6px; font-size:0.82rem; font-weight:700; cursor:pointer;" title="삭제">
+                        🗑️ 삭제
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -525,6 +541,7 @@
                 <div><strong style="color:#047857;">📍 미팅 장소:</strong> <span id="dtlMeetingLocation" style="color:#1e293b;">-</span></div>
                 <div><strong style="color:#047857;">📅 미팅 일시:</strong> <span id="dtlMeetingDate" style="color:#1e293b;">-</span></div>
                 <div><strong style="color:#047857;">👥 참석자:</strong> <span id="dtlMeetingAttendees" style="color:#1e293b;">-</span></div>
+                <div><strong style="color:#047857;">✍️ 보고 작성자:</strong> <span id="dtlMeetingAuthor" style="font-weight:700; color:#0369a1;">-</span></div>
             </div>
         </div>
 
@@ -630,7 +647,7 @@
         <div style="background:white; border-radius:1rem; max-width:640px; width:100%; max-height:92vh; display:flex; flex-direction:column; box-shadow:0 25px 35px -5px rgba(0,0,0,0.25);">
             <!-- Modal Header -->
             <div style="padding:1.25rem 1.5rem; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
-                <h3 style="margin:0; font-size:1.2rem; color:#1e293b; font-weight:800; display:flex; align-items:center; gap:0.5rem;">
+                <h3 id="mModalTitle" style="margin:0; font-size:1.2rem; color:#1e293b; font-weight:800; display:flex; align-items:center; gap:0.5rem;">
                     <span>🤝</span> 외부 미팅 및 기타 업무보고 작성
                 </h3>
                 <button type="button" id="btnCloseMeetingModal" style="background:none; border:none; font-size:1.25rem; cursor:pointer; color:#94a3b8; font-weight:700;">✕</button>

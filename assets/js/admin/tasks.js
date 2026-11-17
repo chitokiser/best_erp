@@ -1,6 +1,6 @@
 import { auth, db } from '../firebase-config.js';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, query, where, orderBy, onSnapshot, getDocs, doc, getDoc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { createTask, createSubTask, updateTask, submitTaskReport, logTaskAction, addTaskComment } from '../task-manager.js';
 import { checkAdminAuth } from '../auth.js';
 
@@ -11,6 +11,7 @@ let currentSearchQuery = '';
 let currentFilterStatus = '';
 let currentFilterTeam = '';
 let selectedPhotosBase64 = [];
+let editingTaskId = null;
 let activeTaskId = null;
 
 const taskListContainer = document.getElementById('taskListContainer');
@@ -272,7 +273,10 @@ function renderTaskListItem(id, data) {
         const typeLabel = data.type === 'FIELD' ? '🚗 현장출장' : '🤝 외근/미팅';
         div.innerHTML = `
             <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem; align-items:center;">
-                <span class="badge-type-meeting">${typeLabel}</span>
+                <div style="display:flex; gap:0.35rem; align-items:center; flex-wrap:wrap;">
+                    <span class="badge-type-meeting">${typeLabel}</span>
+                    <span class="tag-author" style="background:#e0f2fe; color:#0369a1; padding:0.12rem 0.5rem; border-radius:999px; font-weight:700; font-size:0.73rem; border:1px solid #bae6fd;">✍️ ${data.creatorName || data.assigneeName || '직원'}</span>
+                </div>
                 <span class="status-badge ${statClass}">${statKor}</span>
             </div>
             <h4 style="margin: 0 0 0.35rem 0; font-size:0.95rem; color:#1e293b; line-height:1.4;">${data.title}</h4>
@@ -291,7 +295,10 @@ function renderTaskListItem(id, data) {
 
         div.innerHTML = `
             <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem; align-items:center;">
-                <span class="badge-type-report">${reportLabel}</span>
+                <div style="display:flex; gap:0.35rem; align-items:center; flex-wrap:wrap;">
+                    <span class="badge-type-report">${reportLabel}</span>
+                    <span class="tag-author" style="background:#e0f2fe; color:#0369a1; padding:0.12rem 0.5rem; border-radius:999px; font-weight:700; font-size:0.73rem; border:1px solid #bae6fd;">✍️ ${data.creatorName || data.assigneeName || '직원'}</span>
+                </div>
                 <span class="status-badge ${statClass}">${statKor}</span>
             </div>
             <h4 style="margin: 0 0 0.35rem 0; font-size:0.95rem; color:#1e293b; line-height:1.4;">${data.title}</h4>
@@ -305,7 +312,10 @@ function renderTaskListItem(id, data) {
         let prioClass = `pri-${data.priority || 'NORMAL'}`;
         div.innerHTML = `
             <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem; align-items:center;">
-                <span class="priority-badge ${prioClass}">${data.priority || 'NORMAL'}</span>
+                <div style="display:flex; gap:0.35rem; align-items:center; flex-wrap:wrap;">
+                    <span class="priority-badge ${prioClass}">${data.priority || 'NORMAL'}</span>
+                    <span class="tag-author" style="background:#f1f5f9; color:#475569; padding:0.12rem 0.5rem; border-radius:999px; font-weight:700; font-size:0.73rem; border:1px solid #e2e8f0;">✍️ ${data.creatorName || data.assigneeName || '직원'}</span>
+                </div>
                 <span class="status-badge ${statClass}">${statKor}</span>
             </div>
             <h4 style="margin: 0 0 0.35rem 0; font-size:0.95rem; color:#1e293b; line-height:1.4;">${data.title}</h4>
@@ -365,10 +375,15 @@ function showTaskDetail(taskId, data, shouldScroll = true) {
     dtlStatus.className = 'status-badge ' + statClass;
     dtlStatus.innerText = statKor;
 
+    const authorName = data.creatorName || data.creatorEmail || data.assigneeName || '직원';
     document.getElementById('dtlTitle').innerText = data.title;
     document.getElementById('dtlTeam').innerText = data.teamId || '-';
     document.getElementById('dtlAssignee').innerText = data.assigneeName || '미배정';
-    document.getElementById('dtlCreator').innerText = data.creatorName || data.creatorEmail || '-';
+    document.getElementById('dtlCreator').innerText = authorName;
+
+    // Set prominent author tag
+    const dtlAuthorName = document.getElementById('dtlAuthorName');
+    if (dtlAuthorName) dtlAuthorName.innerText = authorName;
 
     const dtlDueDate = document.getElementById('dtlDueDate');
     const dtlDateLabel = document.getElementById('dtlDateLabel');
@@ -394,6 +409,8 @@ function showTaskDetail(taskId, data, shouldScroll = true) {
         document.getElementById('dtlMeetingLocation').innerText = data.meetingLocation || '-';
         document.getElementById('dtlMeetingDate').innerText = data.meetingDate ? data.meetingDate.replace('T', ' ') : '-';
         document.getElementById('dtlMeetingAttendees').innerText = data.attendees || '-';
+        const dtlMeetingAuthor = document.getElementById('dtlMeetingAuthor');
+        if (dtlMeetingAuthor) dtlMeetingAuthor.innerText = `${authorName} (${data.teamId || '-'})`;
     }
 
     // Follow-up Box Setup
@@ -423,6 +440,36 @@ function showTaskDetail(taskId, data, shouldScroll = true) {
     const btnReject = document.getElementById('btnRejectProcess');
 
     let isManager = ['SUPER_ADMIN', 'CEO'].includes(currentUserInfo.role) || currentUserInfo.email === 'daguri75@gmail.com';
+    const isAuthor = (currentUserInfo.uid && currentUserInfo.uid === data.createdBy) ||
+                     (currentUserInfo.email && data.creatorEmail && currentUserInfo.email.toLowerCase() === data.creatorEmail.toLowerCase()) ||
+                     (currentUserInfo.email && data.assignedTo && currentUserInfo.email.toLowerCase() === data.assignedTo.toLowerCase());
+
+    // Configure Edit & Delete Buttons for Author or Managers
+    const btnEdit = document.getElementById('btnEditTaskOrReport');
+    const btnDelete = document.getElementById('btnDeleteTaskOrReport');
+
+    if (btnEdit && (isAuthor || isManager)) {
+        btnEdit.style.display = 'inline-flex';
+        btnEdit.onclick = () => {
+            openMeetingReportModal(taskId, data);
+        };
+    }
+
+    if (btnDelete && (isAuthor || isManager)) {
+        btnDelete.style.display = 'inline-flex';
+        btnDelete.onclick = async () => {
+            if (confirm(`정말로 이 보고서/업무 [${data.title}]을(를) 삭제하시겠습니까?`)) {
+                try {
+                    await deleteDoc(doc(db, 'tasks', taskId));
+                    alert("성공적으로 삭제되었습니다.");
+                    activeTaskId = null;
+                    detailContainer.innerHTML = '<div style="display:flex; justify-content:center; align-items:center; height:100%; color:#94a3b8;">삭제되었습니다. 다른 업무 또는 보고서를 선택하세요.</div>';
+                } catch (delErr) {
+                    alert("삭제 중 오류가 발생했습니다: " + delErr.message);
+                }
+            }
+        };
+    }
     if (currentUserInfo.role === 'TEAM_LEADER' && currentUserInfo.teamId === data.teamId) {
         isManager = true;
     }
@@ -745,6 +792,34 @@ function initMeetingReportModal() {
                 const isMeeting = type === 'MEETING' || type === 'FIELD';
                 const category = isMeeting ? 'MEETING_REPORT' : 'WORK_REPORT';
 
+                if (editingTaskId) {
+                    // Update / Refine existing report
+                    await updateDoc(doc(db, 'tasks', editingTaskId), {
+                        type,
+                        category,
+                        title,
+                        description: content,
+                        meetingPartner: partner,
+                        meetingLocation: location,
+                        meetingDate: date,
+                        dueDate: date,
+                        attendees: attendees,
+                        teamId: teamId || currentUserInfo.teamId || 'SALES',
+                        parentTaskId: relatedTaskId || null,
+                        followUp: followUp,
+                        photos: selectedPhotosBase64,
+                        updatedAt: serverTimestamp(),
+                        lastModifiedByName: currentUserInfo.name || currentUserInfo.email
+                    });
+
+                    await logTaskAction(editingTaskId, currentUserInfo.uid, 'UPDATE', null, `보고서 수정보완 완료 (${currentUserInfo.name || currentUserInfo.email})`);
+
+                    alert("✅ 보고서가 성공적으로 수정보완되었습니다.");
+                    closeMeetingReportModal();
+                    editingTaskId = null;
+                    return;
+                }
+
                 const reportPayload = {
                     type,
                     category,
@@ -801,26 +876,53 @@ function initMeetingReportModal() {
     }
 }
 
-function openMeetingReportModal() {
+function openMeetingReportModal(editTaskId = null, existingData = null) {
     const modal = document.getElementById('meetingReportModal');
     if (!modal) return;
 
-    // Set Default DateTime to Now
-    const now = new Date();
-    const pad = (n) => String(n).padStart(2, '0');
-    const localIso = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    
-    const dateInput = document.getElementById('mReportDate');
-    if (dateInput) dateInput.value = localIso;
+    const modalTitle = document.getElementById('mModalTitle');
+    const btnSubmit = document.getElementById('btnSubmitMeetingReport');
+    const form = document.getElementById('meetingReportForm');
 
-    // Set Team if employee belongs to a team
-    const teamSel = document.getElementById('mReportTeam');
-    if (teamSel && currentUserInfo?.teamId) {
-        teamSel.value = currentUserInfo.teamId;
+    if (editTaskId && existingData) {
+        editingTaskId = editTaskId;
+        if (modalTitle) modalTitle.innerHTML = '<span>✏️</span> 보고서 수정보완 (내용 수정 및 추가)';
+        if (btnSubmit) btnSubmit.innerHTML = '<span>💾</span> 수정보완 내용 저장하기';
+
+        document.getElementById('mReportType').value = existingData.type || (existingData.meetingPartner ? 'MEETING' : 'WORK_REPORT');
+        document.getElementById('mReportTitle').value = existingData.title || '';
+        document.getElementById('mReportPartner').value = existingData.meetingPartner || '';
+        document.getElementById('mReportLocation').value = existingData.meetingLocation || '';
+        document.getElementById('mReportDate').value = existingData.meetingDate || existingData.dueDate || '';
+        document.getElementById('mReportAttendees').value = existingData.attendees || '';
+        document.getElementById('mReportTeam').value = existingData.teamId || currentUserInfo?.teamId || 'SALES';
+        document.getElementById('mReportRelatedTask').value = existingData.parentTaskId || '';
+        document.getElementById('mReportContent').value = existingData.description || '';
+        document.getElementById('mReportFollowUp').value = existingData.followUp || '';
+
+        selectedPhotosBase64 = [...(existingData.photos || [])];
+        renderPhotoPreviews();
+    } else {
+        editingTaskId = null;
+        if (modalTitle) modalTitle.innerHTML = '<span>🤝</span> 외부 미팅 및 기타 업무보고 작성';
+        if (btnSubmit) btnSubmit.innerHTML = '<span>✓</span> 보고서 제출하기';
+        if (form) form.reset();
+
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        const localIso = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+        
+        const dateInput = document.getElementById('mReportDate');
+        if (dateInput) dateInput.value = localIso;
+
+        const teamSel = document.getElementById('mReportTeam');
+        if (teamSel && currentUserInfo?.teamId) {
+            teamSel.value = currentUserInfo.teamId;
+        }
+
+        selectedPhotosBase64 = [];
+        renderPhotoPreviews();
     }
-
-    selectedPhotosBase64 = [];
-    renderPhotoPreviews();
 
     modal.style.display = 'flex';
 }
