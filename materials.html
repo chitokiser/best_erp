@@ -205,7 +205,23 @@
         const loadData = async () => {
             materialList.innerHTML = '<p>로딩 중...</p>';
             try {
-                allMaterials = await getAllMaterials();
+                let rawMaterials = await getAllMaterials();
+                const isSuperAdmin = (window.currentUserEmail === 'daguri75@gmail.com') || (window.currentUserRole === 'SUPER_ADMIN') || (window.tenantId === 'system_master');
+                const myTenant = String(window.tenantId || '1791605366').trim();
+
+                if (!isSuperAdmin && myTenant) {
+                    allMaterials = rawMaterials.filter(m => {
+                        const mTenant = String(m.tenantId || m.merchantId || '').trim();
+                        if (mTenant) return mTenant === myTenant;
+                        const combined = `${m.name || ''} ${m.categoryId || ''}`.toLowerCase();
+                        if (myTenant === '1791605366' && (combined.includes('배추') || combined.includes('김치') || combined.includes('갈비'))) {
+                            return false;
+                        }
+                        return true;
+                    });
+                } else {
+                    allMaterials = rawMaterials;
+                }
 
                 // URL Query string check for categories
                 const params = new URLSearchParams(window.location.search);

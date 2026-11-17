@@ -214,8 +214,19 @@
 
     <main class="container" style="padding: 2rem 1rem;">
         <h2>신규 자재 등록</h2>
-        <div class="card" style="margin-top: 1.5rem;">
             <form id="materialForm" style="display: flex; flex-direction: column; gap: 1rem;">
+
+                <!-- 대상 가맹점 선택 (최고관리자 전용) -->
+                <div id="mMaterialMerchantWrap" style="display:none; background:#eef2ff; border:1px solid #c7d2fe; padding:0.85rem 1rem; border-radius:0.5rem; margin-bottom:0.5rem;">
+                    <label style="font-weight:700; color:#3730a3; display:block; margin-bottom:0.35rem; font-size:0.85rem;">🏢 등록 대상 가맹점 (본사 최고관리자 전용)</label>
+                    <select id="selTargetMerchant" class="search-input" style="width:100%; border-color:#818cf8; font-weight:600;">
+                        <option value="1791605366" data-name="BEST WINNER">베스트위너 (BEST WINNER) [1791605366]</option>
+                        <option value="1794710386" data-name="백제갈비">백제갈비 [1794710386]</option>
+                        <option value="1791002036" data-name="대한김치">대한김치 [1791002036]</option>
+                        <option value="1793671043" data-name="베스트마리오">베스트마리오 [1793671043]</option>
+                        <option value="1793776651" data-name="sunvietnam">sunvietnam [1793776651]</option>
+                    </select>
+                </div>
 
                 <!-- 기본 정보 -->
                 <fieldset style="border: 1px solid var(--border-color); padding: 1rem; border-radius: 4px;">
@@ -551,6 +562,21 @@
                     txtImageUrl: document.getElementById('txtImageUrl') ? document.getElementById('txtImageUrl').value : ''
                 };
 
+                // Multi-tenant bonding
+                const isSuperAdmin = (window.currentUserRole === 'SUPER_ADMIN') || (window.currentUserEmail === 'daguri75@gmail.com') || (window.tenantId === 'system_master');
+                let materialTenantId = String(window.tenantId || '1791605366');
+                let materialStoreName = window.currentStoreName || 'BEST WINNER';
+
+                const selMerchant = document.getElementById('selTargetMerchant');
+                if (isSuperAdmin && selMerchant && selMerchant.value) {
+                    materialTenantId = selMerchant.value;
+                    materialStoreName = selMerchant.options[selMerchant.selectedIndex]?.dataset.name || '본사';
+                }
+
+                materialData.tenantId = String(materialTenantId);
+                materialData.merchantId = String(materialTenantId);
+                materialData.storeName = materialStoreName;
+
                 const fileImages = document.getElementById('fileImages').files;
 
                 if (editId) {
@@ -610,7 +636,17 @@
                         position = '최고 관리자';
                     }
 
+                    window.currentUserRole = role;
+                    window.currentUserEmail = user.email;
+
                     const roleUpper = (role || '').toUpperCase();
+                    const isSuper = (roleUpper === 'SUPER_ADMIN') || (user.email === 'daguri75@gmail.com') || (window.tenantId === 'system_master');
+
+                    const mWrap = document.getElementById('mMaterialMerchantWrap');
+                    if (mWrap) {
+                        mWrap.style.display = isSuper ? 'block' : 'none';
+                    }
+
                     const canEdit = ['SUPER_ADMIN', 'CEO', 'PM', 'ADMIN', 'MERCHANT', 'OWNER', 'FRANCHISE', 'STAFF', 'EMPLOYEE'].includes(roleUpper)
                         || position.includes('대표') || position.includes('팀장') || position.includes('가맹점') || position.includes('점주') || position.includes('관리자') || position.includes('PM')
                         || user.email === 'daguri75@gmail.com';

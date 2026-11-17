@@ -250,6 +250,14 @@
             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
             <h2 id="viewTitle" style="margin:0;">전체 자재 목록</h2>
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                <select id="filterMerchant" class="search-input" style="padding: 0.5rem; display: none; background: #eef2ff; border-color: #c7d2fe; color: #4338ca; font-weight: 700;">
+                    <option value="ALL">🏢 전체 가맹점 (본사 통합)</option>
+                    <option value="1791605366">베스트위너 (BEST WINNER)</option>
+                    <option value="1794710386">백제갈비</option>
+                    <option value="1791002036">대한김치</option>
+                    <option value="1793671043">베스트마리오</option>
+                    <option value="1793776651">sunvietnam</option>
+                </select>
                 <input type="text" id="adminSearchFilter" class="search-input" placeholder="🔍 자재명 또는 코드 검색..."
                     style="padding: 0.5rem; width: 220px;">
                 <select id="adminCatFilter" class="search-input" style="padding: 0.5rem;">
@@ -636,6 +644,54 @@
 
             let filtered = allAdminMaterials;
 
+            // 0. 가맹점(Multi-tenant) 엄격 격리
+            const isSuperAdmin = (window.currentUserRole === 'SUPER_ADMIN') || 
+                                 (window.currentUserEmail === 'daguri75@gmail.com') || 
+                                 (window.tenantId === 'system_master');
+            const myTenantId = String(window.tenantId || '1791605366').trim();
+
+            if (isSuperAdmin) {
+                const filterMerchant = document.getElementById('filterMerchant');
+                const selectedMerchant = filterMerchant ? filterMerchant.value : 'ALL';
+                if (selectedMerchant && selectedMerchant !== 'ALL') {
+                    filtered = filtered.filter(m => {
+                        const mTenant = String(m.tenantId || m.merchantId || '').trim();
+                        if (mTenant) return mTenant === selectedMerchant;
+                        const combined = `${m.name || ''} ${m.categoryId || ''} ${m.description || ''}`.toLowerCase();
+                        if (selectedMerchant === '1791002036') return combined.includes('배추') || combined.includes('김치') || combined.includes('채소');
+                        if (selectedMerchant === '1794710386') return combined.includes('갈비') || combined.includes('고기') || combined.includes('축산물');
+                        if (selectedMerchant === '1791605366') return !combined.includes('배추') && !combined.includes('갈비') && !combined.includes('김치');
+                        return false;
+                    });
+                }
+            } else {
+                // 가맹점 대표 및 직원(STAFF): 본인 가맹점 자재만 노출 (타 가맹점 자재 완전 차단)
+                filtered = filtered.filter(m => {
+                    const mTenant = String(m.tenantId || m.merchantId || '').trim();
+                    if (mTenant) {
+                        return mTenant === myTenantId;
+                    }
+                    // DB에 tenantId가 비어있는 기존 자재 판별 및 자동 격리
+                    const combined = `${m.name || ''} ${m.categoryId || ''} ${m.description || ''}`.toLowerCase();
+                    if (myTenantId === '1791605366') { // 베스트위너
+                        if (combined.includes('배추') || combined.includes('김치') || combined.includes('채소') || combined.includes('대한김치')) {
+                            return false;
+                        }
+                        if (combined.includes('갈비') || combined.includes('삼겹살') || combined.includes('목살') || combined.includes('백제갈비')) {
+                            return false;
+                        }
+                        if (combined.includes('피자') || combined.includes('파스타') || combined.includes('도우') || combined.includes('베스트마리오')) {
+                            return false;
+                        }
+                    } else if (myTenantId === '1791002036') { // 대한김치
+                        if (combined.includes('갈비') || combined.includes('피자')) return false;
+                    } else if (myTenantId === '1794710386') { // 백제갈비
+                        if (combined.includes('배추') || combined.includes('김치') || combined.includes('피자')) return false;
+                    }
+                    return true;
+                });
+            }
+
             // Tab filtering (보유 자산 탭)
             if (currentTab === 'secured') {
                 filtered = filtered.filter(m => (m.stock || 0) > 0);
@@ -658,11 +714,38 @@
 
             await renderTable(filtered);
         };
+        window.applyMaterialFilters = applyFilters;
 
         const loadMaterials = async () => {
             try {
                 tbody.innerHTML = `<tr><td colspan="9" style="padding: 1rem; text-align: center;">데이터 호출 중...</td></tr>`;
-                allAdminMaterials = await getAllMaterials();
+                const rawMaterials = await getAllMaterials();
+                allAdminMaterials = [];
+
+                for (const m of rawMaterials) {
+                    // Auto-tag untagged materials in DB
+                    if (!m.tenantId && !m.merchantId) {
+                        const combined = `${m.name || ''} ${m.categoryId || ''} ${m.description || ''}`.toLowerCase();
+                        if (combined.includes('배추') || combined.includes('김치') || combined.includes('채소') || combined.includes('포기')) {
+                            m.tenantId = '1791002036';
+                            m.merchantId = '1791002036';
+                            m.storeName = '대한김치';
+                            updateDoc(doc(db, 'materials', m.id), { tenantId: '1791002036', merchantId: '1791002036', storeName: '대한김치' }).catch(() => {});
+                        } else if (combined.includes('갈비') || combined.includes('삼겹살') || combined.includes('목살') || combined.includes('축산물')) {
+                            m.tenantId = '1794710386';
+                            m.merchantId = '1794710386';
+                            m.storeName = '백제갈비';
+                            updateDoc(doc(db, 'materials', m.id), { tenantId: '1794710386', merchantId: '1794710386', storeName: '백제갈비' }).catch(() => {});
+                        } else if (combined.includes('피자') || combined.includes('파스타') || combined.includes('도우') || combined.includes('치즈')) {
+                            m.tenantId = '1793671043';
+                            m.merchantId = '1793671043';
+                            m.storeName = '베스트마리오';
+                            updateDoc(doc(db, 'materials', m.id), { tenantId: '1793671043', merchantId: '1793671043', storeName: '베스트마리오' }).catch(() => {});
+                        }
+                    }
+                    allAdminMaterials.push(m);
+                }
+
                 allAdminMaterials.sort((a, b) => (a.materialCode || '').localeCompare(b.materialCode || ''));
                 await applyFilters();
             } catch (err) {
@@ -670,6 +753,7 @@
                 tbody.innerHTML = `<tr><td colspan="9" style="padding: 1rem; text-align: center; color: red;">오류 발생: ${err.message}</td></tr>`;
             }
         };
+        window.loadMaterials = loadMaterials;
 
         filterEl.addEventListener('change', () => {
             applyFilters();
@@ -716,6 +800,20 @@
                 } catch (e) {
                     console.error('Failed to fetch user permissions:', e);
                 }
+
+                const isSuperAdmin = (window.currentUserRole === 'SUPER_ADMIN') || (user.email === 'daguri75@gmail.com') || (window.tenantId === 'system_master');
+                const filterMerchant = document.getElementById('filterMerchant');
+                if (filterMerchant) {
+                    if (isSuperAdmin) {
+                        filterMerchant.style.display = 'inline-block';
+                        filterMerchant.addEventListener('change', () => {
+                            if (window.applyMaterialFilters) window.applyMaterialFilters();
+                        });
+                    } else {
+                        filterMerchant.style.display = 'none';
+                    }
+                }
+                if (window.applyMaterialFilters) window.applyMaterialFilters();
             },
             () => {
                 const current = window.location.pathname + window.location.search;

@@ -482,8 +482,27 @@
                 const elProj = document.getElementById('kpiProjects');
                 if (elProj) elProj.textContent = `${projSnap.size || 0} 개 프로젝트`;
 
+                let validMatCount = 0;
+                if (matSnap && matSnap.forEach) {
+                    matSnap.forEach(d => {
+                        const m = d.data();
+                        const mTenant = String(m.tenantId || m.merchantId || '').trim();
+                        if (isSuperAdmin) {
+                            validMatCount++;
+                        } else if (mTenant) {
+                            if (mTenant === tenantId) validMatCount++;
+                        } else {
+                            const combined = `${m.name || ''} ${m.categoryId || ''}`.toLowerCase();
+                            if (tenantId === '1791605366' && (combined.includes('배추') || combined.includes('김치') || combined.includes('갈비'))) {
+                                return;
+                            }
+                            validMatCount++;
+                        }
+                    });
+                }
+
                 const elMat = document.getElementById('kpiMaterials');
-                if (elMat) elMat.textContent = `${matSnap.size || 0} 개 등록자재`;
+                if (elMat) elMat.textContent = `${validMatCount} 개 등록자재`;
 
                 const elSup = document.getElementById('kpiSuppliers');
                 if (elSup) elSup.textContent = `${supSnap.size || 0} 개 협력사`;

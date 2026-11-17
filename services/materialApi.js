@@ -22,13 +22,20 @@ export const createMaterial = async (materialData, imageFiles) => {
             imageUrls = imageUrls.concat(uploadedUrls);
         }
 
+        const curTenant = materialData.tenantId || window.tenantId || '1791605366';
+        const curStore = materialData.storeName || window.currentStoreName || 'BEST WINNER';
+
         const newMaterial = {
             ...materialData,
             images: imageUrls,
             status: "active",
+            tenantId: String(curTenant),
+            merchantId: String(curTenant),
+            storeName: curStore,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
             createdBy: currentUser.uid,
+            creatorEmail: currentUser.email || '',
             updatedBy: currentUser.uid
         };
 
@@ -46,12 +53,17 @@ export const createMaterial = async (materialData, imageFiles) => {
     }
 };
 
-export const getAllMaterials = async () => {
+export const getAllMaterials = async (filterTenantId) => {
     try {
         const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
         const materials = [];
         querySnapshot.forEach((doc) => {
-            materials.push({ id: doc.id, ...doc.data() });
+            const d = doc.data();
+            if (filterTenantId && filterTenantId !== 'ALL') {
+                const mTenant = String(d.tenantId || d.merchantId || '').trim();
+                if (mTenant && mTenant !== filterTenantId) return;
+            }
+            materials.push({ id: doc.id, ...d });
         });
         return materials;
     } catch (error) {
