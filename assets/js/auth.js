@@ -64,6 +64,29 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                 let position = '방문자';
                 let status = '대기중';
 
+                const userEmailLower = (user.email || '').toLowerCase().trim();
+
+                // Auto-sync pre-registered franchise owners / co-CEOs
+                if ((!snap || !snap.exists() || !snap.data().merchantId) && userEmailLower !== 'daguri75@gmail.com') {
+                    try {
+                        const preSnap = await getDocs(query(collection(db, 'users'), where('email', '==', userEmailLower)));
+                        if (!preSnap.empty) {
+                            const preDoc = preSnap.docs[0];
+                            const preData = preDoc.data();
+                            if (preData.merchantId || preData.isMerchantOwner || preData.role === 'CEO') {
+                                await setDoc(doc(db, 'users', user.uid), {
+                                    ...preData,
+                                    uid: user.uid,
+                                    lastLoginAt: serverTimestamp()
+                                }, { merge: true });
+                                snap = await getDoc(doc(db, 'users', user.uid));
+                            }
+                        }
+                    } catch (preErr) {
+                        console.warn('Pre-registered owner lookup notice:', preErr);
+                    }
+                }
+
                 if ((!snap || !snap.exists()) && user.email === 'daguri75@gmail.com') {
                     // First time auto-provisioning for Super Admin
                     try {
@@ -93,7 +116,7 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                     status = data.status || '대기중';
 
                     const isStaffRole = ['STAFF', 'EMPLOYEE'].includes(rawRole);
-                    isMerchant = !!(data.merchantId || data.merchant_id);
+                    isMerchant = !!(data.merchantId || data.merchant_id || data.isMerchantOwner);
 
                     if (isStaffRole) {
                         role = 'STAFF';
@@ -147,7 +170,6 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                 }
 
                 // 🚨 CRITICAL: hexttokenopbnb@gmail.com은 최고관리자가 아닌 BEST WINNER 가맹점 점주(CEO)
-                const userEmailLower = (user.email || '').toLowerCase().trim();
                 if (userEmailLower === 'hexttokenopbnb@gmail.com') {
                     role = 'CEO';
                     position = '가맹점 대표 (BEST WINNER)';

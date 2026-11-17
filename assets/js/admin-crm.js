@@ -120,7 +120,7 @@ async function loadClients() {
 
                     // 백제갈비 등 가맹점주/매장 ID 매핑
                     let mId = String(ud.registeredMerchantId || ud.merchantId || ud.registeredStoreId || ud.storeId || '').trim();
-                    const isOwner = email === 'bestwinner167@gmail.com' || ud.role === 'MERCHANT' || ud.role === 'STORE_ADMIN';
+                    const isOwner = email === 'bestwinner167@gmail.com' || ud.isMerchantOwner === true || ud.role === 'CEO' || ud.role === 'MERCHANT' || ud.role === 'STORE_ADMIN';
                     if (email === 'bestwinner167@gmail.com') {
                         mId = '1794710386';
                     }

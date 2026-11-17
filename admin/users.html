@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SaaS 회원권한 관리 - AI 경영관리</title>
+    <title>SaaS 회원 & 가맹점 오너(공동대표) 관리 - AI 경영관리</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/index.css">
     <link rel="stylesheet" href="../assets/css/admin.css">
@@ -11,20 +11,112 @@
         table { width: 100%; border-collapse: collapse; margin-top:1rem; }
         th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 0.95rem; }
         th { background: #f8fafc; font-weight: 600; color: #475569; }
-        .tag { padding: 0.25rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+        .tag { padding: 0.25rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem; }
         .tag-super { background: #fecaca; color: #b91c1c; }
-        .tag-admin { background: #dcfce7; color: #166534; }
-        .tag-guest { background: #f1f5f9; color: #475569; }
+        .tag-owner { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+        .tag-co-owner { background: #e0e7ff; color: #4338ca; border: 1px solid #a5b4fc; }
+        .tag-admin { background: #fef3c7; color: #b45309; }
+        .tag-staff { background: #f1f5f9; color: #475569; }
+        .tag-guest { background: #f1f5f9; color: #94a3b8; }
+
+        /* Franchise Cards Grid */
+        .franchise-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.25rem;
+            margin-top: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .franchise-card {
+            background: white;
+            border-radius: 0.85rem;
+            border: 1px solid #e2e8f0;
+            padding: 1.25rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+        }
+
+        .franchise-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+            border-color: #cbd5e1;
+        }
+
+        .franchise-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.85rem;
+        }
+
+        .franchise-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .merchant-badge {
+            font-size: 0.75rem;
+            font-family: monospace;
+            background: #f1f5f9;
+            color: #475569;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+
+        .owner-chip-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            min-height: 48px;
+        }
+
+        .owner-chip {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+
+        .btn-add-coowner {
+            background: #f8fafc;
+            border: 1px dashed #4F46E5;
+            color: #4F46E5;
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .btn-add-coowner:hover {
+            background: #eef2ff;
+        }
         
         /* Modal */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
-        .modal-content { background: white; padding: 2.5rem; border-radius: 1rem; width: 100%; max-width: 500px; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter:blur(3px); z-index: 1000; align-items: center; justify-content: center; padding: 1rem; overflow-y:auto; }
+        .modal-content { background: white; padding: 2rem; border-radius: 1rem; width: 100%; max-width: 540px; box-shadow: 0 25px 35px -5px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
         
-        .role-option { border: 2px solid #e2e8f0; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1rem; cursor: pointer; transition: all 0.2s; }
+        .role-option { border: 2px solid #e2e8f0; padding: 0.85rem 1rem; border-radius: 0.75rem; margin-bottom: 0.75rem; cursor: pointer; transition: all 0.2s; }
         .role-option:hover { border-color: #4F46E5; background: rgba(79,70,229,0.02); }
         .role-option.selected { border-color: #4F46E5; background: rgba(79,70,229,0.05); }
-        .role-option h4 { margin: 0 0 0.25rem 0; color: #1e293b; display: flex; align-items: center; justify-content: space-between; }
-        .role-option p { margin: 0; font-size: 0.85rem; color: #64748b; }
+        .role-option h4 { margin: 0 0 0.25rem 0; color: #1e293b; display: flex; align-items: center; justify-content: space-between; font-size: 0.95rem; }
+        .role-option p { margin: 0; font-size: 0.8rem; color: #64748b; }
         
         .dropdown { position: relative; display: inline-block; margin-top:2px; }
         .dropdown-content { display: none; position: absolute; background-color: white; min-width: 180px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 0.5rem; border: 1px solid #e2e8f0; z-index: 1000; top:100%; left:0; }
@@ -36,7 +128,7 @@
     </style>
 </head>
 <body class="admin-body">
-        <nav class="top-nav">
+    <nav class="top-nav">
         <div class="nav-header-bar">
             <div class="nav-brand">
                 <h1 class="brand-edit-badge" onclick="location.href='dashboard.html'" title="대시보드로 이동">
@@ -71,6 +163,7 @@
                 <span class="dropbtn">내부운영(HR) ▾</span>
                 <div class="dropdown-content">
                     <a href="tasks.html">업무지시/보고</a>
+                    <a href="field-reports.html">📸 현장/안건 사진보고</a>
                     <a href="finance.html">재무/회계</a>
                     <a href="employees.html">직원목록</a>
                 </div>
@@ -81,58 +174,173 @@
                     <a href="clients.html">멘티(고객) CRM</a>
                     <a href="contacts.html">인맥(명함)</a>
                     <a href="marketing.html">자동 마케팅(트리거)</a>
-                    <a href="users.html">SaaS 회원관리</a>
+                    <a href="users.html" style="color:var(--ai-primary); font-weight:700;">SaaS 회원관리</a>
                 </div>
             </li>
         </ul>
         <div id="navUserEmail" style="display:none;"></div>
     </nav>
 
-    <div class="admin-container" style="max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h2 style="font-size: 1.8rem; font-weight: 800; color: #1e293b; margin:0;">담당자 및 권한 설정</h2>
-            <button class="btn-primary" onclick="inviteNewUser()" style="background:#4F46E5; border:none; padding:0.75rem 1.5rem; border-radius:0.5rem; color:white; font-weight:600; cursor:pointer;">+ 새 권한 부여</button>
+    <div class="admin-container" style="max-width: 1300px; margin: 2rem auto; padding: 0 1.5rem;">
+        <!-- Page Title & Primary Actions -->
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h2 style="font-size: 1.8rem; font-weight: 800; color: #1e293b; margin:0;">가맹점 오너(공동대표) & 회원 권한 관리</h2>
+                <p style="margin: 0.35rem 0 0 0; color: #64748b; font-size: 0.9rem;">
+                    가맹점별 대표 및 공동 대표(2인 이상 지정 가능)를 설정하고, 시스템 접근 권한을 관리합니다.
+                </p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button onclick="openOwnerModal()" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); border:none; padding:0.65rem 1.25rem; border-radius:0.5rem; color:white; font-weight:700; font-size:0.9rem; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 4px 10px rgba(16,185,129,0.25);">
+                    <span>👑</span> + 가맹점 오너(공동대표) 등록
+                </button>
+                <button onclick="inviteNewUser()" style="background:#4F46E5; border:none; padding:0.65rem 1.25rem; border-radius:0.5rem; color:white; font-weight:700; font-size:0.9rem; cursor:pointer;">
+                    + ERP 계정 권한 부여
+                </button>
+            </div>
         </div>
 
-        <div style="background: white; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); padding: 2rem; margin-top: 1.5rem; border: 1px solid #e2e8f0;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom:1rem;">
+        <!-- 1. Franchise Owners Summary Cards -->
+        <div style="margin-top: 2rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                <h3 style="margin:0; font-size:1.15rem; color:#1e293b; font-weight:800; display:flex; align-items:center; gap:0.4rem;">
+                    <span>🏢</span> 가맹점별 등록 오너 (대표 / 공동대표 현황)
+                </h3>
+                <span style="font-size:0.8rem; color:#64748b;">※ 한 가맹점에 2명 이상의 공동대표 등록이 가능합니다.</span>
+            </div>
+            <div id="franchiseGrid" class="franchise-grid">
+                <!-- Dynamically populated franchise cards -->
+            </div>
+        </div>
+
+        <!-- 2. Active Users Table -->
+        <div style="background: white; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); padding: 1.75rem; border: 1px solid #e2e8f0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom:1.25rem; flex-wrap:wrap; gap:0.75rem;">
                 <div>
-                    <h3 style="margin: 0; color: #1e293b;">활성 사용자 목록</h3>
-                    <p style="margin: 0.25rem 0 0 0; color: #64748b; font-size: 0.9rem;">SaaS(Jumper)에 등록된 유저 중, ERP 접근 권한을 가진 사용자들을 관리합니다.</p>
+                    <h3 style="margin: 0; color: #1e293b; font-size:1.1rem; font-weight:800;">전체 활성 사용자 및 가맹점 매핑 목록</h3>
+                    <p style="margin: 0.25rem 0 0 0; color: #64748b; font-size: 0.85rem;">각 회원의 소속 가맹점, 대표자 직책(공동대표 등) 및 시스템 권한을 확인하고 수정합니다.</p>
                 </div>
-                <input type="text" id="searchInput" placeholder="이름 또는 이메일 검색..." style="padding: 0.5rem 1rem; border:1px solid #e2e8f0; border-radius:0.5rem; outline:none; width:250px;">
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                    <select id="roleFilter" onchange="renderUsers()" style="padding: 0.45rem 0.75rem; border:1px solid #cbd5e1; border-radius:0.5rem; font-size:0.85rem;">
+                        <option value="ALL">전체 권한 보기</option>
+                        <option value="OWNER">가맹점 오너(대표/공동대표)만</option>
+                        <option value="ADMIN">ADMIN (관리자)만</option>
+                        <option value="STAFF">STAFF (직원)만</option>
+                    </select>
+                    <input type="text" id="searchInput" placeholder="이름, 이메일, 가맹점 검색..." style="padding: 0.45rem 0.85rem; border:1px solid #cbd5e1; border-radius:0.5rem; outline:none; width:220px; font-size:0.85rem;">
+                </div>
             </div>
 
             <table>
                 <thead>
                     <tr>
-                        <th>담당자 명/이메일</th>
-                        <th>시스템 권한</th>
+                        <th>담당자 명 / 이메일</th>
+                        <th>소속 가맹점 (Merchant ID)</th>
+                        <th>대표 직책 / 시스템 권한</th>
                         <th>상태</th>
-                        <th>권한 부여 및 관리</th>
+                        <th style="text-align:right;">가맹점 & 권한 관리</th>
                     </tr>
                 </thead>
                 <tbody id="usersTableBody">
-                    <tr><td colspan="4" style="text-align:center; padding:2rem; color:#64748b;">데이터를 불러오는 중입니다...</td></tr>
+                    <tr><td colspan="5" style="text-align:center; padding:2.5rem; color:#64748b;">데이터를 불러오는 중입니다...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <!-- Role Assignment Modal -->
+    <!-- Franchise Owner (Co-CEO) Registration & Edit Modal -->
+    <div class="modal" id="ownerModal">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:1rem; margin-bottom:1.25rem;">
+                <h3 style="margin:0; font-size:1.2rem; color:#1e293b; font-weight:800; display:flex; align-items:center; gap:0.4rem;">
+                    <span>👑</span> 가맹점 오너(대표/공동대표) 등록 및 권한 설정
+                </h3>
+                <button type="button" onclick="closeOwnerModal()" style="background:none; border:none; font-size:1.25rem; cursor:pointer; color:#94a3b8; font-weight:700;">✕</button>
+            </div>
+
+            <form id="ownerForm" onsubmit="handleSaveFranchiseOwner(event)" style="display:flex; flex-direction:column; gap:1rem;">
+                <div>
+                    <label style="font-size:0.85rem; font-weight:700; color:#334155;">대상 가맹점 선택 *</label>
+                    <select id="modalMerchantSelect" onchange="handleMerchantSelectChange(this)" required style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:0.5rem; margin-top:0.25rem; font-weight:600;">
+                        <option value="1794710386" data-name="백제갈비">🥩 백제갈비 (1794710386)</option>
+                        <option value="1791605366" data-name="BEST WINNER">🏆 베스트위너 / BEST WINNER (1791605366)</option>
+                        <option value="1791002036" data-name="대한김치">🥬 대한김치 (1791002036)</option>
+                        <option value="1793671043" data-name="베스트마리오">🍕 베스트마리오 (1793671043)</option>
+                        <option value="1793776651" data-name="sunvietnam">🇻🇳 sunvietnam (1793776651)</option>
+                        <option value="CUSTOM">➕ 신규/기타 가맹점 직접 입력</option>
+                    </select>
+                </div>
+
+                <div id="customMerchantFields" style="display:none; grid-template-columns:1fr 1fr; gap:0.75rem; background:#f8fafc; padding:0.75rem; border-radius:0.5rem; border:1px solid #e2e8f0;">
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:700; color:#475569;">신규 가맹점 ID *</label>
+                        <input type="text" id="modalCustomMerchantId" placeholder="예: 1799999999" style="width:100%; padding:0.55rem; border:1px solid #cbd5e1; border-radius:0.4rem; box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:700; color:#475569;">신규 가맹점명 *</label>
+                        <input type="text" id="modalCustomMerchantName" placeholder="예: 맛있는치킨" style="width:100%; padding:0.55rem; border:1px solid #cbd5e1; border-radius:0.4rem; box-sizing:border-box;">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-size:0.85rem; font-weight:700; color:#334155;">대표자 구분 (직책 / 역할) *</label>
+                    <select id="modalOwnerPosition" required style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:0.5rem; margin-top:0.25rem; font-weight:600;">
+                        <option value="가맹점 공동대표">🤝 가맹점 공동대표 (Co-CEO / 2인 이상 공동 운영)</option>
+                        <option value="가맹점 대표">👑 가맹점 단독대표 (CEO / 점주)</option>
+                        <option value="가맹점 총괄이사">👔 가맹점 총괄이사 / 관리자 (ADMIN)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="font-size:0.85rem; font-weight:700; color:#334155;">대표자 이메일 (Google 로그인 계정) *</label>
+                    <input type="email" id="modalOwnerEmail" required placeholder="예: partner@gmail.com" style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:0.5rem; margin-top:0.25rem; box-sizing:border-box;">
+                    <span style="font-size:0.75rem; color:#64748b; margin-top:0.2rem; display:block;">해당 이메일로 구글 로그인 시 즉시 해당 가맹점의 CEO 권한으로 자동 연동됩니다.</span>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+                    <div>
+                        <label style="font-size:0.85rem; font-weight:700; color:#334155;">대표자 성함 (이름) *</label>
+                        <input type="text" id="modalOwnerName" required placeholder="예: 홍길동 대표" style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:0.5rem; margin-top:0.25rem; box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.85rem; font-weight:700; color:#334155;">연락처 (Zalo/전화번호)</label>
+                        <input type="text" id="modalOwnerPhone" placeholder="예: 0981234567" style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:0.5rem; margin-top:0.25rem; box-sizing:border-box;">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-size:0.85rem; font-weight:700; color:#334155;">메모 / 비고 (선택)</label>
+                    <input type="text" id="modalOwnerNote" placeholder="예: F&B 매장 및 대외 영업 총괄 공동대표" style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:0.5rem; margin-top:0.25rem; box-sizing:border-box;">
+                </div>
+
+                <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:0.75rem 1rem; border-radius:0.5rem; font-size:0.8rem; color:#166534; line-height:1.4;">
+                    💡 <strong>공동 대표 안내:</strong> 한 가맹점에 2명 이상의 대표를 "공동대표"로 등록할 수 있습니다. 등록된 모든 공동대표는 해당 가맹점의 스마트 메뉴, 실시간 주문, 재무, CRM에 대한 완전한 CEO 권한을 동일하게 공유합니다.
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1rem; border-top:1px solid #e2e8f0; padding-top:1rem;">
+                    <button type="button" onclick="closeOwnerModal()" style="padding:0.65rem 1.25rem; border:1px solid #cbd5e1; background:#f8fafc; color:#475569; border-radius:0.5rem; font-weight:600; cursor:pointer;">취소</button>
+                    <button type="submit" id="btnSaveOwner" style="padding:0.65rem 1.5rem; border:none; background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:white; border-radius:0.5rem; font-weight:700; cursor:pointer;">
+                        가맹점 오너(대표) 저장 및 승인
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Legacy General Role Assignment Modal -->
     <div class="modal" id="roleModal">
         <div class="modal-content">
             <h2 style="margin: 0 0 0.5rem 0; color: #1e293b;">ERP 접근 권한 부여</h2>
             <p style="color: #64748b; margin: 0 0 1.5rem 0; font-size:0.9rem;" id="roleModalTarget">대상: </p>
             
             <div class="role-option" onclick="selectRole('CEO')" id="opt-CEO">
-                <h4>독립 기업/가맹점 대표 (CEO) <span style="font-size:1.2rem;">��</span></h4>
-                <p>본인만의 완벽히 독립된 ERP 인프라(별도 테넌트)를 운영할 수 있는 최고 권한입니다.</p>
+                <h4>독립 기업/가맹점 대표 (CEO) <span style="font-size:1.2rem;">👑</span></h4>
+                <p>본인만의 완벽히 독립된 가맹점 ERP 인프라를 운영할 수 있는 최고 권한입니다.</p>
             </div>
             
             <div class="role-option" onclick="selectRole('ADMIN')" id="opt-ADMIN">
-                <h4>ERP 관리자 (ADMIN) <span style="font-size:1.2rem;">👑</span></h4>
-                <p>시스템에 로그인하여 대시보드 및 모든 기능(결제, 재무 제외)을 열람/수정할 수 있는 전체 접근 권한입니다.</p>
+                <h4>ERP 관리자 (ADMIN) <span style="font-size:1.2rem;">⚡</span></h4>
+                <p>대시보드 및 모든 기능(결제, 재무 제외)을 열람/수정할 수 있는 전체 접근 권한입니다.</p>
             </div>
             
             <div class="role-option" onclick="selectRole('STAFF')" id="opt-STAFF">
@@ -142,12 +350,12 @@
             
             <div class="role-option" onclick="selectRole('VIEWER')" id="opt-VIEWER">
                 <h4>권한 회수 (차단) <span style="font-size:1.2rem;">🚫</span></h4>
-                <p>ERP에 로그인할 권한이 없으며 접속 시 쫓겨납니다.</p>
+                <p>ERP에 로그인할 권한이 없으며 접속 시 차단됩니다.</p>
             </div>
 
-            <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:2rem;">
-                <button onclick="document.getElementById('roleModal').style.display='none'" style="padding:0.75rem 1.5rem; border:none; background:#f1f5f9; color:#475569; border-radius:0.5rem; font-weight:600; cursor:pointer;">취소</button>
-                <button id="btnSaveRole" style="padding:0.75rem 1.5rem; border:none; background:#4F46E5; color:white; border-radius:0.5rem; font-weight:600; cursor:pointer;">권한 저장 (승인)</button>
+            <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:1.5rem;">
+                <button onclick="document.getElementById('roleModal').style.display='none'" style="padding:0.65rem 1.25rem; border:none; background:#f1f5f9; color:#475569; border-radius:0.5rem; font-weight:600; cursor:pointer;">취소</button>
+                <button id="btnSaveRole" style="padding:0.65rem 1.5rem; border:none; background:#4F46E5; color:white; border-radius:0.5rem; font-weight:600; cursor:pointer;">권한 저장 (승인)</button>
             </div>
         </div>
     </div>
@@ -158,62 +366,243 @@
         import { db } from '../assets/js/firebase-config.js';
         import { collection, getDocs, updateDoc, doc, deleteDoc, serverTimestamp, setDoc, query, where } from 'firebase/firestore';
 
+        const KNOWN_FRANCHISES = [
+            { id: '1794710386', name: '백제갈비', icon: '🥩' },
+            { id: '1791605366', name: 'BEST WINNER', icon: '🏆' },
+            { id: '1791002036', name: '대한김치', icon: '🥬' },
+            { id: '1793671043', name: '베스트마리오', icon: '🍕' },
+            { id: '1793776651', name: 'sunvietnam', icon: '🇻🇳' }
+        ];
+
         let allUsers = [];
         let currentlyEditingUserId = null;
         let selectedRole = 'VIEWER';
 
-        function getRoleBadge(role) {
-            if (!role) return `<span class="tag tag-guest">GUEST</span>`;
-            const r = role.toUpperCase();
-            if (r === 'SUPER_ADMIN' || r === 'CEO') return `<span class="tag tag-super">${r}</span>`;
-            if (r === 'ADMIN') return `<span class="tag tag-admin">ADMIN (승인됨)</span>`;
-            return `<span class="tag tag-guest">${r}</span>`;
+        function getMerchantDisplay(merchantId, customName = '') {
+            if (!merchantId || merchantId === 'undefined' || merchantId === 'system_master') return '-';
+            const s = String(merchantId).trim();
+            const found = KNOWN_FRANCHISES.find(f => f.id === s);
+            if (found) return `${found.icon} ${found.name} (${found.id})`;
+            if (customName) return `🏪 ${customName} (${s})`;
+            return `🏪 가맹점 (${s})`;
+        }
+
+        function getRoleBadge(user) {
+            const role = (user.role || '').toUpperCase();
+            const position = user.position || '';
+            const isOwner = user.isMerchantOwner || role === 'CEO' || (user.merchantId && !['STAFF', 'EMPLOYEE'].includes(role));
+
+            if (role === 'SUPER_ADMIN' || user.email === 'daguri75@gmail.com') {
+                return `<span class="tag tag-super">👑 SUPER_ADMIN (최고관리자)</span>`;
+            }
+
+            if (isOwner) {
+                if (position.includes('공동대표')) {
+                    return `<span class="tag tag-co-owner">🤝 공동대표 (CEO)</span>`;
+                }
+                return `<span class="tag tag-owner">👑 가맹점 대표 (CEO)</span>`;
+            }
+
+            if (role === 'ADMIN') return `<span class="tag tag-admin">⚡ 관리자 (ADMIN)</span>`;
+            if (role === 'STAFF' || role === 'EMPLOYEE') return `<span class="tag tag-staff">💼 ${position || '직원 (STAFF)'}</span>`;
+            return `<span class="tag tag-guest">${role || 'GUEST'}</span>`;
         }
 
         async function loadUsers() {
             const tbody = document.getElementById('usersTableBody');
             try {
-                let snap;
-                if (window.currentUserEmail === 'daguri75@gmail.com' || window.tenantId === 'system_master') {
-                    snap = await getDocs(collection(db, 'users'));
-                } else {
-                    snap = await getDocs(query(collection(db, 'users'), where('tenant_id', '==', window.tenantId)));
-                }
+                const snap = await getDocs(collection(db, 'users'));
                 allUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+                // Hardcoded fallback presets for known franchise owners if not yet in firestore
+                const presetOwners = [
+                    {
+                        id: 'owner_bestwinner167',
+                        email: 'bestwinner167@gmail.com',
+                        name: '백제갈비 점주',
+                        merchantId: '1794710386',
+                        storeName: '백제갈비',
+                        position: '가맹점 대표',
+                        role: 'CEO',
+                        status: '승인완료',
+                        isMerchantOwner: true
+                    },
+                    {
+                        id: 'owner_hexttokenopbnb',
+                        email: 'hexttokenopbnb@gmail.com',
+                        name: 'BEST WINNER 대표',
+                        merchantId: '1791605366',
+                        storeName: 'BEST WINNER',
+                        position: '가맹점 대표',
+                        role: 'CEO',
+                        status: '승인완료',
+                        isMerchantOwner: true
+                    }
+                ];
+
+                presetOwners.forEach(preset => {
+                    const existing = allUsers.find(u => (u.email || '').toLowerCase() === preset.email.toLowerCase());
+                    if (!existing) {
+                        allUsers.push(preset);
+                    } else {
+                        if (!existing.merchantId) existing.merchantId = preset.merchantId;
+                        if (!existing.storeName) existing.storeName = preset.storeName;
+                        existing.isMerchantOwner = true;
+                    }
+                });
+
+                renderFranchiseCards();
                 renderUsers();
             } catch (e) {
-                tbody.innerHTML = `<tr><td colspan="4" style="color:red;text-align:center;">데이터를 불러올 수 없습니다. (${e.message})</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" style="color:red;text-align:center;">데이터를 불러올 수 없습니다. (${e.message})</td></tr>`;
             }
+        }
+
+        function renderFranchiseCards() {
+            const grid = document.getElementById('franchiseGrid');
+            if (!grid) return;
+
+            // Gather all franchise IDs (known + any custom ones from users)
+            const franchiseMap = new Map();
+            KNOWN_FRANCHISES.forEach(f => {
+                franchiseMap.set(f.id, { id: f.id, name: f.name, icon: f.icon, owners: [] });
+            });
+
+            allUsers.forEach(u => {
+                const mId = String(u.merchantId || u.tenantId || '').trim();
+                const isOwner = u.isMerchantOwner || u.role === 'CEO' || (u.position && u.position.includes('대표'));
+                if (mId && mId !== 'system_master' && isOwner) {
+                    if (!franchiseMap.has(mId)) {
+                        franchiseMap.set(mId, {
+                            id: mId,
+                            name: u.storeName || u.merchantName || `가맹점(${mId})`,
+                            icon: '🏪',
+                            owners: []
+                        });
+                    }
+                    const fObj = franchiseMap.get(mId);
+                    // Avoid duplicates
+                    if (!fObj.owners.some(o => (o.email || '').toLowerCase() === (u.email || '').toLowerCase())) {
+                        fObj.owners.push(u);
+                    }
+                }
+            });
+
+            let html = '';
+            franchiseMap.forEach(f => {
+                const ownerCount = f.owners.length;
+                let countBadge = ownerCount > 1 
+                    ? `<span style="font-size:0.75rem; background:#e0e7ff; color:#4338ca; padding:0.15rem 0.5rem; border-radius:999px; font-weight:700;">🤝 공동대표 ${ownerCount}명</span>`
+                    : (ownerCount === 1 ? `<span style="font-size:0.75rem; background:#dcfce7; color:#166534; padding:0.15rem 0.5rem; border-radius:999px; font-weight:700;">👑 대표 1명</span>` : `<span style="font-size:0.75rem; color:#94a3b8;">오너 미등록</span>`);
+
+                let ownersHtml = '';
+                if (ownerCount === 0) {
+                    ownersHtml = `<div style="color:#94a3b8; font-size:0.85rem; padding:0.5rem 0; text-align:center;">등록된 오너(대표)가 없습니다.</div>`;
+                } else {
+                    f.owners.forEach(o => {
+                        const isCo = (o.position || '').includes('공동대표') || ownerCount > 1;
+                        const badge = isCo ? `<span class="tag tag-co-owner" style="font-size:0.7rem;">공동대표</span>` : `<span class="tag tag-owner" style="font-size:0.7rem;">대표</span>`;
+                        ownersHtml += `
+                            <div class="owner-chip">
+                                <div>
+                                    <div style="font-weight:700; color:#1e293b;">${o.name || o.email?.split('@')[0]}</div>
+                                    <div style="font-size:0.75rem; color:#64748b;">${o.email || '-'}</div>
+                                </div>
+                                <div>${badge}</div>
+                            </div>
+                        `;
+                    });
+                }
+
+                html += `
+                    <div class="franchise-card">
+                        <div>
+                            <div class="franchise-card-header">
+                                <div class="franchise-title">
+                                    <span>${f.icon}</span>
+                                    <span>${f.name}</span>
+                                </div>
+                                <span class="merchant-badge">${f.id}</span>
+                            </div>
+                            <div style="margin-bottom:0.75rem;">${countBadge}</div>
+                            <div class="owner-chip-list">
+                                ${ownersHtml}
+                            </div>
+                        </div>
+                        <button class="btn-add-coowner" onclick="openOwnerModal('${f.id}', '${f.name}')">
+                            + ${f.name} 공동대표 추가
+                        </button>
+                    </div>
+                `;
+            });
+
+            grid.innerHTML = html;
         }
 
         function renderUsers() {
             const tbody = document.getElementById('usersTableBody');
-            const search = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = allUsers.filter(u => 
-                (u.name && u.name.toLowerCase().includes(search)) || 
-                (u.email && u.email.toLowerCase().includes(search))
-            );
+            const search = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+            const filter = document.getElementById('roleFilter')?.value || 'ALL';
+
+            const filtered = allUsers.filter(u => {
+                const isOwner = u.isMerchantOwner || u.role === 'CEO' || (u.position && u.position.includes('대표'));
+                if (filter === 'OWNER' && !isOwner) return false;
+                if (filter === 'ADMIN' && u.role !== 'ADMIN') return false;
+                if (filter === 'STAFF' && !['STAFF', 'EMPLOYEE'].includes(u.role)) return false;
+
+                if (search) {
+                    const str = [
+                        u.name,
+                        u.email,
+                        u.merchantId,
+                        u.storeName,
+                        u.position,
+                        u.role
+                    ].filter(Boolean).join(' ').toLowerCase();
+
+                    if (!str.includes(search)) return false;
+                }
+                return true;
+            });
 
             if (filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:2rem; color:#64748b;">결과가 없습니다.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:2rem; color:#64748b;">조건에 일치하는 사용자가 없습니다.</td></tr>';
                 return;
             }
 
             let html = '';
             filtered.forEach(u => {
-                const roleBadge = getRoleBadge(u.role);
-                const statusStr = (u.status === '승인' || u.status === '승인완료') ? `<span style="color:#059669;font-weight:600;">승인됨</span>` : `<span style="color:#94a3b8;">대기중</span>`;
+                const roleBadge = getRoleBadge(u);
+                const merchantStr = getMerchantDisplay(u.merchantId, u.storeName);
+                const statusStr = (u.status === '승인' || u.status === '승인완료') 
+                    ? `<span style="color:#059669; font-weight:600;">승인완료</span>` 
+                    : `<span style="color:#94a3b8;">대기중</span>`;
                 
+                const isOwner = u.isMerchantOwner || u.role === 'CEO';
+
                 html += `
                     <tr>
                         <td>
-                            <div style="font-weight:600; color:#1e293b;">${u.name || '-'}</div>
-                            <div style="font-size:0.85rem; color:#64748b;">${u.email || u.id}</div>
+                            <div style="font-weight:700; color:#1e293b;">${u.name || '-'}</div>
+                            <div style="font-size:0.8rem; color:#64748b;">${u.email || u.id}</div>
+                            ${u.phone ? `<div style="font-size:0.75rem; color:#059669;">📞 ${u.phone}</div>` : ''}
+                        </td>
+                        <td>
+                            <div style="font-weight:600; color:#334155;">${merchantStr}</div>
                         </td>
                         <td>${roleBadge}</td>
                         <td>${statusStr}</td>
-                        <td>
-                            <button onclick="openRoleModal('${u.id}', '${u.email || u.id}', '${u.role || 'VIEWER'}')" style="padding:0.4rem 0.8rem; background:#4F46E5; color:white; border:none; border-radius:0.25rem; font-weight:600; cursor:pointer;">ERP 엑세스 권한 부여</button>
+                        <td style="text-align:right;">
+                            <div style="display:inline-flex; gap:0.35rem;">
+                                <button onclick="openEditUserOwner('${u.id}', '${u.email || ''}', '${u.name || ''}', '${u.merchantId || ''}', '${u.position || ''}')" style="padding:0.4rem 0.75rem; background:#4F46E5; color:white; border:none; border-radius:0.35rem; font-weight:600; font-size:0.8rem; cursor:pointer;">
+                                    가맹점/오너 설정
+                                </button>
+                                ${isOwner && u.email !== 'daguri75@gmail.com' ? `
+                                    <button onclick="removeFranchiseOwner('${u.id}', '${u.email}', '${u.storeName || ''}')" style="padding:0.4rem 0.6rem; background:#fee2e2; color:#b91c1c; border:none; border-radius:0.35rem; font-weight:600; font-size:0.8rem; cursor:pointer;" title="가맹점 오너 권한 해제">
+                                        오너해제
+                                    </button>
+                                ` : ''}
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -221,14 +610,186 @@
             tbody.innerHTML = html;
         }
 
+        // -----------------------------------------------------------------
+        // Franchise Owner Registration Modal Functions
+        // -----------------------------------------------------------------
+        window.openOwnerModal = (preselectedMerchantId = '', preselectedMerchantName = '') => {
+            const modal = document.getElementById('ownerModal');
+            const sel = document.getElementById('modalMerchantSelect');
+            const customBox = document.getElementById('customMerchantFields');
+            const posSel = document.getElementById('modalOwnerPosition');
+            
+            document.getElementById('ownerForm').reset();
+            customBox.style.display = 'none';
+
+            if (preselectedMerchantId) {
+                // If known in select, pick it
+                const optionExists = Array.from(sel.options).some(o => o.value === preselectedMerchantId);
+                if (optionExists) {
+                    sel.value = preselectedMerchantId;
+                } else {
+                    sel.value = 'CUSTOM';
+                    customBox.style.display = 'grid';
+                    document.getElementById('modalCustomMerchantId').value = preselectedMerchantId;
+                    document.getElementById('modalCustomMerchantName').value = preselectedMerchantName || '';
+                }
+                posSel.value = '가맹점 공동대표';
+            } else {
+                sel.value = '1794710386'; // Baekje Galbi default
+            }
+
+            modal.style.display = 'flex';
+        };
+
+        window.openEditUserOwner = (uid, email, name, merchantId, position) => {
+            window.openOwnerModal(merchantId);
+            document.getElementById('modalOwnerEmail').value = email;
+            document.getElementById('modalOwnerName').value = name;
+            if (position) {
+                document.getElementById('modalOwnerPosition').value = position.includes('공동대표') ? '가맹점 공동대표' : (position.includes('총괄') ? '가맹점 총괄이사' : '가맹점 대표');
+            }
+        };
+
+        window.closeOwnerModal = () => {
+            document.getElementById('ownerModal').style.display = 'none';
+        };
+
+        window.handleMerchantSelectChange = (sel) => {
+            const customBox = document.getElementById('customMerchantFields');
+            if (sel.value === 'CUSTOM') {
+                customBox.style.display = 'grid';
+                document.getElementById('modalCustomMerchantId').required = true;
+                document.getElementById('modalCustomMerchantName').required = true;
+            } else {
+                customBox.style.display = 'none';
+                document.getElementById('modalCustomMerchantId').required = false;
+                document.getElementById('modalCustomMerchantName').required = false;
+            }
+        };
+
+        window.handleSaveFranchiseOwner = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnSaveOwner');
+            btn.disabled = true;
+            btn.textContent = '저장 중...';
+
+            const sel = document.getElementById('modalMerchantSelect');
+            let merchantId = sel.value;
+            let storeName = sel.options[sel.selectedIndex]?.dataset.name || '';
+
+            if (merchantId === 'CUSTOM') {
+                merchantId = document.getElementById('modalCustomMerchantId').value.trim();
+                storeName = document.getElementById('modalCustomMerchantName').value.trim();
+            }
+
+            const position = document.getElementById('modalOwnerPosition').value;
+            const email = document.getElementById('modalOwnerEmail').value.trim().toLowerCase();
+            const name = document.getElementById('modalOwnerName').value.trim();
+            const phone = document.getElementById('modalOwnerPhone').value.trim();
+            const note = document.getElementById('modalOwnerNote').value.trim();
+
+            if (!merchantId || !email || !name) {
+                alert('가맹점, 이메일, 성함은 필수 항목입니다.');
+                btn.disabled = false;
+                btn.textContent = '가맹점 오너(대표) 저장 및 승인';
+                return;
+            }
+
+            try {
+                // Determine target UID
+                // 1. Check if user already exists in Firestore by email
+                let targetUid = null;
+                const existingUser = allUsers.find(u => (u.email || '').toLowerCase() === email);
+                if (existingUser && existingUser.id && !existingUser.id.startsWith('owner_')) {
+                    targetUid = existingUser.id;
+                } else {
+                    const snap = await getDocs(query(collection(db, 'users'), where('email', '==', email)));
+                    if (!snap.empty) {
+                        targetUid = snap.docs[0].id;
+                    } else {
+                        // Sanitize email for document ID
+                        targetUid = 'owner_' + email.replace(/[@.]/g, '_');
+                    }
+                }
+
+                const ownerPayload = {
+                    email: email,
+                    name: name,
+                    phone: phone,
+                    merchantId: String(merchantId),
+                    merchant_id: String(merchantId),
+                    tenantId: String(merchantId),
+                    tenant_id: String(merchantId),
+                    storeName: storeName,
+                    merchantName: storeName,
+                    position: position,
+                    role: 'CEO',
+                    status: '승인완료',
+                    isMerchantOwner: true,
+                    note: note,
+                    assignedBy: 'daguri75@gmail.com',
+                    updatedAt: serverTimestamp()
+                };
+
+                // Save to users collection
+                await setDoc(doc(db, 'users', targetUid), ownerPayload, { merge: true });
+
+                // Also update merchants collection doc for multi-owner synchronization
+                try {
+                    await setDoc(doc(db, 'merchants', String(merchantId)), {
+                        id: String(merchantId),
+                        name: storeName,
+                        updatedAt: serverTimestamp()
+                    }, { merge: true });
+                } catch (mErr) {
+                    console.warn("Merchants doc sync notice:", mErr);
+                }
+
+                alert(`✅ [${storeName}] ${position} 등록 완료!
+
+이메일: ${email}
+성함: ${name}
+
+해당 사용자가 구글 로그인 시 즉시 ${storeName}의 최고 관리자(CEO)로 접속됩니다.`);
+                closeOwnerModal();
+                loadUsers();
+            } catch (err) {
+                console.error("Owner save error:", err);
+                alert("등록 중 오류가 발생했습니다: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '가맹점 오너(대표) 저장 및 승인';
+            }
+        };
+
+        window.removeFranchiseOwner = async (uid, email, storeName) => {
+            if (!confirm(`정말로 [${email}] 님의 [${storeName || '가맹점'}] 대표/오너 권한을 해제하시겠습니까?`)) {
+                return;
+            }
+
+            try {
+                await updateDoc(doc(db, 'users', uid), {
+                    role: 'VIEWER',
+                    position: '일반 회원',
+                    status: '대기중',
+                    isMerchantOwner: false,
+                    merchantId: null,
+                    tenantId: null,
+                    updatedAt: serverTimestamp()
+                });
+                alert('가맹점 오너 권한이 해제되었습니다.');
+                loadUsers();
+            } catch (e) {
+                alert('해제 중 오류 발생: ' + e.message);
+            }
+        };
+
+        // Legacy role modal
         window.openRoleModal = (uid, email, currentRole) => {
             currentlyEditingUserId = uid;
             document.getElementById('roleModalTarget').textContent = `대상: ${email}`;
-            
-            // preset selection
             const initialRole = ['CEO', 'ADMIN', 'STAFF'].includes(currentRole?.toUpperCase()) ? currentRole.toUpperCase() : 'VIEWER';
             window.selectRole(initialRole);
-            
             document.getElementById('roleModal').style.display = 'flex';
         };
 
@@ -239,43 +800,40 @@
             if (opt) opt.classList.add('selected');
         };
 
-        document.getElementById('btnSaveRole').addEventListener('click', async () => {
+        document.getElementById('btnSaveRole')?.addEventListener('click', async () => {
             if (!currentlyEditingUserId) return;
-            document.getElementById('btnSaveRole').innerText = '저장 중...';
+            const btn = document.getElementById('btnSaveRole');
+            btn.innerText = '저장 중...';
             try {
-                // If they are granted ERP access, we sync them to the Master Tenant so they become an admin of this instance.
-                const updateData = { role: selectedRole, status: selectedRole === 'VIEWER' ? '대기중' : '승인' };
+                const updateData = { role: selectedRole, status: selectedRole === 'VIEWER' ? '대기중' : '승인완료' };
                 if (selectedRole === 'ADMIN' || selectedRole === 'STAFF') {
-                    updateData.tenant_id = window.tenantId; // Bond them to the CURRENT logged-in CEO's workspace!
-                } else if (selectedRole === 'CEO') {
-                    updateData.tenant_id = currentlyEditingUserId; // Isolate them to their own personal workspace!
+                    updateData.tenant_id = window.tenantId;
                 }
-                
                 await updateDoc(doc(db, 'users', currentlyEditingUserId), updateData);
                 document.getElementById('roleModal').style.display = 'none';
                 loadUsers();
             } catch (e) {
                 alert('권한 부여 중 오류 발생: ' + e.message);
             } finally {
-                document.getElementById('btnSaveRole').innerText = '권한 저장 (승인)';
+                btn.innerText = '권한 저장 (승인)';
             }
         });
 
         window.inviteNewUser = async () => {
-            const email = prompt("권한을 임의로 부여할 계정 아이디(이메일)를 입력하세요.\n(미가입 유저일 시 자동 생성됩니다.)");
+            const email = prompt("권한을 부여할 계정 아이디(이메일)를 입력하세요:");
             if (!email) return;
             
             const dummyUid = 'ext_' + new Date().getTime();
             try {
                 await setDoc(doc(db, 'users', dummyUid), {
-                    email: email, name: email.split('@')[0], role: 'ADMIN', status: '승인', tenant_id: window.tenantId, createdAt: serverTimestamp()
+                    email: email, name: email.split('@')[0], role: 'ADMIN', status: '승인완료', tenant_id: window.tenantId, createdAt: serverTimestamp()
                 });
-                alert('승인 완료! 사용자가 해당 구글 계정으로 로그인 시 즉시 ERP에 접속할 수 있습니다.');
+                alert('승인 완료! 사용자가 해당 구글 계정으로 로그인 시 즉시 접속할 수 있습니다.');
                 loadUsers();
             } catch (e) { alert(e.message); }
         };
 
-        document.getElementById('searchInput').addEventListener('input', renderUsers);
+        document.getElementById('searchInput')?.addEventListener('input', renderUsers);
 
         checkAdminAuth((user) => { 
             const email = (user.email || '').toLowerCase().trim();
