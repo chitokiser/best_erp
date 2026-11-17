@@ -404,7 +404,16 @@
             </div>
 
             <!-- 검색 및 조건 필터부 -->
-            <div style="margin-bottom:1rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <div style="margin-bottom:1rem; display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+                <!-- Super Admin Merchant Scope Filter -->
+                <select id="filterMerchant" style="display:none; padding:0.4rem 0.65rem; border-radius:6px; border:1px solid #818cf8; background:#eef2ff; color:#3730a3; font-weight:700; font-size:0.85rem;">
+                    <option value="ALL">전체 가맹점 보기</option>
+                    <option value="1794710386">🥩 백제갈비 (1794710386)</option>
+                    <option value="1791605366">🏆 베스트위너 (1791605366)</option>
+                    <option value="1791002036">🥬 대한김치 (1791002036)</option>
+                    <option value="1793671043">🍕 베스트마리오 (1793671043)</option>
+                    <option value="1793776651">🇻🇳 sunvietnam (1793776651)</option>
+                </select>
                 <input type="text" id="taskSearchInput" placeholder="제목, 고객사/미팅대상, 작성자 검색..." style="flex:1; min-width:140px; padding:0.4rem 0.6rem; border-radius:6px; border:1px solid #cbd5e1; font-size:0.85rem;">
                 <select id="filterStatus" style="padding:0.4rem; border-radius:6px; border:1px solid #cbd5e1; font-size:0.85rem;">
                     <option value="">모든 상태</option>
@@ -655,6 +664,19 @@
 
             <!-- Modal Form Body -->
             <form id="meetingReportForm" style="padding:1.5rem; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:1rem; margin:0;">
+                <!-- Super Admin Target Franchise Selector -->
+                <div id="mReportMerchantWrap" style="display:none; background:#eef2ff; border:1px solid #c7d2fe; padding:0.75rem; border-radius:0.5rem;">
+                    <label style="font-size:0.85rem; font-weight:700; color:#3730a3;">대상 가맹점 선택 (수퍼관리자 전용) *</label>
+                    <select id="mReportMerchant" style="width:100%; padding:0.55rem; border:1px solid #a5b4fc; border-radius:0.4rem; margin-top:0.25rem; font-weight:700; font-family:inherit; background:white;">
+                        <option value="1794710386" data-name="백제갈비">🥩 백제갈비 (1794710386)</option>
+                        <option value="1791605366" data-name="BEST WINNER">🏆 베스트위너 / BEST WINNER (1791605366)</option>
+                        <option value="1791002036" data-name="대한김치">🥬 대한김치 (1791002036)</option>
+                        <option value="1793671043" data-name="베스트마리오">🍕 베스트마리오 (1793671043)</option>
+                        <option value="1793776651" data-name="sunvietnam">🇻🇳 sunvietnam (1793776651)</option>
+                        <option value="HQ" data-name="본사 공통">🏢 본사 공통 (전체 매장)</option>
+                    </select>
+                </div>
+
                 <div>
                     <label style="font-size:0.85rem; font-weight:700; color:#334155;">보고 유형 *</label>
                     <select id="mReportType" style="width:100%; padding:0.65rem; border:1px solid #cbd5e1; border-radius:0.5rem; margin-top:0.25rem; font-weight:600; font-family:inherit;">

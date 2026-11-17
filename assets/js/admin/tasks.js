@@ -10,6 +10,7 @@ let activeFilterTab = 'ALL'; // ALL, MEETING, REPORT, TASK
 let currentSearchQuery = '';
 let currentFilterStatus = '';
 let currentFilterTeam = '';
+let currentFilterMerchant = 'ALL';
 let selectedPhotosBase64 = [];
 let editingTaskId = null;
 let activeTaskId = null;
@@ -115,22 +116,59 @@ function initTaskBoard() {
         });
     }
 
+    const isSuperAdmin = (currentUserInfo.email === 'daguri75@gmail.com') || (currentUserInfo.role === 'SUPER_ADMIN') || (window.tenantId === 'system_master');
+    const myMerchantId = String(currentUserInfo.merchantId || window.tenantId || '').trim();
+
+    // Setup Super Admin Merchant Filter
+    const filterMerchant = document.getElementById('filterMerchant');
+    if (filterMerchant) {
+        if (isSuperAdmin) {
+            filterMerchant.style.display = 'inline-block';
+            filterMerchant.addEventListener('change', (e) => {
+                currentFilterMerchant = e.target.value;
+                applyFiltersAndRender();
+            });
+        } else {
+            filterMerchant.style.display = 'none';
+        }
+    }
+
+    // Setup Super Admin Modal Target Franchise Selector
+    const mWrap = document.getElementById('mReportMerchantWrap');
+    if (mWrap) {
+        mWrap.style.display = isSuperAdmin ? 'block' : 'none';
+    }
+
     // Realtime Listener for Tasks based on Role
     let q;
-    const isSuperOrCEO = ['SUPER_ADMIN', 'CEO'].includes(currentUserInfo.role) || currentUserInfo.email === 'daguri75@gmail.com';
-
-    if (isSuperOrCEO) {
+    if (isSuperAdmin) {
         q = query(collection(db, 'tasks'), orderBy('createdAt', 'desc'));
     } else if (currentUserInfo.role === 'TEAM_LEADER') {
         q = query(collection(db, 'tasks'), where('teamId', '==', currentUserInfo.teamId || ''), orderBy('createdAt', 'desc'));
     } else {
-        q = query(collection(db, 'tasks'), where('assignedTo', '==', currentUserInfo.email));
+        q = query(collection(db, 'tasks'), orderBy('createdAt', 'desc'));
     }
 
     onSnapshot(q, (snapshot) => {
         allTasks = [];
         snapshot.forEach(docSnap => {
-            allTasks.push({ id: docSnap.id, ...docSnap.data() });
+            const d = docSnap.data();
+            // Auto-tag Baekje Galbi / Best Winner tasks if missing merchantId
+            if (!d.merchantId && !d.tenantId) {
+                const combined = `${d.title || ''} ${d.meetingPartner || ''} ${d.description || ''}`;
+                if (combined.includes('백제갈비') || combined.includes('1794710386')) {
+                    d.merchantId = '1794710386';
+                    d.tenantId = '1794710386';
+                    d.storeName = '백제갈비';
+                    updateDoc(doc(db, 'tasks', docSnap.id), { merchantId: '1794710386', tenantId: '1794710386', storeName: '백제갈비' }).catch(() => {});
+                } else if (combined.includes('베스트위너') || combined.includes('1791605366')) {
+                    d.merchantId = '1791605366';
+                    d.tenantId = '1791605366';
+                    d.storeName = 'BEST WINNER';
+                    updateDoc(doc(db, 'tasks', docSnap.id), { merchantId: '1791605366', tenantId: '1791605366', storeName: 'BEST WINNER' }).catch(() => {});
+                }
+            }
+            allTasks.push({ id: docSnap.id, ...d });
         });
 
         // Sort descending by createdAt
@@ -179,10 +217,51 @@ function populateRelatedTasksSelect() {
 function applyFiltersAndRender() {
     taskListContainer.innerHTML = '';
 
+    const isSuperAdmin = (currentUserInfo.email === 'daguri75@gmail.com') || (currentUserInfo.role === 'SUPER_ADMIN') || (window.tenantId === 'system_master');
+    const myMerchantId = String(currentUserInfo.merchantId || window.tenantId || '').trim();
+
     const filtered = allTasks.filter(item => {
         const isMeeting = item.type === 'MEETING' || item.type === 'FIELD' || item.category === 'MEETING_REPORT';
         const isReport = item.type === 'WORK_REPORT' || item.type === 'ISSUE' || item.type === 'IDEA' || item.category === 'WORK_REPORT';
         const isTask = !isMeeting && !isReport;
+
+        // 0. Multi-Tenant Franchise Isolation
+        const taskMerchant = String(item.merchantId || item.tenantId || '').trim();
+        const isAssignedToMe = (item.assignedTo && item.assignedTo.toLowerCase() === currentUserInfo.email.toLowerCase());
+        const isCreatedByMe = (item.creatorEmail && item.creatorEmail.toLowerCase() === currentUserInfo.email.toLowerCase()) || (item.createdBy === currentUserInfo.uid);
+
+        if (isSuperAdmin) {
+            // Super Admin Merchant Scope Filter
+            if (currentFilterMerchant && currentFilterMerchant !== 'ALL') {
+                if (taskMerchant && taskMerchant !== currentFilterMerchant) return false;
+                if (!taskMerchant) {
+                    const combined = `${item.title || ''} ${item.meetingPartner || ''} ${item.description || ''}`;
+                    if (currentFilterMerchant === '1794710386' && !combined.includes('백제갈비')) return false;
+                    if (currentFilterMerchant === '1791605366' && !combined.includes('베스트위너') && !combined.includes('BEST WINNER')) return false;
+                }
+            }
+        } else {
+            // Strict Franchise Owner / Staff Isolation
+            if (!isAssignedToMe && !isCreatedByMe) {
+                if (myMerchantId) {
+                    // Hide any task belonging to a different franchise
+                    if (taskMerchant && taskMerchant !== myMerchantId) {
+                        return false;
+                    }
+                    // Hide tasks without merchantId that mention another franchise in title/partner/description
+                    const combined = `${item.title || ''} ${item.meetingPartner || ''} ${item.description || ''}`;
+                    if (myMerchantId === '1791605366') {
+                        if (taskMerchant === '1794710386' || combined.includes('백제갈비') || combined.includes('대한김치') || combined.includes('베스트마리오') || combined.includes('sunvietnam')) {
+                            return false;
+                        }
+                    } else if (myMerchantId === '1794710386') {
+                        if (taskMerchant === '1791605366' || combined.includes('베스트위너') || combined.includes('BEST WINNER') || combined.includes('대한김치')) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
 
         // 1. Tab filter
         if (activeFilterTab === 'MEETING' && !isMeeting) return false;
@@ -820,6 +899,24 @@ function initMeetingReportModal() {
                     return;
                 }
 
+                // Determine Franchise Merchant ID
+                let reportMerchantId = myMerchantId || '1791605366';
+                let reportStoreName = window.currentStoreName || 'BEST WINNER';
+
+                if (isSuperAdmin) {
+                    const mSelect = document.getElementById('mReportMerchant');
+                    if (mSelect) {
+                        reportMerchantId = mSelect.value;
+                        reportStoreName = mSelect.options[mSelect.selectedIndex]?.dataset.name || '본사';
+                    }
+                }
+
+                // If content/partner mentions Baekje Galbi, bond to Baekje Galbi
+                if (partner.includes('백제갈비') || title.includes('백제갈비')) {
+                    reportMerchantId = '1794710386';
+                    reportStoreName = '백제갈비';
+                }
+
                 const reportPayload = {
                     type,
                     category,
@@ -832,6 +929,9 @@ function initMeetingReportModal() {
                     followUp: followUp,
                     photos: selectedPhotosBase64,
                     teamId: teamId || currentUserInfo.teamId || 'SALES',
+                    merchantId: String(reportMerchantId),
+                    tenantId: String(reportMerchantId),
+                    storeName: reportStoreName,
                     assignedTo: currentUserInfo.email,
                     assigneeName: currentUserInfo.name || currentUserInfo.email,
                     dueDate: date,
