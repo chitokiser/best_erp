@@ -129,7 +129,8 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                     }
 
                     // Store tenant ID globally as String to prevent doc() path errors
-                    window.tenantId = String(data.merchantId || data.merchant_id || data.tenantId || data.tenant_id || data.company_id || '1791605366');
+                    const defaultMerchant = (role === 'GUEST' || rawRole === 'GUEST') ? '' : '1791605366';
+                    window.tenantId = String(data.merchantId || data.merchant_id || data.tenantId || data.tenant_id || data.company_id || defaultMerchant);
                     if ((user.email || '').toLowerCase().trim() === 'bestwinner167@gmail.com') {
                         window.tenantId = '1794710386';
                     }

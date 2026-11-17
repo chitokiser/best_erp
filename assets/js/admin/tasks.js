@@ -29,7 +29,49 @@ function getMyMerchantId() {
     if (mId && mId !== 'undefined' && mId !== 'null' && mId !== 'system_master') {
         return String(mId).trim();
     }
+    const role = (currentUserInfo?.role || window.currentUserRole || '').toUpperCase();
+    if (role === 'GUEST') return '';
     return '1791605366';
+}
+
+function canUserAccessTask(data) {
+    if (!data) return false;
+    if (getIsSuperAdmin()) return true;
+
+    const userEmailLower = (currentUserInfo?.email || auth.currentUser?.email || '').toLowerCase().trim();
+    const userUid = currentUserInfo?.uid || auth.currentUser?.uid || '';
+    const myMerchantId = getMyMerchantId();
+
+    const taskMerchant = String(data.merchantId || data.tenantId || '').trim();
+    const isAssignedToMe = !!(data.assignedTo && userEmailLower && data.assignedTo.toLowerCase() === userEmailLower);
+    const isCreatedByMe = !!((data.creatorEmail && userEmailLower && data.creatorEmail.toLowerCase() === userEmailLower) || (userUid && data.createdBy === userUid));
+
+    // 1. Author or Assignee always has access
+    if (isCreatedByMe || isAssignedToMe) return true;
+
+    // 2. Unapproved guest / non-store users cannot access other store's tasks
+    if (!myMerchantId) return false;
+
+    // 3. Strict Store/Franchise Isolation
+    if (taskMerchant) {
+        return taskMerchant === myMerchantId;
+    }
+
+    // 4. Fallback for legacy tasks without explicit merchantId
+    const combined = `${data.title || ''} ${data.meetingPartner || ''} ${data.description || ''}`;
+    if (myMerchantId === '1791605366') {
+        if (combined.includes('백제갈비') && !combined.includes('베스트위너')) return false;
+        if (combined.includes('대한김치')) return false;
+        return true;
+    } else if (myMerchantId === '1794710386') {
+        if ((combined.includes('베스트위너') || combined.includes('BEST WINNER')) && !combined.includes('백제갈비')) return false;
+        if (combined.includes('대한김치')) return false;
+        return true;
+    } else if (myMerchantId === '1791002036') {
+        return combined.includes('대한김치');
+    }
+
+    return false;
 }
 
 const taskListContainer = document.getElementById('taskListContainer');
@@ -312,27 +354,8 @@ function applyFiltersAndRender() {
             }
         } else {
             // Strict Franchise Owner / Staff Isolation
-            if (!isAssignedToMe && !isCreatedByMe) {
-                if (myMerchantId) {
-                    if (taskMerchant) {
-                        // Strict check: Only show tasks/reports of the same store
-                        if (taskMerchant !== myMerchantId) {
-                            return false;
-                        }
-                    } else {
-                        // Only for legacy tasks without merchantId
-                        const combined = `${item.title || ''} ${item.meetingPartner || ''} ${item.description || ''}`;
-                        if (myMerchantId === '1791605366') {
-                            if (combined.includes('백제갈비') && !combined.includes('베스트위너') && !combined.includes('BEST WINNER')) {
-                                return false;
-                            }
-                        } else if (myMerchantId === '1794710386') {
-                            if ((combined.includes('베스트위너') || combined.includes('BEST WINNER')) && !combined.includes('백제갈비')) {
-                                return false;
-                            }
-                        }
-                    }
-                }
+            if (!canUserAccessTask(item)) {
+                return false;
             }
         }
 
@@ -489,6 +512,29 @@ function renderTaskListItem(id, data) {
 }
 
 function showTaskDetail(taskId, data, shouldScroll = true) {
+    if (!canUserAccessTask(data)) {
+        activeTaskId = null;
+        detailContainer.innerHTML = `
+            <div style="padding:4rem 2rem; text-align:center; background:#ffffff; border-radius:12px; border:1px solid #fee2e2; margin-top:1rem; box-shadow:0 4px 12px rgba(239, 68, 68, 0.05);">
+                <div style="font-size:3.5rem; margin-bottom:1rem;">🔒</div>
+                <h3 style="font-size:1.3rem; font-weight:800; color:#dc2626; margin-bottom:0.75rem;">접근 권한이 없는 보고서입니다</h3>
+                <p style="font-size:0.95rem; line-height:1.7; max-width:520px; margin:0 auto; color:#475569;">
+                    해당 문서는 <strong>${data.storeName || '타 가맹점'}</strong> 소속의 업무 및 외근 보고서입니다.<br>
+                    타 가맹점 대표님 및 승인되지 않은 외부 계정은 열람할 수 없습니다.<br>
+                    <span style="display:inline-block; margin-top:0.5rem; font-size:0.85rem; color:#94a3b8;">
+                        (열람이 필요한 경우 ${data.storeName || '해당 가맹점'} 대표님께 [직원 관리] 메뉴에서 직원 등록 및 권한 승인을 요청하세요.)
+                    </span>
+                </p>
+                <div style="margin-top:1.5rem;">
+                    <a href="/admin/tasks.html" style="display:inline-block; padding:0.6rem 1.4rem; background:#4f46e5; color:#fff; border-radius:8px; font-weight:600; text-decoration:none; font-size:0.9rem;">
+                        내 매장 업무 목록으로 이동
+                    </a>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
     activeTaskId = taskId;
     detailContainer.innerHTML = '';
     const content = tplTaskDetailView.content.cloneNode(true);
