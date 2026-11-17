@@ -1,6 +1,6 @@
 import { db, auth, storage } from './firebase-config.js';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, doc, setDoc, deleteDoc, getDocs, addDoc, serverTimestamp, query, orderBy, where } from 'firebase/firestore';
+import { collection, doc, getDoc, setDoc, deleteDoc, getDocs, addDoc, serverTimestamp, query, orderBy, where } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { scanReceiptAI } from './aiApi.js';
 
@@ -335,6 +335,162 @@ async function loadFinanceData() {
             }
         }
 
+        // 3-B. 📱 QR 결제 매출 (transactions: pay_merchant, receive_bt) & 쇼핑몰 주문 매출 (merchant_orders) 자동 합산
+        const STORE_ALIASES = {
+            '1791605366': ['1791605366', 'bestwinner', 'best_winner'],
+            '1794710386': ['1794710386', 'baekje_galbi', 'baekjegalbi'],
+            '1791002036': ['1791002036', 'daehan_kimchi', 'daehankimchi'],
+            '1793671043': ['1793671043', 'best_mario', 'bestmario'],
+            '1793776651': ['1793776651', 'sunvietnam']
+        };
+        const normalizeStoreId = (rawId) => {
+            const s = String(rawId || '').trim();
+            for (const [canon, list] of Object.entries(STORE_ALIASES)) {
+                if (list.includes(s)) return canon;
+            }
+            return s;
+        };
+        const matchesTargetStore = (rawId) => {
+            if (isSuper && selectedMerchant === 'ALL') return true;
+            const norm = normalizeStoreId(rawId);
+            return norm && norm === targetStoreId;
+        };
+        const toDateString = (ts) => {
+            try {
+                if (!ts) return new Date().toISOString().slice(0, 10);
+                if (typeof ts === 'string' && /^\d{4}-\d{2}-\d{2}/.test(ts)) return ts.slice(0, 10);
+                const d = ts.toDate ? ts.toDate() : (ts.seconds ? new Date(ts.seconds * 1000) : new Date(ts));
+                if (isNaN(d.getTime())) return new Date().toISOString().slice(0, 10);
+                return d.toISOString().slice(0, 10);
+            } catch (_) {
+                return new Date().toISOString().slice(0, 10);
+            }
+        };
+
+        try {
+            const [qrTxSnap, ordersSnap] = await Promise.all([
+                getDocs(query(collection(db, 'transactions'), where('type', 'in', ['pay_merchant', 'receive_bt']))).catch(() => ({ docs: [] })),
+                getDocs(collection(db, 'merchant_orders')).catch(() => ({ docs: [] }))
+            ]);
+
+            const seenQrTxHashes = new Set();
+            const pendingQrRecords = [];
+            const uidsToLookup = new Set();
+
+            (qrTxSnap.docs || []).forEach(docSnap => {
+                const tx = docSnap.data() || {};
+                if (!matchesTargetStore(tx.merchantId)) return;
+
+                const amountVnd = Number(tx.amountVnd || (tx.amountKrw ? Math.round(Number(tx.amountKrw) * 18) : 0));
+                if (!amountVnd || amountVnd <= 0) return;
+
+                const txKey = String(tx.txHash || tx.rewardId || docSnap.id);
+                if (seenQrTxHashes.has(txKey) || recordMap.has(`QR_${txKey}`)) return;
+                seenQrTxHashes.add(txKey);
+
+                const buyerUid = String(tx.uid || tx.buyerUid || '').trim();
+                if (buyerUid) uidsToLookup.add(buyerUid);
+
+                pendingQrRecords.push({
+                    docId: `qr_tx_${txKey}`,
+                    txKey,
+                    tx,
+                    buyerUid,
+                    amountVnd,
+                    canonStoreId: normalizeStoreId(tx.merchantId) || targetStoreId
+                });
+            });
+
+            // 고객 프로필 조회 (이름/이메일 표시용)
+            const userProfileMap = new Map();
+            if (uidsToLookup.size > 0) {
+                await Promise.all(Array.from(uidsToLookup).map(async (u) => {
+                    try {
+                        const uSnap = await getDoc(doc(db, 'users', u));
+                        if (uSnap.exists()) {
+                            userProfileMap.set(u, uSnap.data() || {});
+                        }
+                    } catch (_) {}
+                }));
+            }
+
+            pendingQrRecords.forEach(({ docId, tx, buyerUid, amountVnd, canonStoreId }) => {
+                if (recordMap.has(docId)) return;
+                const uData = userProfileMap.get(buyerUid) || {};
+                const buyerEmail = (tx.buyerEmail || uData.email || '').trim();
+                const rawBuyerName = (tx.buyerName || uData.name || uData.displayName || '').trim();
+                const cleanBuyerName = (rawBuyerName && rawBuyerName !== 'Winner Best')
+                    ? rawBuyerName
+                    : (buyerEmail ? buyerEmail.split('@')[0] : (buyerUid ? `고객(${buyerUid.slice(0, 6)})` : 'QR 결제 고객'));
+                const buyerLabel = buyerEmail ? `${cleanBuyerName} (${buyerEmail})` : cleanBuyerName;
+                const issuedBt = Number(tx.issuedBt || tx.bt || 0);
+                const storeDispName = TENANT_MAP[canonStoreId]?.name || tx.merchantName || targetInfo.name || '가맹점';
+
+                recordMap.set(docId, {
+                    id: docId,
+                    type: 'INCOME',
+                    category: '📱 QR 결제 매출',
+                    amount: amountVnd,
+                    date: toDateString(tx.createdAt),
+                    partner: buyerLabel,
+                    project: `매장 QR 결제${issuedBt > 0 ? ` · BT ${issuedBt}장 지급` : ''}`,
+                    registrant: 'QR 자동정산 시스템',
+                    spender: buyerLabel,
+                    memo: `[QR 결제 매출] ${storeDispName} QR 결제 완료 (${formatCurrency(amountVnd)} VND${issuedBt > 0 ? ` / 보너스티켓 ${issuedBt} BT 지급` : ''})`,
+                    tenantId: canonStoreId,
+                    merchantId: canonStoreId,
+                    storeName: storeDispName,
+                    isAutoSyncedSales: true,
+                    syncBadgeText: '📱 QR매출'
+                });
+            });
+
+            // 온라인/매장 주문 (merchant_orders) 매출 연동 (QR txHash와 중복되지 않는 완료/결제 주문)
+            (ordersSnap.docs || []).forEach(docSnap => {
+                const ord = docSnap.data() || {};
+                const rawMId = ord.merchant_id || ord.merchantId || ord.tenantId || ord.storeId || '';
+                if (!matchesTargetStore(rawMId)) return;
+                if (ord.status === '취소' || ord.status === 'cancelled') return;
+
+                if (ord.txHash && seenQrTxHashes.has(String(ord.txHash))) return;
+
+                const amountVnd = Number(ord.total_amount || ord.totalAmount || ord.amount || 0);
+                if (!amountVnd || amountVnd <= 0) return;
+
+                const docId = `order_inc_${docSnap.id}`;
+                if (recordMap.has(docId)) return;
+
+                const canonStoreId = normalizeStoreId(rawMId) || targetStoreId;
+                const storeDispName = TENANT_MAP[canonStoreId]?.name || targetInfo.name || '가맹점';
+                const buyerEmail = (ord.buyer_email || ord.email || '').trim();
+                const buyerName = (ord.buyer_name || ord.name || (buyerEmail ? buyerEmail.split('@')[0] : '주문 고객')).trim();
+                const buyerLabel = buyerEmail ? `${buyerName} (${buyerEmail})` : buyerName;
+                const itemsDesc = Array.isArray(ord.items) && ord.items.length > 0
+                    ? ord.items.map(it => `${it.name || it.product_name || '상품'} x${it.qty || 1}`).join(', ')
+                    : '매장/온라인 주문';
+
+                recordMap.set(docId, {
+                    id: docId,
+                    type: 'INCOME',
+                    category: ord.payment_method === 'bm_wallet' ? '📱 QR 결제 매출' : '🛍️ 주문 매출',
+                    amount: amountVnd,
+                    date: toDateString(ord.paid_at || ord.created_at || ord.createdAt),
+                    partner: buyerLabel,
+                    project: ord.payment_method === 'bm_wallet' ? '매장 QR 결제' : '쇼핑몰/온라인 주문',
+                    registrant: '주문 자동정산',
+                    spender: buyerLabel,
+                    memo: `[매출 자동연동] ${itemsDesc}`,
+                    tenantId: canonStoreId,
+                    merchantId: canonStoreId,
+                    storeName: storeDispName,
+                    isAutoSyncedSales: true,
+                    syncBadgeText: ord.payment_method === 'bm_wallet' ? '📱 QR매출' : '🛍️ 주문매출'
+                });
+            });
+        } catch (salesSyncErr) {
+            console.warn('QR/Order sales sync warning:', salesSyncErr);
+        }
+
         // 4. DYNAMIC VIRTUAL PAYROLL INJECTION & EMPLOYEE SPENDER DATALIST: Strictly isolated per store!
         let virtualPayrolls = [];
         const spenderEmpNames = new Set();
@@ -450,14 +606,18 @@ async function loadFinanceData() {
                 }
 
                 const isVirtual = String(data.id || '').startsWith('virtual_payroll_');
+                const isAutoSales = Boolean(data.isAutoSyncedSales);
                 const registrantDisp = data.registrant || data.createdBy || (isVirtual ? '시스템 자동' : '-');
                 const spenderDisp = data.spender || data.registrant || data.createdBy || (isVirtual ? data.partner : '-');
+                const actorRoleLabel = (type === 'INCOME' || type === 'RECEIVABLE') ? '💰 결제자' : '💳 지출자';
 
                 const deleteActionHtml = isVirtual
                     ? `<span style="color:#94A3B8; font-size:0.75rem;">자동급여</span>`
-                    : `<button type="button" class="btn-delete-row" data-record-id="${data.id}" data-memo="${(data.memo || data.partner || '').replace(/"/g, '&quot;')}" style="display:inline-flex; align-items:center; gap:0.25rem; font-size:0.75rem; background:#FEE2E2; color:#B91C1C; border:1px solid #FECACA; padding:0.32rem 0.65rem; border-radius:0.4rem; font-weight:700; cursor:pointer; transition:all 0.15s;" title="지출 내역 영구 삭제">
-                           <span>🗑️</span> 삭제
-                       </button>`;
+                    : isAutoSales
+                        ? `<span style="color:#059669; background:#ECFDF5; border:1px solid #A7F3D0; padding:0.25rem 0.5rem; border-radius:0.35rem; font-size:0.72rem; font-weight:700; white-space:nowrap;">${data.syncBadgeText || '📱 QR매출'}</span>`
+                        : `<button type="button" class="btn-delete-row" data-record-id="${data.id}" data-memo="${(data.memo || data.partner || '').replace(/"/g, '&quot;')}" style="display:inline-flex; align-items:center; gap:0.25rem; font-size:0.75rem; background:#FEE2E2; color:#B91C1C; border:1px solid #FECACA; padding:0.32rem 0.65rem; border-radius:0.4rem; font-weight:700; cursor:pointer; transition:all 0.15s;" title="지출 내역 영구 삭제">
+                               <span>🗑️</span> 삭제
+                           </button>`;
 
                 html += `
                     <tr>
@@ -473,7 +633,7 @@ async function loadFinanceData() {
                         </td>
                         <td>
                             <div style="font-size:0.82rem; font-weight:700; color:#047857; display:flex; align-items:center; gap:0.25rem;">
-                                <span style="background:#ECFDF5; border:1px solid #A7F3D0; padding:0.1rem 0.38rem; border-radius:0.3rem; font-size:0.72rem;">💳 지출자</span>
+                                <span style="background:#ECFDF5; border:1px solid #A7F3D0; padding:0.1rem 0.38rem; border-radius:0.3rem; font-size:0.72rem;">${actorRoleLabel}</span>
                                 <span style="color:#0F172A;">${spenderDisp}</span>
                             </div>
                             <div style="font-size:0.76rem; color:#64748B; margin-top:0.28rem; display:flex; align-items:center; gap:0.25rem;">

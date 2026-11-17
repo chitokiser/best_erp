@@ -140,19 +140,21 @@ async function loadClients() {
                     }
                     if (!mId) mId = activeMerchantId;
 
+                    const isOwner = Boolean(ud.isMerchantOwner);
                     const key = email || docSnap.id;
 
                     const client = {
                         id: docSnap.id,
                         uid: docSnap.id,
                         email: ud.email || '',
-                        name: ud.name || '멘티 고객',
+                        name: (ud.name && ud.name !== 'Winner Best') ? ud.name : (ud.displayName || (ud.email ? ud.email.split('@')[0] : '멘티 고객')),
                         phone: ud.phone || '',
                         merchantId: mId,
                         isMerchantOwner: isOwner,
                         merchantStoreName: isOwner ? (getMerchantName(mId) || ud.name) : '',
                         isMentee: true,
                         isBuyer: false,
+                        isQrBuyer: false,
                         registeredAt: ud.createdAt || ud.registeredAt || null,
                         lastEventAt: ud.lastEventAt || null,
                         points: Number(ud.points || ud.pointBalance || ud.generatedForMentor || 0),
@@ -167,10 +169,28 @@ async function loadClients() {
             console.warn('멘티 회원 조회 오류/스킵:', menteeErr);
         }
 
+        // Helper to find existing client by email or uid
+        const findClientInMap = (emailLower, uidStr) => {
+            if (emailLower && clientMap.has(emailLower)) return clientMap.get(emailLower);
+            if (uidStr && clientMap.has(uidStr)) return clientMap.get(uidStr);
+            if (uidStr) {
+                for (const existing of clientMap.values()) {
+                    if (existing.uid && existing.uid === uidStr) return existing;
+                }
+            }
+            if (emailLower) {
+                for (const existing of clientMap.values()) {
+                    if (existing.email && existing.email.toLowerCase().trim() === emailLower) return existing;
+                }
+            }
+            return null;
+        };
+
         // ----------------------------------------------------
         // 2. 내 상품 구매 고객(Buyers from merchant_orders) 수집
         //    - 내 멘티가 아니면 '제휴 회원(affiliate)'으로 자동 분류
         // ----------------------------------------------------
+        const recordedOrderTxHashes = new Set();
         try {
             const ordersSnap = await getDocs(collection(db, 'merchant_orders'));
             ordersSnap.forEach(d => {
@@ -186,6 +206,9 @@ async function loadClients() {
                 }
 
                 if (!belongsToMe) return;
+                if (ord.status === 'cancelled' || ord.status === '취소') return;
+
+                if (ord.txHash) recordedOrderTxHashes.add(String(ord.txHash));
 
                 const buyerEmail = (ord.buyer_email || ord.email || '').trim().toLowerCase();
                 const buyerUid = ord.buyer_id || ord.buyer_uid || ord.userId || ord.user_id || '';
@@ -193,30 +216,20 @@ async function loadClients() {
                 const buyerPhone = ord.buyer_phone || ord.phone || ord.contact || '';
                 const amount = Number(ord.total_amount || ord.amount || 0);
 
-                // 이메일 또는 UID로 기존 멘티 매칭 확인
-                let client = (buyerEmail && clientMap.get(buyerEmail)) || (buyerUid && clientMap.get(buyerUid)) || null;
-                if (!client && buyerUid) {
-                    for (const existing of clientMap.values()) {
-                        if (existing.uid === buyerUid) {
-                            client = existing;
-                            break;
-                        }
-                    }
-                }
-
+                let client = findClientInMap(buyerEmail, buyerUid);
                 const key = buyerEmail || buyerUid || ('buyer_order_' + d.id);
 
                 if (!client) {
-                    // 다른 가맹점/경로를 통해 가입한 회원이 내 가맹점에서 구매한 경우 -> 제휴 회원 (affiliate)
                     client = {
                         id: buyerUid || d.id,
                         uid: buyerUid,
                         email: buyerEmail,
-                        name: buyerName || '제휴 구매고객',
+                        name: buyerName || (buyerEmail ? buyerEmail.split('@')[0] : '제휴 구매고객'),
                         phone: buyerPhone,
                         merchantId: ordMerchantId || activeMerchantId,
                         isMentee: false,
                         isBuyer: true,
+                        isQrBuyer: ord.payment_method === 'bm_wallet',
                         registeredAt: ord.created_at || ord.createdAt || null,
                         lastEventAt: null,
                         points: 0,
@@ -226,8 +239,8 @@ async function loadClients() {
                     };
                     clientMap.set(key, client);
                 } else {
-                    // 이미 내 멘티로 등록된 회원이 상품도 구매한 경우 (멘티 + 구매고객)
                     client.isBuyer = true;
+                    if (ord.payment_method === 'bm_wallet') client.isQrBuyer = true;
                     if ((!client.name || client.name === '멘티 고객') && buyerName) {
                         client.name = buyerName;
                     }
@@ -248,6 +261,204 @@ async function loadClients() {
             });
         } catch (orderErr) {
             console.warn('merchant_orders 조회 실패/스킵:', orderErr);
+        }
+
+        // ----------------------------------------------------
+        // 2-B. 📱 QR 결제 고객 (transactions: pay_merchant, receive_bt & bt_transactions) 수집
+        // ----------------------------------------------------
+        try {
+            const [qrTxSnap, btTxSnap, storeCustSnap] = await Promise.all([
+                getDocs(query(collection(db, 'transactions'), where('type', 'in', ['pay_merchant', 'receive_bt']))).catch(() => ({ docs: [] })),
+                getDocs(query(collection(db, 'bt_transactions'), where('type', '==', 'remote_send'))).catch(() => ({ docs: [] })),
+                getDocs(collection(db, 'store_customers')).catch(() => ({ docs: [] }))
+            ]);
+
+            const rawQrEvents = [];
+            const missingUserUids = new Set();
+
+            (qrTxSnap.docs || []).forEach(d => {
+                const tx = d.data() || {};
+                const txMerchantId = String(tx.merchantId || '');
+                const belongsToMe = isSuperAdmin || matchesMerchant(txMerchantId, activeMerchantId);
+                if (!belongsToMe) return;
+
+                const txKey = String(tx.txHash || tx.rewardId || d.id);
+                if (recordedOrderTxHashes.has(txKey)) return;
+                recordedOrderTxHashes.add(txKey);
+
+                const buyerUid = String(tx.uid || tx.buyerUid || '').trim();
+                const buyerEmail = String(tx.buyerEmail || '').toLowerCase().trim();
+                const amountVnd = Number(tx.amountVnd || (tx.amountKrw ? Math.round(Number(tx.amountKrw) * 18) : 0));
+                if (!buyerUid && !buyerEmail) return;
+                if (buyerUid === myUid || (myEmail && buyerEmail === myEmail)) return;
+
+                if (buyerUid && !findClientInMap(buyerEmail, buyerUid)) {
+                    missingUserUids.add(buyerUid);
+                }
+
+                rawQrEvents.push({
+                    txId: txKey,
+                    buyerUid,
+                    buyerEmail,
+                    buyerName: tx.buyerName || '',
+                    buyerPhone: tx.buyerPhone || '',
+                    merchantId: txMerchantId || activeMerchantId,
+                    amountVnd,
+                    issuedBt: Number(tx.issuedBt || tx.bt || 0),
+                    createdAt: tx.createdAt || null
+                });
+            });
+
+            (btTxSnap.docs || []).forEach(d => {
+                const btx = d.data() || {};
+                const txMerchantId = String(btx.merchantId || '');
+                const belongsToMe = isSuperAdmin || matchesMerchant(txMerchantId, activeMerchantId);
+                if (!belongsToMe) return;
+                if (btx.orderId) return; // 이미 merchant_orders에서 집계됨
+
+                const buyerUid = String(btx.customerUid || '').trim();
+                const buyerEmail = String(btx.customerEmail || '').toLowerCase().trim();
+                const amountVnd = Number(btx.amountVnd || 0);
+                if (!buyerUid && !buyerEmail) return;
+                if (buyerUid === myUid || (myEmail && buyerEmail === myEmail)) return;
+
+                if (buyerUid && !findClientInMap(buyerEmail, buyerUid)) {
+                    missingUserUids.add(buyerUid);
+                }
+
+                rawQrEvents.push({
+                    txId: d.id,
+                    buyerUid,
+                    buyerEmail,
+                    buyerName: '',
+                    buyerPhone: '',
+                    merchantId: txMerchantId || activeMerchantId,
+                    amountVnd,
+                    issuedBt: Number(btx.btIssued || 0),
+                    createdAt: btx.createdAt || null
+                });
+            });
+
+            // QR 결제 유저의 users 프로필 일괄 조회
+            const qrUserProfiles = new Map();
+            if (missingUserUids.size > 0) {
+                await Promise.all(Array.from(missingUserUids).map(async (uId) => {
+                    try {
+                        const uSnap = await getDoc(doc(db, 'users', uId));
+                        if (uSnap.exists()) {
+                            qrUserProfiles.set(uId, uSnap.data() || {});
+                        }
+                    } catch (_) {}
+                }));
+            }
+
+            rawQrEvents.forEach(ev => {
+                const uData = qrUserProfiles.get(ev.buyerUid) || {};
+                const resolvedEmail = (ev.buyerEmail || uData.email || '').toLowerCase().trim();
+                const rawName = (ev.buyerName || uData.name || uData.displayName || '').trim();
+                const resolvedName = (rawName && rawName !== 'Winner Best')
+                    ? rawName
+                    : (resolvedEmail ? resolvedEmail.split('@')[0] : (ev.buyerUid ? `QR고객(${ev.buyerUid.slice(0, 6)})` : 'QR 결제 고객'));
+                const resolvedPhone = ev.buyerPhone || uData.phone || '';
+                const resolvedPoints = Number(uData.points || uData.pointBalance || 0);
+
+                // 멘티 여부 확인
+                const isDirectMentee = Boolean(
+                    (myUid && uData.mentorUid === myUid) ||
+                    (myEmail && (uData.mentorEmail || '').toLowerCase().trim() === myEmail) ||
+                    matchesMerchant(uData.registeredMerchantId || uData.merchantId, activeMerchantId)
+                );
+
+                let client = findClientInMap(resolvedEmail, ev.buyerUid);
+                const key = resolvedEmail || ev.buyerUid || ('qr_buyer_' + ev.txId);
+
+                if (!client) {
+                    client = {
+                        id: ev.buyerUid || ev.txId,
+                        uid: ev.buyerUid,
+                        email: resolvedEmail,
+                        name: resolvedName,
+                        phone: resolvedPhone,
+                        merchantId: ev.merchantId || activeMerchantId,
+                        isMentee: isDirectMentee,
+                        isBuyer: true,
+                        isQrBuyer: true,
+                        registeredAt: uData.createdAt || ev.createdAt || null,
+                        lastEventAt: ev.createdAt || null,
+                        points: resolvedPoints,
+                        purchaseCount: 0,
+                        totalSpend: 0,
+                        orders: []
+                    };
+                    clientMap.set(key, client);
+                } else {
+                    client.isBuyer = true;
+                    client.isQrBuyer = true;
+                    if ((!client.name || client.name === '멘티 고객' || client.name === '제휴 구매고객') && resolvedName) {
+                        client.name = resolvedName;
+                    }
+                    if (!client.email && resolvedEmail) client.email = resolvedEmail;
+                    if (!client.phone && resolvedPhone) client.phone = resolvedPhone;
+                    if (!client.points && resolvedPoints) client.points = resolvedPoints;
+                }
+
+                client.purchaseCount += 1;
+                client.totalSpend += ev.amountVnd;
+                client.orders.push({
+                    orderId: ev.txId,
+                    total_amount: ev.amountVnd,
+                    amount: ev.amountVnd,
+                    payment_method: 'qr_bm_pay',
+                    status: 'completed',
+                    issuedBt: ev.issuedBt,
+                    created_at: ev.createdAt,
+                    items: [
+                        {
+                            name: `📱 매장 QR 결제${ev.issuedBt > 0 ? ` (보너스 ${ev.issuedBt} BT 지급)` : ''}`,
+                            qty: 1
+                        }
+                    ]
+                });
+            });
+
+            // 테이블 QR 체크인 고객 (store_customers) 연동
+            (storeCustSnap.docs || []).forEach(d => {
+                const sc = d.data() || {};
+                const scMerchantId = String(sc.merchantId || sc.tenantId || sc.storeId || '');
+                const belongsToMe = isSuperAdmin || matchesMerchant(scMerchantId, activeMerchantId);
+                if (!belongsToMe) return;
+
+                const scEmail = String(sc.email || '').toLowerCase().trim();
+                const scUid = String(sc.uid || sc.userId || '').trim();
+                if (!scEmail && !scUid) return;
+                if (scUid === myUid || (myEmail && scEmail === myEmail)) return;
+
+                let client = findClientInMap(scEmail, scUid);
+                if (!client) {
+                    const key = scEmail || scUid || ('table_qr_' + d.id);
+                    clientMap.set(key, {
+                        id: scUid || d.id,
+                        uid: scUid,
+                        email: scEmail,
+                        name: sc.name || (scEmail ? scEmail.split('@')[0] : 'QR 방문 고객'),
+                        phone: sc.phone || '',
+                        merchantId: scMerchantId || activeMerchantId,
+                        isMentee: true,
+                        isBuyer: false,
+                        isQrBuyer: true,
+                        registeredAt: sc.createdAt || null,
+                        lastEventAt: sc.updatedAt || sc.createdAt || null,
+                        points: Number(sc.points || 0),
+                        purchaseCount: 0,
+                        totalSpend: 0,
+                        orders: []
+                    });
+                } else {
+                    client.isQrBuyer = true;
+                }
+            });
+        } catch (qrCustErr) {
+            console.warn('QR 결제 고객 조회 실패/스킵:', qrCustErr);
         }
 
         // ----------------------------------------------------
@@ -273,11 +484,12 @@ async function loadClients() {
             return c;
         });
 
-        // 멘티+구매고객(both) 및 고액 구매자 우선 정렬
+        // 멘티+구매고객(both), QR 결제 고객 및 고액 구매자 우선 정렬
         storedClients.sort((a, b) => {
             if (a.relationType === 'both' && b.relationType !== 'both') return -1;
             if (b.relationType === 'both' && a.relationType !== 'both') return 1;
-            return b.totalSpend - a.totalSpend;
+            if (b.totalSpend !== a.totalSpend) return b.totalSpend - a.totalSpend;
+            return b.purchaseCount - a.purchaseCount;
         });
 
         window.renderMentees();
@@ -304,8 +516,9 @@ window.renderMentees = function () {
             if (!matchesMerchant(c.merchantId, filterMerchantVal)) return false;
         }
 
-        // 2. 고객 관계 필터 (전체 / 내 멘티만 / 멘티+구매 / 제휴 회원만)
+        // 2. 고객 관계 필터 (전체 / QR결제 / 내 멘티만 / 멘티+구매 / 제휴 회원만)
         if (filterRelationVal !== 'all') {
+            if (filterRelationVal === 'qr' && !c.isQrBuyer) return false;
             if (filterRelationVal === 'both' && c.relationType !== 'both') return false;
             if ((filterRelationVal === 'affiliate' || filterRelationVal === 'buyer') && c.relationType !== 'affiliate') return false;
             if (filterRelationVal === 'mentee' && !c.isMentee) return false;
@@ -320,8 +533,8 @@ window.renderMentees = function () {
 
         // 4. 검색 필터 (이름, 이메일, 전화번호, 구매상품명)
         if (searchVal) {
-            const matchName = c.name.toLowerCase().includes(searchVal);
-            const matchEmail = c.email.toLowerCase().includes(searchVal);
+            const matchName = (c.name || '').toLowerCase().includes(searchVal);
+            const matchEmail = (c.email || '').toLowerCase().includes(searchVal);
             const matchPhone = (c.phone || '').toLowerCase().includes(searchVal);
             const matchOrderItems = c.orders.some(o => {
                 const summary = (o.items || []).map(it => it.name || it.product_name || '').join(' ').toLowerCase();
@@ -345,23 +558,25 @@ window.renderMentees = function () {
         if (c.isMerchantOwner) {
             relBadge = `<span class="tag-status" style="background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; font-weight:700;">🏪 가맹점주${c.merchantStoreName ? ` (${escapeHtml(c.merchantStoreName)})` : ''}</span>`;
         } else if (c.relationType === 'both') {
-            relBadge = '<span class="tag-status" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; font-weight:700;">🌟 내 멘티 + 구매</span>';
+            relBadge = `<span class="tag-status" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; font-weight:700;">🌟 내 멘티 + ${c.isQrBuyer ? '📱QR결제' : '구매'}</span>`;
+        } else if (c.isQrBuyer && c.isBuyer) {
+            relBadge = '<span class="tag-status" style="background:#dcfce7; color:#047857; border:1px solid #a7f3d0; font-weight:700;">📱 QR 결제 고객</span>';
         } else if (c.relationType === 'affiliate') {
-            relBadge = '<span class="tag-status" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-weight:700;">🤝 제휴 회원</span>';
+            relBadge = '<span class="tag-status" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-weight:700;">🤝 제휴 구매고객</span>';
         } else {
-            relBadge = '<span class="tag-status" style="background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; font-weight:600;">👥 내 멘티 회원</span>';
+            relBadge = `<span class="tag-status" style="background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; font-weight:600;">👥 내 멘티 회원${c.isQrBuyer ? ' (QR)' : ''}</span>`;
         }
 
         // 계정 & 연락처
-        const emailStr = c.email ? escapeHtml(c.email) : `<span style="color:#94a3b8; font-family:monospace;">${escapeHtml(c.id.substring(0, 10))}...</span>`;
+        const emailStr = c.email ? escapeHtml(c.email) : `<span style="color:#94a3b8; font-family:monospace;">${escapeHtml(String(c.id).substring(0, 10))}...</span>`;
         const phoneStr = c.phone ? `<br><span style="font-size:0.75rem; color:#64748b;">📞 ${escapeHtml(c.phone)}</span>` : '';
 
         // 구매 실적
         let spendHtml = '';
         if (c.purchaseCount > 0) {
-            spendHtml = `<strong style="color:#2563eb; font-size:0.95rem;">₫ ${c.totalSpend.toLocaleString()}</strong><br><span style="font-size:0.75rem; color:#64748b;">(총 ${c.purchaseCount}회 구매)</span>`;
+            spendHtml = `<strong style="color:#2563eb; font-size:0.95rem;">₫ ${c.totalSpend.toLocaleString()}</strong><br><span style="font-size:0.75rem; color:#64748b;">(총 ${c.purchaseCount}회 ${c.isQrBuyer ? 'QR/매장결제' : '구매'})</span>`;
         } else {
-            spendHtml = '<span style="color:#94a3b8; font-size:0.85rem;">구매 이력 없음</span>';
+            spendHtml = '<span style="color:#94a3b8; font-size:0.85rem;">결제 이력 없음</span>';
         }
 
         // 포인트
@@ -386,7 +601,7 @@ window.renderMentees = function () {
                 <td>
                     <button onclick="viewOrders('${c.id}')" 
                         style="padding:0.4rem 0.8rem; border:1px solid #cbd5e1; border-radius:0.4rem; background:white; cursor:pointer; font-size:0.78rem; font-weight:600; color:#334155; white-space:nowrap;">
-                        📋 구매상세 ${c.purchaseCount > 0 ? `(${c.purchaseCount}건)` : ''}
+                        📋 상세내역 ${c.purchaseCount > 0 ? `(${c.purchaseCount}건)` : ''}
                     </button>
                 </td>
             </tr>
@@ -405,12 +620,13 @@ window.viewOrders = function (clientId) {
     const custInfoEl = document.getElementById('orderModalCustomerInfo');
     const contentEl = document.getElementById('orderModalContent');
 
-    titleEl.textContent = `🛍️ [${client.name}] 고객 상세 구매 및 회원 내역`;
+    titleEl.textContent = `🛍️ [${client.name}] 고객 상세 결제·구매 및 회원 내역`;
 
     // 회원 관계 표시명
     let relLabel = '내 가맹점 직속 멘티 회원';
     if (client.isMerchantOwner) relLabel = `🏪 가맹점 대표/점주 (${client.merchantStoreName || '가맹점'})`;
-    else if (client.relationType === 'both') relLabel = '내 멘티 & 상품 구매 고객 (VIP)';
+    else if (client.relationType === 'both') relLabel = `내 멘티 & ${client.isQrBuyer ? 'QR 결제' : '상품 구매'} 고객 (VIP)`;
+    else if (client.isQrBuyer) relLabel = '📱 매장 QR 결제 고객';
     else if (client.relationType === 'affiliate') relLabel = '🤝 제휴 회원 (타 가맹점 가입 · 내 가맹점 구매고객)';
 
     custInfoEl.innerHTML = `
@@ -443,12 +659,14 @@ window.viewOrders = function (clientId) {
             else if (o.status === 'payment_confirmed') statusBadge = '<span style="color:#059669; font-weight:bold;">💰 결제확인</span>';
             else if (o.status === 'cancelled') statusBadge = '<span style="color:#ef4444; font-weight:bold;">취소됨</span>';
 
-            const payMethodStr = o.payment_method === 'bm_wallet' ? '내 지갑 BM' : (o.payment_method === 'bank_transfer' ? '계좌이체' : '일반 결제');
+            const payMethodStr = o.payment_method === 'qr_bm_pay'
+                ? '📱 매장 QR 결제 (BM)'
+                : (o.payment_method === 'bm_wallet' ? '내 지갑 BM' : (o.payment_method === 'bank_transfer' ? '계좌이체' : '일반 결제'));
 
             return `
                 <div style="border:1px solid #e2e8f0; border-radius:0.75rem; padding:1.25rem; margin-bottom:1rem; background:white; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
                     <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; border-bottom:1px solid #f1f5f9; padding-bottom:0.5rem; font-size:0.85rem; color:#64748b;">
-                        <span>주문번호: <strong>${escapeHtml(o.orderId || '')}</strong></span>
+                        <span>결제/주문번호: <strong>${escapeHtml(o.orderId || '')}</strong></span>
                         <span>${dateStr}</span>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">

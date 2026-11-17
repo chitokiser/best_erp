@@ -575,30 +575,68 @@
                 if (elSup && elSup.textContent.includes('조회 중')) elSup.textContent = '0 개 협력사';
             }
 
-            // 2. Total Sales (Real-time) from merchant_orders
+            // 2. Total Sales (Real-time) from merchant_orders + QR transactions (pay_merchant, receive_bt)
             try {
-                const ordersSnap = await getDocs(collection(db, 'merchant_orders'));
+                const matchStoreHelper = (rawMId, rawMName = '') => {
+                    const mId = String(rawMId || '').trim();
+                    const mName = String(rawMName || '').trim().toLowerCase();
+                    if (isSuperAdmin && selectedMerchant === 'ALL') return true;
+                    const target = (isSuperAdmin && selectedMerchant !== 'ALL') ? selectedMerchant : tenantId;
+                    if (!target) return false;
+                    if (mId === target) return true;
+                    if (target === '1794710386' && (mId === 'baekje_galbi' || mId === 'baekjegalbi' || mName.includes('백제갈비'))) return true;
+                    if (target === '1791605366' && (mId === 'bestwinner' || mId === 'best_winner' || mName.includes('베스트위너') || mName.includes('위너베스트'))) return true;
+                    if (target === '1791002036' && (mId === 'daehan_kimchi' || mId === 'daehankimchi' || mName.includes('대한김치'))) return true;
+                    return false;
+                };
+
+                const [ordersSnap, qrTxSnap] = await Promise.all([
+                    getDocs(collection(db, 'merchant_orders')).catch(() => ({ docs: [] })),
+                    getDocs(query(collection(db, 'transactions'), where('type', 'in', ['pay_merchant', 'receive_bt']))).catch(() => ({ docs: [] }))
+                ]);
+
                 let totalSales = 0;
                 let validOrderCount = 0;
+                let qrOrderCount = 0;
+                const seenSalesTx = new Set();
 
-                ordersSnap.forEach(docSnap => {
+                (ordersSnap.docs || []).forEach(docSnap => {
                     const o = docSnap.data();
                     const mId = String(o.merchant_id || o.merchantId || o.tenantId || o.storeId || '').trim();
-                    const matchMerchant = (isSuperAdmin && selectedMerchant === 'ALL')
-                        || (selectedMerchant !== 'ALL' && (mId === selectedMerchant || mId === 'baekje_galbi' && selectedMerchant === '1794710386'))
-                        || (!isSuperAdmin && (mId === tenantId || (tenantId === '1794710386' && (mId === 'baekje_galbi' || mId === 'baekjegalbi')) || (tenantId === '1791605366' && (mId === 'bestwinner' || mId === 'best_winner'))));
-                    if (!matchMerchant) return;
+                    const mName = String(o.merchantName || o.storeName || '').trim();
+                    if (!matchStoreHelper(mId, mName)) return;
 
-                    if (o.status !== '취소' && o.status !== 'cancelled') {
-                        totalSales += Number(o.total_amount || o.totalAmount || o.amount || 0);
+                    if (o.status !== '취소' && o.status !== 'cancelled' && o.status !== 'rejected') {
+                        const amt = Number(o.total_amount || o.totalAmount || o.amount || o.amountVnd || 0);
+                        if (amt > 0) {
+                            totalSales += amt;
+                            validOrderCount += 1;
+                            if (o.txHash) seenSalesTx.add(String(o.txHash));
+                        }
+                    }
+                });
+
+                (qrTxSnap.docs || []).forEach(docSnap => {
+                    const tx = docSnap.data();
+                    const txKey = String(tx.txHash || docSnap.id);
+                    if (seenSalesTx.has(txKey)) return;
+                    const mId = String(tx.merchantId || tx.merchant_id || tx.storeId || tx.tenantId || '').trim();
+                    const mName = String(tx.merchantName || tx.storeName || '').trim();
+                    if (!matchStoreHelper(mId, mName)) return;
+
+                    const amt = Number(tx.amountVnd || tx.amount || tx.totalAmount || tx.amountKrw || 0);
+                    if (amt > 0) {
+                        seenSalesTx.add(txKey);
+                        totalSales += amt;
                         validOrderCount += 1;
+                        qrOrderCount += 1;
                     }
                 });
 
                 document.getElementById('kpiSales').textContent = `₫ ${totalSales.toLocaleString()}`;
                 const trend = document.getElementById('kpiSales').nextElementSibling;
                 if (trend && totalSales > 0) {
-                    trend.textContent = `${validOrderCount} 건 결제완료`;
+                    trend.textContent = qrOrderCount > 0 ? `${validOrderCount} 건 결제완료 (📱QR ${qrOrderCount}건 포함)` : `${validOrderCount} 건 결제완료`;
                     trend.className = 'trend trend-up';
                 } else if (trend) {
                     trend.textContent = `결제 내역 없음`;
@@ -705,19 +743,39 @@
                 console.warn("메뉴 데이터 로딩 에러:", menuErr);
             }
 
-            // 4. Total Managed Customers (내 가맹점 직속 멘티 - 순수 고객/멘티 회원만 필터링)
+            // 4. Total Managed Customers (내 가맹점 직속 멘티 + QR 결제/구매 고객 통합)
             try {
+                const targetFilterId = (isSuperAdmin && selectedMerchant !== 'ALL') ? selectedMerchant : tenantId;
+                const matchCustomerStore = (rawMId, rawMName = '') => {
+                    const mId = String(rawMId || '').trim();
+                    const mName = String(rawMName || '').trim().toLowerCase();
+                    if (isSuperAdmin && selectedMerchant === 'ALL') return true;
+                    if (!targetFilterId) return false;
+                    if (mId === targetFilterId) return true;
+                    if (targetFilterId === '1794710386' && (mId === 'baekje_galbi' || mId === 'baekjegalbi' || mName.includes('백제갈비'))) return true;
+                    if (targetFilterId === '1791605366' && (mId === 'bestwinner' || mId === 'best_winner' || mName.includes('베스트위너') || mName.includes('위너베스트'))) return true;
+                    if (targetFilterId === '1791002036' && (mId === 'daehan_kimchi' || mId === 'daehankimchi' || mName.includes('대한김치'))) return true;
+                    return false;
+                };
+
                 const menteeQueries = [];
                 if (userEmail) {
                     menteeQueries.push(getDocs(query(collection(db, 'users'), where('mentorEmail', '==', userEmail))).catch(() => ({ docs: [] })));
                     menteeQueries.push(getDocs(query(collection(db, 'users'), where('mentorAddressInput', '==', userEmail))).catch(() => ({ docs: [] })));
                 }
-                if (tenantId) {
-                    menteeQueries.push(getDocs(query(collection(db, 'users'), where('registeredMerchantId', '==', tenantId))).catch(() => ({ docs: [] })));
-                    menteeQueries.push(getDocs(query(collection(db, 'users'), where('merchantId', '==', tenantId))).catch(() => ({ docs: [] })));
+                if (targetFilterId) {
+                    menteeQueries.push(getDocs(query(collection(db, 'users'), where('registeredMerchantId', '==', targetFilterId))).catch(() => ({ docs: [] })));
+                    menteeQueries.push(getDocs(query(collection(db, 'users'), where('merchantId', '==', targetFilterId))).catch(() => ({ docs: [] })));
                 }
 
-                const snaps = await Promise.all(menteeQueries);
+                const [snaps, qrCustTxSnap, btCustTxSnap, ordCustSnap, storeCustSnap] = await Promise.all([
+                    Promise.all(menteeQueries),
+                    getDocs(query(collection(db, 'transactions'), where('type', 'in', ['pay_merchant', 'receive_bt']))).catch(() => ({ docs: [] })),
+                    getDocs(query(collection(db, 'bt_transactions'), where('type', '==', 'remote_send'))).catch(() => ({ docs: [] })),
+                    getDocs(collection(db, 'merchant_orders')).catch(() => ({ docs: [] })),
+                    getDocs(collection(db, 'store_customers')).catch(() => ({ docs: [] }))
+                ]);
+
                 const seenUids = new Set();
                 const mentees = [];
 
@@ -751,26 +809,126 @@
 
                         // 3. 타 가맹점 계정 유입 차단 (멀티테넌트)
                         const userTenant = String(data.registeredMerchantId || data.merchantId || data.tenantId || '').trim();
-                        if (tenantId && userTenant && userTenant !== tenantId) {
+                        if (targetFilterId && userTenant && userTenant !== targetFilterId) {
                             return;
                         }
                         const nameLower = (data.name || '').toLowerCase();
-                        if (tenantId === '1791605366') {
+                        if (targetFilterId === '1791605366') {
                             if (nameLower.includes('백제갈비') || userTenant === '1794710386') return;
                             if (nameLower.includes('대한김치') || userTenant === '1791002036') return;
-                        } else if (tenantId === '1794710386') {
+                        } else if (targetFilterId === '1794710386') {
                             if (nameLower.includes('베스트위너') || userTenant === '1791605366') return;
                         }
 
                         seenUids.add(d.id);
-                        mentees.push({ id: d.id, ...data });
+                        mentees.push({ id: d.id, ...data, isMentee: true, isQrCustomer: false });
                     });
                 });
 
+                // 📱 QR 결제 및 매장 주문 고객 수집
+                const qrBuyerStats = new Map();
+                const recordQrCustomer = (bUid, amt, fallbackName = '', fallbackEmail = '', isQr = true) => {
+                    if (!bUid || bUid === userUid) return;
+                    if (!qrBuyerStats.has(bUid)) {
+                        qrBuyerStats.set(bUid, { uid: bUid, spend: 0, count: 0, name: fallbackName, email: fallbackEmail, isQr: false });
+                    }
+                    const st = qrBuyerStats.get(bUid);
+                    st.spend += Number(amt || 0);
+                    st.count += 1;
+                    if (isQr) st.isQr = true;
+                    if (!st.name && fallbackName) st.name = fallbackName;
+                    if (!st.email && fallbackEmail) st.email = fallbackEmail;
+                };
+
+                (qrCustTxSnap.docs || []).forEach(d => {
+                    const tx = d.data();
+                    if (!matchCustomerStore(tx.merchantId || tx.merchant_id || tx.storeId, tx.merchantName || tx.storeName)) return;
+                    const bUid = String(tx.uid || tx.buyerUid || tx.userId || '').trim();
+                    const amt = Number(tx.amountVnd || tx.amount || tx.totalAmount || tx.amountKrw || 0);
+                    recordQrCustomer(bUid, amt, tx.buyerName || tx.userName || '', tx.buyerEmail || tx.userEmail || '', true);
+                });
+
+                (btCustTxSnap.docs || []).forEach(d => {
+                    const btx = d.data();
+                    if (!matchCustomerStore(btx.merchantId || btx.storeId, btx.merchantName || btx.storeName)) return;
+                    const bUid = String(btx.toUid || btx.recipientUid || btx.uid || '').trim();
+                    recordQrCustomer(bUid, Number(btx.amountVnd || 0), btx.toName || btx.recipientName || '', btx.toEmail || btx.recipientEmail || '', true);
+                });
+
+                (ordCustSnap.docs || []).forEach(d => {
+                    const o = d.data();
+                    if (o.status === '취소' || o.status === 'cancelled') return;
+                    if (!matchCustomerStore(o.merchant_id || o.merchantId || o.storeId || o.tenantId, o.merchantName || o.storeName)) return;
+                    const bUid = String(o.buyer_uid || o.buyerUid || o.userId || o.uid || '').trim();
+                    const amt = Number(o.total_amount || o.totalAmount || o.amount || 0);
+                    recordQrCustomer(bUid, amt, o.buyer_name || o.buyerName || '', o.buyer_email || o.buyerEmail || '', Boolean(o.paymentMethod === 'qr' || o.txHash));
+                });
+
+                (storeCustSnap.docs || []).forEach(d => {
+                    const sc = d.data();
+                    if (!matchCustomerStore(sc.storeId || sc.merchantId, sc.storeName || sc.merchantName)) return;
+                    const bUid = String(sc.uid || sc.userId || '').trim();
+                    recordQrCustomer(bUid, Number(sc.totalSpent || 0), sc.name || sc.displayName || '', sc.email || '', true);
+                });
+
+                // 기존 멘티 목록에 있으면 QR 결제 배지 업데이트, 없으면 users/{uid} 조회 후 추가
+                const missingQrUids = [];
+                qrBuyerStats.forEach((st, bUid) => {
+                    const existing = mentees.find(m => m.id === bUid);
+                    if (existing) {
+                        existing.isQrCustomer = st.isQr;
+                        existing.qrSpend = st.spend;
+                        existing.qrCount = st.count;
+                    } else if (!seenUids.has(bUid)) {
+                        missingQrUids.push(bUid);
+                    }
+                });
+
+                if (missingQrUids.length > 0) {
+                    const userDocs = await Promise.all(
+                        missingQrUids.map(uid => getDoc(doc(db, 'users', uid)).catch(() => null))
+                    );
+                    userDocs.forEach((uSnap, idx) => {
+                        const bUid = missingQrUids[idx];
+                        const st = qrBuyerStats.get(bUid);
+                        if (uSnap && uSnap.exists()) {
+                            const uData = uSnap.data();
+                            const uEmail = (uData.email || st.email || '').toLowerCase().trim();
+                            if (uEmail && userEmail && uEmail === userEmail) return;
+                            seenUids.add(bUid);
+                            mentees.push({
+                                id: bUid,
+                                ...uData,
+                                name: uData.name || uData.displayName || st.name || 'QR 결제 고객',
+                                email: uData.email || st.email || '',
+                                isMentee: false,
+                                isQrCustomer: st.isQr,
+                                qrSpend: st.spend,
+                                qrCount: st.count
+                            });
+                        } else if (st) {
+                            seenUids.add(bUid);
+                            mentees.push({
+                                id: bUid,
+                                name: st.name || 'QR 결제 고객',
+                                email: st.email || bUid.substring(0, 8),
+                                points: 0,
+                                isMentee: false,
+                                isQrCustomer: st.isQr,
+                                qrSpend: st.spend,
+                                qrCount: st.count
+                            });
+                        }
+                    });
+                }
+
+                const qrCustCount = mentees.filter(m => m.isQrCustomer).length;
                 document.getElementById('kpiNewCustomers').textContent = `${mentees.length} 명`;
                 const custTrend = document.getElementById('kpiNewCustomers').nextElementSibling;
                 if (custTrend) {
-                    custTrend.textContent = mentees.length > 0 ? '내 직속 멘티 회원' : '멘티 회원 등록 대기중';
+                    custTrend.textContent = mentees.length > 0
+                        ? (qrCustCount > 0 ? `멘티 + 📱QR고객 ${qrCustCount}명 포함` : '내 직속 멘티 회원')
+                        : '멘티/QR고객 등록 대기중';
                 }
 
                 let totalP = 0;
@@ -778,9 +936,16 @@
                 mentees.forEach(data => {
                     const pts = Number(data.points || data.pointBalance || 0);
                     totalP += pts;
+                    const badgeHtml = data.isQrCustomer
+                        ? `<span style="font-size:0.68rem; background:#dbeafe; color:#1d4ed8; padding:0.1rem 0.38rem; border-radius:0.25rem; font-weight:700;">📱 QR결제${data.qrSpend ? ' ₫' + Number(data.qrSpend).toLocaleString() : ''}</span>`
+                        : `<span style="font-size:0.68rem; background:#dcfce7; color:#15803d; padding:0.1rem 0.38rem; border-radius:0.25rem; font-weight:700;">🌟 멘티</span>`;
 
                     clientHtml += `<div class="quick-menu-item">
-                        <div style="font-weight:700; color:#334155;">${data.name || '멘티 회원'} <span style="font-size:0.8rem; color:#94a3b8;">(${data.email || data.id.substring(0, 8)})</span></div>
+                        <div style="font-weight:700; color:#334155; display:flex; align-items:center; gap:0.35rem; flex-wrap:wrap;">
+                            ${badgeHtml}
+                            <span>${data.name || '고객 회원'}</span>
+                            <span style="font-size:0.8rem; color:#94a3b8;">(${data.email || data.id.substring(0, 8)})</span>
+                        </div>
                         <div style="display:flex; align-items:center; gap:0.5rem;">
                             <span style="font-size:0.75rem; font-weight:700; color:#10b981;">${pts.toLocaleString()} P</span>
                         </div>
@@ -790,7 +955,7 @@
                 if (mentees.length > 0) {
                     document.getElementById('quickClientControl').innerHTML = clientHtml;
                 } else {
-                    document.getElementById('quickClientControl').innerHTML = '<p style="text-align:center; color:#94a3b8; font-size:0.9rem; padding:1.5rem 0;">아직 등록된 멘티/고객이 없습니다.</p>';
+                    document.getElementById('quickClientControl').innerHTML = '<p style="text-align:center; color:#94a3b8; font-size:0.9rem; padding:1.5rem 0;">아직 등록된 멘티/QR결제 고객이 없습니다.</p>';
                 }
                 document.getElementById('kpiChurn').textContent = `${totalP.toLocaleString()} P`;
             } catch (custErr) {

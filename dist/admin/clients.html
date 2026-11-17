@@ -7,10 +7,10 @@
     <title>가맹점 멘티/고객 CRM - AI M-SaaS</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>.crm-container{background:#fff;border:1px solid #e2e8f0;border-radius:1rem;margin-top:1.5rem;padding:2rem;box-shadow:0 4px 6px -1px #0000000d}.search-bar{gap:1rem;margin-bottom:2rem;display:flex}.search-bar input,.search-bar select{border:1px solid #e2e8f0;border-radius:.5rem;outline:none;padding:.75rem 1rem;font-size:.95rem}table{border-collapse:collapse;width:100%}th,td{text-align:left;border-bottom:1px solid #e2e8f0;padding:1rem;font-size:.95rem}th{color:#475569;background:#f8fafc;font-weight:600}.tag-status{border-radius:999px;padding:.25rem .6rem;font-size:.75rem;font-weight:600}.tag-vip{color:#b91c1c;background:#fee2e2}.tag-normal{color:#3730a3;background:#e0e7ff}.tag-new{color:#166534;background:#dcfce7}.dropdown{margin-top:2px;display:inline-block;position:relative}.dropdown-content{z-index:9999;z-index:1000;background-color:#fff;border:1px solid #e2e8f0;border-radius:.5rem;min-width:180px;display:none;position:absolute;top:100%;left:0;box-shadow:0 10px 25px #0000001a}.dropdown-content a{white-space:nowrap;border-bottom:1px solid #f1f5f9;font-size:.95rem;font-weight:500;text-decoration:none;display:block;color:#334155!important;padding:.8rem 1rem!important}.dropdown-content a:hover{background-color:#f8fafc;color:#4f46e5!important;padding-left:1.25rem!important}.dropdown:hover .dropdown-content{display:block}.dropbtn{color:#475569;cursor:pointer;border-radius:.5rem;padding:.5rem .75rem;font-weight:600;display:inline-block}.top-nav ul{align-items:center;gap:1rem;margin:0;padding:0;list-style:none;display:flex}</style>
-  <script type="module" crossorigin src="/assets/admin_clients-C2BXFaNz.js"></script>
+  <script type="module" crossorigin src="/assets/admin_clients-DpOhBQ2e.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-DK3Fl9T5.js">
   <link rel="modulepreload" crossorigin href="/assets/firebase-config-BWFrQkzL.js">
-  <link rel="modulepreload" crossorigin href="/assets/auth-B-iTyhph.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-DKos8FFd.js">
   <link rel="stylesheet" crossorigin href="/assets/css-BGEJ69Kh.css">
   <link rel="stylesheet" crossorigin href="/assets/admin-ra0HbW-b.css">
 </head>
@@ -72,7 +72,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap:wrap; gap:1rem;">
             <div>
                 <h2 style="font-size: 1.8rem; font-weight: 800; color: #1e293b; margin:0;">👥 통합 고객 & 멘티 CRM (Master Clients)</h2>
-                <p style="color: #64748b; margin-top: 0.5rem;">내 가맹점의 <strong>추천 멘티</strong>와 쇼핑몰에서 <strong>내 상품을 구매한 고객</strong>의 통합 실적 및 멤버십을 관리합니다.</p>
+                <p style="color: #64748b; margin-top: 0.5rem;">내 가맹점의 <strong>추천 멘티</strong>, <strong>📱 매장 QR 결제 고객</strong> 및 쇼핑몰에서 <strong>내 상품을 구매한 고객</strong>의 통합 실적 및 멤버십을 관리합니다.</p>
             </div>
             <div>
                 <button class="btn-primary" onclick="copyQRLink()"
@@ -95,14 +95,15 @@
                     <option value="1793776651">☀️ sunvietnam (1793776651)</option>
                 </select>
                 <select id="CRM_filterRelation" onchange="renderMentees()" style="font-weight:500;">
-                    <option value="all">전체 고객 (내 멘티 + 제휴 구매회원)</option>
+                    <option value="all">전체 고객 (내 멘티 + QR결제 + 구매회원)</option>
+                    <option value="qr">📱 QR 결제 고객만</option>
                     <option value="mentee">👥 내 멘티 회원만 (회원보기)</option>
-                    <option value="both">🌟 내 멘티 & 구매고객 (VIP)</option>
-                    <option value="affiliate">🤝 제휴 회원만 (타 가맹점 가입 구매고객)</option>
+                    <option value="both">🌟 내 멘티 & 결제고객 (VIP)</option>
+                    <option value="affiliate">🤝 제휴 회원만 (타 가맹점 가입 · 내 가맹점 결제고객)</option>
                 </select>
                 <select id="CRM_filterAmount" onchange="renderMentees()" style="font-weight:500;">
                     <option value="all">포인트/실적 전체</option>
-                    <option value="purchased">상품 구매 이력 보유</option>
+                    <option value="purchased">결제/구매 이력 보유</option>
                     <option value="5000">VIP (5,000 P 이상)</option>
                     <option value="1000">일반 (1,000 P 이상)</option>
                 </select>
@@ -116,12 +117,13 @@
                 <table>
                     <thead>
                         <tr>
-                            <th style="min-width:130px;">회원 구분</th>
+                            <th style="min-width:140px;">회원 구분</th>
                             <th style="min-width:190px;">회원 계정 (이메일/연락처)</th>
                             <th style="min-width:110px;">이름</th>
-                            <th style="min-width:180px;">내 상품 구매 실적</th>
+                            <th style="min-width:180px;">내 매장 결제/구매 실적</th>
                             <th style="min-width:110px;">누적 P💸</th>
-                            <th style="min-width:130px;">구매상세 내역</th>
+                            <th style="min-width:95px;">회원 등급</th>
+                            <th style="min-width:130px;">결제/구매 상세</th>
                         </tr>
                     </thead>
                     <tbody id="menteeTableBody">
