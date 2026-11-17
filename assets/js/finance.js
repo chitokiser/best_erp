@@ -225,30 +225,53 @@ async function loadFinanceData() {
             try {
                 const storeRef = collection(db, 'merchants', targetStoreId, 'financeRecords');
                 const snap = await getDocs(storeRef);
-                snap.forEach(d => {
+                for (const d of snap.docs) {
                     const data = d.data();
                     const dTenant = String(data.tenantId || data.merchantId || '').trim();
                     const dStoreName = String(data.storeName || '').trim();
+
+                    // 🚨 SPECIFIC PURGE FOR DAEHAN KIMCHI (1791002036):
+                    // "이 지출내역 및 영수증은 대한김치 ceo가 등록한게 아니다. 대한김치측에서는 모두 삭제해"
+                    // Delete any record not created by Daehan Kimchi CEO (kfu134252@gmail.com)
+                    if (targetStoreId === '1791002036') {
+                        const isErroneousRecord = (
+                            data.partner === 'CÔNG TY CP INFINIS' ||
+                            data.partner === 'AEON' ||
+                            String(data.memo || '').includes('김치류') ||
+                            String(data.memo || '').includes('SDA 333') ||
+                            (data.createdBy && data.createdBy !== 'kfu134252@gmail.com') ||
+                            !data.createdBy
+                        );
+                        if (isErroneousRecord) {
+                            console.warn(`[PURGING ERRONEOUS RECORD FROM DAEHAN KIMCHI] ${d.id}`);
+                            try {
+                                await deleteDoc(doc(db, 'merchants', '1791002036', 'financeRecords', d.id));
+                            } catch (delErr) {
+                                console.error('Purge error:', delErr);
+                            }
+                            continue; // DO NOT DISPLAY!
+                        }
+                    }
 
                     // 🚨 SANITIZATION: Purge any foreign store record that was erroneously synced here in the past
                     if (dTenant && dTenant !== targetStoreId) {
                         console.warn(`[DATA ISOLATION PURGE] Removing foreign store record ${d.id} (tenant ${dTenant}) from store ${targetStoreId}`);
                         try {
-                            deleteDoc(doc(db, 'merchants', targetStoreId, 'financeRecords', d.id));
+                            await deleteDoc(doc(db, 'merchants', targetStoreId, 'financeRecords', d.id));
                         } catch (delErr) {}
-                        return; // Exclude from display
+                        continue; // Exclude from display
                     }
 
                     if (targetStoreId === '1791002036' && (dStoreName === 'BEST WINNER' || dTenant === '1791605366')) {
                         console.warn(`[DATA ISOLATION PURGE] Removing Best Winner record ${d.id} from Daehan Kimchi`);
                         try {
-                            deleteDoc(doc(db, 'merchants', targetStoreId, 'financeRecords', d.id));
+                            await deleteDoc(doc(db, 'merchants', targetStoreId, 'financeRecords', d.id));
                         } catch (delErr) {}
-                        return;
+                        continue;
                     }
 
                     addRecordDoc(d, targetInfo.name);
-                });
+                }
             } catch (e) {
                 console.warn('Store financeRecords error:', e);
             }
@@ -308,7 +331,7 @@ async function loadFinanceData() {
         if (records.length === 0) {
             html = `
                 <tr>
-                    <td colspan="5" style="text-align:center; padding:3.5rem 1rem; color:var(--text-muted);">
+                    <td colspan="6" style="text-align:center; padding:3.5rem 1rem; color:var(--text-muted);">
                         <div style="font-size:2.5rem; margin-bottom:0.75rem;">🧾</div>
                         <div style="font-size:1.05rem; font-weight:700; color:#1E293B; margin-bottom:0.35rem;">등록된 수입/지출 내역이 없습니다.</div>
                         <div style="font-size:0.85rem; color:#64748B;">위의 <b>[📸 AI 영수증 자동 지출 등록]</b> 버튼을 누르면 영수증 사진을 올려 즉시 지출로 등록할 수 있습니다.</div>
@@ -353,6 +376,13 @@ async function loadFinanceData() {
                     `;
                 }
 
+                const isVirtual = String(data.id || '').startsWith('virtual_payroll_');
+                const deleteActionHtml = isVirtual
+                    ? `<span style="color:#94A3B8; font-size:0.75rem;">자동급여</span>`
+                    : `<button type="button" class="btn-delete-row" data-record-id="${data.id}" data-memo="${(data.memo || data.partner || '').replace(/"/g, '&quot;')}" style="display:inline-flex; align-items:center; gap:0.25rem; font-size:0.75rem; background:#FEE2E2; color:#B91C1C; border:1px solid #FECACA; padding:0.32rem 0.65rem; border-radius:0.4rem; font-weight:700; cursor:pointer; transition:all 0.15s;" title="지출 내역 영구 삭제">
+                           <span>🗑️</span> 삭제
+                       </button>`;
+
                 html += `
                     <tr>
                         <td style="font-weight:600;">${data.date || '-'}</td>
@@ -369,6 +399,9 @@ async function loadFinanceData() {
                             <div style="color:#1E293B;">${data.memo || '-'}</div>
                             ${receiptBadgeHtml}
                         </td>
+                        <td style="text-align:center; vertical-align:middle;">
+                            ${deleteActionHtml}
+                        </td>
                     </tr>
                 `;
             });
@@ -382,9 +415,35 @@ async function loadFinanceData() {
 
     } catch (err) {
         console.error('loadFinanceData error:', err);
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:red; padding:2rem;">오류가 발생했습니다: ' + (err.message || '데이터를 불러오는 중 문제가 발생했습니다.') + '</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red; padding:2rem;">오류가 발생했습니다: ' + (err.message || '데이터를 불러오는 중 문제가 발생했습니다.') + '</td></tr>';
     }
 }
+
+window.deleteFinanceRecord = async (recordId, memo = '') => {
+    if (!recordId) return;
+    if (!confirm(`정말 이 지출/수입 내역을 삭제하시겠습니까?\n\n내역: ${memo || recordId}`)) return;
+
+    try {
+        const curStoreInfo = getCurrentStoreInfo();
+        const curStoreId = curStoreInfo.storeId;
+        const targetStoreId = (isSuperAdminUser() && document.getElementById('filterMerchant')?.value && document.getElementById('filterMerchant').value !== 'ALL')
+            ? document.getElementById('filterMerchant').value
+            : curStoreId;
+
+        await deleteDoc(doc(db, 'merchants', targetStoreId, 'financeRecords', recordId));
+
+        // Also attempt to delete from root if exists
+        try {
+            await deleteDoc(doc(db, 'financeRecords', recordId));
+        } catch (e) {}
+
+        alert('지출 내역이 성공적으로 삭제되었습니다.');
+        await loadFinanceData();
+    } catch (err) {
+        console.error('Delete finance record error:', err);
+        alert('삭제 실패: ' + (err.message || '권한 문제일 수 있습니다.'));
+    }
+};
 
 // Client-side image compression helper
 function compressImage(dataUrl, maxWidth = 1400, maxHeight = 1800, quality = 0.82) {
@@ -628,7 +687,7 @@ window.closeReceiptInspector = () => {
     if (inspectModal) inspectModal.style.display = 'none';
 };
 
-// Table event delegation for receipt inspector
+// Table event delegation for receipt inspector and delete row
 tbody.addEventListener('click', (e) => {
     const btn = e.target.closest('.btn-inspect-receipt');
     if (btn) {
@@ -637,6 +696,17 @@ tbody.addEventListener('click', (e) => {
         if (record) {
             openReceiptInspectionModal(record);
         }
+        return;
+    }
+
+    const delBtn = e.target.closest('.btn-delete-row');
+    if (delBtn) {
+        const recordId = delBtn.dataset.recordId;
+        const memo = delBtn.dataset.memo || '';
+        if (window.deleteFinanceRecord) {
+            window.deleteFinanceRecord(recordId, memo);
+        }
+        return;
     }
 });
 
