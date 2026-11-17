@@ -327,7 +327,7 @@
     </main>
 
     <script type="module">
-        import { getAllMaterials, getSupplierPrices } from '../services/materialApi.js';
+        import { getAllMaterials, getSupplierPrices, deleteMaterial } from '../services/materialApi.js';
         import { db } from '../assets/js/firebase-config.js';
         import { doc, updateDoc, deleteDoc, addDoc, collection, serverTimestamp, getDocs, query, orderBy } from 'firebase/firestore';
 
@@ -382,6 +382,7 @@
                         <th style="padding: 1rem; width: 40px;"><input type="checkbox" id="selectAllMaterials"
                                 onclick="window.toggleAllMaterials(this.checked)"></th>
                         <th style="padding: 1rem; width: 60px;">사진</th>
+                        <th style="padding: 1rem;">소속 가맹점</th>
                         <th style="padding: 1rem;">자재코드</th>
                         <th style="padding: 1rem;">자재명</th>
                         <th style="padding: 1rem;">규격</th>
@@ -389,6 +390,7 @@
                         <th style="padding: 1rem;">단가 (VND)</th>
                         <th style="padding: 1rem;">재고/확보량</th>
                         <th style="padding: 1rem;">총 자산가치</th>
+                        <th style="padding: 1rem; text-align:center;">관리</th>
                     </tr>
                 `;
                 document.getElementById('adminCatFilter').style.display = 'inline-block';
@@ -474,6 +476,23 @@
             location.href = `material-form.html?id=${checkboxes[0].value}`;
         };
 
+        window.deleteOneMaterial = async (id, name) => {
+            if (!window.canManageMaterials()) {
+                alert("접근 불가: 권한이 없습니다."); return;
+            }
+            if (!confirm(`정말로 이 자재 [${name}]을(를) 삭제하시겠습니까?\n(삭제 시 가맹점 DB에서도 즉시 영구 삭제됩니다)`)) {
+                return;
+            }
+            try {
+                await deleteMaterial(id);
+                alert("자재가 성공적으로 삭제되었습니다.");
+                loadMaterials();
+            } catch (e) {
+                console.error("Delete Error", e);
+                alert("삭제 중 오류가 발생했습니다: " + e.message);
+            }
+        };
+
         window.deleteSelected = async () => {
             if (!window.canManageMaterials()) {
                 alert("접근 불가: 권한이 없습니다."); return;
@@ -481,16 +500,16 @@
             const checkboxes = document.querySelectorAll('.material-checkbox:checked');
             if (checkboxes.length === 0) { alert("삭제할 자재를 선택해주세요."); return; }
 
-            const names = Array.from(checkboxes).map(c => c.getAttribute('data-name')).join('\\n- ');
-            if (!confirm(`정말로 다음 자재들을 삭제하시겠습니까?\n\n[선택항목]\n- ${names}\n\n(삭제 시 복구가 불가능합니다)`)) {
+            const names = Array.from(checkboxes).map(c => c.getAttribute('data-name')).join('\n- ');
+            if (!confirm(`정말로 다음 자재들을 삭제하시겠습니까?\n\n[선택항목]\n- ${names}\n\n(삭제 시 가맹점 DB에서도 영구 삭제됩니다)`)) {
                 return;
             }
 
             try {
                 for (const c of checkboxes) {
-                    await deleteDoc(doc(db, 'materials', c.value));
+                    await deleteMaterial(c.value);
                 }
-                alert("선택한 자재들이 삭제되었습니다.");
+                alert("선택한 자재들이 성공적으로 삭제되었습니다.");
                 loadMaterials();
             } catch (e) {
                 console.error("Delete Error", e);
@@ -610,18 +629,26 @@
                 const price = m.ourPurchasePrice || 0;
                 const assetValue = stock * price;
 
+                const storeDisplayName = m.storeName || (m.tenantId === '1794710386' ? '백제갈비' : (m.tenantId === '1791002036' ? '대한김치' : (m.tenantId === '1793671043' ? '베스트마리오' : 'BEST WINNER')));
+                const storeBadgeColor = m.tenantId === '1794710386' ? 'background:#fee2e2; color:#b91c1c;' : (m.tenantId === '1791002036' ? 'background:#ecfdf5; color:#047857;' : 'background:#e0e7ff; color:#3730a3;');
+
                 tr.innerHTML = `
                     <td style="padding: 1rem;" onclick="event.stopPropagation()"><input type="checkbox" class="material-checkbox" value="${m.id}" data-name="${m.name}" data-price="${price}"></td>
                     <td style="padding: 1rem;"><img src="${imgUrl}" style="width:50px; height:50px; object-fit:cover; border-radius:4px;" alt="thumb"></td>
+                    <td style="padding: 1rem;">
+                        <span style="${storeBadgeColor} padding: 0.2rem 0.55rem; border-radius: 4px; font-size: 0.78rem; font-weight:700; white-space:nowrap;">
+                            🏬 ${storeDisplayName}
+                        </span>
+                    </td>
                     <td style="padding: 1rem;">${m.materialCode || '-'}</td>
-                    <td style="padding: 1rem; font-weight: 500;">${m.name}</td>
+                    <td style="padding: 1rem; font-weight: 600; color:#1e293b;">${m.name}</td>
                     <td style="padding: 1rem;">${m.specification || '-'}</td>
                     <td style="padding: 1rem;">
                         <span style="background: #e2e8f0; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">
                             ${m.categoryId || '-'}
                         </span>
                     </td>
-                    <td style="padding: 1rem;">${price.toLocaleString()}</td>
+                    <td style="padding: 1rem; font-weight:600;">${price.toLocaleString()}</td>
                     <td style="padding: 1rem; font-weight: 700; color: ${stock > 0 ? 'var(--primary-color, #4F46E5)' : '#94a3b8'};">
                         <div style="display:flex; align-items:center; gap:0.5rem;">
                             <span>${stock} 개</span>
@@ -630,6 +657,12 @@
                     </td>
                     <td style="padding: 1rem; font-weight: 800; color: #10B981;">
                         ${assetValue > 0 ? assetValue.toLocaleString() : '-'}
+                    </td>
+                    <td style="padding: 1rem; text-align:center;" onclick="event.stopPropagation()">
+                        <div style="display:inline-flex; gap:0.35rem;">
+                            <button onclick="location.href='material-form.html?id=${m.id}'" style="background:#e0e7ff; color:#4338ca; border:none; padding:0.35rem 0.65rem; border-radius:0.35rem; font-size:0.78rem; font-weight:700; cursor:pointer;">✏️ 수정</button>
+                            <button onclick="window.deleteOneMaterial('${m.id}', '${m.name}')" style="background:#fee2e2; color:#ef4444; border:none; padding:0.35rem 0.65rem; border-radius:0.35rem; font-size:0.78rem; font-weight:700; cursor:pointer;">삭제</button>
+                        </div>
                     </td>
                 `;
                 tbody.appendChild(tr);

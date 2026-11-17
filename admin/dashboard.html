@@ -126,6 +126,14 @@
                     onmouseout="this.style.opacity='1'; this.style.transform='none'">
                     <span>💡</span> AI 경영참모 브리핑
                 </button>
+                <select id="filterMerchant" style="display:none; padding:0.55rem 0.9rem; border-radius:0.5rem; border:2px solid #4F46E5; background:#fff; font-weight:800; font-size:0.875rem; color:#4338ca; cursor:pointer; box-shadow:0 2px 8px rgba(79,70,229,0.15);">
+                    <option value="ALL">🌐 전체 가맹점 (통합 모니터링)</option>
+                    <option value="1794710386">🏬 백제갈비 (Baekje Galbi)</option>
+                    <option value="1791605366">🏬 BEST WINNER (베스트위너)</option>
+                    <option value="1791002036">🏬 대한김치</option>
+                    <option value="1793671043">🏬 베스트마리오</option>
+                    <option value="1793776651">🏬 sunvietnam</option>
+                </select>
                 <a href="api-settings.html" id="btnSysSettings"
                     style="background:#f1f5f9; border:1px solid #cbd5e1; color:#475569; padding:0.55rem 0.9rem; border-radius:0.5rem; font-weight:700; text-decoration:none; font-size:0.875rem; transition:background 0.2s;"
                     onmouseover="this.style.background='#e2e8f0'"
@@ -470,11 +478,28 @@
             const tenantId = (window.tenantId && window.tenantId !== 'undefined' && window.tenantId !== 'null' && window.tenantId !== 'system_master')
                 ? String(window.tenantId)
                 : '1791605366';
-            const isSuperAdmin = window.currentUserRole === 'SUPER_ADMIN' || window.tenantId === 'system_master';
+            const isSuperAdmin = (window.currentUserRole === 'SUPER_ADMIN') || 
+                                 (window.currentUserEmail === 'daguri75@gmail.com') || 
+                                 (auth.currentUser?.email === 'daguri75@gmail.com') ||
+                                 (window.tenantId === 'system_master');
             const userEmail = (window.currentUserEmail || auth.currentUser?.email || '').toLowerCase().trim();
             const userUid = window.currentUserUid || auth.currentUser?.uid || '';
 
-            // 0. Set Real Dynamic Brand Title immediately so it never stays '가맹점(로딩중)'
+            const filterMerchantEl = document.getElementById('filterMerchant');
+            if (filterMerchantEl) {
+                if (isSuperAdmin) {
+                    filterMerchantEl.style.display = 'inline-block';
+                    if (!filterMerchantEl.dataset.bound) {
+                        filterMerchantEl.dataset.bound = 'true';
+                        filterMerchantEl.addEventListener('change', () => loadDashboardData());
+                    }
+                } else {
+                    filterMerchantEl.style.display = 'none';
+                }
+            }
+            const selectedMerchant = (isSuperAdmin && filterMerchantEl && filterMerchantEl.value) ? filterMerchantEl.value : (isSuperAdmin ? 'ALL' : tenantId);
+
+            // 0. Set Real Dynamic Brand Title immediately
             const storeTitleMap = {
                 '1794710386': '백제갈비',
                 'baekje_galbi': '백제갈비',
@@ -482,12 +507,14 @@
                 '1793671043': '베스트마리오',
                 '1793776651': 'sunvietnam'
             };
-            const storeTitle = storeTitleMap[tenantId] || (window.currentStoreName && window.currentStoreName !== 'Winner Best' ? window.currentStoreName : 'BEST WINNER');
+            const storeTitle = (isSuperAdmin && selectedMerchant === 'ALL')
+                ? 'BEST M-SaaS 본사 (전체 가맹점 통합)'
+                : (storeTitleMap[selectedMerchant !== 'ALL' ? selectedMerchant : tenantId] || (window.currentStoreName && window.currentStoreName !== 'Winner Best' ? window.currentStoreName : 'BEST WINNER'));
             window.currentStoreName = storeTitle;
             const storeEl = document.getElementById('dynamicStoreName');
             if (storeEl) storeEl.textContent = storeTitle;
 
-            // 1. 영업 / 프로젝트 & 현장 인프라 통계 로드 (최우선 병렬 처리하여 '조회 중...' 즉시 해소)
+            // 1. 영업 / 프로젝트 & 현장 인프라 통계 로드
             try {
                 const [projSnap, matSnap, supSnap] = await Promise.all([
                     getDocs(collection(db, 'projects')).catch(e => { console.warn('projects 조회 스킵:', e); return { size: 0 }; }),
@@ -504,7 +531,9 @@
                         const m = d.data();
                         const mTenant = String(m.tenantId || m.merchantId || '').trim();
                         if (isSuperAdmin) {
-                            validMatCount++;
+                            if (selectedMerchant === 'ALL' || mTenant === selectedMerchant) {
+                                validMatCount++;
+                            }
                         } else if (mTenant) {
                             if (mTenant === tenantId) validMatCount++;
                         } else {
@@ -516,9 +545,22 @@
                         }
                     });
                 }
+                if (isSuperAdmin && selectedMerchant === 'ALL') {
+                    for (const sId of ['1794710386', '1791605366', '1791002036', '1793671043', '1793776651']) {
+                        try {
+                            const subSnap = await getDocs(collection(db, 'merchants', sId, 'materials'));
+                            subSnap.forEach(() => validMatCount++);
+                        } catch (e) {}
+                    }
+                } else if (selectedMerchant !== 'ALL') {
+                    try {
+                        const subSnap = await getDocs(collection(db, 'merchants', selectedMerchant, 'materials'));
+                        subSnap.forEach(() => validMatCount++);
+                    } catch (e) {}
+                }
 
                 const elMat = document.getElementById('kpiMaterials');
-                if (elMat) elMat.textContent = `${validMatCount} 개 등록자재`;
+                if (elMat) elMat.textContent = `${validMatCount} 개 등록자재${isSuperAdmin && selectedMerchant === 'ALL' ? ' (전체)' : ''}`;
 
                 const elSup = document.getElementById('kpiSuppliers');
                 if (elSup) elSup.textContent = `${supSnap.size || 0} 개 협력사`;
@@ -542,9 +584,9 @@
                 ordersSnap.forEach(docSnap => {
                     const o = docSnap.data();
                     const mId = String(o.merchant_id || o.merchantId || o.tenantId || o.storeId || '').trim();
-                    const matchMerchant = isSuperAdmin || mId === tenantId
-                        || (tenantId === '1794710386' && (mId === 'baekje_galbi' || mId === 'baekjegalbi'))
-                        || (tenantId === '1791605366' && (mId === 'bestwinner' || mId === 'best_winner'));
+                    const matchMerchant = (isSuperAdmin && selectedMerchant === 'ALL')
+                        || (selectedMerchant !== 'ALL' && (mId === selectedMerchant || mId === 'baekje_galbi' && selectedMerchant === '1794710386'))
+                        || (!isSuperAdmin && (mId === tenantId || (tenantId === '1794710386' && (mId === 'baekje_galbi' || mId === 'baekjegalbi')) || (tenantId === '1791605366' && (mId === 'bestwinner' || mId === 'best_winner'))));
                     if (!matchMerchant) return;
 
                     if (o.status !== '취소' && o.status !== 'cancelled') {
@@ -576,14 +618,16 @@
                     mpSnap.forEach(docSnap => {
                         const d = docSnap.data();
                         const mId = String(d.merchant_id || d.merchantId || d.tenantId || '').trim();
-                        if (mId === tenantId
-                            || (tenantId === '1794710386' && (mId === 'baekje_galbi' || mId === 'baekjegalbi'))
-                            || (tenantId === '1791605366' && (mId === 'bestwinner' || mId === 'best_winner'))) {
+                        const matches = (isSuperAdmin && selectedMerchant === 'ALL')
+                            || (selectedMerchant !== 'ALL' && (mId === selectedMerchant || (selectedMerchant === '1794710386' && (mId === 'baekje_galbi' || mId === 'baekjegalbi')) || (selectedMerchant === '1791605366' && (mId === 'bestwinner' || mId === 'best_winner'))))
+                            || (!isSuperAdmin && (mId === tenantId || (tenantId === '1794710386' && (mId === 'baekje_galbi' || mId === 'baekjegalbi')) || (tenantId === '1791605366' && (mId === 'bestwinner' || mId === 'best_winner'))));
+                        if (matches) {
                             seenIds.add(docSnap.id);
                             menuItems.push({
                                 id: docSnap.id,
                                 source: 'merchant_products',
                                 name: d.product_name || d.name || '무제 상품',
+                                merchantId: mId,
                                 price: Number(d.price || 0),
                                 isLive: (d.sale_status || d.status || 'published') === 'published' || d.status === '판매중'
                             });
@@ -594,18 +638,25 @@
                 }
 
                 try {
-                    const mSnap = await getDocs(query(collection(db, 'menus'), where('tenantId', '==', tenantId)));
+                    const mSnap = await getDocs(collection(db, 'menus'));
                     mSnap.forEach(docSnap => {
                         if (!seenIds.has(docSnap.id)) {
                             const m = docSnap.data();
-                            seenIds.add(docSnap.id);
-                            menuItems.push({
-                                id: docSnap.id,
-                                source: 'menus',
-                                name: m.name || '무제 메뉴',
-                                price: Number(m.price || 0),
-                                isLive: m.status === '판매중' || m.sale_status === 'published'
-                            });
+                            const mId = String(m.merchantId || m.merchant_id || m.tenantId || '').trim();
+                            const matches = (isSuperAdmin && selectedMerchant === 'ALL')
+                                || (selectedMerchant !== 'ALL' && mId === selectedMerchant)
+                                || (!isSuperAdmin && mId === tenantId);
+                            if (matches) {
+                                seenIds.add(docSnap.id);
+                                menuItems.push({
+                                    id: docSnap.id,
+                                    source: 'menus',
+                                    name: m.name || '무제 메뉴',
+                                    merchantId: mId,
+                                    price: Number(m.price || 0),
+                                    isLive: m.status === '판매중' || m.sale_status === 'published'
+                                });
+                            }
                         }
                     });
                 } catch (mErr) {
@@ -615,15 +666,30 @@
                 document.getElementById('kpiOrders').textContent = `${menuItems.length} 개`;
                 const menuTrend = document.getElementById('kpiOrders').nextElementSibling;
                 if (menuTrend) {
-                    menuTrend.textContent = menuItems.length > 0 ? '실시간 연동 완료' : '등록 대기중';
+                    menuTrend.textContent = menuItems.length > 0 ? (isSuperAdmin && selectedMerchant === 'ALL' ? '전체 가맹점 실시간 연동' : '실시간 연동 완료') : '등록 대기중';
                 }
 
                 if (menuItems.length > 0) {
                     let menuHtml = '';
+                    const storeNamesMap = {
+                        '1794710386': '백제갈비',
+                        'baekje_galbi': '백제갈비',
+                        '1791605366': '베스트위너',
+                        'bestwinner': '베스트위너',
+                        '1791002036': '대한김치',
+                        'daehankimchi': '대한김치',
+                        '1793671043': '베스트마리오',
+                        '1793776651': 'sunvietnam'
+                    };
                     menuItems.forEach(m => {
                         const checked = m.isLive ? 'checked' : '';
+                        const sName = storeNamesMap[m.merchantId] || m.merchantId || '가맹점';
                         menuHtml += `<div class="quick-menu-item">
-                            <div style="font-weight:700; color:#334155;">${m.name} <span style="font-size:0.8rem; color:#94a3b8;">(₫${Number(m.price || 0).toLocaleString()})</span></div>
+                            <div style="font-weight:700; color:#334155; display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
+                                <span style="font-size:0.7rem; background:#e0e7ff; color:#3730a3; padding:0.12rem 0.4rem; border-radius:0.25rem;">🏪 ${sName}</span>
+                                <span>${m.name}</span>
+                                <span style="font-size:0.8rem; color:#94a3b8;">(₫${Number(m.price || 0).toLocaleString()})</span>
+                            </div>
                             <div style="display:flex; align-items:center; gap:0.5rem;">
                                 <span style="font-size:0.75rem; font-weight:700; color:${checked ? '#166534' : '#b91c1c'}">${checked ? '판매중' : '품절'}</span>
                                 <label class="toggle-switch">

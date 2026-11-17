@@ -1,4 +1,4 @@
-import"./firebase-config-BWFrQkzL.js";import{i as e,t}from"./auth-CSF2jmVj.js";/* empty css              */import{a as n,i as r}from"./materialApi-Ca03akK4.js";var i=document.getElementById(`mainContent`),a=new URLSearchParams(window.location.search).get(`id`);(async()=>{if(!a){i.innerHTML=`<p>자재 ID가 제공되지 않았습니다.</p>`;return}try{let e=await r(a);if(!e){i.innerHTML=`<p>자재를 찾을 수 없습니다.</p>`;return}i.innerHTML=`
+import"./firebase-config-BWFrQkzL.js";import{i as e,t}from"./auth-CSF2jmVj.js";/* empty css              */import{a as n,o as r}from"./materialApi-KDQ9OJVs.js";var i=document.getElementById(`mainContent`),a=new URLSearchParams(window.location.search).get(`id`);(async()=>{if(!a){i.innerHTML=`<p>자재 ID가 제공되지 않았습니다.</p>`;return}try{let e=await n(a);if(!e){i.innerHTML=`<p>자재를 찾을 수 없습니다.</p>`;return}i.innerHTML=`
                     <div style="margin-bottom: 1rem;">
                         <a href="materials.html" style="color: var(--primary-color); font-weight: 500;">&larr; 목록으로 돌아가기</a>
                     </div>
@@ -92,7 +92,7 @@ import"./firebase-config-BWFrQkzL.js";import{i as e,t}from"./auth-CSF2jmVj.js";/
                             </div>
                         </div>
                     </div>
-                `,window.addToRequestCart=(e,t,n)=>{let r=JSON.parse(localStorage.getItem(`purchaseCart`)||`[]`),i=r.find(t=>t.id===e);i?i.qty+=1:r.push({id:e,name:t,price:n,qty:1}),localStorage.setItem(`purchaseCart`,JSON.stringify(r));let a=r.reduce((e,t)=>e+t.qty,0);document.getElementById(`cartCount`).innerText=a,alert(`[${t}] 자재가 구매요청 장바구니에 담겼습니다.`)};let t=JSON.parse(localStorage.getItem(`purchaseCart`)||`[]`).reduce((e,t)=>e+t.qty,0);document.getElementById(`cartCount`).innerText=t,setTimeout(async()=>{let e=document.getElementById(`supplierInfoBox`),t=await n(a);if(t&&t.length>0){let n=`<ul style="list-style:none; padding:0; margin:0;">`;t.forEach(e=>{n+=`
+                `,window.addToRequestCart=(e,t,n)=>{let r=JSON.parse(localStorage.getItem(`purchaseCart`)||`[]`),i=r.find(t=>t.id===e);i?i.qty+=1:r.push({id:e,name:t,price:n,qty:1}),localStorage.setItem(`purchaseCart`,JSON.stringify(r));let a=r.reduce((e,t)=>e+t.qty,0);document.getElementById(`cartCount`).innerText=a,alert(`[${t}] 자재가 구매요청 장바구니에 담겼습니다.`)};let t=JSON.parse(localStorage.getItem(`purchaseCart`)||`[]`).reduce((e,t)=>e+t.qty,0);document.getElementById(`cartCount`).innerText=t,setTimeout(async()=>{let e=document.getElementById(`supplierInfoBox`),t=await r(a);if(t&&t.length>0){let n=`<ul style="list-style:none; padding:0; margin:0;">`;t.forEach(e=>{n+=`
                             <li style="border: 1px solid var(--border-color); padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem; display:flex; justify-content: space-between; align-items: center;">
                                 <div>
                                     <strong style="color: var(--text-primary); font-size: 1.1rem;">${e.supplierName||`업체명`}</strong>

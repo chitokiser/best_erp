@@ -1,8 +1,8 @@
 import { db, storage } from '../assets/js/firebase-config.js';
-import { collection, addDoc, doc, updateDoc, getDoc, getDocs, query, where, serverTimestamp, setDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, deleteDoc, getDoc, getDocs, query, where, serverTimestamp, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { auth } from '../assets/js/firebase-config.js';
-import { getCurrentStoreInfo, getStoreSubcollection, getStoreDocRef } from '../assets/js/tenant-router.js';
+import { getCurrentStoreInfo, getStoreSubcollection, getStoreDocRef, isSuperAdminUser, TENANT_MAP } from '../assets/js/tenant-router.js';
 
 const COLLECTION_NAME = 'materials';
 const HISTORY_COLLECTION = 'priceHistory';
@@ -25,7 +25,7 @@ export const createMaterial = async (materialData, imageFiles, explicitStoreId) 
 
         const storeInfo = getCurrentStoreInfo();
         const curTenant = explicitStoreId || materialData.tenantId || window.tenantId || storeInfo.storeId;
-        const curStore = materialData.storeName || window.currentStoreName || storeInfo.name;
+        const curStore = materialData.storeName || window.currentStoreName || TENANT_MAP[curTenant]?.name || storeInfo.name;
 
         const newMaterial = {
             ...materialData,
@@ -62,17 +62,118 @@ export const createMaterial = async (materialData, imageFiles, explicitStoreId) 
     }
 };
 
+export const updateMaterial = async (id, materialData, explicitStoreId) => {
+    try {
+        const currentUser = auth.currentUser;
+        const storeInfo = getCurrentStoreInfo();
+        const curTenant = explicitStoreId || materialData.tenantId || window.tenantId || storeInfo.storeId;
+        const curStore = materialData.storeName || TENANT_MAP[curTenant]?.name || storeInfo.name;
+
+        const updates = {
+            ...materialData,
+            tenantId: String(curTenant),
+            merchantId: String(curTenant),
+            storeName: curStore,
+            updatedAt: serverTimestamp(),
+            updatedBy: currentUser?.uid || 'admin'
+        };
+
+        // 1. Update in root collection
+        try {
+            await setDoc(doc(db, COLLECTION_NAME, id), updates, { merge: true });
+        } catch (e) {}
+
+        // 2. Update in store subcollection
+        if (curTenant && curTenant !== 'ALL') {
+            try {
+                await setDoc(getStoreDocRef('materials', id, curTenant), updates, { merge: true });
+            } catch (e) {}
+        }
+
+        return true;
+    } catch (error) {
+        console.error("Error updating material: ", error);
+        throw error;
+    }
+};
+
+export const deleteMaterial = async (id, explicitStoreId) => {
+    try {
+        // 1. Delete from root collection
+        try {
+            await deleteDoc(doc(db, COLLECTION_NAME, id));
+        } catch (e) {}
+
+        // 2. Delete from specific store subcollection
+        if (explicitStoreId && explicitStoreId !== 'ALL') {
+            try {
+                await deleteDoc(getStoreDocRef('materials', id, explicitStoreId));
+            } catch (e) {}
+        } else {
+            // Delete from all store subcollections
+            for (const sId of Object.keys(TENANT_MAP)) {
+                try {
+                    await deleteDoc(getStoreDocRef('materials', id, sId));
+                } catch (e) {}
+            }
+        }
+        return true;
+    } catch (error) {
+        console.error("Error deleting material: ", error);
+        throw error;
+    }
+};
+
 export const getAllMaterials = async (filterTenantId) => {
     try {
+        const isSuper = isSuperAdminUser();
         const storeInfo = getCurrentStoreInfo();
-        const curStoreId = (filterTenantId && filterTenantId !== 'ALL') ? String(filterTenantId) : storeInfo.storeId;
+        const curStoreId = filterTenantId !== undefined ? String(filterTenantId) : (isSuper ? 'ALL' : storeInfo.storeId);
 
-        // 1. Query dedicated store subcollection
-        const storeMatRef = getStoreSubcollection('materials', curStoreId);
+        const materialsMap = new Map();
+
+        // 1. Super Admin viewing ALL stores
+        if (isSuper && curStoreId === 'ALL') {
+            // Fetch from root collection
+            try {
+                const rootSnap = await getDocs(collection(db, COLLECTION_NAME));
+                rootSnap.forEach(d => {
+                    const data = d.data();
+                    materialsMap.set(d.id, { id: d.id, ...data });
+                });
+            } catch (e) {
+                console.warn("Root materials fetch note:", e);
+            }
+
+            // Fetch from each store subcollection
+            for (const sId of Object.keys(TENANT_MAP)) {
+                try {
+                    const sSnap = await getDocs(collection(db, 'merchants', sId, COLLECTION_NAME));
+                    sSnap.forEach(d => {
+                        const data = d.data();
+                        materialsMap.set(d.id, {
+                            id: d.id,
+                            ...data,
+                            tenantId: data.tenantId || sId,
+                            merchantId: data.merchantId || sId,
+                            storeName: data.storeName || TENANT_MAP[sId]?.name || '가맹점'
+                        });
+                    });
+                } catch (e) {
+                    console.warn(`Store subcollection fetch (${sId}):`, e);
+                }
+            }
+
+            return Array.from(materialsMap.values());
+        }
+
+        // 2. Specific store filtering or regular franchise user
+        const targetStoreId = curStoreId !== 'ALL' ? curStoreId : storeInfo.storeId;
+        const storeMatRef = getStoreSubcollection('materials', targetStoreId);
         let querySnapshot = await getDocs(storeMatRef);
 
         // One-time auto-migration for Best Winner legacy materials if empty
-        if (curStoreId === '1791605366' && querySnapshot.empty) {
+        if (targetStoreId === '1791605366' && querySnapshot.empty) {
             try {
                 const legacySnap = await getDocs(collection(db, COLLECTION_NAME));
                 for (const lDoc of legacySnap.docs) {
@@ -93,11 +194,25 @@ export const getAllMaterials = async (filterTenantId) => {
             }
         }
 
-        const materials = [];
         querySnapshot.forEach((docSnap) => {
-            materials.push({ id: docSnap.id, ...docSnap.data() });
+            materialsMap.set(docSnap.id, { id: docSnap.id, ...docSnap.data() });
         });
-        return materials;
+
+        // Also merge any root materials belonging to this store
+        try {
+            const rootSnap = await getDocs(collection(db, COLLECTION_NAME));
+            rootSnap.forEach(d => {
+                const data = d.data();
+                const mTenant = String(data.tenantId || data.merchantId || '').trim();
+                if (mTenant === targetStoreId) {
+                    if (!materialsMap.has(d.id)) {
+                        materialsMap.set(d.id, { id: d.id, ...data });
+                    }
+                }
+            });
+        } catch (e) {}
+
+        return Array.from(materialsMap.values());
     } catch (error) {
         console.error("Error getting materials: ", error);
         throw error;
@@ -106,18 +221,31 @@ export const getAllMaterials = async (filterTenantId) => {
 
 export const getMaterialById = async (id, explicitStoreId) => {
     try {
-        const storeInfo = getCurrentStoreInfo();
-        const curStoreId = explicitStoreId || storeInfo.storeId;
-        const storeDocRef = getStoreDocRef('materials', id, curStoreId);
-        const docSnap = await getDoc(storeDocRef);
-        if (docSnap.exists()) {
-            return { id: docSnap.id, ...docSnap.data() };
-        }
-        // Fallback to root collection
+        // 1. Check root collection first
         const rootSnap = await getDoc(doc(db, COLLECTION_NAME, id));
         if (rootSnap.exists()) {
             return { id: rootSnap.id, ...rootSnap.data() };
         }
+
+        // 2. If explicit store ID provided
+        if (explicitStoreId && explicitStoreId !== 'ALL') {
+            const storeDocRef = getStoreDocRef('materials', id, explicitStoreId);
+            const docSnap = await getDoc(storeDocRef);
+            if (docSnap.exists()) {
+                return { id: docSnap.id, ...docSnap.data() };
+            }
+        }
+
+        // 3. Search all store subcollections
+        for (const sId of Object.keys(TENANT_MAP)) {
+            try {
+                const snap = await getDoc(getStoreDocRef('materials', id, sId));
+                if (snap.exists()) {
+                    return { id: snap.id, ...snap.data(), tenantId: snap.data().tenantId || sId };
+                }
+            } catch (e) {}
+        }
+
         return null;
     } catch (error) {
         console.error("Error getting material: ", error);

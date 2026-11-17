@@ -413,7 +413,7 @@
     </div>
 
     <script type="module">
-        import { createMaterial, getMaterialById } from '../services/materialApi.js';
+        import { createMaterial, getMaterialById, updateMaterial, deleteMaterial } from '../services/materialApi.js';
         import { doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
         import { db } from '../assets/js/firebase-config.js';
 
@@ -512,16 +512,22 @@
                 document.getElementById('numStock').value = m.stock || 0;
                 document.getElementById('selVat').value = m.vatIncluded ? 'true' : 'false';
                 document.getElementById('txtDescription').value = m.description || '';
+
+                const targetMerchant = m.tenantId || m.merchantId;
+                const selMerchant = document.getElementById('selTargetMerchant');
+                if (targetMerchant && selMerchant) {
+                    selMerchant.value = targetMerchant;
+                }
                 btnDelete.style.display = 'block';
             }).catch(console.error);
 
             btnDelete.addEventListener('click', async () => {
-                if (confirm('정말로 이 자재 데이터를 삭제하시겠습니까? (삭제 시 복구할 수 없습니다)')) {
+                if (confirm('정말로 이 자재 데이터를 삭제하시겠습니까? (삭제 시 가맹점 DB에서도 영구 삭제됩니다)')) {
                     try {
                         btnDelete.textContent = '삭제 중...';
                         btnDelete.disabled = true;
-                        await deleteDoc(doc(db, 'materials', editId));
-                        alert('자재가 삭제되었습니다.');
+                        await deleteMaterial(editId);
+                        alert('자재가 성공적으로 삭제되었습니다.');
                         window.location.href = 'materials.html';
                     } catch (err) {
                         console.error('Delete error', err);
@@ -581,14 +587,13 @@
 
                 if (editId) {
                     // Update Mode
-                    // Images update strategy here is skipped for brevity (requires deep storage handling), just updating text
                     materialData.updatedAt = serverTimestamp();
-                    await updateDoc(doc(db, 'materials', editId), materialData);
+                    await updateMaterial(editId, materialData, materialTenantId);
                     statusMsg.style.color = "green";
-                    statusMsg.textContent = "수정되었습니다!";
+                    statusMsg.textContent = "성공적으로 수정 및 변경되었습니다!";
                 } else {
                     // Create Mode
-                    await createMaterial({ ...materialData, supplierIds: [] }, fileImages);
+                    await createMaterial({ ...materialData, supplierIds: [] }, fileImages, materialTenantId);
                     statusMsg.style.color = "green";
                     statusMsg.textContent = "성공적으로 등록되었습니다!";
                 }

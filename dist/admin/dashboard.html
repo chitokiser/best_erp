@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>.brand-edit-badge{cursor:pointer;align-items:center;gap:.35rem;transition:opacity .2s;display:inline-flex}.brand-edit-badge:hover{opacity:.85}.chart-container{width:100%;height:200px;position:relative}@media (width<=640px){.chart-container{height:180px}}</style>
-  <script type="module" crossorigin src="/assets/admin_dashboard-DmLRcYP4.js"></script>
+  <script type="module" crossorigin src="/assets/admin_dashboard-CdnkjPeX.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-DK3Fl9T5.js">
   <link rel="modulepreload" crossorigin href="/assets/firebase-config-BWFrQkzL.js">
   <link rel="modulepreload" crossorigin href="/assets/auth-CSF2jmVj.js">
@@ -110,6 +110,14 @@
                     onmouseout="this.style.opacity='1'; this.style.transform='none'">
                     <span>💡</span> AI 경영참모 브리핑
                 </button>
+                <select id="filterMerchant" style="display:none; padding:0.55rem 0.9rem; border-radius:0.5rem; border:2px solid #4F46E5; background:#fff; font-weight:800; font-size:0.875rem; color:#4338ca; cursor:pointer; box-shadow:0 2px 8px rgba(79,70,229,0.15);">
+                    <option value="ALL">🌐 전체 가맹점 (통합 모니터링)</option>
+                    <option value="1794710386">🏬 백제갈비 (Baekje Galbi)</option>
+                    <option value="1791605366">🏬 BEST WINNER (베스트위너)</option>
+                    <option value="1791002036">🏬 대한김치</option>
+                    <option value="1793671043">🏬 베스트마리오</option>
+                    <option value="1793776651">🏬 sunvietnam</option>
+                </select>
                 <a href="api-settings.html" id="btnSysSettings"
                     style="background:#f1f5f9; border:1px solid #cbd5e1; color:#475569; padding:0.55rem 0.9rem; border-radius:0.5rem; font-weight:700; text-decoration:none; font-size:0.875rem; transition:background 0.2s;"
                     onmouseover="this.style.background='#e2e8f0'"
