@@ -10,6 +10,8 @@ import {
     increment
 } from 'firebase/firestore';
 import { checkAdminAuth } from './auth.js';
+import { getApp } from 'firebase/app';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 let storedClients = [];
 let currentUser = null;
@@ -267,14 +269,60 @@ async function loadClients() {
         // 2-B. 📱 QR 결제 고객 (transactions: pay_merchant, receive_bt & bt_transactions) 수집
         // ----------------------------------------------------
         try {
+            // 서버 함수(getMerchantQrCustomers)로 QR 결제 고객과 회원 이메일을 가맹점 기준으로 조회한다.
+            // 회원 문서에 email이 없어도 로그인 계정 이메일로 채워 준다. 실패하면 기존 브라우저 조회로 대체.
+            const uidsWithoutEmail = Array.from(clientMap.values()).filter(c => !c.email && c.uid).map(c => c.uid);
+            let serverQr = null;
+            try {
+                const callQrCustomers = httpsCallable(getFunctions(getApp(), 'us-central1'), 'getMerchantQrCustomers');
+                const res = await callQrCustomers({
+                    merchantId: isSuperAdmin ? 'ALL' : String(activeMerchantId),
+                    uids: uidsWithoutEmail.slice(0, 300)
+                });
+                serverQr = res?.data || null;
+            } catch (fnErr) {
+                console.warn('getMerchantQrCustomers 호출 실패 → 브라우저 조회로 대체:', fnErr?.code || fnErr?.message);
+            }
+
             const [qrTxSnap, btTxSnap, storeCustSnap] = await Promise.all([
-                getDocs(query(collection(db, 'transactions'), where('type', 'in', ['pay_merchant', 'receive_bt']))).catch(() => ({ docs: [] })),
-                getDocs(query(collection(db, 'bt_transactions'), where('type', '==', 'remote_send'))).catch(() => ({ docs: [] })),
+                serverQr ? Promise.resolve({ docs: [] }) : getDocs(query(collection(db, 'transactions'), where('type', 'in', ['pay_merchant', 'receive_bt']))).catch(() => ({ docs: [] })),
+                serverQr ? Promise.resolve({ docs: [] }) : getDocs(query(collection(db, 'bt_transactions'), where('type', '==', 'remote_send'))).catch(() => ({ docs: [] })),
                 getDocs(isSuperAdmin ? collection(db, 'store_customers') : query(collection(db, 'store_customers'), where('merchantId', '==', String(activeMerchantId)))).catch(() => ({ docs: [] }))
             ]);
 
             const rawQrEvents = [];
             const missingUserUids = new Set();
+            const serverProfiles = serverQr?.profiles || {};
+            const msToTs = (ms) => (ms ? { seconds: Math.floor(ms / 1000) } : null);
+
+            if (serverQr) {
+                // 이미 목록에 있는 회원 중 이메일이 비어 있던 사람 채우기
+                for (const c of clientMap.values()) {
+                    const p = c.uid ? serverProfiles[c.uid] : null;
+                    if (!p) continue;
+                    if (!c.email && p.email) c.email = p.email;
+                    if (!c.phone && p.phone) c.phone = p.phone;
+                }
+                (serverQr.events || []).forEach(ev => {
+                    const belongsToMe = isSuperAdmin || matchesMerchant(ev.merchantId, activeMerchantId);
+                    if (!belongsToMe) return;
+                    const txKey = String(ev.txId);
+                    if (recordedOrderTxHashes.has(txKey)) return;
+                    recordedOrderTxHashes.add(txKey);
+                    if (ev.buyerUid === myUid || (myEmail && ev.buyerEmail === myEmail)) return;
+                    rawQrEvents.push({
+                        txId: txKey,
+                        buyerUid: ev.buyerUid || '',
+                        buyerEmail: ev.buyerEmail || '',
+                        buyerName: ev.buyerName || '',
+                        buyerPhone: ev.buyerPhone || '',
+                        merchantId: ev.merchantId || activeMerchantId,
+                        amountVnd: Number(ev.amountVnd || 0),
+                        issuedBt: Number(ev.issuedBt || 0),
+                        createdAt: msToTs(ev.createdAtMs)
+                    });
+                });
+            }
 
             (qrTxSnap.docs || []).forEach(d => {
                 const tx = d.data() || {};
@@ -353,7 +401,7 @@ async function loadClients() {
             }
 
             rawQrEvents.forEach(ev => {
-                const uData = qrUserProfiles.get(ev.buyerUid) || {};
+                const uData = qrUserProfiles.get(ev.buyerUid) || serverProfiles[ev.buyerUid] || {};
                 const resolvedEmail = (ev.buyerEmail || uData.email || '').toLowerCase().trim();
                 const rawName = (ev.buyerName || uData.name || uData.displayName || '').trim();
                 const resolvedName = (rawName && rawName !== 'Winner Best')
@@ -383,7 +431,7 @@ async function loadClients() {
                         isMentee: isDirectMentee,
                         isBuyer: true,
                         isQrBuyer: true,
-                        registeredAt: uData.createdAt || ev.createdAt || null,
+                        registeredAt: uData.createdAt || msToTs(uData.createdAtMs) || ev.createdAt || null,
                         lastEventAt: ev.createdAt || null,
                         points: resolvedPoints,
                         purchaseCount: 0,
@@ -568,7 +616,7 @@ window.renderMentees = function () {
         }
 
         // 계정 & 연락처
-        const emailStr = c.email ? escapeHtml(c.email) : `<span style="color:#94a3b8; font-family:monospace;">${escapeHtml(String(c.id).substring(0, 10))}...</span>`;
+        const emailStr = c.email ? escapeHtml(c.email) : `<span style="color:#94a3b8;" title="회원 ID: ${escapeHtml(String(c.id))}">이메일 미등록 회원</span>`;
         const phoneStr = c.phone ? `<br><span style="font-size:0.75rem; color:#64748b;">📞 ${escapeHtml(c.phone)}</span>` : '';
 
         // 구매 실적
