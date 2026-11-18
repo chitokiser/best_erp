@@ -773,6 +773,11 @@
                         <button class="tier-filter-pill" onclick="filterCustomerTier('재방문', this)">재방문 (<span id="count재방문">0</span>)</button>
                         <button class="tier-filter-pill" onclick="filterCustomerTier('일반', this)">신규/일반 (<span id="count일반">0</span>)</button>
                     </div>
+                    <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap; font-size:0.75rem; color:#475569; margin:0.35rem 0 0.6rem 0;">
+                        <span>🔔 재방문 알림: VIP 고객과</span>
+                        <input type="number" id="returnAlertDaysInput" min="1" max="365" value="30" onchange="setReturnAlertDays(this.value)" style="width:3.6rem; padding:0.15rem 0.3rem; border:1px solid #CBD5E1; border-radius:0.3rem; font-size:0.75rem;">
+                        <span>일 넘게 안 온 고객이 얼굴 인식되면 직원 화면에 알림</span>
+                    </div>
 
                     <!-- Customer Search -->
                     <div style="margin-bottom:0.75rem;">
@@ -1622,7 +1627,7 @@
         import { db, auth, storage } from '../assets/js/firebase-config.js';
         import { checkAdminAuth } from '../assets/js/auth.js';
         import { initNotificationHub, playNotificationSound } from '../assets/js/notification-hub.js';
-        import { collection, addDoc, getDocs, getDoc, doc, setDoc, onSnapshot, deleteDoc, serverTimestamp, query, where, orderBy, limit, updateDoc, Timestamp } from 'firebase/firestore';
+        import { collection, addDoc, getDocs, getDoc, doc, setDoc, onSnapshot, deleteDoc, serverTimestamp, query, where, orderBy, limit, updateDoc, Timestamp, increment } from 'firebase/firestore';
         import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 
         initNotificationHub();
@@ -3203,32 +3208,15 @@
                                             recognizedCustId = cId;
                                             recognizedCustName = cName;
                                         } else {
-                                            const realCust = masterCustomers.find(c => !c.isMock && (c.descriptor || c.photoURL));
-                                            if (realCust) {
-                                                matchScore = 98;
-                                                label = `${realCust.name} (${realCust.tier}) · ${matchScore}%`;
-                                                isVip = realCust.tier.includes('VIP');
-                                                recognizedCustId = realCust.customerId;
-                                                recognizedCustName = realCust.name;
-                                            } else {
-                                                label = '미등록 방문객 (신규 고객) · 미매칭';
-                                                matchScore = 0;
-                                                isVip = false;
-                                            }
-                                        }
-                                    } else {
-                                        const realCust = masterCustomers.find(c => !c.isMock && (c.descriptor || c.photoURL));
-                                        if (realCust) {
-                                            matchScore = 98;
-                                            label = `${realCust.name} (${realCust.tier}) · ${matchScore}%`;
-                                            isVip = realCust.tier.includes('VIP');
-                                            recognizedCustId = realCust.customerId;
-                                            recognizedCustName = realCust.name;
-                                        } else {
+                                            // 등록 얼굴과 일치하지 않으면 미등록 방문객 (다른 고객으로 추정 표시하지 않음)
                                             label = '미등록 방문객 (신규 고객) · 미매칭';
                                             matchScore = 0;
                                             isVip = false;
                                         }
+                                    } else {
+                                        label = masterCustomers.some(c => c.descriptor) ? '얼굴 인식 엔진 준비 중' : '미등록 방문객 (신규 고객) · 미매칭';
+                                        matchScore = 0;
+                                        isVip = false;
                                     }
                                 }
 
@@ -3353,17 +3341,8 @@
                 }
             } else {
                 // 실물 얼굴이 등록된 고객이 있으면 매칭, 없으면 '미등록 방문객' 표시
-                const realEnrolled = masterCustomers.find(c => !c.isMock && (c.descriptor || c.photoURL));
-                if (realEnrolled) {
-                    const name = realEnrolled.name;
-                    const tier = realEnrolled.tier;
-                    const matchScore = 98;
-                    const happyScore = 92;
-                    drawTargetHud(ctx, { x: boxX, y: boxY, width: boxW, height: boxH }, `${name} (${tier}) · ${matchScore}%`, matchScore, tier.includes('VIP'), happyScore);
-                    if (fallbackTick % 40 === 0) {
-                        triggerCustomerIdentified(realEnrolled.customerId, name, matchScore, happyScore);
-                    }
-                } else {
+                // 얼굴이 탐지되지 않은 화면: 고객을 추정 식별하지 않는다
+                {
                     // 미등록 방문객 (김민수는 가상데이터이므로 매칭하지 않음)
                     const label = '미등록 방문객 (신규 고객) · 얼굴 미매칭';
                     drawTargetHud(ctx, { x: boxX, y: boxY, width: boxW, height: boxH }, label, 0, false, 85);
@@ -3373,6 +3352,113 @@
                     }
                 }
             }
+        }
+
+        // ==========================================
+        // 🔔 재방문 알림: 얼굴 인식된 VIP·오래 안 온 고객을 직원 화면에 알림
+        //  - 고객별 하루 1회만 판단하고 방문 기록(lastVisitAt, visitCount)을 남긴다
+        //  - 기준 일수는 가맹점별(이 브라우저)로 저장
+        // ==========================================
+        const RETURN_ALERT_DEFAULT_DAYS = 30;
+        const vnToday = () => new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10);
+        function getReturnAlertDays() {
+            const v = Number(readScopedCache('vision_crm_return_alert_days'));
+            return Number.isFinite(v) && v >= 1 && v <= 365 ? Math.round(v) : RETURN_ALERT_DEFAULT_DAYS;
+        }
+        window.setReturnAlertDays = (value) => {
+            const v = Math.round(Number(value));
+            const days = Number.isFinite(v) && v >= 1 && v <= 365 ? v : RETURN_ALERT_DEFAULT_DAYS;
+            writeScopedCache('vision_crm_return_alert_days', days);
+            const el = document.getElementById('returnAlertDaysInput');
+            if (el) el.value = days;
+        };
+        window.syncReturnAlertDaysInput = () => {
+            const el = document.getElementById('returnAlertDaysInput');
+            if (el) el.value = getReturnAlertDays();
+        };
+
+        // 오늘 이미 처리한 고객이면 false
+        function claimVisitToday(key) {
+            const today = vnToday();
+            const log = readScopedCache('vision_crm_visit_log') || {};
+            const ids = log.date === today && Array.isArray(log.ids) ? log.ids : [];
+            if (ids.includes(key)) return false;
+            ids.push(key);
+            writeScopedCache('vision_crm_visit_log', { date: today, ids: ids.slice(-500) });
+            return true;
+        }
+
+        function evaluateReturnVisit(customer, nowMs, thresholdDays) {
+            const lastMs = customer.lastVisitAtMs || customer.createdAtMs || null;
+            const days = lastMs ? Math.floor((nowMs - lastMs) / 86400000) : null;
+            const isVip = String(customer.tier || '').includes('VIP');
+            const isLongAbsent = days !== null && days >= thresholdDays;
+            return { isVip, isLongAbsent, days, lastMs, shouldAlert: isVip || isLongAbsent };
+        }
+        window.__evaluateReturnVisit = evaluateReturnVisit;
+
+        async function handleReturnVisit(customer, source, score) {
+            if (!customer || !getMerchantId()) return;
+            const key = customer.docId || customer.customerId;
+            if (!key || !claimVisitToday(key)) return;
+            const r = evaluateReturnVisit(customer, Date.now(), getReturnAlertDays());
+            if (r.shouldAlert) showReturnVisitAlert(customer, r, source, score);
+            customer.lastVisitAtMs = Date.now();
+            if (customer.docId && db) {
+                try {
+                    await updateDoc(doc(db, 'store_customers', customer.docId), {
+                        lastVisitAt: serverTimestamp(),
+                        visitCount: increment(1),
+                        updatedAt: serverTimestamp()
+                    });
+                } catch (e) {
+                    console.warn('방문 기록 저장 실패:', e?.code || e?.message || e);
+                }
+            }
+        }
+        window.__handleReturnVisit = handleReturnVisit;
+
+        function showReturnVisitAlert(customer, r, source, score) {
+            let stack = document.getElementById('returnVisitAlertStack');
+            if (!stack) {
+                stack = document.createElement('div');
+                stack.id = 'returnVisitAlertStack';
+                stack.style.cssText = 'position:fixed; top:16px; right:16px; z-index:10000; display:flex; flex-direction:column; gap:0.6rem; width:min(340px, calc(100vw - 32px)); max-height:calc(100vh - 32px); overflow-y:auto;';
+                document.body.appendChild(stack);
+            }
+            const color = r.isVip ? '#D97706' : '#4F46E5';
+            const card = document.createElement('div');
+            card.className = 'return-visit-alert';
+            card.style.cssText = `background:white; border:1px solid #E2E8F0; border-left:6px solid ${color}; border-radius:0.75rem; padding:0.85rem 0.95rem; box-shadow:0 12px 28px rgba(15,23,42,0.22); animation:popUp 0.3s ease; color:#1E293B;`;
+            const el = (tag, css, text) => { const e = document.createElement(tag); if (css) e.style.cssText = css; if (text !== undefined) e.textContent = text; return e; };
+
+            const titleParts = [];
+            if (r.isVip) titleParts.push('⭐ VIP 고객 방문');
+            if (r.isLongAbsent) titleParts.push(`⏰ ${r.days}일 만의 방문`);
+            card.appendChild(el('div', `font-size:0.78rem; font-weight:800; color:${color}; margin-bottom:0.3rem;`, titleParts.join(' · ')));
+            card.appendChild(el('div', 'font-size:1.05rem; font-weight:800; margin-bottom:0.2rem;', `${customer.name || '고객'} 님`));
+            const lastText = r.lastMs ? new Date(r.lastMs).toLocaleDateString('ko-KR') : '기록 없음';
+            const spent = Number(customer.totalSpent || 0).toLocaleString();
+            card.appendChild(el('div', 'font-size:0.78rem; color:#475569; line-height:1.55;',
+                `${customer.tier || '일반 고객'} · 방문 ${Number(customer.visitCount || 0)}회 · 누적 ₫${spent}`));
+            card.appendChild(el('div', 'font-size:0.78rem; color:#475569; line-height:1.55;',
+                `마지막 방문 ${lastText}${customer.favMenu ? ` · 선호 ${customer.favMenu}` : ''}`));
+            card.appendChild(el('div', 'font-size:0.7rem; color:#94A3B8; margin-top:0.2rem;',
+                `${source === 'nvr' ? '매장 NVR' : '카메라'} 얼굴 인식${score ? ` · 일치율 ${score}%` : ''} · ${new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}`));
+
+            const btns = el('div', 'display:flex; gap:0.4rem; margin-top:0.6rem;');
+            const view = el('button', `flex:1; background:${color}; color:white; border:none; padding:0.4rem; border-radius:0.4rem; font-size:0.78rem; font-weight:800; cursor:pointer;`, '고객 정보 보기');
+            view.type = 'button';
+            view.onclick = () => { try { openCustomerProfile(customer.customerId); } catch (e) {} };
+            const ok = el('button', 'flex:1; background:#F1F5F9; color:#334155; border:1px solid #CBD5E1; padding:0.4rem; border-radius:0.4rem; font-size:0.78rem; font-weight:800; cursor:pointer;', '확인');
+            ok.type = 'button';
+            ok.onclick = () => card.remove();
+            btns.appendChild(view); btns.appendChild(ok);
+            card.appendChild(btns);
+
+            stack.prepend(card);
+            while (stack.children.length > 5) stack.lastElementChild.remove();
+            try { playNotificationSound(); } catch (e) {}
         }
 
         function triggerCustomerIdentified(customerId, customerName, matchScore, happyScore) {
@@ -3402,7 +3488,7 @@
             // 고객 원장 자동 업그레이드
             const target = masterCustomers.find(c => c.customerId === customerId);
             if (target) {
-                target.visitCount += 1;
+                handleReturnVisit(target, 'camera', matchScore);
                 const measured = parseFloat((4.5 + (happyScore || 85) / 200).toFixed(1));
                 target.rating = measured;
                 const nowD = new Date();
@@ -3543,18 +3629,7 @@
                 }
             }
 
-            // 🎭 1인 테스터 모드이거나 실물 얼굴 등록 회원이 있는 경우:
-            // 정면이 아니어도 (측면, 비스듬한 시선) 등록된 회원으로 유연하게 매칭!
-            if (!matchedCustomer && masterCustomers.length > 0) {
-                const realEnrolled = masterCustomers.find(c => !c.isMock && (c.descriptor || c.photoURL));
-                if (realEnrolled) {
-                    matchedCustomer = realEnrolled;
-                    matchScore = 98;
-                } else if (currentTesterPersona === 'CUSTOMER' && masterCustomers[0]) {
-                    matchedCustomer = masterCustomers[0];
-                    matchScore = 96;
-                }
-            }
+            // 얼굴 거리 기준으로 일치하지 않으면 미등록으로 본다 (첫 등록 회원으로 추정 매칭하지 않음)
 
             if (matchedCustomer) {
                 // Registered Member Match Success!
@@ -5196,6 +5271,8 @@
                                 consentVersion: data.consentVersion || '',
                                 consentWithdrawnAt: data.consentWithdrawnAt || null,
                                 customerId: data.customerId || docSnap.id,
+                                lastVisitAtMs: tsMs(data.lastVisitAt) || null,
+                                createdAtMs: tsMs(data.createdAt) || null,
                                 name: data.name || '방문 고객',
                                 email: data.email || '',
                                 tier: data.tier || '일반 고객',
@@ -5649,7 +5726,9 @@
 
         function nvrShowVip(v) {
             const name = v.customerName || '등록 고객';
-            nvrToast(`⭐ VIP 방문: ${name} 고객님 (${v.camera} · ${Math.round((v.score || 0) * 100)}%) ${nvrTime(nvrToDate(v.visitedAt))}`, '#D97706');
+            const known = masterCustomers.find(c => (v.customerDocId && c.docId === v.customerDocId) || (v.customerId && c.customerId === v.customerId));
+            if (known) handleReturnVisit(known, 'nvr', Math.round((v.score || 0) * 100));
+            else nvrToast(`⭐ VIP 방문: ${name} 고객님 (${v.camera} · ${Math.round((v.score || 0) * 100)}%) ${nvrTime(nvrToDate(v.visitedAt))}`, '#D97706');
             const banner = document.getElementById('aiLiveMatchAlert');
             const text = document.getElementById('aiLiveMatchAlertText');
             if (banner && text) {
@@ -5861,6 +5940,7 @@
             }
             await loadMerchantScopedState();
             try { window.updateStoreQrCode?.(); } catch (e) {}
+            try { window.syncReturnAlertDaysInput?.(); } catch (e) {}
             scanUsbCameraDevices(false);
             initCharts();
             renderCustomerList();
