@@ -767,11 +767,11 @@
 
                     <!-- Tier Filters -->
                     <div style="display:flex; gap:0.35rem; flex-wrap:wrap; margin-bottom:0.75rem;">
-                        <button class="tier-filter-pill active" onclick="filterCustomerTier('ALL', this)">전체 (<span id="countAll">5</span>)</button>
-                        <button class="tier-filter-pill" onclick="filterCustomerTier('VIP', this)">VIP 고객 (2)</button>
-                        <button class="tier-filter-pill" onclick="filterCustomerTier('단골', this)">단골 고객 (1)</button>
-                        <button class="tier-filter-pill" onclick="filterCustomerTier('재방문', this)">재방문 (1)</button>
-                        <button class="tier-filter-pill" onclick="filterCustomerTier('일반', this)">신규/일반 (1)</button>
+                        <button class="tier-filter-pill active" onclick="filterCustomerTier('ALL', this)">전체 (<span id="countAll">0</span>)</button>
+                        <button class="tier-filter-pill" onclick="filterCustomerTier('VIP', this)">VIP 고객 (<span id="countVIP">0</span>)</button>
+                        <button class="tier-filter-pill" onclick="filterCustomerTier('단골', this)">단골 고객 (<span id="count단골">0</span>)</button>
+                        <button class="tier-filter-pill" onclick="filterCustomerTier('재방문', this)">재방문 (<span id="count재방문">0</span>)</button>
+                        <button class="tier-filter-pill" onclick="filterCustomerTier('일반', this)">신규/일반 (<span id="count일반">0</span>)</button>
                     </div>
 
                     <!-- Customer Search -->
@@ -2581,6 +2581,13 @@
             const container = document.getElementById('customerListContainer');
             if (!container) return;
 
+            // 등급별 실제 고객 수
+            const tierCount = (key) => masterCustomers.filter(c => String(c.tier || '').includes(key)).length;
+            const setCount = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+            setCount('countAll', masterCustomers.length);
+            ['VIP', '단골', '재방문'].forEach(k => setCount(`count${k}`, tierCount(k)));
+            setCount('count일반', masterCustomers.filter(c => /일반|신규/.test(String(c.tier || ''))).length);
+
             const q = document.getElementById('crmSearchInput')?.value.toLowerCase().trim() || '';
             const filtered = masterCustomers.filter(c => {
                 const matchTier = currentTierFilter === 'ALL' || c.tier.includes(currentTierFilter);
@@ -3766,7 +3773,8 @@
             }
 
             currentCapturedFaceImgData = croppedDataUrl;
-            currentCapturedDescriptor = descriptor;
+            // face-api 벡터는 Float32Array: Firestore·localStorage에 그대로 저장되지 않으므로 일반 배열로 변환
+            currentCapturedDescriptor = descriptor ? Array.from(descriptor) : null;
 
             document.getElementById('enrollFacePreviewImg').src = croppedDataUrl;
             const statusSpan = document.getElementById('enrollAiFeatureStatus');
@@ -3901,6 +3909,10 @@
             }
 
             const merchantId = getMerchantId();
+            if (!merchantId) {
+                alert('가맹점이 확인되지 않아 얼굴을 저장할 수 없습니다.\n최고관리자는 상단 [가맹점 ID] 칸에 가맹점 ID를 입력하거나 ?store=bestwinner 처럼 매장 주소로 열어 주세요.');
+                return;
+            }
             const confirmBtn = document.getElementById('btnConfirmFaceEnroll');
             const statusIndicator = document.getElementById('enrollServerStatusIndicator');
             const origBtnText = confirmBtn ? confirmBtn.innerHTML : '';
@@ -3979,10 +3991,12 @@
                     try {
                         if (db) {
                             if (targetCust) {
+                                const { docId: _ignoredDocId, ...custPayload } = targetCust;
                                 await addDoc(collection(db, 'store_customers'), {
-                                    ...targetCust,
+                                    ...custPayload,
                                     merchantId: merchantId,
                                     serverStored: true,
+                                    createdAt: serverTimestamp(),
                                     updatedAt: serverTimestamp()
                                 });
                             }
@@ -4001,6 +4015,7 @@
                         }
                     } catch (e) {
                         console.warn('1인 올인원 Firestore 동기화 안내:', e);
+                        alert(`⚠️ 얼굴은 이 브라우저에만 저장되고 서버 저장은 실패했습니다.\n(${e.code || e.message || e})\n\n로그인한 계정이 이 가맹점(${merchantId}) 소속인지 확인해 주세요.`);
                     }
 
                     closeFaceEnrollModal();
@@ -5151,17 +5166,22 @@
                 const q = query(
                     collection(db, 'store_customers'),
                     where('merchantId', '==', merchantId),
-                    orderBy('createdAt', 'desc'),
-                    limit(20)
+                    limit(300)
                 );
+                // createdAt 정렬 쿼리는 createdAt 이 없는 문서(얼굴 등록으로 만든 고객)를 빼먹으므로 화면에서 최신순 정렬
+                const tsMs = (t) => (t?.toMillis?.() || (t?.seconds ? t.seconds * 1000 : 0));
                 onSnapshot(q, (snapshot) => {
                     if (!snapshot.empty) {
                         const firestoreCustomers = [];
-                        snapshot.forEach(docSnap => {
+                        const sortedDocs = snapshot.docs.slice().sort((a, b) =>
+                            (tsMs(b.data().updatedAt) || tsMs(b.data().createdAt)) - (tsMs(a.data().updatedAt) || tsMs(a.data().createdAt)));
+                        sortedDocs.forEach(docSnap => {
                             const data = docSnap.data();
                             firestoreCustomers.push({
                                 docId: docSnap.id,
                                 merchantId: merchantId,
+                                descriptor: Array.isArray(data.descriptor) ? data.descriptor : (data.descriptor && typeof data.descriptor === 'object' ? Object.values(data.descriptor) : null),
+                                serverStored: true,
                                 photoURL: data.photoURL || '',
                                 nvrEnroll: data.nvrEnroll === true,
                                 consentGivenAt: data.consentGivenAt || null,
@@ -5789,7 +5809,9 @@
             const input = document.getElementById('merchantIdInput');
             isSuperAdminUser = window.currentUserRole === 'SUPER_ADMIN';
             const tenant = String(window.tenantId || '');
-            const urlMerchant = new URLSearchParams(location.search).get('merchantId') || '';
+            const STORE_SLUG_TO_ID = { baekje: '1794710386', bestwinner: '1791605366', daehankimchi: '1791002036', bestmario: '1793671043', sunvietnam: '1793776651' };
+            const params = new URLSearchParams(location.search);
+            const urlMerchant = params.get('merchantId') || STORE_SLUG_TO_ID[String(params.get('store') || '').toLowerCase()] || '';
             const validId = (v) => /^[\w-]{1,64}$/.test(v) && v !== 'system_master' && v !== 'undefined' && v !== 'null';
 
             if (isSuperAdminUser) {
