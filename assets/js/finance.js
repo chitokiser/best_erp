@@ -259,9 +259,31 @@ async function loadFinanceData() {
                 if (targetStoreId === '1791605366' && (recTenant === '1791002036' || recStoreName.includes('대한김치'))) return;
             }
 
+            // 서버(payMerchantFirebase)가 자동 기록한 QR 결제 매출(QR_{txHash})은 필드 이름이 다르다
+            // (buyerName/buyerEmail/description/registrantName). 화면 표준 필드로 맞추고 삭제 버튼 대신 QR매출 배지를 쓴다.
+            let normalized = data;
+            if (data.isAutoQrRevenue || String(id).startsWith('QR_')) {
+                const buyerEmail = String(data.buyerEmail || '').trim();
+                const rawName = String(data.buyerName || '').trim();
+                const buyerName = (rawName && rawName !== 'Winner Best') ? rawName : (buyerEmail ? buyerEmail.split('@')[0] : 'QR 결제 고객');
+                const buyerLabel = data.spenderName || (buyerEmail ? `${buyerName} (${buyerEmail})` : buyerName);
+                normalized = {
+                    ...data,
+                    type: data.type || 'INCOME',
+                    category: data.category || '📱 QR 결제 매출',
+                    partner: data.partner || buyerLabel,
+                    spender: data.spender || buyerLabel,
+                    registrant: data.registrant || data.registrantName || 'QR 자동정산 시스템',
+                    memo: data.memo || data.description || '[QR 결제 매출]',
+                    project: data.project || '매장 QR 결제',
+                    isAutoSyncedSales: true,
+                    syncBadgeText: data.syncBadgeText || '📱 QR매출'
+                };
+            }
+
             recordMap.set(id, {
                 id: id,
-                ...data,
+                ...normalized,
                 storeName: data.storeName || defaultStoreName || targetInfo.name || '가맹점'
             });
         };
