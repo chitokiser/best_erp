@@ -449,6 +449,21 @@
         import { db, auth } from '../assets/js/firebase-config.js';
         import { collection, query, where, getDocs, updateDoc, doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
         import { checkAdminAuth } from '../assets/js/auth.js';
+        import { getApp } from 'firebase/app';
+        import { getFunctions, httpsCallable } from 'firebase/functions';
+
+        // 가맹점 매출·고객 단일 기준 (BestClub 마이페이지와 같은 서버 함수 getMerchantSalesSummary)
+        async function fetchMerchantSalesSummary(merchantId) {
+            if (!merchantId || merchantId === 'ALL' || merchantId === 'system_master') return null;
+            try {
+                const fn = httpsCallable(getFunctions(getApp(), 'us-central1'), 'getMerchantSalesSummary');
+                const res = await fn({ merchantId: String(merchantId) });
+                return res?.data || null;
+            } catch (e) {
+                console.warn('getMerchantSalesSummary 호출 실패 → 기존 집계로 표시:', e?.code || e?.message);
+                return null;
+            }
+        }
         import { initNotificationHub } from '../assets/js/notification-hub.js';
 
         // 알림 센터 자동 마운트
@@ -575,8 +590,28 @@
                 if (elSup && elSup.textContent.includes('조회 중')) elSup.textContent = '0 개 협력사';
             }
 
+            // 가맹점 단위 매출·고객 요약 (서버 단일 기준). 최고관리자 '전체'는 기존 집계 사용
+            const summaryTarget = (isSuperAdmin && selectedMerchant !== 'ALL') ? selectedMerchant : (isSuperAdmin ? 'ALL' : tenantId);
+            const salesSummary = await fetchMerchantSalesSummary(summaryTarget);
+            window.__merchantSalesSummary = salesSummary;
+
+            if (salesSummary) {
+                const s = salesSummary.sales || {};
+                const ch = salesSummary.channels || {};
+                document.getElementById('kpiSales').textContent = `₫ ${Number(s.totalVnd || 0).toLocaleString()}`;
+                const trend = document.getElementById('kpiSales').nextElementSibling;
+                if (trend) {
+                    const parts = Object.values(ch).filter(c => c.count > 0).map(c => `${c.label} ${c.count}건`);
+                    trend.textContent = s.count > 0
+                        ? `${s.count}건 · 이번 달 ₫${Number(s.monthVnd || 0).toLocaleString()}${parts.length ? ' · ' + parts.join(' / ') : ''}`
+                        : '결제 내역 없음';
+                    trend.title = salesSummary.basis || '';
+                    trend.className = s.count > 0 ? 'trend trend-up' : 'trend trend-neutral';
+                }
+            }
+
             // 2. Total Sales (Real-time) from merchant_orders + QR transactions (pay_merchant, receive_bt)
-            try {
+            if (!salesSummary) try {
                 const matchStoreHelper = (rawMId, rawMName = '') => {
                     const mId = String(rawMId || '').trim();
                     const mName = String(rawMName || '').trim().toLowerCase();
@@ -777,7 +812,7 @@
                 ]);
 
                 const seenUids = new Set();
-                const mentees = [];
+                let mentees = [];
 
                 // 🚨 수퍼관리자, 가맹점 대표, 내부 직원, 타 매장 점주 계정은 일반 고객(멘티) 목록에서 철저히 제외
                 const EXCLUDED_EMAILS = [
@@ -922,6 +957,20 @@
                     });
                 }
 
+                // 서버 단일 기준 고객 목록으로 교체 (BestClub 마이페이지와 동일)
+                if (salesSummary && salesSummary.customers) {
+                    mentees = (salesSummary.customers.list || []).map(c => ({
+                        id: c.uid || c.email,
+                        name: c.name,
+                        email: c.email,
+                        phone: c.phone,
+                        points: c.points || 0,
+                        isMentee: c.isMentee || c.isMember,
+                        isQrCustomer: c.isBuyer,
+                        qrSpend: c.spendVnd,
+                        qrCount: c.payCount
+                    }));
+                }
                 const qrCustCount = mentees.filter(m => m.isQrCustomer).length;
                 document.getElementById('kpiNewCustomers').textContent = `${mentees.length} 명`;
                 const custTrend = document.getElementById('kpiNewCustomers').nextElementSibling;
