@@ -662,7 +662,22 @@
         .fin-table .fin-actor-name { overflow: hidden; text-overflow: ellipsis; max-width: 150px; font-size: 0.82rem; }
         .fin-table .col-memo { min-width: 240px; color: #1E293B; line-height: 1.45; word-break: keep-all; overflow-wrap: anywhere; }
         .fin-table .col-manage { width: 100px; text-align: center; white-space: nowrap; vertical-align: middle; }
-        .fin-table thead .col-amount { text-align: right; }
+        .fin-table thead th.col-amount { text-align: right; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
+        /* 정렬 머리글 · 유형 필터 */
+        .fin-table thead th.sortable { cursor: pointer; user-select: none; }
+        .fin-table thead th.sortable:hover { color: #1E293B; background: #EEF2FF; }
+        .fin-table thead th .sort-ind { display: inline-block; width: 0.9rem; margin-left: 0.2rem; color: #CBD5E1; font-size: 0.7rem; }
+        .fin-table thead th.sorted .sort-ind { color: #4F46E5; }
+        .fin-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.9rem; }
+        .fin-chips { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+        .fin-chip { border: 1px solid #E2E8F0; background: #fff; color: #475569; font-size: 0.8rem; font-weight: 700; padding: 0.35rem 0.8rem; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+        .fin-chip .cnt { margin-left: 0.3rem; font-weight: 600; color: #94A3B8; }
+        .fin-chip.active { background: #1E293B; border-color: #1E293B; color: #fff; }
+        .fin-chip.active .cnt { color: #CBD5E1; }
+        .fin-sort-hint { font-size: 0.75rem; color: #94A3B8; }
+        .fin-table .fin-group-row td { background: #F8FAFC !important; font-size: 0.78rem; font-weight: 800; color: #475569; padding: 0.45rem 0.9rem; border-bottom: 1px solid #E2E8F0; }
+        .fin-table .fin-partner-name { font-weight: 600; color: #0F172A; line-height: 1.4; }
+        .fin-table .fin-partner-sub { font-size: 0.8rem; color: #94A3B8; margin-top: 0.15rem; }
     </style>
 
     <!-- FORCE CSS -->
@@ -797,14 +812,24 @@
         </div>
 
         <div class="data-card">
+            <div class="fin-toolbar">
+                <div class="fin-chips" id="finTypeChips">
+                    <button type="button" class="fin-chip active" data-filter="ALL">전체<span class="cnt"></span></button>
+                    <button type="button" class="fin-chip" data-filter="INCOME">수입<span class="cnt"></span></button>
+                    <button type="button" class="fin-chip" data-filter="EXPENSE">지출<span class="cnt"></span></button>
+                    <button type="button" class="fin-chip" data-filter="RECEIVABLE">받을 돈<span class="cnt"></span></button>
+                    <button type="button" class="fin-chip" data-filter="PAYABLE">줄 돈<span class="cnt"></span></button>
+                </div>
+                <span class="fin-sort-hint">머리글을 누르면 정렬됩니다 (다시 누르면 반대로)</span>
+            </div>
             <div class="fin-table-wrap">
             <table class="fin-table">
                 <thead>
                     <tr>
-                        <th class="col-date">발생일자</th>
-                        <th class="col-type">유형/항목</th>
-                        <th class="col-amount">금액</th>
-                        <th class="col-partner">관련 거래처/프로젝트</th>
+                        <th class="col-date sortable" data-sort="date">발생일자<span class="sort-ind"></span></th>
+                        <th class="col-type sortable" data-sort="type">유형/항목<span class="sort-ind"></span></th>
+                        <th class="col-amount sortable" data-sort="amount">금액<span class="sort-ind"></span></th>
+                        <th class="col-partner sortable" data-sort="partner">관련 거래처/프로젝트<span class="sort-ind"></span></th>
                         <th class="col-actor">결제·지출자 / 등록자</th>
                         <th class="col-memo">적요(내용)</th>
                         <th class="col-manage">관리</th>
@@ -1185,6 +1210,96 @@
             </div>
         </div>
     </div>
+<script>
+// 재무 표 정렬·유형 필터 (화면 표시만 바꿈, 데이터는 그대로)
+(function () {
+    const TYPE_ORDER = { INCOME: 0, RECEIVABLE: 1, EXPENSE: 2, PAYABLE: 3 };
+    const TYPE_LABEL = { INCOME: '수입', RECEIVABLE: '받을 돈', EXPENSE: '지출', PAYABLE: '줄 돈 (지출예정)' };
+    const state = { key: 'date', dir: -1, filter: 'ALL' };
+    const collator = new Intl.Collator('ko');
+
+    function rowsOf(tbody) {
+        return Array.from(tbody.querySelectorAll('tr[data-type]'));
+    }
+    function cmp(a, b) {
+        const d = a.dataset, e = b.dataset;
+        let r = 0;
+        if (state.key === 'date') r = (d.date || '').localeCompare(e.date || '');
+        else if (state.key === 'amount') r = Number(d.amount) - Number(e.amount);
+        else if (state.key === 'partner') r = collator.compare(d.partner || '', e.partner || '');
+        else if (state.key === 'type') {
+            r = (TYPE_ORDER[d.type] ?? 9) - (TYPE_ORDER[e.type] ?? 9);
+            if (r === 0) r = collator.compare(d.cat || '', e.cat || '') * state.dir; // 항목은 같은 방향
+            if (r === 0) r = (e.date || '').localeCompare(d.date || '') * state.dir;  // 같은 항목은 최신순
+        }
+        if (r === 0 && state.key !== 'date') r = (e.date || '').localeCompare(d.date || '') * state.dir;
+        return r * state.dir;
+    }
+
+    window.applyFinanceTableView = function () {
+        const tbody = document.getElementById('financeTableBody');
+        if (!tbody) return;
+        tbody.querySelectorAll('tr.fin-group-row').forEach(tr => tr.remove());
+        const rows = rowsOf(tbody);
+        if (!rows.length) return;
+
+        // 유형별 건수
+        const counts = { ALL: rows.length };
+        rows.forEach(tr => { counts[tr.dataset.type] = (counts[tr.dataset.type] || 0) + 1; });
+        document.querySelectorAll('#finTypeChips .fin-chip').forEach(btn => {
+            const f = btn.dataset.filter;
+            btn.classList.toggle('active', f === state.filter);
+            const c = btn.querySelector('.cnt');
+            if (c) c.textContent = counts[f] || 0;
+        });
+
+        rows.sort(cmp);
+        let lastGroup = null;
+        rows.forEach(tr => {
+            const show = state.filter === 'ALL' || tr.dataset.type === state.filter;
+            tr.style.display = show ? '' : 'none';
+            // 유형/항목 정렬 시 항목별 구분 줄
+            if (show && state.key === 'type') {
+                const g = `${tr.dataset.type}|${tr.dataset.cat}`;
+                if (g !== lastGroup) {
+                    lastGroup = g;
+                    const gr = document.createElement('tr');
+                    gr.className = 'fin-group-row';
+                    const td = document.createElement('td');
+                    td.colSpan = 7;
+                    td.textContent = `${TYPE_LABEL[tr.dataset.type] || tr.dataset.type} · ${tr.dataset.cat}`;
+                    gr.appendChild(td);
+                    tbody.appendChild(gr);
+                }
+            }
+            tbody.appendChild(tr);
+        });
+
+        document.querySelectorAll('.fin-table thead th.sortable').forEach(th => {
+            const on = th.dataset.sort === state.key;
+            th.classList.toggle('sorted', on);
+            const ind = th.querySelector('.sort-ind');
+            if (ind) ind.textContent = on ? (state.dir > 0 ? '▲' : '▼') : '↕';
+        });
+    };
+
+    document.addEventListener('click', (ev) => {
+        const th = ev.target.closest('.fin-table thead th.sortable');
+        if (th) {
+            const key = th.dataset.sort;
+            if (state.key === key) state.dir = -state.dir;
+            else { state.key = key; state.dir = (key === 'type' || key === 'partner') ? 1 : -1; }
+            window.applyFinanceTableView();
+            return;
+        }
+        const chip = ev.target.closest('#finTypeChips .fin-chip');
+        if (chip) {
+            state.filter = chip.dataset.filter;
+            window.applyFinanceTableView();
+        }
+    });
+})();
+</script>
 </body>
 
 </html>

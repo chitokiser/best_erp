@@ -619,8 +619,10 @@ async function loadFinanceData() {
                                <span>🗑️</span> 삭제
                            </button>`;
 
+                const sortAttr = (v) => String(v ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+                const signedAmount = (type === 'EXPENSE' || type === 'PAYABLE') ? -amount : amount;
                 html += `
-                    <tr>
+                    <tr data-date="${sortAttr(data.date)}" data-type="${type}" data-cat="${sortAttr(data.category || '기타/미분류')}" data-amount="${signedAmount}" data-partner="${sortAttr(partner)}">
                         <td class="col-date">${data.date || '-'}</td>
                         <td class="col-type">
                             ${badgeHtml}
@@ -628,8 +630,8 @@ async function loadFinanceData() {
                         </td>
                         <td class="col-amount" style="color:${type === 'EXPENSE' || type === 'PAYABLE' ? '#DC2626' : '#059669'};">${type === 'EXPENSE' || type === 'PAYABLE' ? '−' : '+'}${formatCurrency(amount)}<span class="fin-unit">VND</span></td>
                         <td class="col-partner">
-                            <div style="color:var(--text-dark); font-weight:600;">${storeBadge}${partner}</div>
-                            <div style="font-size:0.85rem; color:var(--text-muted);">${project}</div>
+                            <div class="fin-partner-name">${storeBadge}${partner}</div>
+                            ${project && project !== '-' ? `<div class="fin-partner-sub">${project}</div>` : ''}
                         </td>
                         <td class="col-actor">
                             <div class="fin-actor-row">
@@ -654,6 +656,7 @@ async function loadFinanceData() {
         }
 
         tbody.innerHTML = html;
+        if (typeof window.applyFinanceTableView === 'function') window.applyFinanceTableView();
         document.getElementById('sumIncome').textContent = formatCurrency(sums.INCOME || 0) + ' VND';
         document.getElementById('sumExpense').textContent = formatCurrency(sums.EXPENSE || 0) + ' VND';
         document.getElementById('sumReceivable').textContent = formatCurrency(sums.RECEIVABLE || 0) + ' VND';
