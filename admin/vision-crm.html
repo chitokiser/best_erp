@@ -548,23 +548,23 @@
         <div class="stats-grid" style="margin-top:0.75rem;">
             <div class="stat-card">
                 <h3>👥 시간대별 방문객 수 (Footfall)</h3>
-                <p class="value" id="kpiFootfall" style="color:var(--crm-primary);">152 명</p>
-                <div class="trend trend-up" id="kpiFootfallSub">피크 타임 유입 집중 (정상)</div>
+                <p class="value" id="kpiFootfall" style="color:#94A3B8;">데이터 없음</p>
+                <div class="trend" id="kpiFootfallSub">NVR 미연결 · 출입구 실측 데이터 없음</div>
             </div>
             <div class="stat-card">
                 <h3 id="kpiRecognitionTitle">🎯 AI 회원 인식/매칭률 (CRM)</h3>
-                <p class="value" id="kpiRecognition" style="color:#10b981;">98.2 %</p>
-                <div class="trend trend-up" id="kpiRecognitionSub">등록 회원 실시간 자동 식별 가동중</div>
+                <p class="value" id="kpiRecognition" style="color:#94A3B8;">데이터 없음</p>
+                <div class="trend" id="kpiRecognitionSub">NVR 미연결 · 얼굴 인식 실측 데이터 없음</div>
             </div>
             <div class="stat-card">
                 <h3>⏰ 직원 출근 현황 (Attendance)</h3>
-                <p class="value" id="kpiEmployeeAttendance" style="color:#6366f1;">4 / 5 명</p>
-                <div class="trend trend-up" id="kpiEmployeeAttendanceSub">출근율 80% · 1명 미출근(휴무)</div>
+                <p class="value" id="kpiEmployeeAttendance" style="color:#94A3B8;">데이터 없음</p>
+                <div class="trend" id="kpiEmployeeAttendanceSub">NVR 미연결 · 출퇴근 실측 데이터 없음</div>
             </div>
             <div class="stat-card">
                 <h3>🚨 방범/보안 경비 상태 (Security)</h3>
-                <p class="value" id="kpiSecurityStatus" style="color:#10b981;">안전 (SAFE)</p>
-                <div class="trend trend-up" id="kpiSecuritySubtext">침입 감지 0건 · 실시간 모니터링</div>
+                <p class="value" id="kpiSecurityStatus" style="color:#94A3B8;">데이터 없음</p>
+                <div class="trend" id="kpiSecuritySubtext">NVR 미연결 · 침입 감지 데이터 없음</div>
             </div>
         </div>
 
@@ -2517,7 +2517,7 @@
         let webcamStream = null;
         let currentFacingMode = 'user';
         let selectedCameraDeviceId = '';
-        let currentFootfallCount = 152;
+        let currentFootfallCount = 0;
         let autoCollectionInterval = null;
         let autoCollectedCounter = 0;
         let currentTierFilter = 'ALL';
@@ -4209,8 +4209,7 @@
             autoCollectionInterval = setInterval(() => {
                 autoCollectedCounter += 1;
                 document.getElementById('autoCollectedCount').textContent = autoCollectedCounter;
-                currentFootfallCount += 1;
-                document.getElementById('kpiFootfall').textContent = `${currentFootfallCount} 명`;
+                currentFootfallCount += 1;   // KPI 카드에는 표시하지 않음 (실측 아님)
                 window.captureAndAnalyzeCurrentFace(true);
             }, 5000);
 
@@ -4559,8 +4558,8 @@
             if (offDutyEl) offDutyEl.textContent = `${offDuty}명`;
             if (rateEl) rateEl.textContent = `${rate}%`;
 
-            if (kpiAttendance) kpiAttendance.textContent = `${onDuty} / ${total} 명`;
-            if (kpiSub) kpiSub.textContent = `출근율 ${rate}% · ${offDuty > 0 ? `${offDuty}명 미출근/휴무` : '전원 정상 출근'}`;
+            if (kpiAttendance) { kpiAttendance.textContent = '데이터 없음'; kpiAttendance.style.color = '#94A3B8'; }
+            if (kpiSub) kpiSub.textContent = 'NVR 미연결 · 출퇴근 실측 데이터 없음';
         };
 
         window.toggleEmployeeDuty = (empId, forcedState = null) => {
@@ -4910,10 +4909,10 @@
                     if (quickText) quickText.textContent = '방범 경비 가동';
                 }
                 if (kpiStatus) {
-                    kpiStatus.textContent = '안전 (SAFE)';
-                    kpiStatus.style.color = '#10B981';
+                    kpiStatus.textContent = window.__nvrModeActive ? '안전 (SAFE)' : '데이터 없음';
+                    kpiStatus.style.color = window.__nvrModeActive ? '#10B981' : '#94A3B8';
                 }
-                if (kpiSub) kpiSub.textContent = '침입 감지 0건 · 실시간 모니터링';
+                if (kpiSub) kpiSub.textContent = window.__nvrModeActive ? '침입 감지 0건 · NVR 실시간 모니터링' : 'NVR 미연결 · 침입 감지 데이터 없음';
 
                 playNotificationSound();
             }
@@ -5546,6 +5545,8 @@
         function nvrRenderKpis() {
             const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
             const ff = nvr.footfall;
+            [['kpiFootfall', 'var(--crm-primary)'], ['kpiRecognition', '#10b981'], ['kpiEmployeeAttendance', '#6366f1']]
+                .forEach(([id, c]) => { const el = document.getElementById(id); if (el) el.style.color = c; });
             set('kpiFootfall', `${ff?.footfallCount || 0} 명`);
             if (ff && ff.hourly && Object.keys(ff.hourly).length) {
                 const [peakH, peakN] = Object.entries(ff.hourly).sort((a, b) => b[1] - a[1])[0];
@@ -5723,6 +5724,13 @@
             window.__nvrModeActive = false;
             Object.entries(nvr.saved).forEach(([id, text]) => { const el = document.getElementById(id); if (el) el.textContent = text; });
             nvr.saved = {};
+            ['kpiFootfall', 'kpiRecognition', 'kpiEmployeeAttendance'].forEach(id => { const el = document.getElementById(id); if (el) el.style.color = '#94A3B8'; });
+            if (!isSecurityArmed) {
+                const ks = document.getElementById('kpiSecurityStatus');
+                if (ks) { ks.textContent = '데이터 없음'; ks.style.color = '#94A3B8'; }
+                const kss = document.getElementById('kpiSecuritySubtext');
+                if (kss) kss.textContent = 'NVR 미연결 · 침입 감지 데이터 없음';
+            }
             if (nvr.savedIncidents) securityIncidents = nvr.savedIncidents;
             window.renderEmployeeList();
             window.renderEmployeeAttendanceLogs();
