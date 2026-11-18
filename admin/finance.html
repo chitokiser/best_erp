@@ -641,6 +641,28 @@
         .dropdown:hover .dropbtn { color: #4F46E5; background: rgba(79, 70, 229, 0.05); }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* ── 재무 표 가독성 (가로 스크롤 + 열 너비 고정, 글자 단위 줄바꿈 방지) ── */
+        .fin-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -0.25rem; }
+        .fin-table { min-width: 1080px; font-size: 0.9rem; }
+        .fin-table thead th { position: sticky; top: 0; background: #F8FAFC; z-index: 1; font-size: 0.8rem; white-space: nowrap; padding: 0.75rem 0.9rem; }
+        .fin-table tbody td { padding: 0.8rem 0.9rem; vertical-align: top; }
+        .fin-table tbody tr:nth-child(even) td { background: #FBFDFF; }
+        .fin-table tbody tr:hover td { background: #F1F5F9; }
+        .fin-table .col-date { width: 110px; white-space: nowrap; font-weight: 600; color: #334155; }
+        .fin-table .col-type { width: 150px; }
+        .fin-table .col-type .type-badge { white-space: nowrap; display: inline-block; }
+        .fin-table .col-type .fin-cat { font-size: 0.82rem; color: #475569; margin-top: 0.3rem; line-height: 1.35; }
+        .fin-table .col-amount { width: 170px; white-space: nowrap; text-align: right; font-weight: 800; font-size: 1rem; font-variant-numeric: tabular-nums; }
+        .fin-table .col-amount .fin-unit { font-size: 0.72rem; font-weight: 600; color: #94A3B8; margin-left: 0.2rem; }
+        .fin-table .col-partner { min-width: 170px; }
+        .fin-table .col-actor { width: 230px; }
+        .fin-table .fin-actor-row { display: flex; align-items: center; gap: 0.4rem; white-space: nowrap; line-height: 1.5; }
+        .fin-table .fin-actor-row + .fin-actor-row { margin-top: 0.3rem; }
+        .fin-table .fin-actor-tag { flex: 0 0 auto; font-size: 0.7rem; font-weight: 700; padding: 0.08rem 0.4rem; border-radius: 0.3rem; }
+        .fin-table .fin-actor-name { overflow: hidden; text-overflow: ellipsis; max-width: 150px; font-size: 0.82rem; }
+        .fin-table .col-memo { min-width: 240px; color: #1E293B; line-height: 1.45; word-break: keep-all; overflow-wrap: anywhere; }
+        .fin-table .col-manage { width: 100px; text-align: center; white-space: nowrap; vertical-align: middle; }
+        .fin-table thead .col-amount { text-align: right; }
     </style>
 
     <!-- FORCE CSS -->
@@ -775,16 +797,17 @@
         </div>
 
         <div class="data-card">
-            <table>
+            <div class="fin-table-wrap">
+            <table class="fin-table">
                 <thead>
                     <tr>
-                        <th>발생일자</th>
-                        <th>유형/항목</th>
-                        <th>금액</th>
-                        <th>관련 거래처/프로젝트</th>
-                        <th>등록자 / 지출자</th>
-                        <th>적요(내용)</th>
-                        <th style="text-align:center; width:90px;">관리</th>
+                        <th class="col-date">발생일자</th>
+                        <th class="col-type">유형/항목</th>
+                        <th class="col-amount">금액</th>
+                        <th class="col-partner">관련 거래처/프로젝트</th>
+                        <th class="col-actor">결제·지출자 / 등록자</th>
+                        <th class="col-memo">적요(내용)</th>
+                        <th class="col-manage">관리</th>
                     </tr>
                 </thead>
                 <tbody id="financeTableBody">
@@ -794,6 +817,7 @@
                     </tr>
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
 

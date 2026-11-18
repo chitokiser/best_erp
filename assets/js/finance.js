@@ -621,31 +621,31 @@ async function loadFinanceData() {
 
                 html += `
                     <tr>
-                        <td style="font-weight:600;">${data.date || '-'}</td>
-                        <td>
+                        <td class="col-date">${data.date || '-'}</td>
+                        <td class="col-type">
                             ${badgeHtml}
-                            <div style="font-size:0.85rem; color:var(--text-dark); margin-top:0.25rem;">${data.category || '기타/미분류'}</div>
+                            <div class="fin-cat">${data.category || '기타/미분류'}</div>
                         </td>
-                        <td style="font-weight:800; font-size:1.1rem; color:${type === 'EXPENSE' || type === 'PAYABLE' ? '#DC2626' : '#059669'};">${formatCurrency(amount)} VND</td>
-                        <td>
+                        <td class="col-amount" style="color:${type === 'EXPENSE' || type === 'PAYABLE' ? '#DC2626' : '#059669'};">${type === 'EXPENSE' || type === 'PAYABLE' ? '−' : '+'}${formatCurrency(amount)}<span class="fin-unit">VND</span></td>
+                        <td class="col-partner">
                             <div style="color:var(--text-dark); font-weight:600;">${storeBadge}${partner}</div>
                             <div style="font-size:0.85rem; color:var(--text-muted);">${project}</div>
                         </td>
-                        <td>
-                            <div style="font-size:0.82rem; font-weight:700; color:#047857; display:flex; align-items:center; gap:0.25rem;">
-                                <span style="background:#ECFDF5; border:1px solid #A7F3D0; padding:0.1rem 0.38rem; border-radius:0.3rem; font-size:0.72rem;">${actorRoleLabel}</span>
-                                <span style="color:#0F172A;">${spenderDisp}</span>
+                        <td class="col-actor">
+                            <div class="fin-actor-row">
+                                <span class="fin-actor-tag" style="background:#ECFDF5; color:#047857; border:1px solid #A7F3D0;">${actorRoleLabel}</span>
+                                <span class="fin-actor-name" style="color:#0F172A; font-weight:700;" title="${String(spenderDisp).replace(/"/g, '&quot;')}">${spenderDisp}</span>
                             </div>
-                            <div style="font-size:0.76rem; color:#64748B; margin-top:0.28rem; display:flex; align-items:center; gap:0.25rem;">
-                                <span style="background:#EEF2FF; color:#4F46E5; padding:0.08rem 0.35rem; border-radius:0.3rem; font-size:0.7rem; font-weight:700;">✍️ 등록자</span>
-                                <span>${registrantDisp}</span>
+                            <div class="fin-actor-row">
+                                <span class="fin-actor-tag" style="background:#EEF2FF; color:#4F46E5;">✍️ 등록자</span>
+                                <span class="fin-actor-name" style="color:#64748B;" title="${String(registrantDisp).replace(/"/g, '&quot;')}">${registrantDisp}</span>
                             </div>
                         </td>
-                        <td style="color:var(--text-muted);">
-                            <div style="color:#1E293B;">${data.memo || '-'}</div>
+                        <td class="col-memo">
+                            <div>${data.memo || '-'}</div>
                             ${receiptBadgeHtml}
                         </td>
-                        <td style="text-align:center; vertical-align:middle;">
+                        <td class="col-manage">
                             ${deleteActionHtml}
                         </td>
                     </tr>
