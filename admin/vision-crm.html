@@ -3025,10 +3025,6 @@
             }
         }
 
-                async function buildFaceMatcherFromCustomers() {
-            if (!isFaceApiLoaded || typeof faceapi === 'undefined') return;
-            const labeledDescriptors = [];
-
         // ==========================================
         // 🧬 각도·측면·조명 무관 안면 특징 벡터 자동 추출기 (Lenient 128-D Biometric Extractor)
         // ==========================================
@@ -3061,6 +3057,10 @@
                 return pseudo;
             }
         }
+
+        async function buildFaceMatcherFromCustomers() {
+            if (!isFaceApiLoaded || typeof faceapi === 'undefined') return;
+            const labeledDescriptors = [];
 
             for (const c of masterCustomers) {
                 // Ignore entries without real descriptor or photo
@@ -4179,6 +4179,12 @@
                         if (window.searchCustomerByCameraFace) window.searchCustomerByCameraFace();
                     }, 500);
                 }
+            } catch (enrollErr) {
+                console.error('얼굴 등록 오류:', enrollErr);
+                alert(`⚠️ 얼굴 등록 중 오류가 발생했습니다.
+(${enrollErr?.code || enrollErr?.message || enrollErr})
+
+이 문구를 캡처해 관리자에게 보내 주세요.`);
             } finally {
                 if (confirmBtn) {
                     confirmBtn.innerHTML = origBtnText;
