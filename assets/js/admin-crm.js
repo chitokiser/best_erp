@@ -270,7 +270,7 @@ async function loadClients() {
             const [qrTxSnap, btTxSnap, storeCustSnap] = await Promise.all([
                 getDocs(query(collection(db, 'transactions'), where('type', 'in', ['pay_merchant', 'receive_bt']))).catch(() => ({ docs: [] })),
                 getDocs(query(collection(db, 'bt_transactions'), where('type', '==', 'remote_send'))).catch(() => ({ docs: [] })),
-                getDocs(collection(db, 'store_customers')).catch(() => ({ docs: [] }))
+                getDocs(isSuperAdmin ? collection(db, 'store_customers') : query(collection(db, 'store_customers'), where('merchantId', '==', String(activeMerchantId)))).catch(() => ({ docs: [] }))
             ]);
 
             const rawQrEvents = [];

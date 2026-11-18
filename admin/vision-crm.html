@@ -503,7 +503,7 @@
                 <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
                     <div style="display:flex; align-items:center; gap:0.35rem;">
                         <span style="font-size:0.8rem; font-weight:700; color:#475569;">가맹점 ID:</span>
-                        <input type="text" id="merchantIdInput" value="1791605366" style="width:110px; padding:0.35rem 0.5rem; border:1px solid #cbd5e1; border-radius:0.35rem; font-size:0.8rem; font-weight:700; text-align:center;">
+                        <input type="text" id="merchantIdInput" value="" readonly placeholder="확인 중" title="로그인 계정의 가맹점으로 고정됩니다" style="width:110px; padding:0.35rem 0.5rem; border:1px solid #cbd5e1; border-radius:0.35rem; font-size:0.8rem; font-weight:700; text-align:center;">
                     </div>
                     <span style="color:#cbd5e1;">|</span>
                     <!-- 점주 보유 BT 실시간 표시기 -->
@@ -1223,7 +1223,7 @@
             <!-- QR Code Center Stage -->
             <div style="background:#F8FAFC; border:1.5px dashed #CBD5E1; border-radius:1rem; padding:1.25rem; margin-bottom:1.1rem; display:inline-block; width:100%; box-sizing:border-box;">
                 <div style="background:white; padding:1rem; border-radius:0.75rem; display:inline-block; box-shadow:0 4px 12px rgba(0,0,0,0.06); border:1px solid #E2E8F0;">
-                    <img id="storeQrImage" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=https%3A%2F%2Fbesterp.netlify.app%2Ftable-qr.html%3FmerchantId%3D1791605366%26ownerZalo%3D0981234567" alt="매장 Zalo 친구추가 QR" style="width:200px; height:200px; display:block; margin:0 auto;">
+                    <img id="storeQrImage" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=" alt="매장 Zalo 친구추가 QR" style="width:200px; height:200px; display:block; margin:0 auto;">
                     <span style="display:block; margin-top:0.5rem; font-size:0.75rem; font-weight:800; color:#1E293B;">
                         베스트위너점 매장 대표 QR (공용)
                     </span>
@@ -1239,7 +1239,7 @@
                 </div>
 
                 <div style="margin-top:0.6rem; font-size:0.725rem; color:#64748B; word-break:break-all;">
-                    🔗 링크: <span id="storeQrUrlDisplay" style="font-family:monospace; color:#0068FF;">https://besterp.netlify.app/table-qr.html?merchantId=1791605366&ownerZalo=0981234567</span>
+                    🔗 링크: <span id="storeQrUrlDisplay" style="font-family:monospace; color:#0068FF;">가맹점 확인 중…</span>
                 </div>
             </div>
 
@@ -1620,10 +1620,40 @@
         import { db, auth, storage } from '../assets/js/firebase-config.js';
         import { checkAdminAuth } from '../assets/js/auth.js';
         import { initNotificationHub, playNotificationSound } from '../assets/js/notification-hub.js';
-        import { collection, addDoc, getDocs, doc, setDoc, onSnapshot, deleteDoc, serverTimestamp, query, where, orderBy, limit, updateDoc, Timestamp } from 'firebase/firestore';
+        import { collection, addDoc, getDocs, getDoc, doc, setDoc, onSnapshot, deleteDoc, serverTimestamp, query, where, orderBy, limit, updateDoc, Timestamp } from 'firebase/firestore';
         import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 
         initNotificationHub();
+
+        // ==========================================
+        // 🏪 가맹점(테넌트) 컨텍스트
+        //  - 가맹점 ID는 로그인 계정(checkAdminAuth → window.tenantId)으로만 정한다.
+        //  - 최고관리자만 ?merchantId= 또는 입력란으로 다른 가맹점을 볼 수 있다.
+        //  - 카메라·고객·직원 캐시는 가맹점별 키로 분리한다 (같은 브라우저에서 섞이지 않음).
+        // ==========================================
+        let currentMerchantId = '';
+        let isSuperAdminUser = false;
+        const getMerchantId = () => currentMerchantId;
+        window.getMerchantId = getMerchantId;
+        const scopedKey = (base) => `${base}:${currentMerchantId}`;
+        const LEGACY_SHARED_KEYS = ['vision_crm_store_cameras', 'vision_crm_master_customers', 'vision_crm_master_employees'];
+        const readScopedCache = (base) => {
+            if (!currentMerchantId) return null;
+            try {
+                const raw = localStorage.getItem(scopedKey(base));
+                if (raw) return JSON.parse(raw);
+                // 예전(가맹점 구분 없는) 캐시는 단일 가맹점 계정일 때만 1회 이전한다
+                if (!isSuperAdminUser) {
+                    const legacy = localStorage.getItem(base);
+                    if (legacy) return JSON.parse(legacy);
+                }
+            } catch (e) {}
+            return null;
+        };
+        const writeScopedCache = (base, value) => {
+            if (!currentMerchantId) return;   // 가맹점 확인 전에는 저장하지 않음
+            try { localStorage.setItem(scopedKey(base), JSON.stringify(value)); } catch (e) {}
+        };
 
         
         // ==========================================
@@ -1682,26 +1712,35 @@
             }
         ];
 
-        // Restore cached cameras if present
-        try {
-            const cachedCams = localStorage.getItem('vision_crm_store_cameras');
-            if (cachedCams) {
-                const parsed = JSON.parse(cachedCams);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    storeCameras = parsed;
-                }
-            }
-        } catch (e) {}
+        // 새 가맹점의 기본 채널 구성 (가맹점별 저장본이 없을 때만 사용)
+        const DEFAULT_STORE_CAMERAS = JSON.parse(JSON.stringify(storeCameras));
 
         let activeCameraId = storeCameras[0]?.id || 'cam-01';
         let cameraViewMode = 'single'; // 'single' | 'dual' | 'quad'
         let availableVideoDevices = [];
         let activeCameraStreams = {}; // { 'cam-01': MediaStream, 'cam-02': MediaStream }
 
+        // 카메라 구성 저장: 브라우저 캐시(가맹점별, USB deviceId 포함) + Firestore store_cameras/{merchantId}
+        // deviceId는 이 PC의 USB 장치 ID라서 서버에는 저장하지 않는다.
+        let cameraCloudSaveTimer = null;
         window.saveStoreCamerasState = () => {
-            try {
-                localStorage.setItem('vision_crm_store_cameras', JSON.stringify(storeCameras));
-            } catch (e) {}
+            if (!currentMerchantId) return;
+            writeScopedCache('vision_crm_store_cameras', storeCameras);
+            if (!db) return;
+            clearTimeout(cameraCloudSaveTimer);
+            const merchantId = currentMerchantId;
+            cameraCloudSaveTimer = setTimeout(async () => {
+                try {
+                    await setDoc(doc(db, 'store_cameras', merchantId), {
+                        merchantId,
+                        cameras: storeCameras.map(({ deviceId, ...rest }) => rest),
+                        updatedAt: serverTimestamp(),
+                        updatedBy: auth?.currentUser?.uid || ''
+                    }, { merge: true });
+                } catch (e) {
+                    console.warn('store_cameras 저장 실패:', e.code || e.message);
+                }
+            }, 1500);
         };
 
         window.isVirtualCameraDevice = (dev) => {
@@ -2494,24 +2533,9 @@
         // 360° 고객 원장 실시간 데이터 (가짜 샘플 전면 제거, 오직 실제 카메라 등록 회원만 저장)
         let masterCustomers = [];
 
-        // Restore cached master customers from localStorage (가짜 샘플 완전 배제, 실물 등록 회원만 복원)
-        try {
-            const cachedCustomers = localStorage.getItem('vision_crm_master_customers');
-            if (cachedCustomers) {
-                const parsed = JSON.parse(cachedCustomers);
-                if (Array.isArray(parsed)) {
-                    // 오직 실제 웹캠 사진 및 벡터가 등록된 회원만 유지
-                    masterCustomers = parsed.filter(c => c.photoURL && !c.photoURL.includes('unsplash.com') && (c.descriptor || c.serverStored));
-                }
-            }
-        } catch (e) {
-            masterCustomers = [];
-        }
-
+        // 고객 캐시는 loadMerchantScopedState()에서 가맹점별로 복원한다 (실물 등록 회원만)
         window.saveMasterCustomersState = () => {
-            try {
-                localStorage.setItem('vision_crm_master_customers', JSON.stringify(masterCustomers));
-            } catch (e) {}
+            writeScopedCache('vision_crm_master_customers', masterCustomers);
         };
 
         // 12개 테이블 기본 상태
@@ -2699,7 +2723,7 @@
         // 방식 B: 3자 VIP 전담 단톡방 열기
         window.openZalo3WayGroupChat = () => {
             const customerName = activeSelectedCustomer?.name || '고객';
-            const groupCode = `vip-1791605366-${Math.floor(1000 + Math.random() * 9000)}`;
+            const groupCode = `vip-${getMerchantId()}-${Math.floor(1000 + Math.random() * 9000)}`;
             const url = `https://zalo.me/g/${groupCode}`;
             playNotificationSound();
             alert(`💬 [3자 VIP 전담 단톡방 (방식 B) 연결]\n\n• 참여 구성원: 🛡️ 본사 수퍼관리자 + 🏪 가맹점주 + 👤 ${customerName} 고객님\n• 단톡방 URL: ${url}\n\nZalo 단톡방으로 이동합니다.`);
@@ -2779,7 +2803,7 @@
         window.openTableQrModal = window.openStoreQrModal; // 호환성 유지
 
         window.getStoreQrUrl = () => {
-            const merchantId = document.getElementById('merchantIdInput')?.value.trim() || '1791605366';
+            const merchantId = getMerchantId();
             const ownerZalo = document.getElementById('ownerZaloInput')?.value.trim() || '0981234567';
             return `https://besterp.netlify.app/table-qr.html?merchantId=${merchantId}&ownerZalo=${ownerZalo}`;
         };
@@ -2804,7 +2828,7 @@
         };
 
         window.testOpenStoreQrUrl = () => {
-            const merchantId = document.getElementById('merchantIdInput')?.value.trim() || '1791605366';
+            const merchantId = getMerchantId();
             const ownerZalo = document.getElementById('ownerZaloInput')?.value.trim() || '0981234567';
             const url = `../table-qr.html?merchantId=${merchantId}&ownerZalo=${ownerZalo}`;
             window.open(url, '_blank');
@@ -2812,7 +2836,7 @@
 
         window.printStoreQrPoster = () => {
             const qrUrl = window.getStoreQrUrl();
-            const merchantId = document.getElementById('merchantIdInput')?.value.trim() || '1791605366';
+            const merchantId = getMerchantId();
             const ownerZalo = document.getElementById('ownerZaloInput')?.value.trim() || '0981234567';
             const printWin = window.open('', '_blank', 'width=750,height=900');
             printWin.document.write(`
@@ -2857,7 +2881,7 @@
         };
 
         window.openTableQrUrl = (tableNo) => {
-            const merchantId = document.getElementById('merchantIdInput')?.value.trim() || '1791605366';
+            const merchantId = getMerchantId();
             const ownerZalo = document.getElementById('ownerZaloInput')?.value.trim() || '0981234567';
             const url = `../table-qr.html?merchantId=${merchantId}&table=${tableNo}&ownerZalo=${ownerZalo}`;
             window.open(url, '_blank');
@@ -2909,7 +2933,7 @@
                 if (db) {
                     await addDoc(collection(db, 'store_customers'), {
                         ...newCust,
-                        merchantId: document.getElementById('merchantIdInput')?.value.trim() || '1791605366',
+                        merchantId: getMerchantId(),
                         createdAt: serverTimestamp()
                     });
                 }
@@ -3876,7 +3900,7 @@
                 currentCapturedDescriptor = extractVisualFeatureVector(previewImg);
             }
 
-            const merchantId = document.getElementById('merchantIdInput')?.value.trim() || '1791605366';
+            const merchantId = getMerchantId();
             const confirmBtn = document.getElementById('btnConfirmFaceEnroll');
             const statusIndicator = document.getElementById('enrollServerStatusIndicator');
             const origBtnText = confirmBtn ? confirmBtn.innerHTML : '';
@@ -4168,7 +4192,7 @@
                 alert('🛰️ 매장 AI NVR 연동 중입니다.\n\n방문객 수 · 출퇴근 · 침입 감지는 NVR이 24시간 자동으로 수집하므로 브라우저 무인 관제는 사용하지 않습니다.');
                 return;
             }
-            const merchantId = document.getElementById('merchantIdInput')?.value.trim() || '1791605366';
+            const merchantId = getMerchantId();
             const btn = document.getElementById('btnAutoCollect');
             const icon = document.getElementById('autoCollectIcon');
             const txt = document.getElementById('autoCollectText');
@@ -4215,7 +4239,7 @@
                 window.captureAndAnalyzeCurrentFace = async (silent = false) => {
             if (window.__nvrModeActive) return; // NVR 연동 중에는 브라우저 얼굴 분석 중지
             if (!silent) playNotificationSound();
-            const merchantId = document.getElementById('merchantIdInput')?.value.trim() || '1791605366';
+            const merchantId = getMerchantId();
 
             // Find if any registered customer is currently recognized in front of camera
             let targetCustomer = null;
@@ -4379,25 +4403,8 @@
             }
         ];
 
-        let masterEmployees = [];
-        try {
-            const cachedEmp = localStorage.getItem('vision_crm_master_employees');
-            if (cachedEmp) {
-                const parsed = JSON.parse(cachedEmp);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    masterEmployees = parsed.map(emp => ({
-                        ...emp,
-                        photoURL: (emp.photoURL && !emp.photoURL.includes('unsplash.com')) ? emp.photoURL : ''
-                    }));
-                } else {
-                    masterEmployees = [...DEFAULT_EMPLOYEES];
-                }
-            } else {
-                masterEmployees = [...DEFAULT_EMPLOYEES];
-            }
-        } catch (e) {
-            masterEmployees = [...DEFAULT_EMPLOYEES];
-        }
+        // 직원 캐시는 loadMerchantScopedState()에서 가맹점별로 복원한다
+        let masterEmployees = [...DEFAULT_EMPLOYEES];
 
         let employeeAttendanceLogs = [
             { time: '11:55', empName: '이민아', role: '바리스타', type: '출근 (PUNCH-IN)', method: 'AI 안면 인식', status: '정상' },
@@ -4405,10 +4412,56 @@
         ];
 
         function saveMasterEmployees() {
-            try {
-                localStorage.setItem('vision_crm_master_employees', JSON.stringify(masterEmployees));
-            } catch (e) {}
+            writeScopedCache('vision_crm_master_employees', masterEmployees);
         }
+
+        // 가맹점 확인 직후 1회: 이 가맹점의 카메라·고객·직원 상태를 불러온다
+        async function loadMerchantScopedState() {
+            // 카메라: Firestore(가맹점 공용 구성)가 기준, 이 PC의 USB 매핑(deviceId)은 로컬 캐시에서 덧씌움
+            const localCams = readScopedCache('vision_crm_store_cameras');
+            let cloudCams = null;
+            if (db) {
+                try {
+                    const camSnap = await getDoc(doc(db, 'store_cameras', currentMerchantId));
+                    if (camSnap.exists() && Array.isArray(camSnap.data().cameras) && camSnap.data().cameras.length > 0) {
+                        cloudCams = camSnap.data().cameras;
+                    }
+                } catch (e) {
+                    console.warn('store_cameras 조회 불가:', e.code || e.message);
+                }
+            }
+            if (cloudCams) {
+                const localById = new Map((Array.isArray(localCams) ? localCams : []).map(c => [c.id, c]));
+                storeCameras = cloudCams.map(c => ({ ...c, deviceId: localById.get(c.id)?.deviceId || '' }));
+            } else if (Array.isArray(localCams) && localCams.length > 0) {
+                storeCameras = localCams;
+            } else {
+                storeCameras = JSON.parse(JSON.stringify(DEFAULT_STORE_CAMERAS));
+            }
+            activeCameraId = storeCameras[0]?.id || 'cam-01';
+
+            // 고객: 실제 사진/벡터가 있는 실물 등록 회원만, 이 가맹점 것만
+            const cachedCustomers = readScopedCache('vision_crm_master_customers');
+            masterCustomers = Array.isArray(cachedCustomers)
+                ? cachedCustomers.filter(c => c.photoURL && !c.photoURL.includes('unsplash.com') && (c.descriptor || c.serverStored)
+                    && (!c.merchantId || String(c.merchantId) === currentMerchantId))
+                : [];
+
+            // 직원
+            const cachedEmp = readScopedCache('vision_crm_master_employees');
+            masterEmployees = (Array.isArray(cachedEmp) && cachedEmp.length > 0)
+                ? cachedEmp.map(emp => ({ ...emp, photoURL: (emp.photoURL && !emp.photoURL.includes('unsplash.com')) ? emp.photoURL : '' }))
+                : [...DEFAULT_EMPLOYEES];
+
+            // 이전 완료: 가맹점 구분 없는 예전 캐시는 지운다 (다른 가맹점 화면에 섞이지 않도록)
+            if (!isSuperAdminUser) {
+                writeScopedCache('vision_crm_store_cameras', storeCameras);
+                writeScopedCache('vision_crm_master_customers', masterCustomers);
+                writeScopedCache('vision_crm_master_employees', masterEmployees);
+            }
+            LEGACY_SHARED_KEYS.forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+        }
+        window.loadMerchantScopedState = loadMerchantScopedState;
 
         window.renderEmployeeList = () => {
             const container = document.getElementById('employeeListContainer');
@@ -4982,7 +5035,7 @@
                     }
 
                     if (db) {
-                        const merchantId = document.getElementById('merchantIdInput')?.value.trim() || '1791605366';
+                        const merchantId = getMerchantId();
                         await addDoc(collection(db, 'security_incident_logs'), {
                             merchantId: merchantId,
                             incidentId: incidentId,
@@ -5074,7 +5127,7 @@
         // 가맹점 보유 BT 및 Firestore 실시간 동기화
         // ==========================================
         async function initMerchantAndCustomersSync() {
-            const merchantId = document.getElementById('merchantIdInput')?.value.trim() || '1791605366';
+            const merchantId = getMerchantId();
             if (!db) return;
 
             // 1. 점주 보유 BT 실시간 구독
@@ -5109,6 +5162,7 @@
                             const data = docSnap.data();
                             firestoreCustomers.push({
                                 docId: docSnap.id,
+                                merchantId: merchantId,
                                 photoURL: data.photoURL || '',
                                 nvrEnroll: data.nvrEnroll === true,
                                 consentGivenAt: data.consentGivenAt || null,
@@ -5152,7 +5206,8 @@
 
             // 3. 가맹점 통합 멘티/고객 (users 컬렉션) 동기화
             try {
-                const userSnaps = await getDocs(collection(db, 'users'));
+                // 전체 회원(users)을 읽지 않는다: 이 가맹점에서 가입한 회원만
+                const userSnaps = await getDocs(query(collection(db, 'users'), where('registeredMerchantId', '==', merchantId)));
                 if (!userSnaps.empty) {
                     const mappedUsers = [];
                     userSnaps.forEach(uDoc => {
@@ -5160,12 +5215,16 @@
                         const email = (ud.email || '').toLowerCase().trim();
                         const name = ud.name || '멘티 고객';
                         if (!email && !ud.name) return;
+                        // 점주·직원·관리자 계정은 고객 목록에서 제외
+                        const udRole = String(ud.role || '').toUpperCase();
+                        if (ud.merchantId || ['SUPER_ADMIN', 'CEO', 'STAFF', 'EMPLOYEE', 'ADMIN', 'MERCHANT', 'FRANCHISE'].includes(udRole)) return;
 
                         const pts = Number(ud.points || ud.pointBalance || 0);
                         const isVip = pts >= 5000 || (ud.tier && ud.tier.includes('VIP'));
                         const tier = isVip ? 'VIP 고객' : (pts > 0 ? '단골 고객' : (ud.tier || '신규 고객'));
 
                         mappedUsers.push({
+                            merchantId: merchantId,
                             customerId: `CRM-${uDoc.id.slice(0, 6).toUpperCase()}`,
                             name: name,
                             email: ud.email || '',
@@ -5682,7 +5741,7 @@
         }
 
         function startNvrWatch() {
-            const merchantId = document.getElementById('merchantIdInput')?.value.trim() || '1791605366';
+            const merchantId = getMerchantId();
             if (merchantId === nvr.merchantId) return;
             if (nvr.statusUnsub) nvr.statusUnsub();
             if (nvr.active) nvrDeactivate();
@@ -5715,16 +5774,55 @@
         function initNvrIntegration() {
             if (!db) return;
             startNvrWatch();
-            document.getElementById('merchantIdInput')?.addEventListener('change', startNvrWatch);
         }
 
         // 초기 실행
-        document.addEventListener('DOMContentLoaded', () => {
-            const urlMerchant = new URLSearchParams(location.search).get('merchantId');
-            if (urlMerchant && /^[\w-]{1,64}$/.test(urlMerchant)) {
-                const input = document.getElementById('merchantIdInput');
-                if (input) input.value = urlMerchant;
+        function resolveMerchantContext() {
+            const input = document.getElementById('merchantIdInput');
+            isSuperAdminUser = window.currentUserRole === 'SUPER_ADMIN';
+            const tenant = String(window.tenantId || '');
+            const urlMerchant = new URLSearchParams(location.search).get('merchantId') || '';
+            const validId = (v) => /^[\w-]{1,64}$/.test(v) && v !== 'system_master' && v !== 'undefined' && v !== 'null';
+
+            if (isSuperAdminUser) {
+                // 최고관리자: URL로 지정한 가맹점을 본다 (입력란에서 바꾸면 해당 가맹점으로 다시 연다)
+                currentMerchantId = validId(urlMerchant) ? urlMerchant : (validId(tenant) ? tenant : '');
+                if (input) {
+                    input.readOnly = false;
+                    input.title = '최고관리자: 가맹점 ID를 입력하고 Enter';
+                    input.placeholder = '가맹점 ID';
+                    input.addEventListener('change', () => {
+                        const v = input.value.trim();
+                        if (!validId(v) || v === currentMerchantId) return;
+                        const url = new URL(location.href);
+                        url.searchParams.set('merchantId', v);
+                        location.href = url.toString();
+                    });
+                }
+            } else {
+                // 점주·직원: 로그인 계정의 가맹점으로 고정 (URL 파라미터로 다른 가맹점 지정 불가)
+                currentMerchantId = validId(tenant) ? tenant : '';
+                if (urlMerchant && urlMerchant !== currentMerchantId) {
+                    try {
+                        const url = new URL(location.href);
+                        url.searchParams.delete('merchantId');
+                        history.replaceState({}, '', url.toString());
+                    } catch (e) {}
+                }
             }
+            if (input) input.value = currentMerchantId;
+            return currentMerchantId;
+        }
+
+        async function startMerchantScopedApp() {
+            if (!resolveMerchantContext()) {
+                alert(isSuperAdminUser
+                    ? '조회할 가맹점 ID를 상단 [가맹점 ID] 칸에 입력해 주세요.'
+                    : '이 계정에 연결된 가맹점을 찾을 수 없습니다. 본사에 가맹점 연결을 요청해 주세요.');
+                return;
+            }
+            await loadMerchantScopedState();
+            try { window.updateStoreQrCode?.(); } catch (e) {}
             scanUsbCameraDevices(false);
             initCharts();
             renderCustomerList();
@@ -5736,6 +5834,12 @@
             initMerchantAndCustomersSync();
             initNvrIntegration();
             initFaceApiModels();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAdminAuth(() => {
+                startMerchantScopedApp().catch(err => console.warn('vision-crm 초기화 오류:', err));
+            });
         });
     </script>
 </body>
