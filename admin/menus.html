@@ -391,6 +391,17 @@
                 </div>
             </div>
 
+            <div style="margin-top:1rem;">
+                <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#334155;">구매 방법 (판매 채널)</label>
+                <select id="mSalesChannel"
+                    style="width:100%; padding:0.75rem; border:1px solid #e2e8f0; border-radius:0.5rem; outline:none;">
+                    <option value="both">🏬+🌐 매장·온라인 모두 구매 가능</option>
+                    <option value="in_store">🏬 매장에서만 구매 (온라인 주문 불가)</option>
+                    <option value="online">📦 온라인에서만 구매 (배송·예약)</option>
+                </select>
+                <p style="margin:0.35rem 0 0 0; font-size:0.78rem; color:#64748b;">통합몰과 가맹점 홈페이지에 표시되고, 매장 전용 상품은 온라인 장바구니에 담을 수 없습니다.</p>
+            </div>
+
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1.5rem;">
                 <button type="button" id="btnDeleteInModal" style="display:none; padding:0.75rem 1.25rem; border:none; background:#fee2e2; color:#b91c1c; border-radius:0.5rem; font-weight:600; cursor:pointer;">🗑️ 삭제</button>
                 <div style="display:flex; gap:1rem; margin-left:auto;">

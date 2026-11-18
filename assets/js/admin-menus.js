@@ -225,6 +225,7 @@ async function fetchAllCatalogItems() {
                 status: d.sale_status || 'published',
                 description: d.description || '',
                 imageUrl: imageUrl,
+                salesChannel: ['in_store', 'online', 'both'].includes(d.sales_channel) ? d.sales_channel : 'both',
                 inventory: d.inventory ?? 999
             });
         });
@@ -329,6 +330,11 @@ window.loadMenus = async function (forceRefresh = false) {
                 : `<div class="menu-img">🍽️ 이미지 없음</div>`;
 
             const merchantBadge = `<span style="font-size:0.7rem; background:#e0e7ff; color:#3730a3; padding:0.15rem 0.45rem; border-radius:0.25rem; font-weight:700;">🏪 ${getMerchantName(item.merchantId)} (${item.merchantId})</span>`;
+            const CH = { in_store: ['🏬 매장 전용', '#9a3412', '#ffedd5'], online: ['📦 온라인 전용', '#1e40af', '#dbeafe'], both: ['🏬+🌐 매장·온라인', '#166534', '#dcfce7'] };
+            const ch = CH[item.salesChannel] || CH.both;
+            const channelBadge = item.sourceCollection === 'merchant_products'
+                ? `<span style="font-size:0.7rem; background:${ch[2]}; color:${ch[1]}; padding:0.15rem 0.45rem; border-radius:0.25rem; font-weight:700;">${ch[0]}</span>`
+                : '';
             const categoryBadge = item.category
                 ? `<span style="font-size:0.7rem; background:#fef3c7; color:#92400e; padding:0.15rem 0.45rem; border-radius:0.25rem; font-weight:700;">📂 ${item.category}</span>`
                 : '';
@@ -340,7 +346,7 @@ window.loadMenus = async function (forceRefresh = false) {
                         <span style="font-size:0.75rem; background:#eef2ff; color:#4F46E5; padding:0.2rem 0.5rem; border-radius:0.25rem; font-weight:700;">${getTypeLabel(item.type)}</span>
                         ${getStatusBadge(item.status)}
                     </div>
-                    <div style="margin-bottom:0.45rem; display:flex; gap:0.35rem; flex-wrap:wrap;">${merchantBadge}${categoryBadge}</div>
+                    <div style="margin-bottom:0.45rem; display:flex; gap:0.35rem; flex-wrap:wrap;">${merchantBadge}${categoryBadge}${channelBadge}</div>
                     <h3 class="menu-title">${item.name}</h3>
                     ${item.nameVi ? `<div style="font-size:0.8rem; color:#b45309; font-weight:600; margin-bottom:0.35rem;">🇻🇳 ${item.nameVi}</div>` : ''}
                     <p class="menu-desc">${item.description || '상세 설명이 없습니다.'}</p>
@@ -373,6 +379,8 @@ window.openMenuModal = function () {
     document.getElementById('mDesc').value = '';
     document.getElementById('mPrice').value = '';
     document.getElementById('mStatus').value = 'published';
+    const chNew = document.getElementById('mSalesChannel');
+    if (chNew) chNew.value = 'both';
 
     const mSelect = document.getElementById('mMerchantId');
     if (mSelect) {
@@ -404,6 +412,8 @@ window.editItem = function (id) {
     document.getElementById('mDesc').value = item.description || '';
     document.getElementById('mPrice').value = item.price || 0;
     document.getElementById('mStatus').value = item.status || 'published';
+    const chEdit = document.getElementById('mSalesChannel');
+    if (chEdit) chEdit.value = item.salesChannel || 'both';
 
     const mSelect = document.getElementById('mMerchantId');
     if (mSelect) {
@@ -437,6 +447,8 @@ document.getElementById('btnSaveMenu')?.addEventListener('click', async () => {
     const desc = document.getElementById('mDesc').value.trim();
     const price = parseInt(document.getElementById('mPrice').value, 10) || 0;
     const status = document.getElementById('mStatus').value || 'published';
+    const salesChannelRaw = document.getElementById('mSalesChannel')?.value || 'both';
+    const salesChannel = ['in_store', 'online', 'both'].includes(salesChannelRaw) ? salesChannelRaw : 'both';
 
     if (!name || price <= 0) {
         alert("상품/메뉴명과 판매가(VND)를 올바르게 입력해주세요.");
@@ -458,6 +470,7 @@ document.getElementById('btnSaveMenu')?.addEventListener('click', async () => {
         currency: 'VND',
         inventory: 999,
         sale_status: status,
+        sales_channel: salesChannel,
         description: desc,
         images: imageUrl ? [imageUrl] : [],
         updated_at: serverTimestamp()
