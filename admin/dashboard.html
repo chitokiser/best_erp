@@ -167,6 +167,30 @@
             </div>
         </div>
 
+        <!-- 관계자(점주·직원) 보유 재화 -->
+        <div class="panel" id="stakeholderPanel" style="display:none; margin-bottom:1.5rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.9rem;">
+                <h3 style="margin:0; font-size:1rem; color:#1e293b;">👥 관계자 보유 재화 <span style="font-size:0.78rem; font-weight:600; color:#94a3b8;">BM · BT · P · GP</span></h3>
+                <span id="stakeholderMerchantBt" style="font-size:0.8rem; color:#475569;"></span>
+            </div>
+            <div style="overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.85rem; min-width:560px;">
+                    <thead>
+                        <tr style="background:#f8fafc; color:#64748b; text-align:left;">
+                            <th style="padding:0.55rem 0.75rem; font-weight:700;">관계자</th>
+                            <th style="padding:0.55rem 0.75rem; font-weight:700;">역할</th>
+                            <th style="padding:0.55rem 0.75rem; font-weight:700; text-align:right;">BM (VND)</th>
+                            <th style="padding:0.55rem 0.75rem; font-weight:700; text-align:right;">BT</th>
+                            <th style="padding:0.55rem 0.75rem; font-weight:700; text-align:right;">Point</th>
+                            <th style="padding:0.55rem 0.75rem; font-weight:700; text-align:right;">GP</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stakeholderTableBody"></tbody>
+                </table>
+            </div>
+            <p id="stakeholderNote" style="margin:0.6rem 0 0 0; font-size:0.75rem; color:#94a3b8;"></p>
+        </div>
+
         <!-- Middle 3-Column Dashboard Grid -->
         <div class="dashboard-grid">
             <!-- Chart Panel -->
@@ -594,6 +618,7 @@
             const summaryTarget = (isSuperAdmin && selectedMerchant !== 'ALL') ? selectedMerchant : (isSuperAdmin ? 'ALL' : tenantId);
             const salesSummary = await fetchMerchantSalesSummary(summaryTarget);
             window.__merchantSalesSummary = salesSummary;
+            renderStakeholderBalances(salesSummary && salesSummary.stakeholders);
 
             if (salesSummary) {
                 const s = salesSummary.sales || {};
@@ -1390,6 +1415,42 @@
                 }
             }
         };
+
+        // 관계자(점주·직원) 보유 BM·BT·Point·GP (서버 getMerchantSalesSummary 기준, 화면 표시만)
+        function renderStakeholderBalances(sh) {
+            const panel = document.getElementById('stakeholderPanel');
+            const body = document.getElementById('stakeholderTableBody');
+            if (!panel || !body) return;
+            if (!sh || !Array.isArray(sh.list)) { panel.style.display = 'none'; return; }
+            const esc = (v) => String(v ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+            const n = (v) => Number(v || 0).toLocaleString();
+            const ROLE = { OWNER: '점주', CEO: '대표', ADMIN: '관리자', STORE_ADMIN: '매장 관리자', STAFF: '직원', EMPLOYEE: '직원', MERCHANT: '가맹점', FRANCHISE: '가맹점' };
+            const td = 'padding:0.55rem 0.75rem; border-top:1px solid #f1f5f9;';
+            const num = td + ' text-align:right; font-variant-numeric:tabular-nums; font-weight:700;';
+            let html = sh.list.map(p => `
+                <tr>
+                    <td style="${td}"><div style="font-weight:700; color:#0f172a;">${esc(p.name)}</div><div style="font-size:0.75rem; color:#94a3b8;">${esc(p.email || '이메일 미등록')}</div></td>
+                    <td style="${td}"><span style="background:${p.isOwner ? '#eef2ff' : '#f1f5f9'}; color:${p.isOwner ? '#4338ca' : '#475569'}; font-size:0.72rem; font-weight:800; padding:0.15rem 0.5rem; border-radius:999px;">${esc(ROLE[p.role] || p.role)}</span></td>
+                    <td style="${num}">${n(p.bm)}</td>
+                    <td style="${num} color:#b45309;">${n(p.bt)}</td>
+                    <td style="${num} color:#047857;">${n(p.point)}</td>
+                    <td style="${num} color:#7c3aed;">${n(p.gp)} <span style="font-size:0.7rem; font-weight:600; color:#94a3b8;">Lv.${esc(p.gameLevel)}</span></td>
+                </tr>`).join('');
+            if (!sh.list.length) {
+                html = `<tr><td colspan="6" style="${td} text-align:center; color:#94a3b8;">연결된 점주·직원 계정이 없습니다.</td></tr>`;
+            } else if (sh.list.length > 1) {
+                const t = sh.totals || {};
+                html += `<tr style="background:#f8fafc;"><td colspan="2" style="${td} font-weight:800; color:#334155;">합계</td><td style="${num}">${n(t.bm)}</td><td style="${num} color:#b45309;">${n(t.bt)}</td><td style="${num} color:#047857;">${n(t.point)}</td><td style="${num} color:#7c3aed;">${n(t.gp)}</td></tr>`;
+            }
+            body.innerHTML = html;
+            const mb = document.getElementById('stakeholderMerchantBt');
+            if (mb) mb.innerHTML = `🎟️ 가맹점 BT 재고 <strong style="color:#b45309;">${n(sh.merchantBt)} BT</strong> · 정산 대기 <strong>₫${n(sh.merchantPendingSettlementVnd)}</strong>`;
+            const note = document.getElementById('stakeholderNote');
+            if (note) note.textContent = sh.scope === 'self'
+                ? '직원 계정은 본인 보유분만 표시됩니다.'
+                : 'BM = 현금성 결제 재화(VND), BT = 보너스 티켓, Point = 리워드 포인트, GP = 게임 포인트(게임 레벨 함께 표시).';
+            panel.style.display = 'block';
+        }
 
         window.cleanTestData = async () => {
             alert('보안 안내: 안전한 데이터 보호를 위해 테스트 데이터 초기화 도구는 [시스템 설정] 페이지로 격리 이전되었습니다.');
