@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI CEO MANAGER - BM 정산 관리</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ai-primary: #4F46E5;
+            --ai-secondary: #818CF8;
+            --ai-gradient: linear-gradient(135deg, #4F46E5, #7C3AED);
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --success: #10B981;
+            --info: #3B82F6;
+            --text-dark: #1E293B;
+            --text-muted: #64748B;
+        }
+
+        body {
+            background: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--text-dark);
+        }
+
+        .top-nav {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .top-nav .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: var(--ai-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .header-action {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .header-action h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 0;
+        }
+
+        .btn-add {
+            background: var(--ai-gradient);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+        }
+
+        .finance-summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-box {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .summary-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-val {
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .val-income {
+            color: var(--success);
+        }
+
+        .val-expense {
+            color: var(--danger);
+        }
+
+        .val-receivable {
+            color: var(--info);
+        }
+
+        .val-payable {
+            color: var(--warning);
+        }
+
+        .data-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            padding: 1rem;
+            border-bottom: 2px solid #e2e8f0;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .type-badge {
+            padding: 0.3rem 0.6rem;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .badge-income {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-expense {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-receivable {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-payable {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* Modal & Form Styles */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        .modal-content {
+            background: #ffffff;
+            border-radius: 1.25rem;
+            width: 720px;
+            max-width: 100%;
+            max-height: 92vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(226, 232, 240, 0.8);
+            animation: modalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow: hidden;
+        }
+
+        @keyframes modalPop {
+            from {
+                opacity: 0;
+                transform: scale(0.96) translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 1.5rem 2rem 1.25rem;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            background: #ffffff;
+        }
+
+        .modal-header-titles h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .modal-header-titles p {
+            margin: 0.25rem 0 0 0;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .close-btn {
+            background: #f1f5f9;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            color: #64748b;
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        #financeForm {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .modal-body {
+            padding: 1.5rem 2rem;
+            overflow-y: auto;
+            flex: 1;
+            min-height: 0;
+        }
+
+        /* Type Segmented Cards */
+        .type-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .type-selector-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .type-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 0.85rem 0.6rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            background: #ffffff;
+            user-select: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+            position: relative;
+        }
+
+        .type-card:hover {
+            border-color: #cbd5e1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .type-card .icon {
+            font-size: 1.4rem;
+            margin-bottom: 0.15rem;
+        }
+
+        .type-card .title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .type-card .desc {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        /* Type Card Active States */
+        .type-card[data-type="INCOME"].active {
+            border-color: #10B981;
+            background: #ecfdf5;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+        }
+        .type-card[data-type="INCOME"].active .title {
+            color: #065f46;
+        }
+
+        .type-card[data-type="EXPENSE"].active {
+            border-color: #EF4444;
+            background: #fef2f2;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+        }
+        .type-card[data-type="EXPENSE"].active .title {
+            color: #991b1b;
+        }
+
+        .type-card[data-type="RECEIVABLE"].active {
+            border-color: #3B82F6;
+            background: #eff6ff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+        .type-card[data-type="RECEIVABLE"].active .title {
+            color: #1e40af;
+        }
+
+        .type-card[data-type="PAYABLE"].active {
+            border-color: #F59E0B;
+            background: #fffbeb;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+        }
+        .type-card[data-type="PAYABLE"].active .title {
+            color: #92400e;
+        }
+
+        /* Form Grid Layout */
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-grid-2 .form-group {
+            margin-bottom: 0;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 0.45rem;
+            color: #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-group label .required-mark {
+            color: #ef4444;
+            font-weight: 800;
+            margin-left: 0.2rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem 0.9rem;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 0.6rem;
+            font-family: inherit;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            background: #ffffff;
+            color: #0f172a;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #4F46E5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+            outline: none;
+            background: #ffffff;
+        }
+
+        /* Amount Input & Quick Buttons */
+        .amount-input-wrapper {
+            position: relative;
+        }
+
+        .amount-input-wrapper input {
+            padding-right: 3.5rem;
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: #0f172a;
+        }
+
+        .amount-currency-tag {
+            position: absolute;
+            right: 0.85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #64748b;
+            pointer-events: none;
+        }
+
+        .amount-preview-badge {
+            display: none;
+            margin-top: 0.45rem;
+            padding: 0.35rem 0.65rem;
+            background: #eef2ff;
+            color: #4338ca;
+            border-radius: 0.4rem;
+            font-size: 0.825rem;
+            font-weight: 700;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .quick-amounts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-top: 0.5rem;
+        }
+
+        .btn-chip {
+            padding: 0.3rem 0.6rem;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.4rem;
+            font-size: 0.775rem;
+            font-weight: 600;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.15s;
+            user-select: none;
+        }
+
+        .btn-chip:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+            border-color: #cbd5e1;
+        }
+
+        .btn-chip.chip-reset {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+        .btn-chip.chip-reset:hover {
+            background: #fecaca;
+        }
+
+        /* Modal Footer */
+        .modal-footer {
+            padding: 1.15rem 2rem;
+            border-top: 1.5px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 0.75rem;
+            background: #ffffff;
+            flex-shrink: 0;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+            z-index: 10;
+        }
+
+        .btn-cancel {
+            background: #ffffff;
+            color: #64748b;
+            border: 1.5px solid #cbd5e1;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.6rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .submit-btn {
+            background: var(--ai-gradient, linear-gradient(135deg, #4F46E5, #7C3AED));
+            color: white;
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 0.6rem;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Mobile Responsive Adjustments */
+        @media screen and (max-width: 640px) {
+            .modal-content {
+                width: 100%;
+                border-radius: 1rem;
+            }
+            .modal-header {
+                padding: 1.25rem 1.25rem 1rem;
+            }
+            .modal-body {
+                padding: 1.25rem;
+            }
+            .modal-footer {
+                padding: 1rem 1.25rem;
+            }
+            .type-selector-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.5rem;
+            }
+            .form-grid-2 {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            .modal-footer {
+                flex-direction: column-reverse;
+            }
+            .btn-cancel, .submit-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        
+        .top-nav {
+            background: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .top-nav h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--ai-primary, #4F46E5);
+            font-weight: 800;
+        }
+
+        .top-nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+            margin: 0;
+            padding: 0;
+        }
+
+        .top-nav a {
+            text-decoration: none;
+            color: var(--text-muted, #64748B);
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .top-nav a:hover,
+        .top-nav a.active {
+            color: var(--ai-primary, #4F46E5);
+        }
+    
+        .dropdown { position: relative; display: inline-block; margin-top:2px; }
+        .dropdown-content { display: none; position: absolute; background-color: white; min-width: 180px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 0.5rem; border: 1px solid #e2e8f0; z-index: 1000; overflow: hidden; top:100%; left:0; }
+        .dropdown-content a { color: #334155 !important; padding: 0.8rem 1rem !important; text-decoration: none; display: block; font-size: 0.95rem; font-weight: 500; border-bottom: 1px solid #f1f5f9; transition: all 0.2s; white-space: nowrap; }
+        .dropdown-content a:last-child { border-bottom: none; }
+        .dropdown-content a:hover { background-color: #f8fafc; color: #4F46E5 !important; padding-left: 1.25rem !important; }
+        .dropdown:hover .dropdown-content { display: block; animation: fadeInUp 0.2s ease-out; }
+        .dropbtn { padding: 0.5rem 0.75rem; color: #475569; font-weight: 600; cursor: pointer; border-radius: 0.5rem; transition: background 0.2s; display:inline-block; }
+        .dropdown:hover .dropbtn { color: #4F46E5; background: rgba(79, 70, 229, 0.05); }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ── 재무 표 가독성 (가로 스크롤 + 열 너비 고정, 글자 단위 줄바꿈 방지) ── */
+        .fin-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -0.25rem; }
+        .fin-table { min-width: 1080px; font-size: 0.9rem; }
+        .fin-table thead th { position: sticky; top: 0; background: #F8FAFC; z-index: 1; font-size: 0.8rem; white-space: nowrap; padding: 0.75rem 0.9rem; }
+        .fin-table tbody td { padding: 0.8rem 0.9rem; vertical-align: top; }
+        .fin-table tbody tr:nth-child(even) td { background: #FBFDFF; }
+        .fin-table tbody tr:hover td { background: #F1F5F9; }
+        .fin-table .col-date { width: 110px; white-space: nowrap; font-weight: 600; color: #334155; }
+        .fin-table .col-type { width: 150px; }
+        .fin-table .col-type .type-badge { white-space: nowrap; display: inline-block; }
+        .fin-table .col-type .fin-cat { font-size: 0.82rem; color: #475569; margin-top: 0.3rem; line-height: 1.35; }
+        .fin-table .col-amount { width: 170px; white-space: nowrap; text-align: right; font-weight: 800; font-size: 1rem; font-variant-numeric: tabular-nums; }
+        .fin-table .col-amount .fin-unit { font-size: 0.72rem; font-weight: 600; color: #94A3B8; margin-left: 0.2rem; }
+        .fin-table .col-partner { min-width: 170px; }
+        .fin-table .col-actor { width: 230px; }
+        .fin-table .fin-actor-row { display: flex; align-items: center; gap: 0.4rem; white-space: nowrap; line-height: 1.5; }
+        .fin-table .fin-actor-row + .fin-actor-row { margin-top: 0.3rem; }
+        .fin-table .fin-actor-tag { flex: 0 0 auto; font-size: 0.7rem; font-weight: 700; padding: 0.08rem 0.4rem; border-radius: 0.3rem; }
+        .fin-table .fin-actor-name { overflow: hidden; text-overflow: ellipsis; max-width: 150px; font-size: 0.82rem; }
+        .fin-table .col-memo { min-width: 240px; color: #1E293B; line-height: 1.45; word-break: keep-all; overflow-wrap: anywhere; }
+        .fin-table .col-manage { width: 100px; text-align: center; white-space: nowrap; vertical-align: middle; }
+        .fin-table thead th.col-amount { text-align: right; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
+        /* 정렬 머리글 · 유형 필터 */
+        .fin-table thead th.sortable { cursor: pointer; user-select: none; }
+        .fin-table thead th.sortable:hover { color: #1E293B; background: #EEF2FF; }
+        .fin-table thead th .sort-ind { display: inline-block; width: 0.9rem; margin-left: 0.2rem; color: #CBD5E1; font-size: 0.7rem; }
+        .fin-table thead th.sorted .sort-ind { color: #4F46E5; }
+        .fin-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.9rem; }
+        .fin-chips { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+        .fin-chip { border: 1px solid #E2E8F0; background: #fff; color: #475569; font-size: 0.8rem; font-weight: 700; padding: 0.35rem 0.8rem; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+        .fin-chip .cnt { margin-left: 0.3rem; font-weight: 600; color: #94A3B8; }
+        .fin-chip.active { background: #1E293B; border-color: #1E293B; color: #fff; }
+        .fin-chip.active .cnt { color: #CBD5E1; }
+        .fin-sort-hint { font-size: 0.75rem; color: #94A3B8; }
+        .fin-table .fin-group-row td { background: #F8FAFC !important; font-size: 0.78rem; font-weight: 800; color: #475569; padding: 0.45rem 0.9rem; border-bottom: 1px solid #E2E8F0; }
+        .fin-table .fin-partner-name { font-weight: 600; color: #0F172A; line-height: 1.4; }
+        .fin-table .fin-partner-sub { font-size: 0.8rem; color: #94A3B8; margin-top: 0.15rem; }
+    </style>
+
+    <!-- FORCE CSS -->
+<style>
+    .top-nav { display: flex; align-items: center; justify-content: space-between; flex-wrap: nowrap; overflow: visible; position: relative; }
+    .logo-container { width: auto !important; }
+    .top-nav ul { display: flex; align-items: center; gap: 1rem; list-style: none; margin: 0; padding: 0; flex-wrap: nowrap !important; }
+    .top-nav ul li a { white-space: nowrap !important; }
+    .mobile-only-btn { display: none !important; }
+    
+    @media screen and (max-width: 900px) {
+        .mobile-only-btn { display: block !important; }
+        .logo-container { width: 100% !important; justify-content: space-between !important; }
+        .top-nav { flex-direction: column !important; align-items: flex-start !important; }
+        .top-nav ul { display: none !important; }
+        .top-nav > div:last-child { display: none !important; }
+        
+        .top-nav.menu-open ul { 
+            display: flex !important; flex-direction: column !important; 
+            width: 100%; border-radius: 0.5rem; background:#fff; 
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); padding: 0.5rem 0 !important; gap: 0 !important;
+            margin-top: 1rem;
+            max-height: 70vh; /* Prevent it from going offscreen */
+            overflow-y: auto; /* Scrollable if too many items */
+        }
+        .top-nav.menu-open ul li { width: 100%; border-bottom: 1px solid #f1f5f9; text-align:center; }
+        .top-nav.menu-open ul li a { display: block !important; padding: 1rem !important; }
+        
+        .metric-cards, .dashboard-grid, .client-summary, .finance-summary, .stats-grid, .summary-container { 
+            grid-template-columns: 1fr !important; gap: 1rem !important; display: grid !important;
+        }
+    }
+</style>
+        <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+    
+
+<body style="display: none;">
+        <nav class="top-nav">
+        <div class="nav-header-bar">
+            <div class="nav-brand">
+                <h1 class="brand-edit-badge" onclick="location.href='dashboard.html'" title="대시보드로 이동">
+                    <span style="color:#ef4444;" class="dynamic-brand-text" id="dynamicStoreName">가맹점(로딩중)</span>
+                    <span style="color:var(--text-primary); font-size:1.15rem; font-weight:700;">M-SaaS</span>
+                </h1>
+            </div>
+            <button class="mobile-nav-toggle" onclick="toggleNavMenu()" aria-label="메뉴 열기">
+                <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+                    <path d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+
+        <ul id="navMenuList">
+            <li><a href="dashboard.html">CEO 대시보드</a></li>
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
+                <span class="dropbtn">매장 관리(F&B) ▾</span>
+                <div class="dropdown-content">
+                    <a href="menus.html">스마트 메뉴 관리</a>
+                </div>
+            </li>
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
+                <span class="dropbtn">영업/프로젝트 ▾</span>
+                <div class="dropdown-content">
+                    <a href="projects.html">프로젝트 보드</a>
+                    <a href="materials.html">자재관리</a>
+                    <a href="suppliers.html">협력업체</a>
+                </div>
+            </li>
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
+                <span class="dropbtn">내부운영(HR) ▾</span>
+                <div class="dropdown-content">
+                    <a href="tasks.html">업무지시/보고</a>
+                    <a href="finance.html">재무/회계</a>
+                    <a href="settlement.html">BM 정산 관리</a>
+                    <a href="employees.html">직원목록</a>
+                </div>
+            </li>
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
+                <span class="dropbtn">고객/회원관리 ▾</span>
+                <div class="dropdown-content">
+                    <a href="clients.html">멘티(고객) CRM</a>
+                    <a href="contacts.html">인맥(명함)</a>
+                    <a href="marketing.html">자동 마케팅(트리거)</a>
+                    <a href="users.html">SaaS 회원관리</a>
+                </div>
+            </li>
+        </ul>
+        <div id="navUserEmail" style="display:none;"></div>
+    </nav>
+
+    <style>
+        .stl-cards { display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:0.85rem; margin-bottom:1.5rem; }
+        .stl-card { background:#fff; border:1px solid #e2e8f0; border-radius:0.85rem; padding:1rem 1.1rem; }
+        .stl-card .lbl { font-size:0.78rem; color:#64748b; font-weight:700; }
+        .stl-card .val { font-size:1.3rem; font-weight:800; color:#0f172a; margin-top:0.35rem; font-variant-numeric:tabular-nums; }
+        .stl-card .sub { font-size:0.72rem; color:#94a3b8; margin-top:0.2rem; }
+        .stl-card.unpaid { border-color:#fecaca; background:#fff7f7; }
+        .stl-card.unpaid .val { color:#dc2626; }
+        .stl-card.paid .val { color:#047857; }
+        .stl-panel { background:#fff; border:1px solid #e2e8f0; border-radius:0.85rem; padding:1.1rem 1.2rem; margin-bottom:1.5rem; }
+        .stl-panel h3 { margin:0 0 0.8rem 0; font-size:1rem; color:#1e293b; }
+        .stl-table-wrap { overflow-x:auto; }
+        .stl-table { width:100%; border-collapse:collapse; font-size:0.85rem; min-width:640px; }
+        .stl-table th { background:#f8fafc; color:#64748b; font-weight:700; text-align:left; padding:0.55rem 0.75rem; white-space:nowrap; }
+        .stl-table td { padding:0.6rem 0.75rem; border-top:1px solid #f1f5f9; vertical-align:middle; }
+        .stl-table .num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+        .stl-badge { display:inline-block; font-size:0.72rem; font-weight:800; padding:0.18rem 0.55rem; border-radius:999px; white-space:nowrap; }
+        .stl-badge.paid { background:#dcfce7; color:#166534; }
+        .stl-badge.partial { background:#fef3c7; color:#92400e; }
+        .stl-badge.unpaid { background:#fee2e2; color:#b91c1c; }
+        .stl-badge.none, .stl-badge.void { background:#f1f5f9; color:#64748b; }
+        .stl-form { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:0.7rem; }
+        .stl-form label { display:flex; flex-direction:column; gap:0.3rem; font-size:0.78rem; font-weight:700; color:#475569; }
+        .stl-form input, .stl-form select { padding:0.55rem 0.7rem; border:1px solid #cbd5e1; border-radius:0.45rem; font-size:0.875rem; }
+        .stl-btn { border:none; border-radius:0.5rem; padding:0.6rem 1.1rem; font-weight:800; cursor:pointer; font-size:0.85rem; }
+        .stl-btn.primary { background:#4f46e5; color:#fff; }
+        .stl-btn.light { background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; }
+        .stl-btn:disabled { opacity:0.55; cursor:not-allowed; }
+        .stl-note { font-size:0.78rem; color:#94a3b8; margin:0.5rem 0 0 0; line-height:1.5; }
+        .stl-empty { text-align:center; color:#94a3b8; padding:1.2rem; }
+        @media (max-width: 900px) {
+            .stl-cards { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+            .stl-form { grid-template-columns:1fr; }
+        }
+    </style>
+
+    <div class="main-container">
+        <div class="header-action">
+            <div>
+                <h2>💰 가맹점 BM 정산 관리</h2>
+                <p style="margin:0.25rem 0 0 0; font-size:0.875rem; color:var(--text-muted);">
+                    BM 결제의 90%가 가맹점 정산 예정액입니다. 지급 내역과 미지급 금액을 한 화면에서 관리합니다.
+                </p>
+            </div>
+            <div style="display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center;">
+                <select id="stlMerchantSelect" style="display:none; padding:0.65rem 1rem; border-radius:0.5rem; border:1px solid #cbd5e1; background:#fff; font-weight:700; font-size:0.9rem; color:#4338ca; cursor:pointer;">
+                    <option value="ALL">== 전체 가맹점 ==</option>
+                    <option value="1791605366">🏬 BEST WINNER (베스트위너)</option>
+                    <option value="1794710386">🏬 백제갈비 (Baekje Galbi)</option>
+                    <option value="1791002036">🏬 대한김치</option>
+                    <option value="1793671043">🏬 베스트마리오</option>
+                    <option value="1793776651">🏬 sunvietnam</option>
+                </select>
+                <button type="button" class="stl-btn light" id="stlReloadBtn">🔄 새로고침</button>
+            </div>
+        </div>
+
+        <div id="stlStatus" class="stl-note" style="margin-bottom:1rem;">정산 데이터를 불러오는 중...</div>
+
+        <div class="stl-cards">
+            <div class="stl-card"><div class="lbl">BM 결제 총액</div><div class="val" id="stlBm">-</div><div class="sub">매장 QR + 온라인 BM 주문</div></div>
+            <div class="stl-card"><div class="lbl">플랫폼 수수료 (10%)</div><div class="val" id="stlFee">-</div><div class="sub">정산에서 제외</div></div>
+            <div class="stl-card"><div class="lbl">정산 예정액 (90%)</div><div class="val" id="stlExpected">-</div><div class="sub">누적</div></div>
+            <div class="stl-card paid"><div class="lbl">지급 완료</div><div class="val" id="stlPaid">-</div><div class="sub" id="stlLastPaid">-</div></div>
+            <div class="stl-card unpaid"><div class="lbl">미지급</div><div class="val" id="stlUnpaid">-</div><div class="sub" id="stlUnpaidSub">-</div></div>
+        </div>
+
+        <!-- 전체 가맹점 (최고관리자) -->
+        <div class="stl-panel" id="stlAllPanel" style="display:none;">
+            <h3>🏬 가맹점별 정산 현황 <span style="font-size:0.78rem; color:#94a3b8; font-weight:600;">미지급 많은 순</span></h3>
+            <div class="stl-table-wrap">
+                <table class="stl-table">
+                    <thead><tr><th>가맹점</th><th class="num">BM 결제</th><th class="num">정산 예정 (90%)</th><th class="num">지급 완료</th><th class="num">미지급</th><th>상태</th><th>마지막 지급</th><th></th></tr></thead>
+                    <tbody id="stlAllBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 단일 가맹점 -->
+        <div id="stlOnePanels" style="display:none;">
+            <div class="stl-panel" id="stlPayoutFormPanel" style="display:none;">
+                <h3>✅ 정산 지급 등록 <span style="font-size:0.78rem; color:#94a3b8; font-weight:600;">최고관리자 전용 · 실제로 지급한 뒤 기록하세요</span></h3>
+                <form id="stlPayoutForm" class="stl-form" autocomplete="off">
+                    <label>지급액 (VND)<input type="number" id="stlPayAmount" min="1" step="1" required></label>
+                    <label>지급 방법
+                        <select id="stlPayMethod">
+                            <option value="USDT">USDT</option>
+                            <option value="BANK_TRANSFER">계좌이체</option>
+                            <option value="CASH">현금</option>
+                            <option value="OTHER">기타</option>
+                        </select>
+                    </label>
+                    <label>USDT 수량 (선택)<input type="number" id="stlPayUsdt" min="0" step="0.000001"></label>
+                    <label>거래 참조 (TX 해시·이체번호)<input type="text" id="stlPayRef" maxlength="200"></label>
+                    <label>정산 기간 (예: 2026-10)<input type="text" id="stlPayPeriod" maxlength="40"></label>
+                    <label>메모<input type="text" id="stlPayNote" maxlength="500"></label>
+                </form>
+                <div style="display:flex; gap:0.6rem; align-items:center; margin-top:0.85rem; flex-wrap:wrap;">
+                    <button type="button" class="stl-btn primary" id="stlPaySubmit">지급 기록하기</button>
+                    <button type="button" class="stl-btn light" id="stlPayFillUnpaid">미지급 전액 입력</button>
+                    <span class="stl-note" style="margin:0;">미지급액보다 많이 기록할 수 없습니다. 잘못 기록하면 아래 내역에서 취소할 수 있습니다(기록은 남음).</span>
+                </div>
+            </div>
+
+            <div class="stl-panel">
+                <h3>📅 월별 정산 <span style="font-size:0.78rem; color:#94a3b8; font-weight:600;">지급액은 오래된 달부터 채워집니다</span></h3>
+                <div class="stl-table-wrap">
+                    <table class="stl-table">
+                        <thead><tr><th>월</th><th class="num">BM 결제</th><th class="num">수수료 10%</th><th class="num">정산 예정</th><th class="num">지급</th><th class="num">미지급</th><th>상태</th></tr></thead>
+                        <tbody id="stlMonthBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="stl-panel">
+                <h3>🧾 지급 내역</h3>
+                <div class="stl-table-wrap">
+                    <table class="stl-table">
+                        <thead><tr><th>지급일</th><th class="num">금액</th><th>방법</th><th class="num">USDT</th><th>거래 참조</th><th>기간</th><th>메모</th><th>상태</th><th></th></tr></thead>
+                        <tbody id="stlPayoutBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <p class="stl-note" id="stlBasis"></p>
+    </div>
+
+    <script type="module">
+        import { checkAdminAuth, logoutAdmin } from '../assets/js/auth.js';
+        import { SLUG_TO_TENANT, TENANT_MAP, syncUrlStoreSlug } from '../assets/js/tenant-router.js';
+        import { getApp } from 'firebase/app';
+        import { getFunctions, httpsCallable } from 'firebase/functions';
+        import '../assets/js/firebase-config.js';
+
+        const fns = () => getFunctions(getApp(), 'us-central1');
+        const call = (name, data) => httpsCallable(fns(), name)(data).then(r => r.data);
+        const $ = (id) => document.getElementById(id);
+        const vnd = (n) => `₫${Number(n || 0).toLocaleString()}`;
+        const dateText = (ms) => ms ? new Date(ms).toLocaleDateString('ko-KR') : '-';
+        const STATUS = { paid: '지급 완료', partial: '일부 지급', unpaid: '미지급', none: '정산 없음', void: '취소됨' };
+        const METHOD = { USDT: 'USDT', BANK_TRANSFER: '계좌이체', CASH: '현금', OTHER: '기타' };
+
+        let isSuper = false;
+        let current = null;     // 마지막 조회 결과
+        let loading = false;
+
+        const cell = (text, cls) => { const td = document.createElement('td'); if (cls) td.className = cls; td.textContent = text; return td; };
+        const badge = (status) => {
+            const td = document.createElement('td');
+            const s = document.createElement('span');
+            s.className = `stl-badge ${status}`;
+            s.textContent = STATUS[status] || status;
+            td.appendChild(s);
+            return td;
+        };
+        const emptyRow = (tbody, cols, text) => {
+            const tr = document.createElement('tr');
+            const td = cell(text, 'stl-empty'); td.colSpan = cols;
+            tr.appendChild(td); tbody.appendChild(tr);
+        };
+
+        function selectedMerchant() {
+            if (!isSuper) return String(window.tenantId || '');
+            return $('stlMerchantSelect').value || 'ALL';
+        }
+
+        function renderTotals(res) {
+            const t = res.totals || {};
+            $('stlBm').textContent = vnd(t.bmVnd);
+            $('stlFee').textContent = vnd(t.feeVnd);
+            $('stlExpected').textContent = vnd(t.expectedVnd);
+            $('stlPaid').textContent = vnd(t.paidVnd);
+            $('stlUnpaid').textContent = vnd(t.unpaidVnd);
+            const ms = res.merchants || [];
+            const last = ms.map(m => m.lastPaidAtMs || 0).reduce((a, b) => Math.max(a, b), 0);
+            $('stlLastPaid').textContent = last ? `마지막 지급 ${dateText(last)}` : '지급 기록 없음';
+            const unpaidCount = ms.filter(m => m.unpaidVnd > 0).length;
+            $('stlUnpaidSub').textContent = res.scope === 'all' ? `미지급 가맹점 ${unpaidCount}곳` : (STATUS[ms[0]?.status] || '-');
+            $('stlBasis').textContent = ms[0]?.basis || '';
+        }
+
+        function renderAll(res) {
+            const body = $('stlAllBody');
+            body.innerHTML = '';
+            if (!res.merchants.length) { emptyRow(body, 8, '가맹점이 없습니다.'); return; }
+            res.merchants.forEach(m => {
+                const tr = document.createElement('tr');
+                const nameTd = document.createElement('td');
+                const strong = document.createElement('div'); strong.style.fontWeight = '700'; strong.textContent = m.merchantName || m.merchantId;
+                const sub = document.createElement('div'); sub.style.cssText = 'font-size:0.72rem; color:#94a3b8;'; sub.textContent = m.merchantId;
+                nameTd.append(strong, sub);
+                tr.append(nameTd, cell(vnd(m.bmVnd), 'num'), cell(vnd(m.expectedVnd), 'num'), cell(vnd(m.paidVnd), 'num'));
+                const unpaidTd = cell(vnd(m.unpaidVnd), 'num'); if (m.unpaidVnd > 0) { unpaidTd.style.color = '#dc2626'; unpaidTd.style.fontWeight = '800'; }
+                tr.append(unpaidTd, badge(m.status), cell(dateText(m.lastPaidAtMs)));
+                const act = document.createElement('td');
+                const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'stl-btn light'; btn.style.padding = '0.35rem 0.7rem'; btn.textContent = '상세·지급';
+                btn.onclick = () => { $('stlMerchantSelect').value = m.merchantId; onMerchantChange(); };
+                act.appendChild(btn); tr.appendChild(act);
+                body.appendChild(tr);
+            });
+        }
+
+        function renderOne(m, admin) {
+            const mb = $('stlMonthBody');
+            mb.innerHTML = '';
+            if (!m.months.length) emptyRow(mb, 7, 'BM 결제 내역이 없습니다.');
+            m.months.slice().reverse().forEach(row => {
+                const tr = document.createElement('tr');
+                tr.append(cell(row.month === 'unknown' ? '날짜 없음' : row.month), cell(vnd(row.bmVnd), 'num'), cell(vnd(row.feeVnd), 'num'),
+                    cell(vnd(row.settlementVnd), 'num'), cell(vnd(row.paidVnd), 'num'));
+                const u = cell(vnd(row.unpaidVnd), 'num'); if (row.unpaidVnd > 0) u.style.color = '#dc2626';
+                tr.append(u, badge(row.status));
+                mb.appendChild(tr);
+            });
+
+            const pb = $('stlPayoutBody');
+            pb.innerHTML = '';
+            if (!m.payouts.length) emptyRow(pb, 9, '아직 지급 기록이 없습니다.');
+            m.payouts.forEach(p => {
+                const tr = document.createElement('tr');
+                if (p.status === 'void') tr.style.opacity = '0.55';
+                const memo = [p.note, p.status === 'void' && p.voidReason ? `취소 사유: ${p.voidReason}` : ''].filter(Boolean).join(' · ');
+                tr.append(cell(dateText(p.paidAtMs)), cell(vnd(p.amountVnd), 'num'), cell(METHOD[p.method] || p.method),
+                    cell(p.usdtAmount != null ? String(p.usdtAmount) : '-', 'num'), cell(p.reference || '-'), cell(p.periodLabel || '-'),
+                    cell(memo || '-'), badge(p.status === 'void' ? 'void' : 'paid'));
+                const act = document.createElement('td');
+                if (admin && p.status !== 'void') {
+                    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'stl-btn light'; btn.style.padding = '0.3rem 0.6rem'; btn.textContent = '취소';
+                    btn.onclick = () => voidPayout(p);
+                    act.appendChild(btn);
+                }
+                tr.appendChild(act);
+                pb.appendChild(tr);
+            });
+
+            $('stlPayoutFormPanel').style.display = admin ? 'block' : 'none';
+            $('stlPayAmount').max = String(Math.max(0, m.unpaidVnd));
+        }
+
+        async function load() {
+            if (loading) return;
+            const merchantId = selectedMerchant();
+            if (!merchantId) { $('stlStatus').textContent = '가맹점 정보를 확인할 수 없습니다. 가맹점 계정으로 로그인해 주세요.'; return; }
+            loading = true;
+            $('stlStatus').textContent = '정산 데이터를 불러오는 중...';
+            try {
+                const res = await call('getMerchantSettlementOverview', { merchantId });
+                current = res;
+                renderTotals(res);
+                const all = res.scope === 'all';
+                $('stlAllPanel').style.display = all ? 'block' : 'none';
+                $('stlOnePanels').style.display = all ? 'none' : 'block';
+                if (all) renderAll(res); else renderOne(res.merchants[0], res.isAdmin);
+                $('stlStatus').textContent = `${new Date().toLocaleTimeString('ko-KR')} 기준 · 서버 매출 원장 집계 (대시보드와 같은 기준)`;
+            } catch (e) {
+                console.warn('정산 조회 실패:', e);
+                $('stlStatus').textContent = `정산 데이터를 불러오지 못했습니다: ${e?.message || e}`;
+            } finally {
+                loading = false;
+            }
+        }
+
+        function onMerchantChange() {
+            const v = $('stlMerchantSelect').value;
+            syncUrlStoreSlug(v === 'ALL' ? 'all' : (TENANT_MAP[v]?.slug || v));
+            load();
+        }
+
+        const newIdemKey = () => (crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '') : `${Date.now()}${Math.random().toString(36).slice(2)}`).slice(0, 32);
+        let pendingIdemKey = newIdemKey();
+
+        async function submitPayout() {
+            const m = current?.merchants?.[0];
+            if (!m || current.scope === 'all') return;
+            const amount = Number($('stlPayAmount').value);
+            if (!Number.isSafeInteger(amount) || amount <= 0) { alert('지급액을 1 VND 이상의 정수로 입력해 주세요.'); return; }
+            if (amount > m.unpaidVnd) { alert(`미지급액(${vnd(m.unpaidVnd)})보다 많이 기록할 수 없습니다.`); return; }
+            const methodLabel = METHOD[$('stlPayMethod').value];
+            if (!confirm(`${m.merchantName || m.merchantId}에 ${vnd(amount)}을(를) ${methodLabel}(으)로 지급한 것으로 기록할까요?`)) return;
+            const btn = $('stlPaySubmit');
+            btn.disabled = true;
+            try {
+                const r = await call('recordMerchantSettlementPayout', {
+                    merchantId: m.merchantId, amountVnd: amount, method: $('stlPayMethod').value,
+                    usdtAmount: $('stlPayUsdt').value, reference: $('stlPayRef').value,
+                    periodLabel: $('stlPayPeriod').value, note: $('stlPayNote').value,
+                    idempotencyKey: pendingIdemKey,
+                });
+                pendingIdemKey = newIdemKey();
+                $('stlPayoutForm').reset();
+                alert(r.duplicate ? '이미 기록된 지급입니다 (중복 요청).' : '지급이 기록되었습니다.');
+                await load();
+            } catch (e) {
+                alert(`지급 기록 실패: ${e?.message || e}`);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function voidPayout(p) {
+            const reason = prompt(`${dateText(p.paidAtMs)} ${vnd(p.amountVnd)} 지급 기록을 취소합니다.\n취소 사유를 입력해 주세요 (기록은 '취소됨'으로 남습니다).`);
+            if (!reason || !reason.trim()) return;
+            try {
+                await call('voidMerchantSettlementPayout', { payoutId: p.id, reason: reason.trim() });
+                await load();
+            } catch (e) {
+                alert(`취소 실패: ${e?.message || e}`);
+            }
+        }
+
+        $('stlReloadBtn').addEventListener('click', load);
+        $('stlPaySubmit').addEventListener('click', submitPayout);
+        $('stlPayFillUnpaid').addEventListener('click', () => {
+            const m = current?.merchants?.[0];
+            if (m) $('stlPayAmount').value = Math.max(0, m.unpaidVnd);
+        });
+
+        checkAdminAuth(
+            (user) => {
+                document.body.style.display = 'block';
+                isSuper = (window.currentUserRole === 'SUPER_ADMIN') || (window.tenantId === 'system_master') || (user.email === 'daguri75@gmail.com');
+                const sel = $('stlMerchantSelect');
+                if (isSuper) {
+                    sel.style.display = 'inline-block';
+                    const params = new URLSearchParams(location.search);
+                    const slug = (params.get('store') || params.get('m') || '').toLowerCase().trim();
+                    if (slug) sel.value = SLUG_TO_TENANT[slug] || (slug === 'all' ? 'ALL' : slug);
+                    if (!sel.value) sel.value = 'ALL';
+                    sel.addEventListener('change', onMerchantChange);
+                }
+                load();
+            },
+            () => {
+                const cur = location.pathname + location.search;
+                location.href = '../login.html?redirect=' + encodeURIComponent(cur);
+            }
+        );
+
+        window.logoutAndRedirect = () => {
+            logoutAdmin();
+            location.href = '../login.html';
+        };
+    </script>
+
+<script>
+            function highlightActiveMenu() {
+                const current = location.pathname.split('/').pop() || 'dashboard.html';
+                document.querySelectorAll('.top-nav a').forEach(a => {
+                    const href = a.getAttribute('href');
+                    if (href && href === current) {
+                        a.style.color = 'var(--primary-color, #4F46E5)';
+                        a.style.fontWeight = '700';
+                        const parentDropBtn = a.closest('.dropdown');
+                        if (parentDropBtn) {
+                            parentDropBtn.querySelector('.dropbtn').style.color = 'var(--primary-color, #4F46E5)';
+                            parentDropBtn.querySelector('.dropbtn').style.background = 'rgba(79, 70, 229, 0.05)';
+                        }
+                    } else if (a.classList.contains('active') && href !== current) {
+                        a.classList.remove('active');
+                    }
+                });
+            }
+            document.addEventListener('DOMContentLoaded', highlightActiveMenu);
+        </script>
+</body>
+
+</html>
