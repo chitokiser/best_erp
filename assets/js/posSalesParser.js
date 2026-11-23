@@ -53,3 +53,64 @@ export function extractSalesFromRows(rows) {
 export function rowsToTsv(rows, maxRows = 150) {
     return (rows || []).slice(0, maxRows).map((r) => (r || []).map(cellText).join('\t')).join('\n');
 }
+
+// CSV 글자 → 2차원 배열. 쉼표·세미콜론·탭 구분을 모두 받는다 (베트남 엑셀은 세미콜론으로 저장되기도 함).
+export function parseCsv(text) {
+    const src = String(text || '').replace(/^﻿/, '');
+    const firstLines = src.split(/\r?\n/).slice(0, 20).join('\n');
+    const count = (ch) => (firstLines.match(new RegExp(ch === '\t' ? '\t' : `\\${ch}`, 'g')) || []).length;
+    const delim = [',', ';', '\t'].sort((a, b) => count(b) - count(a))[0];
+    const rows = [];
+    let row = [];
+    let cell = '';
+    let quoted = false;
+    for (let i = 0; i < src.length; i++) {
+        const c = src[i];
+        if (quoted) {
+            if (c === '"' && src[i + 1] === '"') { cell += '"'; i++; }
+            else if (c === '"') quoted = false;
+            else cell += c;
+        } else if (c === '"') quoted = true;
+        else if (c === delim) { row.push(cell); cell = ''; }
+        else if (c === '\n' || c === '\r') {
+            if (c === '\r' && src[i + 1] === '\n') i++;
+            row.push(cell); rows.push(row); row = []; cell = '';
+        } else cell += c;
+    }
+    if (cell || row.length) { row.push(cell); rows.push(row); }
+    return rows;
+}
+
+function csvCell(v) {
+    const s = String(v ?? '');
+    return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+// 엑셀에서 한글/베트남어가 깨지지 않도록 BOM 을 붙인 CSV 글자
+export function toCsv(rows) {
+    return '﻿' + rows.map((r) => r.map(csvCell).join(',')).join('\r\n') + '\r\n';
+}
+
+// 우리 메뉴 이름이 채워진 2열 양식 (메뉴명, 수량)
+export function buildTemplateRows(menuNames) {
+    return [['메뉴명', '수량'], ...(menuNames || []).map((n) => [n, ''])];
+}
+
+// KiotViet "Báo cáo bán hàng theo hàng hóa" 모양의 샘플 (제목 줄 + 머리글 + 합계 줄)
+export function buildSampleRows(menuNames) {
+    const names = (menuNames && menuNames.length ? menuNames : ['Sườn bò nướng', 'Cơm trộn', 'Canh kimchi']).slice(0, 5);
+    const rows = [
+        ['Báo cáo bán hàng theo hàng hóa'],
+        ['Thời gian: 23/11/2026'],
+        [],
+        ['Mã hàng', 'Tên hàng', 'Số lượng', 'Doanh thu', 'Giảm giá', 'Thành tiền']
+    ];
+    let total = 0;
+    names.forEach((n, i) => {
+        const qty = (i % 3) + 2;
+        total += qty;
+        rows.push([`SP${String(i + 1).padStart(4, '0')}`, n, qty, qty * 150000, 0, qty * 150000]);
+    });
+    rows.push(['', 'Tổng cộng', total, '', '', '']);
+    return rows;
+}

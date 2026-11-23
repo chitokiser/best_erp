@@ -6,7 +6,7 @@ import {
     runTransaction, increment, serverTimestamp, arrayUnion
 } from 'firebase/firestore';
 import { planDeduction, applyDeduction, normalizeName } from './recipeEngine.js';
-import { extractSalesFromRows, rowsToTsv } from './posSalesParser.js';
+import { extractSalesFromRows, rowsToTsv, parseCsv, toCsv, buildTemplateRows, buildSampleRows } from './posSalesParser.js';
 import { geminiFetch } from './geminiClient.js';
 
 const SHEETJS_URL = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs';
@@ -17,7 +17,8 @@ let tenantId = '';
 let isSuper = false;
 let recipes = [];
 let materials = [];
-let current = null; // { sales, plan, fileHash, fileName, aliasMap }
+let current = null; // { mode: 'file'|'manual', sales, plan, fileHash, fileName, aliasMap }
+let menus = []; // 우리 가맹점 메뉴 (직접 입력용)
 
 function today() {
     const d = new Date(Date.now() + 7 * 3600 * 1000); // 베트남 시간
@@ -45,9 +46,7 @@ async function readRows(file) {
     const buf = await file.arrayBuffer();
     const fileHash = await sha16(buf);
     if (/\.csv$/i.test(file.name)) {
-        const text = new TextDecoder('utf-8').decode(buf);
-        const rows = text.split(/\r?\n/).map((l) => l.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map((c) => c.replace(/^"|"$/g, '')));
-        return { rows, fileHash };
+        return { rows: parseCsv(new TextDecoder('utf-8').decode(buf)), fileHash };
     }
     const XLSX = await import(/* @vite-ignore */ SHEETJS_URL);
     const wb = XLSX.read(buf, { type: 'array' });
@@ -130,7 +129,7 @@ async function onFile(e) {
         }
         if (sales.length === 0) { setStatus('판매 내역을 찾지 못했습니다.', true); return; }
         await loadBase();
-        current = { sales, fileHash, fileName: file.name, aliasMap: {} };
+        current = { mode: 'file', sales, fileHash, fileName: file.name, aliasMap: {} };
         rebuildPlan();
         setStatus(`${file.name}: 메뉴 ${sales.length}종 읽음`);
     } catch (err) {
@@ -149,20 +148,25 @@ async function onApply() {
         for (const [posName, productId] of Object.entries(current.aliasMap)) {
             try { await updateDoc(doc(db, 'menu_recipes', productId), { aliases: arrayUnion(posName) }); } catch (aliasErr) { console.warn('별칭 저장 실패', aliasErr); }
         }
+        const manual = current.mode === 'manual';
         const r = await applyDeduction({
             db,
             fs: { doc, collection, runTransaction, increment, serverTimestamp },
             plan: current.plan,
-            source: 'pos',
-            ref: `${tenantId || 'all'}_${date}_${current.fileHash}`,
+            source: manual ? 'manual' : 'pos',
+            // 직접 입력은 가맹점·날짜당 한 번만, 파일은 같은 파일·같은 날짜를 한 번만
+            ref: manual ? `${tenantId || 'all'}_${date}` : `${tenantId || 'all'}_${date}_${current.fileHash}`,
             merchantId: tenantId,
             user: auth.currentUser,
-            note: `POS ${date} ${current.fileName}`
+            note: manual ? `마감 입력 ${date}` : `POS ${date} ${current.fileName}`
         });
-        if (r.skipped) alert('이 파일은 이미 같은 날짜로 반영했습니다. (중복 차감 방지)');
+        if (r.skipped) alert(manual
+            ? `${date} 마감 수량은 이미 반영했습니다. (하루 한 번, 중복 차감 방지)\n고칠 게 있으면 자재관리에서 재고를 직접 조정해 주세요.`
+            : '이 파일은 이미 같은 날짜로 반영했습니다. (중복 차감 방지)');
         else alert(`재고 차감 완료: 자재 ${r.count}개`);
         el('sdPreview').style.display = 'none';
         el('sdFile').value = '';
+        if (manual) document.querySelectorAll('.me-qty').forEach((i) => { i.value = ''; });
         current = null;
         setStatus('');
         loadHistory();
@@ -185,7 +189,8 @@ async function loadHistory() {
             .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).slice(0, 20);
         box.innerHTML = list.length ? list.map((d) => {
             const when = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleString('ko-KR') : '';
-            const label = d.source === 'online_order' ? `온라인 주문 ${esc(d.ref)}` : 'POS 업로드';
+            const label = d.source === 'online_order' ? `온라인 주문 ${esc(d.ref)}`
+                : d.source === 'manual' ? `마감 입력 ${esc(String(d.ref || '').split('_').pop())}` : '파일 업로드';
             const menus = (d.matched || []).map((m) => `${esc(m.name)} ${m.qty}`).join(', ');
             return `<div style="padding:0.45rem 0; border-bottom:1px solid #f1f5f9;"><b>${label}</b> · ${when}<br><span style="color:#64748b;">${menus || '-'} → 자재 ${(d.lines || []).length}개 차감${(d.unmatched || []).length ? `, 레시피 없음 ${(d.unmatched || []).length}종` : ''}</span></div>`;
         }).join('') : '아직 기록이 없습니다.';
@@ -193,6 +198,75 @@ async function loadHistory() {
         console.warn(err);
         box.textContent = '기록을 불러오지 못했습니다.';
     }
+}
+
+// ---------- 직접 입력 (POS 가 없는 매장) ----------
+function normMerchant(id) {
+    const s = String(id || '').trim();
+    if (['baekje_galbi', 'baekjegalbi', 'baekje'].includes(s)) return '1794710386';
+    if (['bestwinner', 'best_winner'].includes(s)) return '1791605366';
+    if (['daehankimchi', 'daehan_kimchi'].includes(s)) return '1791002036';
+    return s;
+}
+
+async function loadMenus() {
+    const snap = await getDocs(collection(db, 'merchant_products'));
+    const mine = normMerchant(tenantId);
+    menus = snap.docs.map((d) => {
+        const x = d.data();
+        return {
+            id: d.id,
+            name: x.product_name || x.name || '이름 없음',
+            category: x.category || '',
+            merchantId: normMerchant(x.merchant_id || x.merchantId || ''),
+            status: x.sale_status || 'published',
+            type: x.product_type || (x.category ? 'menu' : 'physical_product')
+        };
+    }).filter((m) => m.status !== 'deleted' && m.type !== 'physical_product' && (isSuper || m.merchantId === mine))
+        .sort((a, b) => a.category.localeCompare(b.category, 'ko') || a.name.localeCompare(b.name, 'ko'));
+}
+
+function renderManual() {
+    const box = el('meList');
+    const kw = (el('meSearch').value || '').trim().toLowerCase();
+    const hasRecipe = new Set(recipes.map((r) => r.productId));
+    const list = menus.filter((m) => !kw || m.name.toLowerCase().includes(kw));
+    if (menus.length === 0) { box.innerHTML = '<div style="color:#64748b;">등록된 메뉴가 없습니다. 스마트 메뉴 관리에서 먼저 메뉴를 넣어 주세요.</div>'; return; }
+    box.querySelectorAll('.me-row').forEach((r) => { r.style.display = list.some((m) => m.id === r.dataset.id) ? '' : 'none'; });
+    if (box.querySelector('.me-row')) return; // 처음 한 번만 그리고, 검색은 숨김/보임으로 (입력한 숫자 유지)
+    box.innerHTML = menus.map((m) => `
+        <label class="me-row" data-id="${esc(m.id)}" style="display:flex; align-items:center; gap:0.5rem; padding:0.45rem 0; border-bottom:1px solid #f1f5f9;">
+            <span style="flex:1; min-width:0;">${esc(m.name)}${m.category ? ` <small style="color:#94a3b8;">${esc(m.category)}</small>` : ''}
+                ${hasRecipe.has(m.id) ? '' : ' <small style="color:#b45309;">레시피 없음</small>'}</span>
+            <input type="number" inputmode="numeric" min="0" step="1" class="me-qty" data-id="${esc(m.id)}" placeholder="0"
+                style="width:84px; padding:0.5rem; border:1px solid #cbd5e1; border-radius:0.45rem; text-align:right; font-size:1rem;">
+        </label>`).join('');
+}
+
+function onManualPreview() {
+    const sales = [...document.querySelectorAll('.me-qty')]
+        .map((i) => ({ productId: i.dataset.id, name: menus.find((m) => m.id === i.dataset.id)?.name || '', qty: Number(i.value) || 0 }))
+        .filter((s) => s.qty > 0);
+    if (sales.length === 0) { alert('판 수량을 하나 이상 넣어 주세요.'); return; }
+    current = { mode: 'manual', sales, aliasMap: {} };
+    rebuildPlan();
+    el('sdPreview').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function download(name, rows) {
+    const url = URL.createObjectURL(new Blob([toCsv(rows)], { type: 'text/csv;charset=utf-8' }));
+    const a = Object.assign(document.createElement('a'), { href: url, download: name });
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function showTab(tab) {
+    ['manual', 'file'].forEach((t) => {
+        el(`tab-${t}`).style.display = t === tab ? 'block' : 'none';
+        const b = el(`btnTab-${t}`);
+        b.style.background = t === tab ? '#4F46E5' : 'white';
+        b.style.color = t === tab ? 'white' : '#334155';
+    });
 }
 
 checkAdminAuth(
@@ -203,6 +277,17 @@ checkAdminAuth(
         el('sdFile').addEventListener('change', onFile);
         el('sdApply').addEventListener('click', onApply);
         el('sdCancel').addEventListener('click', () => { el('sdPreview').style.display = 'none'; el('sdFile').value = ''; current = null; setStatus(''); });
+        el('btnTab-manual').addEventListener('click', () => showTab('manual'));
+        el('btnTab-file').addEventListener('click', () => showTab('file'));
+        el('meSearch').addEventListener('input', renderManual);
+        el('mePreview').addEventListener('click', onManualPreview);
+        el('dlTemplate').addEventListener('click', () => download(`판매수량_양식_${today()}.csv`, buildTemplateRows(menus.map((m) => m.name))));
+        el('dlSample').addEventListener('click', () => download('POS_샘플_KiotViet.csv', buildSampleRows(menus.map((m) => m.name))));
+        showTab('manual');
+        Promise.all([loadBase(), loadMenus()]).then(renderManual).catch((err) => {
+            console.error(err);
+            el('meList').textContent = '메뉴를 불러오지 못했습니다: ' + (err.message || err);
+        });
         loadHistory();
     },
     () => { location.href = '../login.html?redirect=' + encodeURIComponent(location.pathname); }

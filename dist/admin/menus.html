@@ -7,10 +7,11 @@
     <title>스마트 메뉴 관리 - AI M-SaaS</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>.menu-grid{grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem;margin-top:1.5rem;display:grid}.menu-card{background:#fff;border:1px solid #e2e8f0;border-radius:1rem;transition:all .2s;position:relative;overflow:hidden;box-shadow:0 4px 6px -1px #0000000d}.menu-card:hover{transform:translateY(-4px);box-shadow:0 10px 15px -3px #0000001a}.menu-img{object-fit:cover;color:#94a3b8;background:#f1f5f9;justify-content:center;align-items:center;width:100%;height:160px;font-size:1.5rem;font-weight:600;display:flex}.menu-body{padding:1.25rem}.menu-title{color:#1e293b;margin:0 0 .5rem;font-size:1.1rem;font-weight:700}.menu-price{color:#4f46e5;margin:0 0 1rem;font-size:1.2rem;font-weight:800}.menu-desc{color:#64748b;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-bottom:1rem;font-size:.85rem;line-height:1.4;display:-webkit-box;overflow:hidden}.tag-row{flex-wrap:wrap;gap:.4rem;margin-bottom:1rem;display:flex}.smart-tag{border-radius:999px;padding:.2rem .6rem;font-size:.75rem;font-weight:600}.tag-hit{color:#b91c1c;background:#fee2e2}.tag-rec{color:#166534;background:#dcfce7}.tag-new{color:#3730a3;background:#e0e7ff}.tag-origin{color:#64748b;border:1px solid #e2e8f0}.toggle-switch{width:44px;height:24px;display:inline-block;position:relative}.toggle-switch input{opacity:0;width:0;height:0}.slider{cursor:pointer;background-color:#cbd5e1;border-radius:24px;transition:all .3s;position:absolute;inset:0}.slider:before{content:"";background-color:#fff;border-radius:50%;width:18px;height:18px;transition:all .3s;position:absolute;bottom:3px;left:3px}input:checked+.slider{background-color:#4f46e5}input:checked+.slider:before{transform:translate(20px)}.top-nav ul{align-items:center;gap:1rem;margin:0;padding:0;list-style:none;display:flex}.dropdown{display:inline-block;position:relative}.dropdown-content{z-index:9999;z-index:1000;background-color:#fff;border:1px solid #e2e8f0;border-radius:.5rem;min-width:180px;display:none;position:absolute;top:100%;left:0;box-shadow:0 10px 25px #0000001a}.dropdown-content a{white-space:nowrap;border-bottom:1px solid #f1f5f9;font-size:.95rem;font-weight:500;text-decoration:none;display:block;color:#334155!important;padding:.8rem 1rem!important}.dropdown-content a:hover{background-color:#f8fafc;color:#4f46e5!important;padding-left:1.25rem!important}.dropdown:hover .dropdown-content{display:block}.dropbtn{color:#475569;cursor:pointer;border-radius:.5rem;padding:.5rem .75rem;font-weight:600;display:inline-block}</style>
-  <script type="module" crossorigin src="/assets/admin_menus-DUz199qi.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-DK3Fl9T5.js">
-  <link rel="modulepreload" crossorigin href="/assets/firebase-config-BCglRgn-.js">
-  <link rel="modulepreload" crossorigin href="/assets/auth-Douk_74h.js">
+  <script type="module" crossorigin src="/assets/admin_menus-BWP8N5zf.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/firebase-config-D3mJBkbs.js">
+  <link rel="modulepreload" crossorigin href="/assets/index.esm-lmPyWxBr.js">
+  <link rel="modulepreload" crossorigin href="/assets/geminiClient-BdyVo0So.js">
+  <link rel="modulepreload" crossorigin href="/assets/recipeEngine-C_rQrtqp.js">
   <link rel="stylesheet" crossorigin href="/assets/css-ct6z4eHi.css">
   <link rel="stylesheet" crossorigin href="/assets/admin-CCpgtoVo.css">
 </head>
@@ -37,6 +38,7 @@
                 <span class="dropbtn">매장 관리(F&B) ▾</span>
                 <div class="dropdown-content">
                     <a href="menus.html">스마트 메뉴 관리</a>
+                    <a href="sales-deduction.html">판매 수량 반영</a>
                 </div>
             </li>
             <li class="dropdown" onclick="toggleDropdown(this, event)">
@@ -83,10 +85,14 @@
         <!-- Filter -->
         <div style="margin-top:2rem; display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;">
             <select id="filterMerchant"
-                style="padding:0.75rem; border-radius:0.5rem; border:1px solid #cbd5e1; outline:none; font-weight:600; display:none;"
-                onchange="loadMenus()">
+                style="padding:0.75rem; border-radius:0.5rem; border:1px solid #cbd5e1; outline:none; font-weight:700; color:#1e293b; background:#f8fafc;"
+                onchange="onMerchantFilterChange(this.value)">
                 <option value="ALL">== 전체 가맹점 (모든 상품) ==</option>
-                <option value="1791605366">베스트위너 (1791605366)</option>
+                <option value="1794710386">🥩 백제갈비 (1794710386)</option>
+                <option value="1791605366">🏆 베스트위너 (1791605366)</option>
+                <option value="1791002036">🥬 대한김치 (1791002036)</option>
+                <option value="1793671043">🎮 베스트마리오 (1793671043)</option>
+                <option value="1793776651">☀️ sunvietnam (1793776651)</option>
             </select>
             <select id="filterType"
                 style="padding:0.75rem; border-radius:0.5rem; border:1px solid #e2e8f0; outline:none; font-weight:500;"
@@ -97,6 +103,11 @@
                 <option value="service">🎫 서비스 / 티켓 / 바우쳐</option>
                 <option value="booking">📅 예약형 서비스</option>
             </select>
+            <select id="filterCategory"
+                style="padding:0.75rem; border-radius:0.5rem; border:1px solid #e2e8f0; outline:none; font-weight:500;"
+                onchange="loadMenus()">
+                <option value="ALL">전체 세부 카테고리</option>
+            </select>
             <select id="filterStatus"
                 style="padding:0.75rem; border-radius:0.5rem; border:1px solid #e2e8f0; outline:none; font-weight:500;"
                 onchange="loadMenus()">
@@ -105,7 +116,7 @@
                 <option value="draft">임시저장 (비공개)</option>
                 <option value="sold_out">품절</option>
             </select>
-            <input type="text" id="filterSearch" placeholder="상품명, 설명 검색..."
+            <input type="text" id="filterSearch" placeholder="상품명, 카테고리, 설명 검색..."
                 style="padding:0.75rem 1rem; border:1px solid #e2e8f0; border-radius:0.5rem; outline:none; flex:1; min-width:200px; max-width:320px;"
                 oninput="loadMenus()">
         </div>
@@ -122,25 +133,39 @@
             style="background:white; padding:2rem; border-radius:1rem; width:100%; max-width:540px; max-height:90vh; overflow-y:auto;">
             <h2 id="modalTitle" style="margin:0 0 1.5rem 0;">신규 상품/메뉴 등록</h2>
 
-            <div id="modalMerchantRow" style="display:none; margin-bottom:1rem;">
-                <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#ef4444;">가맹점 선택 (최고관리자 전용)</label>
-                <select id="mMerchantId" style="width:100%; padding:0.75rem; border:1px solid #fca5a5; background:#fff5f5; border-radius:0.5rem; outline:none;">
-                    <option value="1791605366">베스트위너 (1791605366)</option>
+            <div id="modalMerchantRow" style="margin-bottom:1rem;">
+                <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#4F46E5;">소속 가맹점 선택</label>
+                <select id="mMerchantId" style="width:100%; padding:0.75rem; border:1px solid #c7d2fe; background:#eef2ff; border-radius:0.5rem; outline:none; font-weight:600;">
+                    <option value="1794710386">🥩 백제갈비 (1794710386)</option>
+                    <option value="1791605366">🏆 베스트위너 (1791605366)</option>
+                    <option value="1791002036">🥬 대한김치 (1791002036)</option>
+                    <option value="1793671043">🎮 베스트마리오 (1793671043)</option>
+                    <option value="1793776651">☀️ sunvietnam (1793776651)</option>
                 </select>
             </div>
 
-            <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#334155;">상품 분류 <span style="color:red">*</span></label>
-            <select id="mType" style="width:100%; padding:0.75rem; border:1px solid #e2e8f0; border-radius:0.5rem; margin-bottom:1rem; outline:none;">
-                <option value="menu">🍽️ 메뉴 (음식/식음료)</option>
-                <option value="physical_product">📦 일반 실물 상품 (배송/식자재)</option>
-                <option value="service">🎫 서비스 / 티켓 / 바우쳐</option>
-                <option value="booking">📅 예약형 서비스</option>
-            </select>
+            <div style="display:flex; gap:0.75rem; margin-bottom:1rem;">
+                <div style="flex:1;">
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#334155;">상품 분류 <span style="color:red">*</span></label>
+                    <select id="mType" style="width:100%; padding:0.75rem; border:1px solid #e2e8f0; border-radius:0.5rem; outline:none;">
+                        <option value="menu">🍽️ 메뉴 (음식/식음료)</option>
+                        <option value="physical_product">📦 일반 실물 상품 (배송/식자재)</option>
+                        <option value="service">🎫 서비스 / 티켓 / 바우쳐</option>
+                        <option value="booking">📅 예약형 서비스</option>
+                    </select>
+                </div>
+                <div style="flex:1;">
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#334155;">세부 카테고리</label>
+                    <input type="text" id="mCategory"
+                        style="width:100%; padding:0.75rem; border:1px solid #e2e8f0; border-radius:0.5rem; outline:none;"
+                        placeholder="예: 소고기 구이 / 점심 메뉴">
+                </div>
+            </div>
 
             <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#334155;">상품/메뉴명 <span style="color:red">*</span></label>
             <input type="text" id="mName"
                 style="width:100%; padding:0.75rem; border:1px solid #e2e8f0; border-radius:0.5rem; margin-bottom:1rem; outline:none;"
-                placeholder="예: 보너스티켓 5000장 / 프리미엄 김치 세트">
+                placeholder="예: [16] 토마호크 스테이크 / 양념 소갈비">
 
             <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:#334155;">대표 이미지 URL</label>
             <input type="url" id="mImageUrl"
