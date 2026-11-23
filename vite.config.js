@@ -2,11 +2,6 @@ const { resolve } = require('path');
 const { defineConfig } = require('vite');
 
 module.exports = defineConfig({
-  define: {
-    'import.meta.env.VITE_GEMINI_API_KEY': JSON.stringify(
-      process.env.VITE_GEMINI_API_KEY || 'AQ.Ab8RN6LmECGSvAk-Pu0P5b8lhg-W77-XWNsKHB9vDuEGex8pWw'
-    )
-  },
   build: {
     target: 'esnext',
     outDir: 'dist',
@@ -36,6 +31,7 @@ module.exports = defineConfig({
         "admin_categories": resolve(__dirname, 'admin/categories.html'),
         "admin_coupons": resolve(__dirname, 'admin/coupons.html'),
         "admin_price-history": resolve(__dirname, 'admin/price-history.html'),
+        "admin_sales-deduction": resolve(__dirname, 'admin/sales-deduction.html'),
         "admin_vision-crm": resolve(__dirname, 'admin/vision-crm.html'),
         "categories": resolve(__dirname, 'categories.html'),
         "estimates": resolve(__dirname, 'estimates.html'),

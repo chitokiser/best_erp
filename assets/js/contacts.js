@@ -1,7 +1,6 @@
 import { db, auth } from './firebase-config.js';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, getDocs, addDoc, updateDoc, doc, serverTimestamp, query, orderBy, getDoc, writeBatch } from 'firebase/firestore';
-import { zaloFriendsData } from './zaloFriendsData.js';
 
 const tbody = document.getElementById('contactsTableBody');
 const addModal = document.getElementById('addContactModal');
@@ -417,6 +416,8 @@ const zaloFriendCount = document.getElementById('zaloFriendCount');
 const zaloDuplicateNotice = document.getElementById('zaloDuplicateNotice');
 const csvFileInput = document.getElementById('csvFileInput');
 
+// Zalo 친구 목록은 소스에 넣지 않는다 (개인정보). Zalo PC 에서 내보낸 CSV 를 모달에서 올려서 가져온다.
+const zaloFriendsData = [];
 let currentZaloQueue = [];
 
 function openZaloModal() {
@@ -434,7 +435,7 @@ function openZaloModal() {
     if (zaloDuplicateNotice) {
         zaloDuplicateNotice.textContent = unregCount < currentZaloQueue.length 
             ? `(${currentZaloQueue.length - unregCount}명 이미 등록됨, ${unregCount}명 신규 등록 가능)`
-            : '(134명 모두 신규 등록 대기)';
+            : (currentZaloQueue.length ? `(${currentZaloQueue.length}명 모두 신규 등록 대기)` : '(CSV 파일을 올려 주세요)');
     }
 
     renderZaloPreviewList(currentZaloQueue);
@@ -550,6 +551,9 @@ csvFileInput?.addEventListener('change', async (e) => {
         const nameIdx = headers.findIndex(h => /name|이름|성명/i.test(h));
         const companyIdx = headers.findIndex(h => /company|회사|소속/i.test(h));
         const phoneIdx = headers.findIndex(h => /phone|전화|연락처|mobile/i.test(h));
+        const zaloIdx = headers.findIndex(h => /^zaloid$|zalo.?id/i.test(h));
+        const avatarIdx = headers.findIndex(h => /avatar|사진/i.test(h));
+        const positionIdx = headers.findIndex(h => /position|직책|직위/i.test(h));
 
         const parsed = [];
         for (let i = 1; i < lines.length; i++) {
@@ -560,9 +564,10 @@ csvFileInput?.addEventListener('change', async (e) => {
                 name: name,
                 company: companyIdx !== -1 ? cols[companyIdx] : 'CSV 가져오기',
                 phone: phoneIdx !== -1 ? cols[phoneIdx] : '',
-                position: '',
-                avatar: '',
-                isRegistered: false
+                position: positionIdx !== -1 ? (cols[positionIdx] || '') : '',
+                avatar: avatarIdx !== -1 && /^https:\/\//.test(cols[avatarIdx] || '') ? cols[avatarIdx] : '',
+                zaloId: zaloIdx !== -1 ? (cols[zaloIdx] || '') : '',
+                isRegistered: allContactsData.some(c => c.name === name || (zaloIdx !== -1 && cols[zaloIdx] && c.zaloId === cols[zaloIdx]))
             });
         }
 

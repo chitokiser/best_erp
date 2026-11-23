@@ -156,17 +156,7 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                     window.tenantId = '1791605366';
                     window.currentStoreName = 'BEST WINNER';
 
-                    // Ensure Firestore user document has CEO role & status so security rules always permit access
-                    try {
-                        await setDoc(doc(db, 'users', user.uid), {
-                            email: user.email,
-                            role: 'CEO',
-                            status: '승인완료',
-                            position: '가맹점 대표 (BEST WINNER)',
-                            merchantId: '1791605366',
-                            tenantId: '1791605366'
-                        }, { merge: true });
-                    } catch (err) { console.warn("Failed to sync user doc to firestore", err); }
+                    // 권한(role)과 소속은 본인이 직접 쓸 수 없다 (보안 규칙). 관리자가 users 문서에 미리 넣어 둔다.
                 } else if (userEmailLower === 'daguri75@gmail.com') {
                     role = 'SUPER_ADMIN';
                     position = '최고 관리자';
@@ -193,19 +183,25 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                                 window.tenantId = String(empData.tenantId);
                                 window.currentStoreName = empData.storeName || window.currentStoreName;
                             }
-                            // Sync users doc in background so subsequent checks are instant
-                            try {
-                                await setDoc(doc(db, 'users', user.uid), {
-                                    email: user.email,
-                                    role: 'STAFF',
-                                    status: '승인완료',
-                                    position: position,
-                                    department: empData.department || '',
-                                    merchantId: window.tenantId,
-                                    tenantId: window.tenantId,
-                                    storeName: window.currentStoreName
-                                }, { merge: true });
-                            } catch (e) {}
+                            // Sync users doc so security rules recognise this staff member.
+                            // 보안 규칙은 employeeDocId 로 직원 문서를 대조해서(이메일·가맹점 일치) 본인 STAFF 연결만 허용한다.
+                            if (empData.tenantId) {
+                                const empTenant = String(empData.tenantId);
+                                try {
+                                    await setDoc(doc(db, 'users', user.uid), {
+                                        email: user.email,
+                                        role: 'STAFF',
+                                        status: '승인완료',
+                                        position: position,
+                                        department: empData.department || '',
+                                        merchantId: empTenant,
+                                        tenantId: empTenant,
+                                        tenant_id: empTenant,
+                                        storeName: window.currentStoreName || '',
+                                        employeeDocId: empSnap.docs[0].id
+                                    }, { merge: true });
+                                } catch (e) { console.warn('직원 계정 연결 실패:', e); }
+                            }
                         }
                     } catch (empCheckErr) {
                         console.warn("Employee lookup check failed:", empCheckErr);
