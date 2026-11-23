@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>신규 가맹점 1분 무료 개설 | BestERP · CRM M-SaaS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Inter',-apple-system,sans-serif; background:#0b1120; color:#f8fafc; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+    .box { width:100%; max-width:520px; background:#111827; border:1px solid rgba(148,163,184,.2); border-radius:22px; padding:28px; box-shadow:0 24px 60px rgba(0,0,0,.45); }
+    .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+    .top a { color:#94a3b8; font-size:.82rem; text-decoration:none; }
+    h1 { font-size:1.45rem; font-weight:900; margin-bottom:6px; }
+    .sub { color:#94a3b8; font-size:.88rem; margin-bottom:20px; }
+    .step-badge { display:inline-block; padding:4px 10px; border-radius:999px; background:rgba(99,102,241,.2); color:#a5b4fc; font-size:.74rem; font-weight:800; margin-bottom:10px; }
+    .field { margin-bottom:14px; }
+    .field label { display:block; font-size:.82rem; font-weight:700; color:#cbd5e1; margin-bottom:6px; }
+    .field input, .field select { width:100%; padding:11px 13px; border-radius:11px; border:1px solid #334155; background:#0f172a; color:#fff; font-size:.92rem; }
+    .field input:focus, .field select:focus { outline:none; border-color:#818cf8; }
+    .btn { width:100%; padding:13px 16px; border-radius:12px; border:none; font-size:.95rem; font-weight:900; cursor:pointer; }
+    .btn-primary { background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; }
+    .btn-gold { background:linear-gradient(135deg,#fde047,#f59e0b); color:#0f172a; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; }
+    .msg { margin-top:12px; font-size:.84rem; text-align:center; min-height:1.2em; }
+    .user-chip { padding:10px 12px; border-radius:12px; background:rgba(16,185,129,.12); border:1px solid rgba(16,185,129,.3); color:#6ee7b7; font-size:.84rem; font-weight:700; margin-bottom:16px; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="top">
+      <a href="index.html">← BestERP 홈으로</a>
+      <a href="login.html">이미 계정이 있나요? 로그인</a>
+    </div>
+
+    <span class="step-badge">🚀 BESTERP · CRM M-SAAS ONBOARDING</span>
+    <h1>1분 만에 내 매장 워크스페이스 개설</h1>
+    <p class="sub">별도 승인 대기 없이 가맹점 전용 ERP·CRM 공간을 즉시 생성하고 운영을 시작하세요.</p>
+
+    <!-- Step 1: Google 로그인 -->
+    <div id="stepLogin">
+      <button type="button" id="btnGoogleStart" class="btn btn-gold">🔐 Google 계정으로 10초 시작하기</button>
+      <div class="msg" id="loginMsg" style="color:#fca5a5;"></div>
+    </div>
+
+    <!-- Step 2: 매장 정보 입력 -->
+    <form id="stepForm" style="display:none;">
+      <div class="user-chip" id="userChip">로그인 계정 확인 중...</div>
+
+      <div class="field">
+        <label for="storeName">가맹점(매장) 이름 *</label>
+        <input type="text" id="storeName" placeholder="예: 하노이 서울갈비" required />
+      </div>
+
+      <div class="field">
+        <label for="storeSlug">영문 스토어 주소 슬러그 (선택)</label>
+        <input type="text" id="storeSlug" placeholder="예: seoulgalbi (영문 소문자·숫자)" />
+      </div>
+
+      <div class="field">
+        <label for="storeCategory">업종 선택</label>
+        <select id="storeCategory">
+          <option value="fnb">🍽️ 음식점 · 카페 (F&amp;B)</option>
+          <option value="retail">🛍️ 유통 · 식품 · 쇼핑몰</option>
+          <option value="service">💆 뷰티 · 병원 · 생활서비스</option>
+          <option value="leisure">🎱 당구 · 골프 · 레저</option>
+          <option value="other">🏢 기타 업종</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="storePhone">매장 연락처 / Zalo</label>
+        <input type="text" id="storePhone" placeholder="예: +84-90-123-4567" />
+      </div>
+
+      <div class="field">
+        <label for="storeAddress">매장 주소</label>
+        <input type="text" id="storeAddress" placeholder="예: 하노이 미딩 송다 1층" />
+      </div>
+
+      <div class="field">
+        <label for="saasPlan">구독 플랜</label>
+        <select id="saasPlan">
+          <option value="starter">Starter (무료 — 기본 ERP · CRM · 통합몰 연동)</option>
+          <option value="pro">Pro (14일 무료체험 — AI 비전 · 마케팅 · HR 전체)</option>
+          <option value="enterprise">Enterprise (다점포 · MCP AI 자동화)</option>
+        </select>
+      </div>
+
+      <button type="submit" id="btnCreateWorkspace" class="btn btn-primary">✨ 내 가맹점 ERP/CRM 워크스페이스 생성</button>
+      <div class="msg" id="formMsg"></div>
+    </form>
+  </div>
+
+  <script type="module">
+    import { auth, db } from './assets/js/firebase-config.js';
+    import { GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from 'firebase/auth';
+    import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+
+    const params = new URLSearchParams(location.search);
+    const presetPlan = params.get('plan');
+    if (presetPlan && ['starter', 'pro', 'enterprise'].includes(presetPlan)) {
+      const sel = document.getElementById('saasPlan');
+      if (sel) sel.value = presetPlan;
+    }
+
+    let currentUser = null;
+
+    document.getElementById('btnGoogleStart').addEventListener('click', async () => {
+      const msg = document.getElementById('loginMsg');
+      msg.textContent = '';
+      try {
+        await signInWithPopup(auth, new GoogleAuthProvider());
+      } catch (err) {
+        msg.textContent = '로그인 실패: ' + (err?.message || err);
+      }
+    });
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return;
+      currentUser = user;
+      document.getElementById('stepLogin').style.display = 'none';
+      document.getElementById('stepForm').style.display = 'block';
+      document.getElementById('userChip').textContent = `✅ 대표 계정: ${user.displayName || ''} (${user.email})`;
+
+      // 이미 개설된 가맹점이 있으면 바로 안내
+      try {
+        const uSnap = await getDoc(doc(db, 'users', user.uid));
+        if (uSnap.exists() && (uSnap.data().merchantId || uSnap.data().merchant_id)) {
+          const existingId = uSnap.data().merchantId || uSnap.data().merchant_id;
+          const formMsg = document.getElementById('formMsg');
+          formMsg.style.color = '#6ee7b7';
+          formMsg.innerHTML = `이미 연결된 가맹점(ID: ${existingId})이 있습니다. <a href="admin/dashboard.html" style="color:#fde047;text-decoration:underline;">대시보드로 바로 이동 →</a>`;
+        }
+      } catch (_) {}
+    });
+
+    document.getElementById('stepForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!currentUser) return;
+
+      const btn = document.getElementById('btnCreateWorkspace');
+      const msg = document.getElementById('formMsg');
+      const name = document.getElementById('storeName').value.trim();
+      if (!name) return;
+
+      const rawSlug = document.getElementById('storeSlug').value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+      const newMerchantId = String(Date.now()).slice(-10);
+      const slug = rawSlug || `store_${newMerchantId.slice(-6)}`;
+      const category = document.getElementById('storeCategory').value;
+      const phone = document.getElementById('storePhone').value.trim();
+      const address = document.getElementById('storeAddress').value.trim();
+      const saasPlan = document.getElementById('saasPlan').value;
+
+      btn.disabled = true;
+      btn.textContent = '⏳ 워크스페이스 생성 중...';
+      msg.style.color = '#cbd5e1';
+      msg.textContent = '가맹점 DB와 권한을 자동 설정하고 있습니다...';
+
+      try {
+        const ownerEmail = (currentUser.email || '').toLowerCase();
+        await setDoc(doc(db, 'merchants', newMerchantId), {
+          merchantId: newMerchantId,
+          slug,
+          name,
+          category,
+          phone,
+          address,
+          ownerUid: currentUser.uid,
+          ownerEmail,
+          btBalance: 0,
+          btPerVnd: 100000,
+          saasPlan,
+          saasStatus: 'active',
+          saasModules: {
+            erpMenus: true,
+            crmClients: true,
+            settlement: true,
+            coupons: true,
+            visionCrm: saasPlan !== 'starter',
+            marketing: saasPlan !== 'starter',
+            hrTasks: saasPlan !== 'starter',
+          },
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+
+        await setDoc(doc(db, 'users', currentUser.uid), {
+          uid: currentUser.uid,
+          email: ownerEmail,
+          name: currentUser.displayName || name,
+          merchantId: newMerchantId,
+          merchantName: name,
+          isMerchantOwner: true,
+          role: 'CEO',
+          position: '가맹점 대표',
+          status: '승인완료',
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+
+        msg.style.color = '#6ee7b7';
+        msg.textContent = '🎉 워크스페이스 개설 완료! 대시보드로 이동합니다...';
+        setTimeout(() => {
+          location.href = `admin/dashboard.html?store=${encodeURIComponent(slug)}`;
+        }, 900);
+      } catch (err) {
+        console.error(err);
+        msg.style.color = '#fca5a5';
+        msg.textContent = '개설 오류: ' + (err?.message || err);
+        btn.disabled = false;
+        btn.textContent = '✨ 내 가맹점 ERP/CRM 워크스페이스 생성';
+      }
+    });
+  </script>
+</body>
+</html>

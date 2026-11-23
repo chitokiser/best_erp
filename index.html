@@ -1,8 +1,215 @@
-﻿<!DOCTYPE html>
-<html>
-  <head>
-    <meta http-equiv="refresh" content="0; url=admin/dashboard.html" />
-    <script>window.location.href = "admin/dashboard.html";</script>
-  </head>
-  <body></body>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BestERP · CRM M-SaaS | 가맹점 통합 경영·고객관리 클라우드</title>
+  <meta name="description" content="베스트클럽 제휴 가맹점을 위한 올인원 ERP·CRM SaaS — 상품·재고 관리, 멘티/VIP CRM, AI 비전 매장관제, BM 정산, 직원 HR을 1분 만에 시작하세요." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root { --bg:#0b1120; --surface:#111827; --card:#1e293b; --line:rgba(148,163,184,.18); --ink:#f8fafc; --muted:#94a3b8; --primary:#6366f1; --accent:#f59e0b; --green:#10b981; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--ink); line-height:1.6; }
+    a { color:inherit; text-decoration:none; }
+    .nav { position:sticky; top:0; z-index:50; background:rgba(11,17,32,.88); backdrop-filter:blur(14px); border-bottom:1px solid var(--line); }
+    .nav-in { max-width:1140px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .brand { display:flex; align-items:center; gap:10px; font-weight:900; font-size:1.15rem; }
+    .brand-tag { font-size:.7rem; padding:3px 9px; border-radius:999px; background:rgba(99,102,241,.2); color:#a5b4fc; border:1px solid rgba(99,102,241,.4); }
+    .nav-btns { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:10px 18px; border-radius:11px; font-weight:800; font-size:.88rem; cursor:pointer; border:none; transition:all .16s ease; }
+    .btn-primary { background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; box-shadow:0 8px 24px rgba(99,102,241,.35); }
+    .btn-primary:hover { transform:translateY(-1px); box-shadow:0 12px 28px rgba(99,102,241,.5); }
+    .btn-gold { background:linear-gradient(135deg,#fde047,#f59e0b); color:#0f172a; box-shadow:0 8px 24px rgba(245,158,11,.35); }
+    .btn-ghost { background:rgba(255,255,255,.06); color:#e2e8f0; border:1px solid var(--line); }
+    .btn-ghost:hover { background:rgba(255,255,255,.12); }
+
+    .session-bar { display:none; background:linear-gradient(90deg,#1e1b4b,#312e81); border-bottom:1px solid rgba(165,180,252,.25); padding:10px 20px; }
+    .session-bar.show { display:block; }
+    .session-in { max-width:1140px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; font-size:.86rem; }
+
+    .hero { position:relative; overflow:hidden; padding:72px 20px 64px; background:radial-gradient(circle at 20% 20%,rgba(99,102,241,.22),transparent 45%),radial-gradient(circle at 80% 30%,rgba(245,158,11,.15),transparent 42%); }
+    .hero-in { max-width:1140px; margin:0 auto; text-align:center; }
+    .pill { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:999px; background:rgba(16,185,129,.14); border:1px solid rgba(16,185,129,.35); color:#6ee7b7; font-size:.78rem; font-weight:800; margin-bottom:18px; }
+    .hero h1 { font-size:clamp(2rem,5vw,3.4rem); font-weight:900; line-height:1.18; letter-spacing:-.03em; margin-bottom:18px; }
+    .hero h1 span { background:linear-gradient(90deg,#fde047,#fb923c,#a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .hero p { max-width:680px; margin:0 auto 28px; color:var(--muted); font-size:1.05rem; }
+    .hero-cta { display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin-bottom:36px; }
+    .stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; max-width:860px; margin:0 auto; }
+    .stat { background:rgba(30,41,59,.65); border:1px solid var(--line); border-radius:16px; padding:16px; }
+    .stat strong { display:block; font-size:1.4rem; color:#fde047; font-weight:900; }
+    .stat span { font-size:.78rem; color:var(--muted); }
+
+    .sec { max-width:1140px; margin:0 auto; padding:56px 20px; }
+    .sec-title { text-align:center; margin-bottom:36px; }
+    .sec-title h2 { font-size:clamp(1.5rem,3vw,2.1rem); font-weight:900; margin-bottom:8px; }
+    .sec-title p { color:var(--muted); font-size:.95rem; }
+
+    .grid-3 { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+    .card { background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:22px; transition:border-color .18s,transform .18s; }
+    .card:hover { border-color:rgba(129,140,248,.55); transform:translateY(-2px); }
+    .card-ico { font-size:1.8rem; margin-bottom:10px; }
+    .card h3 { font-size:1.05rem; font-weight:800; margin-bottom:6px; }
+    .card p { font-size:.86rem; color:var(--muted); }
+
+    .plan { position:relative; display:flex; flex-direction:column; gap:12px; }
+    .plan.featured { border:2px solid #818cf8; background:linear-gradient(180deg,rgba(49,46,129,.45),var(--surface)); }
+    .plan-badge { position:absolute; top:-12px; right:18px; background:linear-gradient(135deg,#6366f1,#ec4899); color:#fff; font-size:.72rem; font-weight:900; padding:4px 10px; border-radius:999px; }
+    .plan-price { font-size:1.8rem; font-weight:900; color:#fde047; }
+    .plan ul { list-style:none; display:flex; flex-direction:column; gap:7px; font-size:.85rem; color:#cbd5e1; flex:1; }
+
+    .footer { border-top:1px solid var(--line); padding:28px 20px; text-align:center; color:var(--muted); font-size:.82rem; }
+    @media (max-width:860px) {
+      .grid-3 { grid-template-columns:1fr; }
+      .stats { grid-template-columns:repeat(2,1fr); }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-in">
+      <a href="/" class="brand">
+        <span>🏢 BestERP</span>
+        <span class="brand-tag">ERP · CRM M-SaaS</span>
+      </a>
+      <div class="nav-btns">
+        <a href="#features" class="btn btn-ghost">기능 소개</a>
+        <a href="#pricing" class="btn btn-ghost">요금제</a>
+        <a href="login.html" class="btn btn-ghost" id="btnNavLogin">가맹점 로그인</a>
+        <a href="onboarding.html" class="btn btn-gold">🚀 1분 무료 개설</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="session-bar" id="sessionBar">
+    <div class="session-in">
+      <span id="sessionText">로그인 계정 확인됨</span>
+      <a href="admin/dashboard.html" class="btn btn-primary" style="padding:7px 14px;font-size:.82rem;">📊 내 가맹점 대시보드 바로가기 →</a>
+    </div>
+  </div>
+
+  <section class="hero">
+    <div class="hero-in">
+      <div class="pill">✅ 멀티테넌트 완전 격리 · BestClubVN 실시간 연동</div>
+      <h1>가맹점 운영의 모든 것을 하나로,<br/><span>BestERP · CRM M-SaaS</span></h1>
+      <p>상품·재고 ERP부터 멘티·VIP 고객 CRM, AI 비전 매장관제, BM 정산, 직원 업무보고까지 — 별도 구축 없이 1분 만에 내 매장 전용 클라우드 워크스페이스를 오픈하세요.</p>
+      <div class="hero-cta">
+        <a href="onboarding.html" class="btn btn-gold" style="padding:14px 26px;font-size:1rem;">🚀 1분 만에 내 매장 무료 개설하기</a>
+        <a href="login.html" class="btn btn-primary" style="padding:14px 26px;font-size:1rem;">🔐 기존 가맹점 로그인</a>
+        <a href="https://bestclubvn.netlify.app/" target="_blank" class="btn btn-ghost" style="padding:14px 22px;font-size:1rem;">🌐 BestClubVN 생태계 보기</a>
+      </div>
+      <div class="stats">
+        <div class="stat"><strong>1분</strong><span>신규 가맹점 셀프 개설</span></div>
+        <div class="stat"><strong>100%</strong><span>가맹점별 데이터 격리</span></div>
+        <div class="stat"><strong>실시간</strong><span>BestClub 통합몰 동기화</span></div>
+        <div class="stat"><strong>All-in-One</strong><span>ERP · CRM · 정산 · HR</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="features">
+    <div class="sec-title">
+      <h2>가맹점에 바로 서비스하는 6대 핵심 SaaS 모듈</h2>
+      <p>F&amp;B 식당, 유통·김치, 뷰티·서비스 업종 모두 클릭만으로 즉시 운영할 수 있습니다.</p>
+    </div>
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-ico">📦</div>
+        <h3>스마트 상품 · 재고 ERP</h3>
+        <p>상품 등록·가격·옵션·재고·판매채널(매장전용/온라인)을 관리하면 BestClub 통합몰과 가맹점 웹에 실시간 반영됩니다.</p>
+      </div>
+      <div class="card">
+        <div class="card-ico">👥</div>
+        <h3>멘티 · 제휴 고객 CRM</h3>
+        <p>내 매장 QR로 가입한 직속 멘티와 타 가맹점 경유 제휴회원을 자동 분류하고, VIP 재방문·구매 이력을 한눈에 추적합니다.</p>
+      </div>
+      <div class="card">
+        <div class="card-ico">👁️</div>
+        <h3>AI 비전 매장관제 CRM</h3>
+        <p>매장 방문 VIP·오래 안 온 단골 고객을 실시간으로 감지해 직원 화면에 맞춤 응대 알림을 제공합니다.</p>
+      </div>
+      <div class="card">
+        <div class="card-ico">💰</div>
+        <h3>BM 정산 · 재무/회계</h3>
+        <p>매출·지출 장부, 정산 예정 90% 자동 집계, 미지급 정산 내역과 BT(보너스 티켓) 지급 기준을 투명하게 관리합니다.</p>
+      </div>
+      <div class="card">
+        <div class="card-ico">🎫</div>
+        <h3>쿠폰 · 바우처 &amp; 자동 마케팅</h3>
+        <p>현장 QR 쿠폰 검증, 재방문 유도 트리거 메시지, 공동구매 타임특가 연동을 통해 단골 매출을 극대화합니다.</p>
+      </div>
+      <div class="card">
+        <div class="card-ico">📋</div>
+        <h3>직원 HR · 현장 사진보고</h3>
+        <p>직원 계정 권한 분리(CEO/직원), 일일 업무지시, 현장 사진보고, 자재·협력업체 발주까지 모바일로 끝냅니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="pricing">
+    <div class="sec-title">
+      <h2>합리적인 가맹점 SaaS 구독 플랜</h2>
+      <p>무료 Starter 플랜으로 바로 시작하고, 매장 성장에 맞춰 언제든 업그레이드하세요.</p>
+    </div>
+    <div class="grid-3">
+      <div class="card plan">
+        <h3>Starter (무료 시작)</h3>
+        <div class="plan-price">무료 <span style="font-size:.82rem;color:#94a3b8;font-weight:600;">/ 월</span></div>
+        <ul>
+          <li>✅ 가맹점 전용 ERP 워크스페이스 즉시 개설</li>
+          <li>✅ 스마트 상품 등록 &amp; BestClub 통합몰 연동</li>
+          <li>✅ 직속 멘티 CRM &amp; QR 포스터 생성</li>
+          <li>✅ BM 정산 및 기본 대시보드</li>
+        </ul>
+        <a href="onboarding.html?plan=starter" class="btn btn-ghost" style="width:100%;">무료로 시작하기</a>
+      </div>
+      <div class="card plan featured">
+        <span class="plan-badge">인기 추천</span>
+        <h3>Pro (성장 가맹점)</h3>
+        <div class="plan-price">490,000₫ <span style="font-size:.82rem;color:#94a3b8;font-weight:600;">/ 월</span></div>
+        <ul>
+          <li>✅ Starter 전체 기능 포함</li>
+          <li>✅ AI 비전 매장관제 CRM &amp; VIP 재방문 알림</li>
+          <li>✅ 자동 마케팅 트리거 &amp; 쿠폰/바우처 무제한</li>
+          <li>✅ 직원 HR · 업무지시 · 현장 사진보고</li>
+          <li>✅ 전용 가맹점 홈페이지 10분 세팅 지원</li>
+        </ul>
+        <a href="onboarding.html?plan=pro" class="btn btn-primary" style="width:100%;">Pro 14일 무료체험 시작</a>
+      </div>
+      <div class="card plan">
+        <h3>Enterprise (다점포/프랜차이즈)</h3>
+        <div class="plan-price">맞춤 협의</div>
+        <ul>
+          <li>✅ Pro 전체 기능 + 다점포 통합 CEO 대시보드</li>
+          <li>✅ BestClub Control MCP 자연어 AI 자동운영</li>
+          <li>✅ 외부 POS · 회계 · 전용 API 커스텀 연동</li>
+          <li>✅ 전담 온보딩 및 우선 기술 지원</li>
+        </ul>
+        <a href="onboarding.html?plan=enterprise" class="btn btn-ghost" style="width:100%;">도입 문의 및 개설</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    © 2026 BestERP · CRM M-SaaS (BestClub Alliance). Multi-Tenant Cloud Platform.
+  </footer>
+
+  <script type="module">
+    import { auth } from './assets/js/firebase-config.js';
+    import { onAuthStateChanged } from 'firebase/auth';
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const bar = document.getElementById('sessionBar');
+        const txt = document.getElementById('sessionText');
+        if (txt) txt.textContent = `✅ ${user.email || '가맹점 계정'} 으로 로그인되어 있습니다.`;
+        if (bar) bar.classList.add('show');
+        const navLogin = document.getElementById('btnNavLogin');
+        if (navLogin) {
+          navLogin.textContent = '📊 대시보드';
+          navLogin.href = 'admin/dashboard.html';
+        }
+      }
+    });
+  </script>
+</body>
 </html>

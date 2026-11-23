@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SaaS 워크스페이스 · 구독 설정 | BestERP</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+  <style>
+    .saas-wrap { max-width: 920px; margin: 24px auto; padding: 0 16px 48px; }
+    .saas-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 14px rgba(15,23,42,.04); }
+    .saas-card h3 { margin: 0 0 12px; font-size: 1.05rem; font-weight: 800; color: #0f172a; }
+    .saas-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .saas-field { display: flex; flex-direction: column; gap: 5px; }
+    .saas-field label { font-size: 0.8rem; font-weight: 700; color: #475569; }
+    .saas-field input, .saas-field select { padding: 10px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.9rem; }
+    .mod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+    .mod-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 0.86rem; font-weight: 700; }
+    .btn-save { padding: 11px 22px; border-radius: 10px; border: none; background: linear-gradient(135deg,#4f46e5,#7c3aed); color: #fff; font-weight: 800; cursor: pointer; }
+    @media (max-width: 640px) { .saas-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body class="admin-body">
+  <div class="saas-wrap">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <a href="dashboard.html" style="font-size:0.84rem;color:#4f46e5;font-weight:700;text-decoration:none;">← CEO 대시보드로 돌아가기</a>
+        <h2 style="margin:6px 0 0;font-size:1.4rem;font-weight:900;">⚙️ SaaS 워크스페이스 · 구독 · 모듈 설정</h2>
+      </div>
+      <span id="saasStoreBadge" style="padding:6px 12px;border-radius:999px;background:#ede9fe;color:#4f46e5;font-weight:800;font-size:0.82rem;">로딩 중...</span>
+    </div>
+
+    <div class="saas-card">
+      <h3>🏪 가맹점 브랜딩 &amp; BestClub 연동 정보</h3>
+      <div class="saas-grid">
+        <div class="saas-field">
+          <label for="cfgName">가맹점 상호명</label>
+          <input type="text" id="cfgName" />
+        </div>
+        <div class="saas-field">
+          <label for="cfgPlan">구독 플랜 (SaaS Plan)</label>
+          <select id="cfgPlan">
+            <option value="starter">Starter (무료)</option>
+            <option value="pro">Pro (성장 가맹점)</option>
+            <option value="enterprise">Enterprise (다점포/프랜차이즈)</option>
+          </select>
+        </div>
+        <div class="saas-field">
+          <label for="cfgPhone">매장 연락처 / Zalo</label>
+          <input type="text" id="cfgPhone" />
+        </div>
+        <div class="saas-field">
+          <label for="cfgBtPerVnd">🎟️ 1 BT 지급 기준금액 (VND)</label>
+          <input type="number" id="cfgBtPerVnd" min="1000" step="10000" />
+        </div>
+        <div class="saas-field" style="grid-column:1 / -1;">
+          <label for="cfgAddress">매장 주소</label>
+          <input type="text" id="cfgAddress" />
+        </div>
+      </div>
+    </div>
+
+    <div class="saas-card">
+      <h3>🧩 활성화 ERP · CRM 모듈 관리</h3>
+      <div class="mod-grid">
+        <label class="mod-item"><span>📦 스마트 메뉴/상품 ERP</span><input type="checkbox" id="modErpMenus" checked /></label>
+        <label class="mod-item"><span>👥 멘티 · 제휴 고객 CRM</span><input type="checkbox" id="modCrmClients" checked /></label>
+        <label class="mod-item"><span>💰 BM 정산 · 회계</span><input type="checkbox" id="modSettlement" checked /></label>
+        <label class="mod-item"><span>🎫 쿠폰 · 바우처 검증</span><input type="checkbox" id="modCoupons" checked /></label>
+        <label class="mod-item"><span>👁️ AI 비전 매장관제</span><input type="checkbox" id="modVisionCrm" /></label>
+        <label class="mod-item"><span>📣 자동 마케팅 트리거</span><input type="checkbox" id="modMarketing" /></label>
+        <label class="mod-item"><span>📋 직원 HR · 사진보고</span><input type="checkbox" id="modHrTasks" /></label>
+      </div>
+    </div>
+
+    <div class="saas-card">
+      <h3>🔗 가맹점 전용 연동 링크</h3>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:0.86rem;">
+        <div><strong>멘티 자동가입 초대 링크:</strong> <code id="linkMentorInvite" style="background:#f1f5f9;padding:3px 7px;border-radius:6px;word-break:break-all;">-</code></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+          <button type="button" id="btnCopyMentor" class="btn-save" style="background:#0f172a;padding:8px 14px;font-size:0.82rem;">📋 초대 링크 복사</button>
+          <a href="https://bestclubvn.netlify.app/merchant-qr.html" target="_blank" class="btn-save" style="background:#059669;padding:8px 14px;font-size:0.82rem;text-decoration:none;">🖼️ 카운터 QR 포스터 만들기 →</a>
+          <a href="https://bestclubvn.netlify.app/merchant-report.html" target="_blank" class="btn-save" style="background:#d97706;padding:8px 14px;font-size:0.82rem;text-decoration:none;">📊 1분 모바일 리포트 →</a>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button type="button" id="btnSaveSaas" class="btn-save">💾 SaaS 설정 저장</button>
+      <span id="saveMsg" style="font-size:0.86rem;font-weight:700;"></span>
+    </div>
+  </div>
+
+  <script type="module">
+    import { checkAdminAuth } from '../assets/js/auth.js';
+    import { getCurrentStoreInfo, loadDynamicTenants } from '../assets/js/tenant-router.js';
+    import { db } from '../assets/js/firebase-config.js';
+    import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+
+    let activeStoreId = '';
+
+    checkAdminAuth(async (user) => {
+      await loadDynamicTenants();
+      const info = getCurrentStoreInfo();
+      if (!info.storeId) {
+        location.href = '../onboarding.html';
+        return;
+      }
+      activeStoreId = String(info.storeId);
+      document.getElementById('saasStoreBadge').textContent = `${info.name} (ID: ${activeStoreId})`;
+
+      const snap = await getDoc(doc(db, 'merchants', activeStoreId));
+      const d = snap.exists() ? (snap.data() || {}) : {};
+      document.getElementById('cfgName').value = d.name || info.name || '';
+      document.getElementById('cfgPlan').value = d.saasPlan || 'starter';
+      document.getElementById('cfgPhone').value = d.phone || '';
+      document.getElementById('cfgAddress').value = d.address || '';
+      document.getElementById('cfgBtPerVnd').value = Number(d.btPerVnd || 100000);
+
+      const mods = d.saasModules || {};
+      document.getElementById('modErpMenus').checked = mods.erpMenus !== false;
+      document.getElementById('modCrmClients').checked = mods.crmClients !== false;
+      document.getElementById('modSettlement').checked = mods.settlement !== false;
+      document.getElementById('modCoupons').checked = mods.coupons !== false;
+      document.getElementById('modVisionCrm').checked = !!mods.visionCrm;
+      document.getElementById('modMarketing').checked = !!mods.marketing;
+      document.getElementById('modHrTasks').checked = !!mods.hrTasks;
+
+      const ownerEmail = (d.ownerEmail || user?.email || '').toLowerCase();
+      const inviteUrl = `https://bestclubvn.netlify.app/register.html?mentor=${encodeURIComponent(ownerEmail)}&merchant=${encodeURIComponent(activeStoreId)}&mname=${encodeURIComponent(d.name || info.name || '')}`;
+      document.getElementById('linkMentorInvite').textContent = inviteUrl;
+
+      document.getElementById('btnCopyMentor').onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(inviteUrl);
+          document.getElementById('btnCopyMentor').textContent = '✅ 복사 완료!';
+          setTimeout(() => { document.getElementById('btnCopyMentor').textContent = '📋 초대 링크 복사'; }, 1800);
+        } catch (_) {}
+      };
+    });
+
+    document.getElementById('btnSaveSaas').addEventListener('click', async () => {
+      if (!activeStoreId) return;
+      const btn = document.getElementById('btnSaveSaas');
+      const msg = document.getElementById('saveMsg');
+      btn.disabled = true;
+      msg.textContent = '저장 중...';
+      msg.style.color = '#475569';
+      try {
+        await setDoc(doc(db, 'merchants', activeStoreId), {
+          name: document.getElementById('cfgName').value.trim(),
+          saasPlan: document.getElementById('cfgPlan').value,
+          phone: document.getElementById('cfgPhone').value.trim(),
+          address: document.getElementById('cfgAddress').value.trim(),
+          btPerVnd: Math.max(1000, Number(document.getElementById('cfgBtPerVnd').value || 100000)),
+          saasModules: {
+            erpMenus: document.getElementById('modErpMenus').checked,
+            crmClients: document.getElementById('modCrmClients').checked,
+            settlement: document.getElementById('modSettlement').checked,
+            coupons: document.getElementById('modCoupons').checked,
+            visionCrm: document.getElementById('modVisionCrm').checked,
+            marketing: document.getElementById('modMarketing').checked,
+            hrTasks: document.getElementById('modHrTasks').checked,
+          },
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+        msg.textContent = '✅ SaaS 워크스페이스 설정이 저장되었습니다!';
+        msg.style.color = '#059669';
+      } catch (err) {
+        msg.textContent = '저장 실패: ' + (err?.message || err);
+        msg.style.color = '#dc2626';
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

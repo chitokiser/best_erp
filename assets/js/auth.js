@@ -129,9 +129,8 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                         status = '승인완료';
                     }
 
-                    // Store tenant ID globally as String to prevent doc() path errors
-                    const defaultMerchant = (role === 'GUEST' || rawRole === 'GUEST') ? '' : '1791605366';
-                    window.tenantId = String(data.merchantId || data.merchant_id || data.tenantId || data.tenant_id || data.company_id || defaultMerchant);
+                    // Store tenant ID globally as String — NEVER fallback to another store's ID
+                    window.tenantId = String(data.merchantId || data.merchant_id || data.tenantId || data.tenant_id || data.company_id || '');
                     if ((user.email || '').toLowerCase().trim() === 'bestwinner167@gmail.com') {
                         window.tenantId = '1794710386';
                     }
