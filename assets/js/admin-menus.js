@@ -10,6 +10,7 @@ import {
     serverTimestamp
 } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
+import { openRecipeEditor, saveRecipe } from './menuRecipeEditor.js';
 
 const SUPER_ADMIN_EMAILS = ['daguri75@gmail.com'];
 let isSuperAdmin = false;
@@ -386,6 +387,7 @@ window.openMenuModal = function () {
     if (delBtn) delBtn.style.display = 'none';
 
     document.getElementById('menuModal').style.display = 'flex';
+    openRecipeEditor(null);
 };
 
 window.editItem = function (id) {
@@ -427,6 +429,7 @@ window.editItem = function (id) {
     }
 
     document.getElementById('menuModal').style.display = 'flex';
+    openRecipeEditor(editingSourceCollection === 'merchant_products' ? item.id : null);
 };
 
 document.getElementById('btnSaveMenu')?.addEventListener('click', async () => {
@@ -469,21 +472,32 @@ document.getElementById('btnSaveMenu')?.addEventListener('click', async () => {
     btn.textContent = '저장 중...';
 
     try {
+        let savedId = null;
         if (editingDocId) {
             if (editingSourceCollection === 'merchant_products') {
                 await updateDoc(doc(db, "merchant_products", editingDocId), payload);
+                savedId = editingDocId;
             } else {
-                await addDoc(collection(db, "merchant_products"), {
+                const ref = await addDoc(collection(db, "merchant_products"), {
                     ...payload,
                     created_at: serverTimestamp()
                 });
+                savedId = ref.id;
                 await deleteDoc(doc(db, "menus", editingDocId));
             }
         } else {
-            await addDoc(collection(db, "merchant_products"), {
+            const ref = await addDoc(collection(db, "merchant_products"), {
                 ...payload,
                 created_at: serverTimestamp()
             });
+            savedId = ref.id;
+        }
+
+        try {
+            await saveRecipe(savedId, { productName: name, merchantId });
+        } catch (recipeErr) {
+            console.error('레시피 저장 실패:', recipeErr);
+            alert('메뉴는 저장됐지만 레시피 저장에 실패했습니다: ' + (recipeErr.message || recipeErr));
         }
 
         document.getElementById('menuModal').style.display = 'none';
