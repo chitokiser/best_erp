@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>🍽️ 테이블 QR 주문 | BestERP</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; color: #0f172a; padding-bottom: 110px; }
+    .top { position: sticky; top: 0; z-index: 40; background: linear-gradient(135deg, #0f172a 0%, #312e81 100%); color: #fff; padding: 14px 16px; box-shadow: 0 4px 16px rgba(15,23,42,.18); }
+    .top-row { max-width: 680px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .store-name { font-size: 1.15rem; font-weight: 900; }
+    .table-pill { padding: 5px 12px; border-radius: 999px; background: linear-gradient(135deg, #fde047, #f59e0b); color: #0f172a; font-size: 0.82rem; font-weight: 900; white-space: nowrap; }
+    .wrap { max-width: 680px; margin: 0 auto; padding: 14px; }
+    .search-box { width: 100%; padding: 10px 14px; border-radius: 12px; border: 1px solid #cbd5e1; background: #fff; font-size: 0.9rem; margin-bottom: 12px; }
+    .menu-list { display: flex; flex-direction: column; gap: 10px; }
+    .m-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 12px; display: flex; gap: 12px; align-items: center; box-shadow: 0 2px 8px rgba(15,23,42,.04); }
+    .m-img { width: 82px; height: 82px; border-radius: 12px; object-fit: cover; background: #e2e8f0; flex-shrink: 0; }
+    .m-info { flex: 1; min-width: 0; }
+    .m-name { font-weight: 800; font-size: 0.96rem; color: #0f172a; margin-bottom: 3px; }
+    .m-desc { font-size: 0.78rem; color: #64748b; line-height: 1.35; margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .m-price { font-weight: 900; font-size: 0.96rem; color: #4f46e5; }
+    .qty-ctrl { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .q-btn { width: 32px; height: 32px; border-radius: 10px; border: 1px solid #cbd5e1; background: #fff; font-size: 1.05rem; font-weight: 900; cursor: pointer; color: #0f172a; }
+    .q-btn.add { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+    .q-num { min-width: 22px; text-align: center; font-weight: 900; font-size: 0.92rem; }
+
+    .note-box { margin-top: 14px; background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px; }
+    .note-box label { display: block; font-size: 0.8rem; font-weight: 800; color: #475569; margin-bottom: 6px; }
+    .note-box input { width: 100%; padding: 9px 11px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.88rem; }
+
+    .cart-bar { position: fixed; left: 12px; right: 12px; bottom: 12px; max-width: 656px; margin: 0 auto; background: #0f172a; color: #fff; border-radius: 18px; padding: 12px 16px; display: none; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 14px 36px rgba(15,23,42,.35); z-index: 50; }
+    .cart-bar.show { display: flex; }
+    .btn-order { padding: 11px 18px; border-radius: 12px; border: none; background: linear-gradient(135deg, #fde047, #f59e0b); color: #0f172a; font-weight: 900; font-size: 0.92rem; cursor: pointer; white-space: nowrap; }
+    .btn-order:disabled { opacity: .5; }
+
+    .status-card { display: none; background: #fff; border: 2px solid #4f46e5; border-radius: 18px; padding: 20px; text-align: center; margin-bottom: 14px; box-shadow: 0 8px 24px rgba(79,70,229,.12); }
+    .status-card.show { display: block; }
+    .st-badge { display: inline-block; padding: 6px 14px; border-radius: 999px; font-weight: 900; font-size: 0.9rem; margin: 8px 0; }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="top-row">
+      <div>
+        <div class="store-name" id="storeName">매장 불러오는 중...</div>
+        <div style="font-size:0.74rem;color:#c7d2fe;">QR 스마트 테이블 주문 · 주방 실시간 전송</div>
+      </div>
+      <div class="table-pill" id="tablePill">TABLE -</div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- 실시간 주문 상태 트래커 -->
+    <section class="status-card" id="orderStatusCard">
+      <div style="font-size:1.6rem;">🎉</div>
+      <h2 style="font-size:1.1rem;font-weight:900;margin-top:4px;">주문이 주방으로 접수되었습니다!</h2>
+      <div class="st-badge" id="liveOrderBadge" style="background:#fee2e2;color:#b91c1c;">🔴 신규 접수 완료</div>
+      <p id="liveOrderSummary" style="font-size:0.84rem;color:#475569;margin-top:4px;"></p>
+      <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+        <button type="button" id="btnMoreOrder" style="padding:8px 14px;border-radius:10px;border:1px solid #cbd5e1;background:#f8fafc;font-weight:800;font-size:0.82rem;cursor:pointer;">+ 메뉴 추가 주문</button>
+        <a id="btnBestClubBonus" href="https://bestclubvn.netlify.app/register.html" target="_blank" style="padding:8px 14px;border-radius:10px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;text-decoration:none;font-weight:800;font-size:0.82rem;">🎁 1,000 GP 보너스 받기 →</a>
+      </div>
+    </section>
+
+    <input type="search" id="menuSearch" class="search-box" placeholder="🔍 메뉴 이름으로 검색..." />
+
+    <div id="menuList" class="menu-list">
+      <div style="text-align:center;padding:40px;color:#64748b;">메뉴를 불러오는 중...</div>
+    </div>
+
+    <div class="note-box">
+      <label for="orderNote">📝 주방 요청사항 (선택)</label>
+      <input type="text" id="orderNote" placeholder="예: 덜 맵게 해주세요, 고수 빼주세요, 얼음 적게" />
+    </div>
+  </main>
+
+  <div class="cart-bar" id="cartBar">
+    <div>
+      <div style="font-size:0.76rem;color:#94a3b8;">선택 메뉴 <strong id="cartCount" style="color:#fde047;">0</strong>개</div>
+      <div style="font-size:1.05rem;font-weight:900;" id="cartTotal">0 VND</div>
+    </div>
+    <button type="button" class="btn-order" id="btnSubmitOrder">🔥 주방으로 주문하기</button>
+  </div>
+
+  <script type="module">
+    import { auth, db } from './assets/js/firebase-config.js';
+    import { signInAnonymously, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+    import { collection, query, where, getDocs, doc, getDoc, addDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+
+    const params = new URLSearchParams(location.search);
+    const storeId = (params.get('store') || params.get('m') || '').trim();
+    const tableNo = (params.get('table') || '1').trim();
+
+    document.getElementById('tablePill').textContent = `TABLE ${tableNo}`;
+
+    let _menus = [];
+    let _cart = {};
+    let _storeName = '베스트클럽 가맹점';
+    let _ownerEmail = '';
+    let _unsubOrder = null;
+
+    function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+    function updateCartUi() {
+      let count = 0, total = 0;
+      Object.entries(_cart).forEach(([id, qty]) => {
+        if (qty <= 0) return;
+        const m = _menus.find((x) => x.id === id);
+        if (!m) return;
+        count += qty;
+        total += Number(m.price || 0) * qty;
+      });
+      document.getElementById('cartCount').textContent = String(count);
+      document.getElementById('cartTotal').textContent = `${total.toLocaleString('ko-KR')} VND`;
+      document.getElementById('cartBar').classList.toggle('show', count > 0);
+    }
+
+    function renderMenus(filter = '') {
+      const box = document.getElementById('menuList');
+      const q = filter.trim().toLowerCase();
+      const list = q ? _menus.filter((m) => String(m.product_name || '').toLowerCase().includes(q)) : _menus;
+
+      if (!list.length) {
+        box.innerHTML = '<div style="text-align:center;padding:40px;color:#64748b;">표시할 메뉴가 없습니다.</div>';
+        return;
+      }
+
+      box.innerHTML = list.map((m) => {
+        const img = m.image_url || (Array.isArray(m.images) && m.images[0]) || 'https://bestclubvn.netlify.app/assets/images/jump/logo2.png';
+        const qty = _cart[m.id] || 0;
+        return `
+          <article class="m-card">
+            <img class="m-img" src="${esc(img)}" alt="${esc(m.product_name)}" loading="lazy" />
+            <div class="m-info">
+              <div class="m-name">${esc(m.product_name || '메뉴')}</div>
+              <div class="m-desc">${esc(m.description || '')}</div>
+              <div class="m-price">${Number(m.price || 0).toLocaleString('ko-KR')} VND</div>
+            </div>
+            <div class="qty-ctrl">
+              ${qty > 0 ? `<button type="button" class="q-btn" data-dec="${esc(m.id)}">−</button><span class="q-num">${qty}</span>` : ''}
+              <button type="button" class="q-btn add" data-inc="${esc(m.id)}">+</button>
+            </div>
+          </article>`;
+      }).join('');
+
+      box.querySelectorAll('[data-inc]').forEach((b) => {
+        b.onclick = () => {
+          const id = b.dataset.inc;
+          _cart[id] = (_cart[id] || 0) + 1;
+          renderMenus(document.getElementById('menuSearch').value);
+          updateCartUi();
+        };
+      });
+      box.querySelectorAll('[data-dec]').forEach((b) => {
+        b.onclick = () => {
+          const id = b.dataset.dec;
+          _cart[id] = Math.max(0, (_cart[id] || 0) - 1);
+          if (_cart[id] === 0) delete _cart[id];
+          renderMenus(document.getElementById('menuSearch').value);
+          updateCartUi();
+        };
+      });
+    }
+
+    async function ensureOrderAuth() {
+      if (auth.currentUser) return auth.currentUser;
+      try {
+        const cred = await signInAnonymously(auth);
+        return cred.user;
+      } catch (_) {
+        const cred = await signInWithPopup(auth, new GoogleAuthProvider());
+        return cred.user;
+      }
+    }
+
+    function watchOrderStatus(orderId, summaryText) {
+      const card = document.getElementById('orderStatusCard');
+      const badge = document.getElementById('liveOrderBadge');
+      const sumEl = document.getElementById('liveOrderSummary');
+      if (sumEl) sumEl.textContent = summaryText;
+      card.classList.add('show');
+      card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      if (_unsubOrder) _unsubOrder();
+      _unsubOrder = onSnapshot(doc(db, 'merchant_orders', orderId), (snap) => {
+        if (!snap.exists()) return;
+        const st = String(snap.data().status || 'pending').toLowerCase();
+        if (st === 'preparing') {
+          badge.textContent = '🟠 주방에서 맛있게 조리 중입니다!';
+          badge.style.background = '#fef3c7';
+          badge.style.color = '#b45309';
+        } else if (st === 'completed' || st === 'paid') {
+          badge.textContent = '🟢 조리 완료 · 곧 서빙됩니다!';
+          badge.style.background = '#dcfce7';
+          badge.style.color = '#15803d';
+        } else {
+          badge.textContent = '🔴 주문 접수 완료 (주방 확인 중)';
+          badge.style.background = '#fee2e2';
+          badge.style.color = '#b91c1c';
+        }
+      });
+    }
+
+    document.getElementById('menuSearch').addEventListener('input', (e) => renderMenus(e.target.value));
+    document.getElementById('btnMoreOrder').addEventListener('click', () => {
+      document.getElementById('menuSearch').focus();
+    });
+
+    document.getElementById('btnSubmitOrder').addEventListener('click', async () => {
+      const items = [];
+      let total = 0;
+      Object.entries(_cart).forEach(([id, qty]) => {
+        if (qty <= 0) return;
+        const m = _menus.find((x) => x.id === id);
+        if (!m) return;
+        const unit = Number(m.price || 0);
+        items.push({ product_id: m.id, product_name: m.product_name, qty, unit_price: unit });
+        total += unit * qty;
+      });
+      if (!items.length) return;
+
+      const btn = document.getElementById('btnSubmitOrder');
+      btn.disabled = true;
+      btn.textContent = '⏳ 주방 전송 중...';
+
+      try {
+        const user = await ensureOrderAuth();
+        const note = document.getElementById('orderNote').value.trim();
+        const ref = await addDoc(collection(db, 'merchant_orders'), {
+          merchant_id: String(storeId),
+          merchant_name: _storeName,
+          tableNumber: tableNo,
+          buyer_uid: user?.uid || 'TABLE_GUEST',
+          buyer_name: `테이블 ${tableNo} 손님`,
+          items,
+          total_amount: total,
+          note,
+          status: 'pending',
+          order_source: 'TABLE_QR',
+          created_at: serverTimestamp(),
+          updated_at: serverTimestamp(),
+        });
+
+        const summary = `테이블 ${tableNo} · ${items.map((i) => `${i.product_name} ×${i.qty}`).join(', ')} (${total.toLocaleString()} VND)`;
+        _cart = {};
+        document.getElementById('orderNote').value = '';
+        renderMenus(document.getElementById('menuSearch').value);
+        updateCartUi();
+        watchOrderStatus(ref.id, summary);
+      } catch (err) {
+        alert('주문 전송 실패: ' + (err?.message || err));
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🔥 주방으로 주문하기';
+      }
+    });
+
+    async function init() {
+      if (!storeId) {
+        document.getElementById('storeName').textContent = '가맹점 정보가 없습니다';
+        document.getElementById('menuList').innerHTML = '<div style="text-align:center;padding:40px;color:#dc2626;">올바른 테이블 QR 코드로 스캔해 주세요.</div>';
+        return;
+      }
+
+      try {
+        const mSnap = await getDoc(doc(db, 'merchants', storeId));
+        if (mSnap.exists()) {
+          const md = mSnap.data() || {};
+          _storeName = md.name || md.storeName || `가맹점 #${storeId}`;
+          _ownerEmail = (md.ownerEmail || '').toLowerCase();
+        }
+        document.getElementById('storeName').textContent = _storeName;
+        document.title = `🍽️ ${_storeName} TABLE ${tableNo} 주문`;
+
+        const bonusLink = document.getElementById('btnBestClubBonus');
+        if (bonusLink) {
+          const p = new URLSearchParams();
+          if (_ownerEmail) p.set('mentor', _ownerEmail);
+          p.set('merchant', storeId);
+          p.set('mname', _storeName);
+          bonusLink.href = `https://bestclubvn.netlify.app/register.html?${p.toString()}`;
+        }
+
+        const sNum = Number(storeId);
+        const candidates = Number.isFinite(sNum) ? [storeId, sNum] : [storeId];
+        const q = query(collection(db, 'merchant_products'), where('merchant_id', 'in', candidates), where('sale_status', '==', 'published'));
+        const snap = await getDocs(q);
+        _menus = snap.docs
+          .map((d) => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => Number(a.display_order || 999) - Number(b.display_order || 999));
+        renderMenus();
+      } catch (err) {
+        document.getElementById('menuList').innerHTML = `<div style="text-align:center;padding:40px;color:#dc2626;">메뉴 불러오기 오류: ${esc(err?.message || err)}</div>`;
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
