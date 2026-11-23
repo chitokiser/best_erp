@@ -1,17 +1,6 @@
-export const getGeminiApiKey = () => {
-    return (
-        import.meta.env?.VITE_GEMINI_API_KEY ||
-        window.__GEMINI_API_KEY__ ||
-        localStorage.getItem('VITE_GEMINI_API_KEY') ||
-        "AQ.Ab8RN6LmECGSvAk-Pu0P5b8lhg-W77-XWNsKHB9vDuEGex8pWw"
-    );
-};
+import { geminiFetch } from './geminiClient.js';
 
 export const callGeminiAI = async (contextData, customPrompt) => {
-    const apiKey = getGeminiApiKey();
-
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-
     const systemPrompt = `
     당신은 BEST WINNER GROUP의 최고 등급 AI 비즈니스 컨설턴트 및 수석 프로젝트 매니저입니다.
     제공된 데이터(프로젝트 진행 상황, 자재, 연락처 목록, 결재 대기 건 등)를 분석하여 다음과 같은 역할을 수행합니다:
@@ -33,11 +22,7 @@ export const callGeminiAI = async (contextData, customPrompt) => {
         }
     };
 
-    const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    });
+    const response = await geminiFetch(payload);
 
     if (!response.ok) {
         const err = await response.text();
@@ -49,19 +34,12 @@ export const callGeminiAI = async (contextData, customPrompt) => {
 };
 
 export const analyzeBusinessQuery = async (query) => {
-    const apiKey = getGeminiApiKey();
-
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
     const payload = {
         contents: [{
             parts: [{ text: query }]
         }]
     };
-    const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    });
+    const response = await geminiFetch(payload);
     if (!response.ok) {
         throw new Error("AI 질의 중 오류 발생");
     }
@@ -70,10 +48,6 @@ export const analyzeBusinessQuery = async (query) => {
 };
 
 export const scanBusinessCardAI = async (base64Image, mimeType) => {
-    const apiKey = getGeminiApiKey();
-
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-
     const prompt = `이 이미지는 명함(Business Card)입니다. 
 다음 정보를 추출하여 정확한 JSON 형식으로만 응답하세요. 마크다운표시나 다른 설명은 일절 추가하지 마세요.
 {
@@ -105,11 +79,7 @@ export const scanBusinessCardAI = async (base64Image, mimeType) => {
         }
     };
 
-    const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    });
+    const response = await geminiFetch(payload);
 
     if (!response.ok) {
         throw new Error("명함 인식 AI 통신 오류");
@@ -123,10 +93,6 @@ export const scanBusinessCardAI = async (base64Image, mimeType) => {
 };
 
 export const scanReceiptAI = async (base64Image, mimeType = 'image/jpeg') => {
-    const apiKey = getGeminiApiKey();
-
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-
     const prompt = `이 이미지는 지출 영수증(Receipt, Hóa đơn) 사진입니다.
 한국어, 베트남어(Hóa đơn), 영어 등으로 작성된 영수증일 수 있습니다.
 영수증의 모든 텍스트를 정확하게 판독하여 오직 유효한 JSON 형식으로만 응답하세요:
@@ -167,11 +133,7 @@ export const scanReceiptAI = async (base64Image, mimeType = 'image/jpeg') => {
         }
     };
 
-    const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    });
+    const response = await geminiFetch(payload);
 
     if (!response.ok) {
         const errorText = await response.text();
