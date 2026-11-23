@@ -84,15 +84,21 @@ service cloud.firestore {
         );
     }
 
+    // 사용자 데이터 u 의 소속 가맹점 ID 목록 (문자열).
+    // BestClubVN 승인 화면은 merchantId 를 숫자로 저장하므로 문자열로 바꿔 비교한다.
+    function myTenantIds(u) {
+      return [string(u.get('tenant_id', '')), string(u.get('tenantId', '')),
+              string(u.get('merchantId', '')), string(u.get('merchant_id', '')),
+              request.auth.uid];
+    }
+
+    function idInList(v, ids) {
+      return v != null && string(v) != '' && string(v) != 'null' && string(v) in ids;
+    }
+
     // 사용자 데이터 u 의 소속 가맹점이 tenantId 인지
     function tenantMatch(u, tenantId) {
-      return tenantId != null && tenantId != '' && (
-        u.get('tenant_id', null) == tenantId ||
-        u.get('tenantId', null) == tenantId ||
-        u.get('merchantId', null) == tenantId ||
-        u.get('merchant_id', null) == tenantId ||
-        request.auth.uid == tenantId
-      );
+      return idInList(tenantId, myTenantIds(u));
     }
 
     // 로그인 사용자의 소속 가맹점이 tenantId 인지
@@ -107,10 +113,11 @@ service cloud.firestore {
 
     // 문서 d 의 가맹점 필드가 모두 비어 있거나 u(로그인 사용자)의 가맹점인지
     function tenantFieldsMineOrEmpty(u, d) {
-      return (d.get('merchantId', null) == null || tenantMatch(u, d.get('merchantId', null)))
-        && (d.get('merchant_id', null) == null || tenantMatch(u, d.get('merchant_id', null)))
-        && (d.get('tenantId', null) == null || tenantMatch(u, d.get('tenantId', null)))
-        && (d.get('tenant_id', null) == null || tenantMatch(u, d.get('tenant_id', null)));
+      let ids = myTenantIds(u);
+      return (d.get('merchantId', null) == null || idInList(d.get('merchantId', null), ids))
+        && (d.get('merchant_id', null) == null || idInList(d.get('merchant_id', null), ids))
+        && (d.get('tenantId', null) == null || idInList(d.get('tenantId', null), ids))
+        && (d.get('tenant_id', null) == null || idInList(d.get('tenant_id', null), ids));
     }
 
     // 본인 users 문서 수정: 권한 role 과 소속 필드는 못 바꾼다.
@@ -147,6 +154,7 @@ service cloud.firestore {
       let empPath = /databases/$(database)/documents/employees/$(empId);
       let emp = get(empPath).data;
       let t = emp.get('tenantId', null);
+      let ts = string(t);
       return signedIn() && request.auth.uid == uid
         && request.auth.token.email_verified == true
         && (request.auth.token.email is string)
@@ -157,10 +165,10 @@ service cloud.firestore {
         && t != null
         && d.get('role', '') == 'STAFF'
         && d.get('isAdmin', false) == false
-        && d.get('merchantId', null) == t
-        && d.get('tenantId', null) == t
-        && d.get('tenant_id', t) == t
-        && d.get('merchant_id', t) == t
+        && string(d.get('merchantId', null)) == ts
+        && string(d.get('tenantId', null)) == ts
+        && string(d.get('tenant_id', t)) == ts
+        && string(d.get('merchant_id', t)) == ts
         && onlyStaffLinkFieldsChanged()
         && (resource == null || !isPrivilegedRole(resource.data.get('role', '')) || resource.data.get('role', '') == 'STAFF');
     }
@@ -182,6 +190,31 @@ service cloud.firestore {
               && tenantFieldsMineOrEmpty(u, resource.data)
               && resource.data.get('isAdmin', false) == false
            ));
+    }
+
+    // 가맹점 소속 엄격 판정 (매장 CCTV·고객 데이터용).
+    // belongsToTenant()는 isCEO()만으로 모든 가맹점을 통과시키므로 매장 데이터에는 쓰지 않는다.
+    function isMerchantMember(merchantId) {
+      let u = getUserData();
+      return signedIn() && (merchantId is string) && merchantId.size() > 0 && (
+        isSuperAdmin() ||
+        string(u.get('merchantId', '')) == merchantId ||
+        string(u.get('tenantId', '')) == merchantId ||
+        string(u.get('tenant_id', '')) == merchantId
+      );
+    }
+
+    // 테이블 QR(비로그인 고객) 자가 등록 시 허용 필드. 얼굴 벡터·NVR 등록·동의 필드는 금지.
+    function isTableQrCustomerCreate() {
+      let d = request.resource.data;
+      return (d.merchantId is string)
+        && exists(/databases/$(database)/documents/merchants/$(d.merchantId))
+        && d.keys().hasOnly(['customerId', 'merchantId', 'name', 'email', 'birthDate', 'gender', 'nationality',
+                             'job', 'preferences', 'photoURL', 'isFaceRegistered', 'marketingConsent',
+                             'privacyConsent', 'tableNo', 'zaloSuperAdminConnected', 'zaloOwnerConnected',
+                             'visitCount', 'totalSpent', 'tier', 'serviceNotes', 'awardedBt', 'btTicketCode',
+                             'createdAt'])
+        && d.visitCount == 1 && d.totalSpent == 0;
     }
 
     function isOrderBuyer() {
@@ -352,6 +385,10 @@ service cloud.firestore {
       match /myMap/{docId} {
         allow read, write: if signedIn() && request.auth.uid == uid;
       }
+
+      match /dailyArea/{docId} {
+        allow read, write: if signedIn() && request.auth.uid == uid;
+      }
     }
 
     match /settlements/{ym} {
@@ -427,9 +464,22 @@ service cloud.firestore {
 
     match /transactions/{docId} {
       allow get, list: if isAdmin()
-        || (signedIn() && resource.data.uid == request.auth.uid);
+        || isStaff()
+        || (signedIn() && (resource.data.uid == request.auth.uid || resource.data.buyerUid == request.auth.uid));
       allow create: if signedIn();
       allow update, delete: if isAdmin();
+    }
+
+    match /bt_transactions/{docId} {
+      allow get, list: if isAdmin() || isStaff() || signedIn();
+      allow create: if signedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    match /bt_rewards/{docId} {
+      allow get, list: if isAdmin() || isStaff() || signedIn();
+      allow create, update: if signedIn();
+      allow delete: if isAdmin();
     }
 
     match /kca_webzine/{docId} {
@@ -456,6 +506,10 @@ service cloud.firestore {
               || (exists(/databases/$(database)/documents/users/$(request.auth.uid))
                   && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.merchantId == merchantId)
             ));
+
+      match /{subcol}/{docId} {
+        allow read, write: if isAdmin() || isStaff() || isAuthenticated();
+      }
     }
 
     match /places/{placeId} {
@@ -593,14 +647,51 @@ service cloud.firestore {
       allow get, list: if true;
       allow create, update, delete: if isAdmin();
     }
+    // 게임 레벨(gsLevel·level)은 회원이 마음대로 바꿀 수 없다 (Point↔GP 전환 배수 조작 방지).
+    // 허용: 그대로 / 올리되 누적 경험치로 도달한 레벨((L)²×10,000 ≤ gsExp) 또는 기존 최고 레벨 이하까지 / 재가입 초기화(Lv.1, 경험치 0)
+    function bpLevelFieldOk(field) {
+      let nv = request.resource.data.get(field, 1);
+      let ov = resource.data.get(field, 1);
+      let og = resource.data.get('gsLevel', 1);
+      let ol = resource.data.get('level', 1);
+      let oldMax = og > ol ? og : ol;
+      let exp = request.resource.data.get('gsExp', 0);
+      return nv == ov
+        || (nv is number && nv > ov && (nv <= oldMax || nv * nv * 10000 <= exp))
+        || (nv == 1 && exp == 0);
+    }
+
     match /battle_players/{uid} {
       allow get, list: if true;
       allow create: if signedIn() && request.auth.uid == uid
-        && !request.resource.data.keys().hasAny(['gold']);
+        && !request.resource.data.keys().hasAny(['gold'])
+        && request.resource.data.get('gsLevel', 1) <= 1
+        && request.resource.data.get('level', 1) <= 1;
       allow update: if signedIn() && request.auth.uid == uid
-        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['gold']);
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['gold'])
+        && bpLevelFieldOk('gsLevel')
+        && bpLevelFieldOk('level');
       allow delete: if isAdmin();
     }
+
+    // ── 수박게임·2048 주간 랭킹 (쓰기는 Cloud Functions 전용) ────────────────
+    match /weekly_rankings/{boardId} {
+      allow get, list: if true;
+      allow write: if false;
+      match /entries/{uid} {
+        allow get, list: if true;
+        allow write: if false;
+      }
+    }
+    match /weekly_settlements/{settleId} {
+      allow get, list: if true;
+      allow write: if false;
+    }
+    match /weekly_ranking_payouts/{payoutId} {
+      allow get, list: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow write: if false;
+    }
+    // weekly_game_sessions: 규칙 없음 → 클라이언트 접근 불가 (서버 전용)
 
     // ── 커뮤니티 / 이벤트 / 버기카 / DAO / 게임 상점 ─────────────────────────
     match /community_posts/{postId} {
@@ -867,18 +958,55 @@ service cloud.firestore {
 
     match /coupon_campaigns/{campaignId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow create, delete: if isAdmin() || isStaff();
+      allow update: if isAdmin() || isStaff() || signedIn();
     }
 
     match /user_coupons/{userCouponId} {
-      allow get, list: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
-      allow create, update: if isAdmin() || (signedIn() && request.resource.data.uid == request.auth.uid);
-      allow delete: if isAdmin();
+      allow get, list: if isAdmin() || isStaff() || (signedIn() && (resource.data.userId == request.auth.uid || resource.data.uid == request.auth.uid));
+      allow create, update: if isAdmin() || isStaff() || (signedIn() && (request.resource.data.userId == request.auth.uid || request.resource.data.uid == request.auth.uid));
+      allow delete: if isAdmin() || isStaff();
+    }
+
+    match /coupon_review_comments/{commentId} {
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin() || isStaff() || (signedIn() && resource.data.userId == request.auth.uid && resource.data.status == 'pending' && request.resource.data.status == 'pending');
+      allow delete: if isAdmin() || isStaff() || (signedIn() && resource.data.userId == request.auth.uid && resource.data.status == 'pending');
+    }
+
+    // 구글 리뷰 이벤트 BT 풀/수령 기록 — 서버(Cloud Functions)만 쓴다
+    match /review_bt_pools/{campaignId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /review_bt_claims/{claimId} {
+      allow get: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+      allow list: if isAdmin();
+      allow write: if false;
+    }
+
+    // Zalo 친구추가 BT 이벤트 — 풀/코드/수령 기록은 서버(Cloud Functions)만 쓴다
+    match /zalo_friend_events/{campaignId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /zalo_friend_codes/{code} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    match /zalo_friend_claims/{claimId} {
+      allow get: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+      allow list: if isAdmin();
+      allow write: if false;
     }
 
     match /coupon_redemptions/{redemptionId} {
-      allow get, list: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
-      allow create, update: if isAdmin() || signedIn();
+      allow get, list: if isAdmin() || isStaff() || (signedIn() && (resource.data.userId == request.auth.uid || resource.data.uid == request.auth.uid));
+      allow create, update: if isAdmin() || isStaff() || signedIn();
       allow delete: if isAdmin();
     }
 
@@ -897,6 +1025,15 @@ service cloud.firestore {
     match /suppliers/{document=**} {
       allow read: if isAuthenticated();
       allow write: if isStaff() || isCEO() || isAuthenticated();
+    }
+
+    // 자재 반출(소모) / 입고(지출등록 자동연동) 이력
+    match /material_usage_logs/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /material_purchase_logs/{document=**} {
+      allow read, write: if isAuthenticated();
     }
 
     match /priceHistory/{document=**} {
@@ -964,6 +1101,7 @@ service cloud.firestore {
         || (isCEO() && isMyTenant(resource.data.get('tenantId', null)));
     }
 
+
     match /clients/{document=**} {
       allow read, write: if isAuthenticated();
     }
@@ -1005,49 +1143,69 @@ service cloud.firestore {
       allow read, write: if isAuthenticated();
     }
 
+    // ── Table QR & AI Smart CRM Collections (가맹점별 격리) ──────────────────────
+    // 고객 원장: 소속 가맹점만 조회·수정·삭제. 테이블 QR 자가 등록만 비로그인 생성 허용.
+    match /store_customers/{docId} {
+      allow read, delete: if isMerchantMember(resource.data.merchantId);
+      allow create: if isMerchantMember(request.resource.data.merchantId) || isTableQrCustomerCreate();
+      allow update: if isMerchantMember(resource.data.merchantId)
+        && request.resource.data.merchantId == resource.data.merchantId;
+    }
+
+    match /store_visits/{docId} {
+      allow read, delete: if isMerchantMember(resource.data.merchantId);
+      allow create: if (request.resource.data.merchantId is string)
+        && exists(/databases/$(database)/documents/merchants/$(request.resource.data.merchantId))
+        && request.resource.data.keys().hasOnly(['customerId', 'merchantId', 'tableNo', 'customerName', 'visitTime', 'status']);
+      allow update: if isMerchantMember(resource.data.merchantId)
+        && request.resource.data.merchantId == resource.data.merchantId;
+    }
+
+    match /merchant_traffic_logs/{docId} {
+      // 아직 없는 일별 NVR 문서(nvr_{merchantId}_{날짜})도 구독할 수 있도록 '없음' 조회는 허용 (내용 노출 없음)
+      allow read: if (signedIn() && resource == null) || isMerchantMember(resource.data.merchantId);
+      allow create: if isMerchantMember(request.resource.data.merchantId);
+      allow update, delete: if false;
+    }
+
+    // 매장 카메라 구성: 가맹점당 1문서 (store_cameras/{merchantId})
+    match /store_cameras/{merchantId} {
+      allow read: if isMerchantMember(merchantId);
+      allow create, update: if isMerchantMember(merchantId)
+        && request.resource.data.merchantId == merchantId;
+      allow delete: if isMerchantMember(merchantId);
+    }
+
+    // 매장 직원 원장: 소속 가맹점만 관리 (merchantId 변경 금지)
+    match /store_employees/{docId} {
+      allow read, delete: if isMerchantMember(resource.data.merchantId);
+      allow create: if isMerchantMember(request.resource.data.merchantId);
+      allow update: if isMerchantMember(resource.data.merchantId)
+        && request.resource.data.merchantId == resource.data.merchantId;
+    }
+
+    // 방범 이력: 소속 가맹점 조회·브라우저 경보 기록. 수정·삭제는 최고관리자만.
+    match /security_incident_logs/{docId} {
+      allow read: if isMerchantMember(resource.data.merchantId);
+      allow create: if isMerchantMember(request.resource.data.merchantId);
+    }
+
     // ── AI NVR (매장 Frigate NVR 미들웨어 연동) ──────────────────────────────────
     // nvr_* 문서는 매장 NVR 미들웨어가 Admin SDK로만 기록한다 (클라이언트 쓰기 금지).
     // 얼굴 이미지·임베딩·스냅샷은 저장하지 않는다.
     match /nvr_status/{merchantId} {
-      allow read: if belongsToTenant(merchantId);
+      allow read: if isMerchantMember(merchantId);
       allow write: if false;
     }
 
     match /nvr_attendance/{docId} {
-      allow read: if belongsToTenant(resource.data.merchantId);
+      allow read: if isMerchantMember(resource.data.merchantId);
       allow write: if false;
     }
 
     match /nvr_vip_visits/{docId} {
-      allow read: if belongsToTenant(resource.data.merchantId);
+      allow read: if isMerchantMember(resource.data.merchantId);
       allow write: if false;
-    }
-
-    // 방범 이력: 가맹점 소속 사용자 조회 허용 (쓰기는 기존대로 superadmin / Admin SDK)
-    match /security_incident_logs/{docId} {
-      allow read: if belongsToTenant(resource.data.merchantId);
-    }
-
-    // 매장 직원 원장: 가맹점 소속 사용자가 자기 가맹점 직원만 관리 (merchantId 변경 금지)
-    match /store_employees/{docId} {
-      allow read: if belongsToTenant(resource.data.merchantId);
-      allow create: if belongsToTenant(request.resource.data.merchantId);
-      allow update: if belongsToTenant(resource.data.merchantId)
-        && request.resource.data.merchantId == resource.data.merchantId;
-      allow delete: if belongsToTenant(resource.data.merchantId);
-    }
-
-    // ── Table QR & AI Smart CRM Collections ────────────────────────────────────
-    match /store_customers/{document=**} {
-      allow read, write: if true;
-    }
-
-    match /store_visits/{document=**} {
-      allow read, write: if true;
-    }
-
-    match /merchant_traffic_logs/{document=**} {
-      allow read, write: if true;
     }
 
     match /user_coupons/{document=**} {

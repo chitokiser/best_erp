@@ -20,6 +20,9 @@ await env.withSecurityRulesDisabled(async (c) => {
   await setDoc(doc(db, 'employees/empA1'), { contact: 'new@x.com', tenantId: 'A', name: 'emp' });
   await setDoc(doc(db, 'nvr_attendance/b1'), { merchantId: 'B' });
   await setDoc(doc(db, 'financeRecords/f1'), { amount: 1 });
+  await setDoc(doc(db, 'users/merchN'), { email: 'mn@x.com', role: 'merchant', merchantId: 1791002036 });
+  await setDoc(doc(db, 'nvr_attendance/n1'), { merchantId: '1791002036' });
+  await setDoc(doc(db, 'users/applicant'), { email: 'ap@x.com', role: 'user' });
   await setDoc(doc(db, 'merchants/B'), { ownerUid: 'ceoB', feeBps: 100, active: true, status: 'approved' });
 });
 
@@ -77,6 +80,18 @@ const op = G('opuid', 'daguri75@gmail.com');
 await t('operator (verified) full access', assertSucceeds(getDoc(doc(op, 'nvr_attendance/b1'))));
 await t('operator email unverified gets nothing', assertFails(getDoc(doc(U('opuid2', 'daguri75@gmail.com'), 'nvr_attendance/b1'))));
 await t('operator can set any role', assertSucceeds(updateDoc(doc(op, 'users/rich'), { role: 'CEO' })));
+
+// BestClubVN flows
+const guest = G('guest1', 'g@x.com');
+await t('guest play creates role user', assertSucceeds(setDoc(doc(guest, 'users/guest1'), { displayName: 'Guest#1', isAnonymous: true, role: 'user' })));
+const merchN = G('merchN', 'mn@x.com');
+await t('numeric merchantId merchant reads own nvr', assertSucceeds(getDoc(doc(merchN, 'nvr_attendance/n1'))));
+await t('numeric merchantId merchant cannot read B nvr', assertFails(getDoc(doc(merchN, 'nvr_attendance/b1'))));
+await t('numeric merchant creates own employee', assertSucceeds(addDoc(collection(merchN, 'employees'), { tenantId: '1791002036', contact: 'q@x.com' })));
+await t('merchant creates coupon campaign (isStaff)', assertSucceeds(setDoc(doc(merchN, 'coupon_campaigns/c1'), { merchantId: 1791002036 })));
+await t('merchant is not admin (notices)', assertFails(setDoc(doc(merchN, 'notices/n1'), { t: 1 })));
+await t('admin approves merchant (admin-approve.js)', assertSucceeds(setDoc(doc(op, 'users/applicant'), { merchantId: 1795000000, role: 'merchant' }, { merge: true })));
+await t('applicant cannot self-approve', assertFails(setDoc(doc(G('applicant', 'ap@x.com'), 'users/applicant'), { role: 'CEO' }, { merge: true })));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 await env.cleanup();
