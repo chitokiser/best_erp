@@ -15,6 +15,7 @@ const STAFF_BLOCKED_PAGES = [
 
 const MODULE_PAGE_MAP = {
   erpMenus: ['menus.html', 'categories.html'],
+  fnbKds: ['kitchen-orders.html', 'table-qr-print.html'],
   crmClients: ['clients.html', 'crm-retention.html'],
   settlement: ['settlement.html', 'finance.html'],
   coupons: ['coupons.html'],
@@ -59,7 +60,7 @@ export async function applySaasNavGuard({ role, tenantId, isSuperAdmin }) {
     }
   }
 
-  // 3. 가맹점별 saasModules ON/OFF 반영 (Super Admin 제외)
+  // 3. 가맹점별 업종(category) & saasModules ON/OFF 반영 (Super Admin 제외)
   if (!isSuperAdmin && tenantId && tenantId !== 'system_master') {
     try {
       const snap = await getDoc(doc(db, 'merchants', String(tenantId)));
@@ -68,12 +69,18 @@ export async function applySaasNavGuard({ role, tenantId, isSuperAdmin }) {
         if (d.saasStatus === 'suspended' && !path.endsWith('/saas-settings.html')) {
           alert('현재 가맹점 SaaS 워크스페이스가 일시정지 상태입니다. 관리자에게 문의해 주세요.');
         }
-        const mods = d.saasModules;
-        if (mods && typeof mods === 'object') {
-          Object.entries(MODULE_PAGE_MAP).forEach(([modKey, pages]) => {
-            if (mods[modKey] === false) hideLinksForPages(pages);
-          });
+        const mods = d.saasModules || {};
+        const isFnb = String(d.category || '').toLowerCase() === 'fnb';
+
+        // 비식당 업종은 fnbKds가 명시적으로 true가 아니면 주방 KDS·테이블 QR 메뉴 자동 숨김
+        if (mods.fnbKds === false || (!isFnb && mods.fnbKds !== true)) {
+          hideLinksForPages(MODULE_PAGE_MAP.fnbKds);
         }
+
+        Object.entries(MODULE_PAGE_MAP).forEach(([modKey, pages]) => {
+          if (modKey === 'fnbKds') return;
+          if (mods[modKey] === false) hideLinksForPages(pages);
+        });
       }
     } catch (_) {}
   }

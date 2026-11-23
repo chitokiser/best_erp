@@ -65,6 +65,7 @@
       <h3>🧩 활성화 ERP · CRM 모듈 관리</h3>
       <div class="mod-grid">
         <label class="mod-item"><span>📦 스마트 메뉴/상품 ERP</span><input type="checkbox" id="modErpMenus" checked /></label>
+        <label class="mod-item"><span>🍽️ 테이블 QR 주문 · 주방 KDS (식당 전용)</span><input type="checkbox" id="modFnbKds" /></label>
         <label class="mod-item"><span>👥 멘티 · 제휴 고객 CRM</span><input type="checkbox" id="modCrmClients" checked /></label>
         <label class="mod-item"><span>💰 BM 정산 · 회계</span><input type="checkbox" id="modSettlement" checked /></label>
         <label class="mod-item"><span>🎫 쿠폰 · 바우처 검증</span><input type="checkbox" id="modCoupons" checked /></label>
@@ -121,7 +122,9 @@
       document.getElementById('cfgBtPerVnd').value = Number(d.btPerVnd || 100000);
 
       const mods = d.saasModules || {};
+      const isFnb = String(d.category || '').toLowerCase() === 'fnb';
       document.getElementById('modErpMenus').checked = mods.erpMenus !== false;
+      document.getElementById('modFnbKds').checked = mods.fnbKds === true || (isFnb && mods.fnbKds !== false);
       document.getElementById('modCrmClients').checked = mods.crmClients !== false;
       document.getElementById('modSettlement').checked = mods.settlement !== false;
       document.getElementById('modCoupons').checked = mods.coupons !== false;
@@ -169,6 +172,7 @@
           btPerVnd: Math.max(1000, Number(document.getElementById('cfgBtPerVnd').value || 100000)),
           saasModules: {
             erpMenus: document.getElementById('modErpMenus').checked,
+            fnbKds: document.getElementById('modFnbKds').checked,
             crmClients: document.getElementById('modCrmClients').checked,
             settlement: document.getElementById('modSettlement').checked,
             coupons: document.getElementById('modCoupons').checked,
