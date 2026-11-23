@@ -794,6 +794,15 @@ service cloud.firestore {
       allow write: if isStaff() || isCEO() || isAuthenticated();
     }
 
+    // 자재 반출(소모) / 입고(지출등록 자동연동) 이력
+    match /material_usage_logs/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /material_purchase_logs/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+
     match /priceHistory/{document=**} {
       allow read: if isAuthenticated();
       allow write: if isStaff() || isCEO() || isAuthenticated();

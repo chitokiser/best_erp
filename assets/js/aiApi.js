@@ -137,12 +137,13 @@ export const scanReceiptAI = async (base64Image, mimeType = 'image/jpeg') => {
   "currency": "VND 또는 KRW",
   "category": "추천 지출 항목 (식자재/원부자재, 매장운영비, 소모품비, 외식/식대, 임대료/공과금, 자재비/원가, 기타경비 중 하나)",
   "items": [
-    { "name": "품목명", "quantity": 1, "price": 50000 }
+    { "name": "품목명", "quantity": 2, "unit": "단위 (kg, 개, 박스 등. 모르면 빈 문자열)", "unitPrice": 25000, "price": 50000 }
   ],
   "summary": "지출 요약 (예: 식음료 및 식자재 구매)",
   "paymentMethod": "결제수단 (신용카드, 체크카드/DEBIT, 현금, 계좌이체 등)"
 }
 주의사항:
+- items의 unitPrice는 1개(1단위)당 가격, price는 그 품목 줄의 합계(수량 × 단가)입니다. 숫자로만 기재하세요.
 - totalAmount는 할인/세금 등이 반영된 최종 실제 결제 총액(Total Payment, TỔNG THANH TOÁN)을 숫자로만 정확히 기재하세요.`;
 
     const payload = {
