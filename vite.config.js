@@ -4,7 +4,7 @@ const { defineConfig } = require('vite');
 module.exports = defineConfig({
   define: {
     'import.meta.env.VITE_GEMINI_API_KEY': JSON.stringify(
-      process.env.VITE_GEMINI_API_KEY || 'AQ.Ab8RN6LmECGSvAk-Pu0P5b8lhg-W77-XWNsKHB9vDuEGex8pWw'
+      process.env.VITE_GEMINI_API_KEY || ''
     )
   },
   build: {
@@ -15,13 +15,13 @@ module.exports = defineConfig({
         "admin_ceo-dashboard": resolve(__dirname, 'admin/ceo-dashboard.html'),
         "admin_clients": resolve(__dirname, 'admin/clients.html'),
         "admin_contacts": resolve(__dirname, 'admin/contacts.html'),
+        "admin_crm-retention": resolve(__dirname, 'admin/crm-retention.html'),
         "admin_dashboard": resolve(__dirname, 'admin/dashboard.html'),
         "admin_employees": resolve(__dirname, 'admin/employees.html'),
         "admin_field-reports": resolve(__dirname, 'admin/field-reports.html'),
         "admin_finance": resolve(__dirname, 'admin/finance.html'),
+        "admin_kitchen-orders": resolve(__dirname, 'admin/kitchen-orders.html'),
         "admin_settlement": resolve(__dirname, 'admin/settlement.html'),
-        "admin_insert-samples": resolve(__dirname, 'admin/insert-samples.html'),
-        "admin_insert-shopee-it": resolve(__dirname, 'admin/insert-shopee-it.html'),
         "admin_material-form": resolve(__dirname, 'admin/material-form.html'),
         "admin_materials": resolve(__dirname, 'admin/materials.html'),
         "admin_marketing": resolve(__dirname, 'admin/marketing.html'),
@@ -29,20 +29,21 @@ module.exports = defineConfig({
         "admin_project-detail": resolve(__dirname, 'admin/project-detail.html'),
         "admin_projects": resolve(__dirname, 'admin/projects.html'),
         "admin_purchase-requests": resolve(__dirname, 'admin/purchase-requests.html'),
+        "admin_saas-console": resolve(__dirname, 'admin/saas-console.html'),
+        "admin_saas-settings": resolve(__dirname, 'admin/saas-settings.html'),
         "admin_sites": resolve(__dirname, 'admin/sites.html'),
         "admin_suppliers": resolve(__dirname, 'admin/suppliers.html'),
         "admin_tasks": resolve(__dirname, 'admin/tasks.html'),
         "admin_users": resolve(__dirname, 'admin/users.html'),
         "admin_api-settings": resolve(__dirname, 'admin/api-settings.html'),
-        "admin_saas-settings": resolve(__dirname, 'admin/saas-settings.html'),
         "admin_categories": resolve(__dirname, 'admin/categories.html'),
         "admin_coupons": resolve(__dirname, 'admin/coupons.html'),
         "admin_price-history": resolve(__dirname, 'admin/price-history.html'),
         "admin_vision-crm": resolve(__dirname, 'admin/vision-crm.html'),
         "categories": resolve(__dirname, 'categories.html'),
-        "estimates": resolve(__dirname, 'estimates.html'),
         "login": resolve(__dirname, 'login.html'),
         "onboarding": resolve(__dirname, 'onboarding.html'),
+        "staff-invite": resolve(__dirname, 'staff-invite.html'),
         "qr-event": resolve(__dirname, 'qr-event.html'),
         "table-qr": resolve(__dirname, 'table-qr.html'),
         "main": resolve(__dirname, 'index.html'),
@@ -51,7 +52,6 @@ module.exports = defineConfig({
         "mobile-task": resolve(__dirname, 'mobile-task.html'),
         "my-workspace": resolve(__dirname, 'my-workspace.html'),
         "price-comparison": resolve(__dirname, 'price-comparison.html'),
-        "projects": resolve(__dirname, 'projects.html'),
         "request-form": resolve(__dirname, 'request-form.html'),
         "suppliers": resolve(__dirname, 'suppliers.html')
       }

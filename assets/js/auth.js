@@ -1,6 +1,7 @@
 import { auth, db } from './firebase-config.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'firebase/auth';
 import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, getDoc, setDoc } from 'firebase/firestore';
+import { applySaasNavGuard } from './saas-nav-guard.js';
 
 const googleProvider = new GoogleAuthProvider();
 
@@ -355,6 +356,12 @@ export const checkAdminAuth = (onAuthSuccess, onAuthFail) => {
                         }
                     } catch (e) {}
                 }
+
+                applySaasNavGuard({
+                    role: window.currentUserRole || role,
+                    tenantId: window.tenantId || '',
+                    isSuperAdmin: userEmailLower === 'daguri75@gmail.com' || (window.currentUserRole || '').toUpperCase() === 'SUPER_ADMIN',
+                }).catch(() => {});
 
                 if (onAuthSuccess) onAuthSuccess(user);
 

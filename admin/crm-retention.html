@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎯 CRM 단골·이탈방지 쿠폰 | BestERP</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+  <style>
+    .crm-wrap { max-width: 1020px; margin: 22px auto; padding: 0 16px 48px; }
+    .crm-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .crm-tab { padding: 9px 14px; border-radius: 10px; border: 1px solid #cbd5e1; background: #fff; font-weight: 800; font-size: 0.84rem; cursor: pointer; color: #334155; }
+    .crm-tab.is-active { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+    .crm-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 14px rgba(15,23,42,.04); }
+    .crm-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #f1f5f9; flex-wrap: wrap; }
+    .crm-badge { padding: 3px 9px; border-radius: 999px; font-size: 0.72rem; font-weight: 800; }
+    .b-vip { background: #fef3c7; color: #b45309; }
+    .b-risk { background: #fee2e2; color: #b91c1c; }
+    .b-new { background: #dcfce7; color: #15803d; }
+    .btn-cpn { padding: 8px 13px; border-radius: 10px; border: none; background: linear-gradient(135deg,#f59e0b,#ea580c); color: #fff; font-size: 0.8rem; font-weight: 800; cursor: pointer; }
+    .btn-cpn:disabled { opacity: .5; cursor: not-allowed; }
+  </style>
+</head>
+<body class="admin-body">
+  <div class="crm-wrap">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <a href="dashboard.html" style="font-size:0.84rem;color:#4f46e5;font-weight:700;text-decoration:none;">← 대시보드로 돌아가기</a>
+        <h2 style="margin:6px 0 0;font-size:1.4rem;font-weight:900;">🎯 CRM 단골 · 이탈 위험 고객 자동 분류 &amp; 재방문 쿠폰</h2>
+      </div>
+      <span id="crmStoreBadge" style="padding:6px 12px;border-radius:999px;background:#ede9fe;color:#4f46e5;font-weight:800;font-size:0.82rem;">로딩 중...</span>
+    </div>
+
+    <div class="crm-tabs" id="crmTabs">
+      <button type="button" class="crm-tab is-active" data-seg="all">👥 전체 멘티 (<span id="cntAll">0</span>)</button>
+      <button type="button" class="crm-tab" data-seg="risk">⚠️ 30일 미방문 이탈위험 (<span id="cntRisk">0</span>)</button>
+      <button type="button" class="crm-tab" data-seg="vip">👑 VIP 단골 (<span id="cntVip">0</span>)</button>
+      <button type="button" class="crm-tab" data-seg="new">🌱 최근 7일 신규 (<span id="cntNew">0</span>)</button>
+    </div>
+
+    <div class="crm-card" id="crmList">
+      <div style="padding:32px;text-align:center;color:#64748b;">내 가맹점 멘티/고객 데이터를 분석하는 중...</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { checkAdminAuth } from '../assets/js/auth.js';
+    import { getCurrentStoreInfo, loadDynamicTenants } from '../assets/js/tenant-router.js';
+    import { db } from '../assets/js/firebase-config.js';
+    import { collection, query, where, getDocs, addDoc, doc, getDoc, serverTimestamp, limit } from 'firebase/firestore';
+
+    let _storeId = '';
+    let _storeName = '가맹점';
+    let _customers = [];
+    let _activeSeg = 'all';
+
+    function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function toMs(ts) {
+      if (!ts) return 0;
+      if (typeof ts.toMillis === 'function') return ts.toMillis();
+      if (typeof ts.seconds === 'number') return ts.seconds * 1000;
+      return Date.parse(String(ts)) || 0;
+    }
+
+    function render() {
+      const box = document.getElementById('crmList');
+      const filtered = _activeSeg === 'all' ? _customers : _customers.filter((c) => c.segment === _activeSeg);
+      if (!filtered.length) {
+        box.innerHTML = '<div style="padding:32px;text-align:center;color:#64748b;">해당 조건의 고객이 없습니다.</div>';
+        return;
+      }
+
+      box.innerHTML = filtered.map((c) => {
+        const badgeCls = c.segment === 'vip' ? 'b-vip' : (c.segment === 'risk' ? 'b-risk' : 'b-new');
+        const badgeTxt = c.segment === 'vip' ? '👑 VIP 단골' : (c.segment === 'risk' ? '⚠️ 30일+ 미활동' : '🌱 신규 고객');
+        const lastDate = c.lastMs ? new Date(c.lastMs).toISOString().slice(0, 10) : '-';
+        return `
+          <div class="crm-row">
+            <div>
+              <div style="font-weight:800;font-size:0.95rem;color:#0f172a;">
+                ${esc(c.name)} <span class="crm-badge ${badgeCls}">${badgeTxt}</span>
+              </div>
+              <div style="font-size:0.8rem;color:#64748b;margin-top:3px;">
+                ${esc(c.email)} · 최근 활동: ${lastDate} · 보유 포인트: ${Number(c.pointBalance || 0).toLocaleString()} P
+              </div>
+            </div>
+            <button type="button" class="btn-cpn" data-uid="${esc(c.uid)}" data-name="${esc(c.name)}">
+              🎫 재방문 10% 쿠폰 발행
+            </button>
+          </div>`;
+      }).join('');
+
+      box.querySelectorAll('.btn-cpn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const targetUid = btn.dataset.uid;
+          const targetName = btn.dataset.name || '고객';
+          btn.disabled = true;
+          btn.textContent = '발행 중...';
+          try {
+            const code = `REVISIT-${_storeId.slice(-4)}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+            await addDoc(collection(db, 'coupons'), {
+              code,
+              merchantId: _storeId,
+              merchantName: _storeName,
+              targetUid,
+              targetName,
+              title: `[${_storeName}] 단골 재방문 10% 특별 할인 쿠폰`,
+              discountRate: 10,
+              status: 'active',
+              source: 'besterp_crm_retention',
+              createdAt: serverTimestamp(),
+            });
+            const promo = `🎁 [${_storeName}] ${targetName}님 전용 재방문 10% 할인 쿠폰이 도착했습니다!\n쿠폰코드: ${code}\n매장 방문 시 직원에게 보여주세요 😊`;
+            if (navigator.clipboard) navigator.clipboard.writeText(promo).catch(() => {});
+            btn.textContent = '✅ 발행 & 문구 복사 완료';
+            alert(`쿠폰(${code})이 발행되었고 카톡/Zalo 안내 문구가 클립보드에 복사되었습니다!`);
+          } catch (err) {
+            alert('쿠폰 발행 실패: ' + (err?.message || err));
+            btn.disabled = false;
+            btn.textContent = '🎫 재방문 10% 쿠폰 발행';
+          }
+        });
+      });
+    }
+
+    document.querySelectorAll('.crm-tab').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        _activeSeg = tab.dataset.seg;
+        document.querySelectorAll('.crm-tab').forEach((t) => t.classList.toggle('is-active', t === tab));
+        render();
+      });
+    });
+
+    checkAdminAuth(async (user) => {
+      await loadDynamicTenants();
+      const info = getCurrentStoreInfo();
+      if (!info.storeId) { location.href = '../onboarding.html'; return; }
+      _storeId = String(info.storeId);
+      _storeName = info.name || '가맹점';
+      document.getElementById('crmStoreBadge').textContent = `${_storeName} (ID: ${_storeId})`;
+
+      const mSnap = await getDoc(doc(db, 'merchants', _storeId));
+      const mData = mSnap.exists() ? (mSnap.data() || {}) : {};
+      const ownerUid = mData.ownerUid || user.uid;
+      const ownerEmail = (mData.ownerEmail || user.email || '').toLowerCase();
+
+      const map = new Map();
+      try {
+        const s1 = await getDocs(query(collection(db, 'users'), where('mentorUid', '==', ownerUid), limit(200)));
+        s1.forEach((d) => { if (d.id !== ownerUid) map.set(d.id, { uid: d.id, ...d.data() }); });
+      } catch (_) {}
+      if (ownerEmail) {
+        try {
+          const s2 = await getDocs(query(collection(db, 'users'), where('mentorEmail', '==', ownerEmail), limit(200)));
+          s2.forEach((d) => { if (d.id !== ownerUid && !map.has(d.id)) map.set(d.id, { uid: d.id, ...d.data() }); });
+        } catch (_) {}
+      }
+
+      const now = Date.now();
+      const day30 = 30 * 86400 * 1000;
+      const day7 = 7 * 86400 * 1000;
+
+      _customers = Array.from(map.values()).map((u) => {
+        const regMs = toMs(u.registeredAt || u.createdAt);
+        const lastMs = Math.max(regMs, toMs(u.lastLoginAt || u.updatedAt));
+        const pts = Number(u.pointBalance || 0);
+        let segment = 'vip';
+        if (lastMs && now - lastMs >= day30) segment = 'risk';
+        else if (regMs && now - regMs <= day7) segment = 'new';
+        else if (pts < 5000 && (!lastMs || now - lastMs > 14 * 86400 * 1000)) segment = 'risk';
+        return {
+          uid: u.uid,
+          name: u.name || u.displayName || '회원',
+          email: u.email || '-',
+          pointBalance: pts,
+          lastMs,
+          segment,
+        };
+      }).sort((a, b) => b.lastMs - a.lastMs);
+
+      document.getElementById('cntAll').textContent = String(_customers.length);
+      document.getElementById('cntRisk').textContent = String(_customers.filter((c) => c.segment === 'risk').length);
+      document.getElementById('cntVip').textContent = String(_customers.filter((c) => c.segment === 'vip').length);
+      document.getElementById('cntNew').textContent = String(_customers.filter((c) => c.segment === 'new').length);
+      render();
+    });
+  </script>
+</body>
+</html>

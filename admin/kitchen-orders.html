@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🍽️ 실시간 주방/카운터 주문 알림판 (KDS) | BestERP</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+  <style>
+    .kds-wrap { max-width: 1180px; margin: 20px auto; padding: 0 16px 48px; }
+    .kds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; }
+    .kds-card { background: #fff; border: 2px solid #e2e8f0; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 6px 18px rgba(15,23,42,.05); }
+    .kds-card.st-pending { border-color: #ef4444; background: #fffbfb; }
+    .kds-card.st-preparing { border-color: #f59e0b; background: #fffdf5; }
+    .kds-card.st-completed { border-color: #10b981; opacity: .78; }
+    .kds-head { display: flex; justify-content: space-between; align-items: center; }
+    .kds-table { font-size: 1.15rem; font-weight: 900; color: #0f172a; }
+    .kds-pill { padding: 3px 9px; border-radius: 999px; font-size: 0.74rem; font-weight: 800; }
+    .kds-items { list-style: none; padding: 8px 0; border-top: 1px dashed #e2e8f0; border-bottom: 1px dashed #e2e8f0; font-size: 0.88rem; display: flex; flex-direction: column; gap: 5px; }
+    .kds-btns { display: flex; gap: 8px; }
+    .kds-btn { flex: 1; padding: 9px; border-radius: 10px; border: none; font-weight: 800; font-size: 0.82rem; cursor: pointer; }
+  </style>
+</head>
+<body class="admin-body">
+  <div class="kds-wrap">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <a href="dashboard.html" style="font-size:0.84rem;color:#4f46e5;font-weight:700;text-decoration:none;">← 대시보드로 돌아가기</a>
+        <h2 style="margin:6px 0 0;font-size:1.45rem;font-weight:900;">🍽️ 실시간 주방 / 카운터 주문 알림판 (KDS)</h2>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span id="kdsStoreBadge" style="padding:6px 12px;border-radius:999px;background:#dcfce7;color:#15803d;font-weight:800;font-size:0.82rem;">🟢 실시간 대기 중</span>
+        <button type="button" id="btnSoundToggle" style="padding:7px 12px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;font-weight:800;font-size:0.82rem;cursor:pointer;">🔊 주문 알림음 ON</button>
+      </div>
+    </div>
+
+    <div id="kdsGrid" class="kds-grid">
+      <div style="grid-column:1/-1;text-align:center;padding:48px;color:#64748b;background:#fff;border-radius:16px;border:1px dashed #cbd5e1;">
+        실시간 주문을 연결하는 중입니다...
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { checkAdminAuth } from '../assets/js/auth.js';
+    import { getCurrentStoreInfo, loadDynamicTenants } from '../assets/js/tenant-router.js';
+    import { db } from '../assets/js/firebase-config.js';
+    import { collection, query, where, onSnapshot, doc, updateDoc, serverTimestamp, limit } from 'firebase/firestore';
+
+    let soundOn = true;
+    let initialLoaded = false;
+
+    function playDingDong() {
+      if (!soundOn) return;
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        const ctx = new AC();
+        const now = ctx.currentTime;
+        [880, 1174.66].forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + i * 0.16);
+          gain.gain.setValueAtTime(0.001, now + i * 0.16);
+          gain.gain.exponentialRampToValueAtTime(0.22, now + i * 0.16 + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.16 + 0.35);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + i * 0.16);
+          osc.stop(now + i * 0.16 + 0.36);
+        });
+      } catch (_) {}
+    }
+
+    document.getElementById('btnSoundToggle').addEventListener('click', () => {
+      soundOn = !soundOn;
+      document.getElementById('btnSoundToggle').textContent = soundOn ? '🔊 주문 알림음 ON' : '🔇 주문 알림음 OFF';
+      if (soundOn) playDingDong();
+    });
+
+    function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+    function renderOrders(orders) {
+      const grid = document.getElementById('kdsGrid');
+      if (!orders.length) {
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:48px;color:#64748b;background:#fff;border-radius:16px;border:1px dashed #cbd5e1;">현재 들어온 실시간 주문이 없습니다. 새 주문이 접수되면 딩동! 알림음과 함께 즉시 표시됩니다.</div>';
+        return;
+      }
+
+      grid.innerHTML = orders.map((o) => {
+        const st = String(o.status || 'pending').toLowerCase();
+        const cls = st === 'completed' || st === 'paid' ? 'st-completed' : (st === 'preparing' ? 'st-preparing' : 'st-pending');
+        const pillBg = cls === 'st-pending' ? '#fee2e2' : (cls === 'st-preparing' ? '#fef3c7' : '#dcfce7');
+        const pillCol = cls === 'st-pending' ? '#b91c1c' : (cls === 'st-preparing' ? '#b45309' : '#15803d');
+        const pillTxt = cls === 'st-pending' ? '🔴 신규 접수' : (cls === 'st-preparing' ? '🟠 조리 중' : '🟢 완료');
+        const tableLabel = o.tableNumber ? `테이블 ${o.tableNumber}` : (o.buyer_name || '온라인/QR 주문');
+        const itemsHtml = (Array.isArray(o.items) ? o.items : []).map((it) =>
+          `<li>• <strong>${esc(it.product_name || it.name || '메뉴')}</strong> × ${Number(it.qty || it.quantity || 1)}</li>`
+        ).join('') || '<li>상세 메뉴 없음</li>';
+        const total = Number(o.total_amount || o.totalAmount || 0);
+
+        return `
+          <article class="kds-card ${cls}">
+            <div class="kds-head">
+              <div class="kds-table">🍽️ ${esc(tableLabel)}</div>
+              <span class="kds-pill" style="background:${pillBg};color:${pillCol};">${pillTxt}</span>
+            </div>
+            <ul class="kds-items">${itemsHtml}</ul>
+            <div style="display:flex;justify-content:space-between;font-size:0.86rem;font-weight:800;">
+              <span>합계 금액</span>
+              <span style="color:#4f46e5;">${total.toLocaleString()} VND</span>
+            </div>
+            <div class="kds-btns">
+              ${cls === 'st-pending' ? `<button type="button" class="kds-btn" data-id="${esc(o.id)}" data-next="preparing" style="background:#f59e0b;color:#fff;">👨‍🍳 조리 시작</button>` : ''}
+              ${cls !== 'st-completed' ? `<button type="button" class="kds-btn" data-id="${esc(o.id)}" data-next="completed" style="background:#10b981;color:#fff;">✅ 서빙/완료</button>` : ''}
+            </div>
+          </article>`;
+      }).join('');
+
+      grid.querySelectorAll('.kds-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.id;
+          const next = btn.dataset.next;
+          await updateDoc(doc(db, 'merchant_orders', id), { status: next, updated_at: serverTimestamp() });
+        });
+      });
+    }
+
+    checkAdminAuth(async () => {
+      await loadDynamicTenants();
+      const info = getCurrentStoreInfo();
+      if (!info.storeId) { location.href = '../onboarding.html'; return; }
+      const sid = String(info.storeId);
+      const sNum = Number(sid);
+      const candidates = Number.isFinite(sNum) ? [sid, sNum] : [sid];
+      document.getElementById('kdsStoreBadge').textContent = `🟢 ${info.name} 실시간 주문 감시 중`;
+
+      const q = query(collection(db, 'merchant_orders'), where('merchant_id', 'in', candidates), limit(40));
+      onSnapshot(q, (snap) => {
+        if (initialLoaded) {
+          const hasNew = snap.docChanges().some((ch) => ch.type === 'added');
+          if (hasNew) playDingDong();
+        }
+        initialLoaded = true;
+        const orders = snap.docs
+          .map((d) => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => ((b.created_at?.seconds || b.createdAt?.seconds || 0) - (a.created_at?.seconds || a.createdAt?.seconds || 0)));
+        renderOrders(orders);
+      });
+    });
+  </script>
+</body>
+</html>

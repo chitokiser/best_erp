@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>가맹점 직원 초대 가입 | BestERP · CRM M-SaaS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Inter',-apple-system,sans-serif; background:#0b1120; color:#f8fafc; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+    .box { width:100%; max-width:460px; background:#111827; border:1px solid rgba(148,163,184,.2); border-radius:22px; padding:28px; box-shadow:0 24px 60px rgba(0,0,0,.45); }
+    .badge { display:inline-block; padding:4px 11px; border-radius:999px; background:rgba(16,185,129,.16); color:#6ee7b7; font-size:.76rem; font-weight:800; margin-bottom:10px; }
+    h1 { font-size:1.38rem; font-weight:900; margin-bottom:6px; }
+    .sub { color:#94a3b8; font-size:.86rem; margin-bottom:18px; line-height:1.5; }
+    .field { margin-bottom:14px; }
+    .field label { display:block; font-size:.8rem; font-weight:700; color:#cbd5e1; margin-bottom:6px; }
+    .field input { width:100%; padding:11px 13px; border-radius:11px; border:1px solid #334155; background:#0f172a; color:#fff; font-size:.92rem; }
+    .btn { width:100%; padding:13px 16px; border-radius:12px; border:none; font-size:.95rem; font-weight:900; cursor:pointer; }
+    .btn-gold { background:linear-gradient(135deg,#fde047,#f59e0b); color:#0f172a; }
+    .btn-primary { background:linear-gradient(135deg,#4f46e5,#7c3aed); color:#fff; }
+    .msg { margin-top:12px; font-size:.84rem; text-align:center; min-height:1.2em; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <span class="badge" id="storeBadge">👥 가맹점 직원 초대</span>
+    <h1 id="inviteTitle">매장 직원 계정 등록</h1>
+    <p class="sub">초대받은 매장의 직원(STAFF) 권한으로 즉시 연결됩니다. 재무·정산 등 대표 전용 메뉴는 자동으로 보호됩니다.</p>
+
+    <div id="stepLogin">
+      <button type="button" id="btnGoogleStaff" class="btn btn-gold">🔐 Google 계정으로 직원 합류하기</button>
+      <div class="msg" id="loginMsg" style="color:#fca5a5;"></div>
+    </div>
+
+    <form id="stepForm" style="display:none;">
+      <div class="field">
+        <label for="staffName">직원 성함 *</label>
+        <input type="text" id="staffName" placeholder="예: 김민수" required />
+      </div>
+      <div class="field">
+        <label for="staffPosition">직급 / 담당 업무</label>
+        <input type="text" id="staffPosition" placeholder="예: 홀 매니저 / 주방 / 카운터" value="가맹점 직원" />
+      </div>
+      <button type="submit" id="btnJoinStaff" class="btn btn-primary">✅ 직원 합류 완료하고 대시보드 열기</button>
+      <div class="msg" id="formMsg"></div>
+    </form>
+  </div>
+
+  <script type="module">
+    import { auth, db } from './assets/js/firebase-config.js';
+    import { GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from 'firebase/auth';
+    import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+
+    const params = new URLSearchParams(location.search);
+    const merchantId = (params.get('merchant') || '').trim();
+    const merchantNameParam = (params.get('mname') || '').trim();
+
+    if (!merchantId) {
+      document.getElementById('inviteTitle').textContent = '유효하지 않은 초대 링크입니다';
+      document.getElementById('stepLogin').style.display = 'none';
+    } else {
+      document.getElementById('storeBadge').textContent = `🏪 ${merchantNameParam || `가맹점 #${merchantId}`} 직원 초대`;
+      document.getElementById('inviteTitle').textContent = `${merchantNameParam || '가맹점'} 팀 합류`;
+    }
+
+    let currentUser = null;
+
+    document.getElementById('btnGoogleStaff').addEventListener('click', async () => {
+      const msg = document.getElementById('loginMsg');
+      msg.textContent = '';
+      try {
+        await signInWithPopup(auth, new GoogleAuthProvider());
+      } catch (err) {
+        msg.textContent = '로그인 실패: ' + (err?.message || err);
+      }
+    });
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user || !merchantId) return;
+      currentUser = user;
+      document.getElementById('stepLogin').style.display = 'none';
+      document.getElementById('stepForm').style.display = 'block';
+      const nameInput = document.getElementById('staffName');
+      if (nameInput && !nameInput.value && user.displayName) nameInput.value = user.displayName;
+    });
+
+    document.getElementById('stepForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!currentUser || !merchantId) return;
+
+      const btn = document.getElementById('btnJoinStaff');
+      const msg = document.getElementById('formMsg');
+      const staffName = document.getElementById('staffName').value.trim();
+      const position = document.getElementById('staffPosition').value.trim() || '가맹점 직원';
+
+      btn.disabled = true;
+      btn.textContent = '⏳ 등록 중...';
+      try {
+        let storeName = merchantNameParam;
+        try {
+          const mSnap = await getDoc(doc(db, 'merchants', merchantId));
+          if (mSnap.exists() && mSnap.data().name) storeName = mSnap.data().name;
+        } catch (_) {}
+
+        await setDoc(doc(db, 'users', currentUser.uid), {
+          uid: currentUser.uid,
+          email: (currentUser.email || '').toLowerCase(),
+          name: staffName,
+          merchantId,
+          merchantName: storeName || '가맹점',
+          role: 'STAFF',
+          position,
+          status: '승인완료',
+          isMerchantOwner: false,
+          joinedAsStaffAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+
+        msg.style.color = '#6ee7b7';
+        msg.textContent = '🎉 직원 등록 완료! 대시보드로 이동합니다...';
+        setTimeout(() => {
+          location.href = 'admin/dashboard.html';
+        }, 800);
+      } catch (err) {
+        msg.style.color = '#fca5a5';
+        msg.textContent = '등록 실패: ' + (err?.message || err);
+        btn.disabled = false;
+        btn.textContent = '✅ 직원 합류 완료하고 대시보드 열기';
+      }
+    });
+  </script>
+</body>
+</html>

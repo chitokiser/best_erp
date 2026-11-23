@@ -75,12 +75,14 @@
     </div>
 
     <div class="saas-card">
-      <h3>🔗 가맹점 전용 연동 링크</h3>
-      <div style="display:flex;flex-direction:column;gap:8px;font-size:0.86rem;">
-        <div><strong>멘티 자동가입 초대 링크:</strong> <code id="linkMentorInvite" style="background:#f1f5f9;padding:3px 7px;border-radius:6px;word-break:break-all;">-</code></div>
+      <h3>🔗 가맹점 전용 연동 &amp; 직원 초대 링크</h3>
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:0.86rem;">
+        <div><strong>고객 멘티 자동가입 링크:</strong> <code id="linkMentorInvite" style="background:#f1f5f9;padding:3px 7px;border-radius:6px;word-break:break-all;">-</code></div>
+        <div><strong>👥 직원(STAFF) 1클릭 초대 링크:</strong> <code id="linkStaffInvite" style="background:#ecfdf5;color:#065f46;padding:3px 7px;border-radius:6px;word-break:break-all;">-</code></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
-          <button type="button" id="btnCopyMentor" class="btn-save" style="background:#0f172a;padding:8px 14px;font-size:0.82rem;">📋 초대 링크 복사</button>
-          <a href="https://bestclubvn.netlify.app/merchant-qr.html" target="_blank" class="btn-save" style="background:#059669;padding:8px 14px;font-size:0.82rem;text-decoration:none;">🖼️ 카운터 QR 포스터 만들기 →</a>
+          <button type="button" id="btnCopyMentor" class="btn-save" style="background:#0f172a;padding:8px 14px;font-size:0.82rem;">📋 고객 초대 링크 복사</button>
+          <button type="button" id="btnCopyStaff" class="btn-save" style="background:#4f46e5;padding:8px 14px;font-size:0.82rem;">👥 직원 초대 링크 복사</button>
+          <a href="https://bestclubvn.netlify.app/merchant-qr.html" target="_blank" class="btn-save" style="background:#059669;padding:8px 14px;font-size:0.82rem;text-decoration:none;">🖼️ 카운터 QR 포스터 →</a>
           <a href="https://bestclubvn.netlify.app/merchant-report.html" target="_blank" class="btn-save" style="background:#d97706;padding:8px 14px;font-size:0.82rem;text-decoration:none;">📊 1분 모바일 리포트 →</a>
         </div>
       </div>
@@ -127,15 +129,26 @@
       document.getElementById('modMarketing').checked = !!mods.marketing;
       document.getElementById('modHrTasks').checked = !!mods.hrTasks;
 
+      const storeLabel = d.name || info.name || '';
       const ownerEmail = (d.ownerEmail || user?.email || '').toLowerCase();
-      const inviteUrl = `https://bestclubvn.netlify.app/register.html?mentor=${encodeURIComponent(ownerEmail)}&merchant=${encodeURIComponent(activeStoreId)}&mname=${encodeURIComponent(d.name || info.name || '')}`;
+      const inviteUrl = `https://bestclubvn.netlify.app/register.html?mentor=${encodeURIComponent(ownerEmail)}&merchant=${encodeURIComponent(activeStoreId)}&mname=${encodeURIComponent(storeLabel)}`;
+      const staffUrl = `${window.location.origin}/staff-invite.html?merchant=${encodeURIComponent(activeStoreId)}&mname=${encodeURIComponent(storeLabel)}`;
+
       document.getElementById('linkMentorInvite').textContent = inviteUrl;
+      document.getElementById('linkStaffInvite').textContent = staffUrl;
 
       document.getElementById('btnCopyMentor').onclick = async () => {
         try {
           await navigator.clipboard.writeText(inviteUrl);
           document.getElementById('btnCopyMentor').textContent = '✅ 복사 완료!';
-          setTimeout(() => { document.getElementById('btnCopyMentor').textContent = '📋 초대 링크 복사'; }, 1800);
+          setTimeout(() => { document.getElementById('btnCopyMentor').textContent = '📋 고객 초대 링크 복사'; }, 1800);
+        } catch (_) {}
+      };
+      document.getElementById('btnCopyStaff').onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(staffUrl);
+          document.getElementById('btnCopyStaff').textContent = '✅ 직원 초대 링크 복사됨!';
+          setTimeout(() => { document.getElementById('btnCopyStaff').textContent = '👥 직원 초대 링크 복사'; }, 1800);
         } catch (_) {}
       };
     });
