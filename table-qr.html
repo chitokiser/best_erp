@@ -809,32 +809,22 @@
                     status: 'active'
                 });
 
-                // 3. 점주 보유 BT 중 1장 고객에게 발급 (user_coupons 컬렉션에 등록)
-                await addDoc(collection(db, 'user_coupons'), {
-                    couponCode: btTicketCode,
-                    ticketType: 'BT_BONUS_TICKET',
-                    amount: 1,
-                    name: '1 BT 보너스 티켓 (가맹점주 지급)',
-                    merchantId: merchantId,
-                    customerId: customerId,
-                    customerName: name,
-                    customerEmail: email,
-                    status: 'ACTIVE',
-                    source: 'TABLE_QR_ZALO_REGISTRATION',
-                    createdAt: serverTimestamp(),
-                    expiryDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-                });
-
-                // 4. 가맹점주 보유 BT 잔고 1장 차감 (increment -1)
-                await setDoc(doc(db, 'merchants', merchantId), {
-                    btBalance: increment(-1),
-                    lastBtAwardedAt: serverTimestamp(),
-                    totalBtAwarded: increment(1)
-                }, { merge: true });
+                // 3~4. 보너스 티켓 발급 + 가맹점주 BT 1장 차감은 서버(tableQrCheckinReward)가 한 번에 처리한다.
+                let issuedCode = btTicketCode;
+                try {
+                    const { getFunctions, httpsCallable } = await import('firebase/functions');
+                    const { getApp } = await import('firebase/app');
+                    const reward = httpsCallable(getFunctions(getApp(), 'us-central1'), 'tableQrCheckinReward');
+                    const res = await reward({ merchantId, customerId });
+                    if (res.data?.code) issuedCode = res.data.code;
+                    if (!res.data?.issued) console.info('보너스 티켓 미발급:', res.data?.reason);
+                } catch (rewardErr) {
+                    console.warn('보너스 티켓 발급 실패:', rewardErr);
+                }
 
                 document.getElementById('issuedCrmId').textContent = customerId;
                 const btCodeEl = document.getElementById('btTicketCodeDisplay');
-                if (btCodeEl) btCodeEl.textContent = btTicketCode;
+                if (btCodeEl) btCodeEl.textContent = issuedCode;
 
                 document.getElementById('confirmedFaceStatus').textContent = isFaceRegistered 
                     ? '연동 완료 (관제 카메라 자동인식)' 
