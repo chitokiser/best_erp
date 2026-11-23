@@ -1,8 +1,12 @@
 import { db, auth, storage } from './firebase-config.js';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, getDocs, addDoc, serverTimestamp, query, orderBy, where } from 'firebase/firestore';
+import { collection, getDocs, addDoc, serverTimestamp, query, orderBy, where, doc, updateDoc, increment } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { scanReceiptAI } from './aiApi.js';
+import {
+    MATERIAL_CATEGORIES, isMaterialExpenseCategory, receiptItemsToRows,
+    findExistingMaterial, planMaterialSync, applyMaterialSync
+} from './expenseMaterialSync.js';
 
 const modal = document.getElementById('financeModal');
 const openBtn = document.getElementById('openModalBtn');
@@ -69,11 +73,214 @@ function updateAmountPreview(val) {
     }
 }
 
+// ── 📦 지출 품목 → 자재관리 자동등록 ─────────────────────────────────────────
+const matSyncSection = document.getElementById('matSyncSection');
+const matSyncEnabled = document.getElementById('matSyncEnabled');
+const matSyncBody = document.getElementById('matSyncBody');
+const matSyncRowsEl = document.getElementById('matSyncRows');
+const matSyncSummary = document.getElementById('matSyncSummary');
+const matSyncTotal = document.getElementById('matSyncTotal');
+let matRows = [];
+let matMaterials = [];
+let matUserToggled = false;
+
+async function loadMaterialsForSync() {
+    try {
+        const snap = await getDocs(collection(db, 'materials'));
+        matMaterials = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (err) {
+        console.warn('자재 목록 불러오기 실패 (자동등록 시 다시 시도):', err);
+    }
+    renderMatRows();
+}
+
+function emptyMatRow() {
+    return { name: '', quantity: 1, unit: '', unitPrice: 0, categoryId: '' };
+}
+
+function setMatSyncEnabled(on, byUser = false) {
+    if (!matSyncEnabled) return;
+    matSyncEnabled.checked = !!on;
+    if (byUser) matUserToggled = true;
+    if (on && matRows.length === 0) matRows.push(emptyMatRow());
+    renderMatRows();
+}
+
+function updateMatSyncVisibility() {
+    if (!matSyncSection) return;
+    const isExpense = finTypeSelect && finTypeSelect.value === 'EXPENSE';
+    matSyncSection.style.display = isExpense ? 'block' : 'none';
+}
+
+function renderMatRows() {
+    if (!matSyncRowsEl) return;
+    const on = matSyncEnabled && matSyncEnabled.checked;
+    if (matSyncBody) matSyncBody.style.display = on ? 'block' : 'none';
+    matSyncRowsEl.innerHTML = '';
+
+    matRows.forEach((row, idx) => {
+        const tr = document.createElement('tr');
+        const existing = findExistingMaterial(matMaterials, row.name);
+
+        const mkInput = (field, type, placeholder) => {
+            const td = document.createElement('td');
+            const input = document.createElement('input');
+            input.type = type;
+            input.placeholder = placeholder || '';
+            input.value = row[field] ?? '';
+            if (type === 'number') { input.min = '0'; input.step = 'any'; }
+            input.addEventListener('input', () => {
+                row[field] = type === 'number' ? Number(input.value) || 0 : input.value;
+                if (field === 'name') refreshRowStatus(tr, row);
+                updateMatSummary();
+            });
+            td.appendChild(input);
+            return td;
+        };
+
+        tr.appendChild(mkInput('name', 'text', '예: 양파, 바닥타일 600x600'));
+        tr.appendChild(mkInput('quantity', 'number', '1'));
+        tr.appendChild(mkInput('unit', 'text', 'EA'));
+        tr.appendChild(mkInput('unitPrice', 'number', '0'));
+
+        const tdCat = document.createElement('td');
+        const sel = document.createElement('select');
+        sel.className = 'mat-cat';
+        MATERIAL_CATEGORIES.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c; opt.textContent = c;
+            sel.appendChild(opt);
+        });
+        sel.value = row.categoryId || '기타';
+        row.categoryId = sel.value;
+        sel.addEventListener('change', () => { row.categoryId = sel.value; });
+        const badge = document.createElement('span');
+        badge.className = 'mat-sync-badge';
+        tdCat.appendChild(sel);
+        tdCat.appendChild(badge);
+        tr.appendChild(tdCat);
+
+        const tdDel = document.createElement('td');
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'mat-sync-remove';
+        del.title = '이 품목 빼기';
+        del.textContent = '✕';
+        del.addEventListener('click', () => { matRows.splice(idx, 1); renderMatRows(); });
+        tdDel.appendChild(del);
+        tr.appendChild(tdDel);
+
+        matSyncRowsEl.appendChild(tr);
+        refreshRowStatus(tr, row, existing);
+    });
+    updateMatSummary();
+}
+
+function refreshRowStatus(tr, row, existing) {
+    if (existing === undefined) existing = findExistingMaterial(matMaterials, row.name);
+    const badge = tr.querySelector('.mat-sync-badge');
+    const sel = tr.querySelector('.mat-cat');
+    if (!badge || !sel) return;
+    if (!String(row.name || '').trim()) {
+        badge.className = 'mat-sync-badge';
+        badge.textContent = '';
+        sel.style.display = '';
+    } else if (existing) {
+        badge.className = 'mat-sync-badge is-existing';
+        badge.textContent = `기존 품목 · 재고 ${Number(existing.stock) || 0} → +${Number(row.quantity) || 1}`;
+        sel.style.display = 'none';
+    } else {
+        badge.className = 'mat-sync-badge is-new';
+        badge.textContent = '신규 등록';
+        sel.style.display = '';
+    }
+}
+
+function updateMatSummary() {
+    const on = matSyncEnabled && matSyncEnabled.checked;
+    const named = matRows.filter(r => String(r.name || '').trim());
+    if (matSyncSummary) {
+        if (!on || named.length === 0) {
+            matSyncSummary.textContent = '';
+        } else {
+            const plan = planMaterialSync(named, matMaterials);
+            const nNew = plan.filter(p => p.action === 'create').length;
+            const nUpd = plan.length - nNew;
+            matSyncSummary.textContent = `신규 ${nNew}개 · 재고 추가 ${nUpd}개`;
+        }
+    }
+    if (matSyncTotal) {
+        const sum = named.reduce((acc, r) => acc + (Number(r.quantity) || 0) * (Number(r.unitPrice) || 0), 0);
+        const amount = Number(amountInput?.value) || 0;
+        const mismatch = sum > 0 && amount > 0 && Math.abs(sum - amount) > Math.max(1000, amount * 0.02);
+        matSyncTotal.className = 'mat-sync-total' + (mismatch ? ' is-mismatch' : '');
+        matSyncTotal.textContent = sum > 0
+            ? `품목 합계 ${formatCurrency(sum)} VND` + (mismatch ? ` (지출 금액 ${formatCurrency(amount)} VND와 다름)` : '')
+            : '';
+    }
+}
+
+function resetMatSync() {
+    matRows = [];
+    matUserToggled = false;
+    if (matSyncEnabled) matSyncEnabled.checked = false;
+    renderMatRows();
+}
+
+function autoToggleMatSyncByCategory() {
+    if (matUserToggled) return;
+    const cat = document.getElementById('finCategory')?.value || '';
+    const shouldOn = isMaterialExpenseCategory(cat) || matRows.some(r => String(r.name || '').trim());
+    if (matSyncEnabled && matSyncEnabled.checked !== shouldOn) setMatSyncEnabled(shouldOn);
+}
+
+if (matSyncEnabled) {
+    matSyncEnabled.addEventListener('change', () => setMatSyncEnabled(matSyncEnabled.checked, true));
+}
+document.getElementById('btnMatSyncAddRow')?.addEventListener('click', () => {
+    matRows.push(emptyMatRow());
+    renderMatRows();
+    const inputs = matSyncRowsEl?.querySelectorAll('tr:last-child input');
+    if (inputs && inputs[0]) inputs[0].focus();
+});
+document.getElementById('finCategory')?.addEventListener('input', autoToggleMatSyncByCategory);
+document.getElementById('finCategory')?.addEventListener('change', autoToggleMatSyncByCategory);
+
+// 지출 저장 후 자재관리에 반영. 실패해도 지출 기록은 이미 저장된 상태로 둔다.
+async function syncExpenseToMaterials(financeRecordId, expense) {
+    if (expense.type !== 'EXPENSE' || !matSyncEnabled || !matSyncEnabled.checked) return null;
+    const rows = matRows.filter(r => String(r.name || '').trim());
+    if (rows.length === 0) return null;
+
+    // 등록 직전에 최신 자재 목록으로 다시 맞춘다 (다른 사람이 방금 등록했을 수 있음)
+    const snap = await getDocs(collection(db, 'materials'));
+    matMaterials = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    const plan = planMaterialSync(rows, matMaterials);
+    const linked = await applyMaterialSync({
+        db,
+        fs: { collection, addDoc, doc, updateDoc, serverTimestamp, increment },
+        plan,
+        materials: matMaterials,
+        financeRecordId,
+        expense,
+        user: auth.currentUser
+    });
+    try {
+        await updateDoc(doc(db, 'financeRecords', financeRecordId), { linkedMaterials: linked });
+    } catch (linkErr) {
+        console.warn('지출 기록에 자재 연결정보 저장 실패:', linkErr);
+    }
+    return linked;
+}
+
 function openModal() {
     const dateInput = document.getElementById('finDate');
     if (dateInput) dateInput.valueAsDate = new Date();
     modal.style.display = 'flex';
+    resetMatSync();
     setType('INCOME');
+    loadMaterialsForSync();
     updateAmountPreview(amountInput ? amountInput.value : 0);
     setTimeout(() => {
         if (amountInput) amountInput.focus();
@@ -106,6 +313,8 @@ function setType(type) {
         const span = btn.querySelector('span');
         if (span) span.textContent = labels[type] || '저장하기';
     }
+    updateMatSyncVisibility();
+    autoToggleMatSyncByCategory();
 }
 
 // Event Listeners for Modal
@@ -130,6 +339,7 @@ typeCards.forEach(card => {
 if (amountInput) {
     amountInput.addEventListener('input', (e) => {
         updateAmountPreview(e.target.value);
+        updateMatSummary();
     });
 }
 
@@ -309,7 +519,7 @@ form.addEventListener('submit', async (e) => {
             }
         }
 
-        await addDoc(collection(db, 'financeRecords'), {
+        const expense = {
             type: document.getElementById('finType').value,
             category: document.getElementById('finCategory').value,
             date: document.getElementById('finDate').value,
@@ -323,14 +533,33 @@ form.addEventListener('submit', async (e) => {
             storeName: sName,
             createdBy: auth.currentUser?.email || auth.currentUser?.uid || 'user',
             createdAt: serverTimestamp()
-        });
+        };
+        const recordRef = await addDoc(collection(db, 'financeRecords'), expense);
+
+        let matMessage = '';
+        try {
+            if (span) span.textContent = '자재관리 품목 반영 중...';
+            const linked = await syncExpenseToMaterials(recordRef.id, expense);
+            if (linked && linked.length) {
+                const nNew = linked.filter(l => l.action === 'create').length;
+                const nUpd = linked.length - nNew;
+                matMessage = `📦 자재관리 반영 완료: 신규 등록 ${nNew}개, 재고 추가 ${nUpd}개\n- ` +
+                    linked.map(l => `${l.name} ${l.action === 'create' ? '(신규)' : '(+' + l.quantity + ')'}`).join('\n- ');
+            }
+        } catch (matErr) {
+            console.error('자재 자동등록 실패:', matErr);
+            matMessage = '⚠️ 지출은 저장됐지만 자재관리 자동등록에 실패했습니다: ' + (matErr.message || matErr) +
+                '\n자재관리 메뉴에서 직접 확인해 주세요.';
+        }
 
         clearReceiptPreview();
+        resetMatSync();
 
         modal.style.display = 'none';
         form.reset();
         updateAmountPreview(0);
         await loadFinanceData();
+        if (matMessage) alert(matMessage);
     } catch (err) {
         console.error(err);
         alert('저장 실패: ' + err.message);
@@ -630,6 +859,13 @@ if (receiptFileInput) {
             }
 
             currentReceiptItems = ocrResult.items || [];
+            const receiptRows = receiptItemsToRows(currentReceiptItems);
+            if (receiptRows.length > 0) {
+                matRows = receiptRows;
+                if (!matUserToggled || matSyncEnabled?.checked) setMatSyncEnabled(true);
+                else renderMatRows();
+            }
+            updateMatSyncVisibility();
             const memoInput = document.getElementById('finMemo');
             if (memoInput) {
                 const itemsDesc = currentReceiptItems.length > 0 

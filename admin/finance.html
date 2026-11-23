@@ -641,6 +641,25 @@
         .dropdown:hover .dropbtn { color: #4F46E5; background: rgba(79, 70, 229, 0.05); }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* 📦 지출 품목 → 자재관리 자동등록 */
+        .mat-sync { margin-top:1rem; border:1.5px solid #C7D2FE; background:#F5F7FF; border-radius:0.75rem; padding:0.85rem 1rem; }
+        .mat-sync-head { display:flex; align-items:center; justify-content:space-between; gap:0.5rem; flex-wrap:wrap; }
+        .mat-sync-toggle { display:flex; align-items:center; gap:0.5rem; font-size:0.9rem; color:#1E1B4B; cursor:pointer; font-weight:600; }
+        .mat-sync-toggle input { width:18px; height:18px; accent-color:#4F46E5; }
+        .mat-sync-summary { font-size:0.775rem; color:#4338CA; font-weight:700; }
+        .mat-sync-hint { margin:0.35rem 0 0 0; font-size:0.75rem; color:#64748B; }
+        .mat-sync-table-wrap { margin-top:0.65rem; overflow-x:auto; }
+        .mat-sync-table { width:100%; border-collapse:collapse; font-size:0.825rem; min-width:560px; }
+        .mat-sync-table th { text-align:left; font-size:0.72rem; color:#64748B; font-weight:700; padding:0.3rem 0.3rem; }
+        .mat-sync-table td { padding:0.25rem 0.3rem; vertical-align:top; }
+        .mat-sync-table input, .mat-sync-table select { width:100%; box-sizing:border-box; padding:0.4rem 0.45rem; border:1px solid #CBD5E1; border-radius:0.4rem; font-size:0.825rem; background:white; }
+        .mat-sync-badge { display:inline-block; margin-top:0.2rem; font-size:0.7rem; font-weight:800; padding:0.1rem 0.4rem; border-radius:0.3rem; }
+        .mat-sync-badge.is-new { background:#DCFCE7; color:#166534; }
+        .mat-sync-badge.is-existing { background:#E0E7FF; color:#3730A3; }
+        .mat-sync-remove { background:#F1F5F9; border:none; width:26px; height:26px; border-radius:50%; color:#64748B; cursor:pointer; }
+        .mat-sync-foot { display:flex; align-items:center; justify-content:space-between; margin-top:0.5rem; gap:0.5rem; flex-wrap:wrap; }
+        .mat-sync-total { font-size:0.775rem; color:#475569; font-weight:700; }
+        .mat-sync-total.is-mismatch { color:#B45309; }
     </style>
 
     <!-- FORCE CSS -->
@@ -944,6 +963,39 @@
                     <div class="form-group">
                         <label for="finMemo">적요 (상세 내용)</label>
                         <textarea id="finMemo" rows="2" placeholder="예: 1차 중도금 수령, 바닥 타일 자재 대금 지급 등"></textarea>
+                    </div>
+
+                    <!-- 📦 지출 품목 → 자재관리 자동등록 (지출일 때만 표시) -->
+                    <div id="matSyncSection" class="mat-sync" style="display:none;">
+                        <div class="mat-sync-head">
+                            <label class="mat-sync-toggle">
+                                <input type="checkbox" id="matSyncEnabled">
+                                <span>📦 구매 품목을 <strong>자재관리</strong>에 자동 등록</span>
+                            </label>
+                            <span id="matSyncSummary" class="mat-sync-summary"></span>
+                        </div>
+                        <p class="mat-sync-hint">같은 이름의 자재가 있으면 재고를 늘리고 단가를 갱신하고, 없으면 새 품목으로 등록합니다. 영수증을 올리면 품목이 자동으로 채워집니다.</p>
+                        <div id="matSyncBody" style="display:none;">
+                            <div class="mat-sync-table-wrap">
+                                <table class="mat-sync-table">
+                                    <thead>
+                                        <tr>
+                                            <th>품목명</th>
+                                            <th style="width:72px;">수량</th>
+                                            <th style="width:64px;">단위</th>
+                                            <th style="width:120px;">단가(VND)</th>
+                                            <th style="width:150px;">카테고리 / 상태</th>
+                                            <th style="width:32px;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="matSyncRows"></tbody>
+                                </table>
+                            </div>
+                            <div class="mat-sync-foot">
+                                <button type="button" class="btn-chip" id="btnMatSyncAddRow">+ 품목 추가</button>
+                                <span id="matSyncTotal" class="mat-sync-total"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
