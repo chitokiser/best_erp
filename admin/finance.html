@@ -812,6 +812,54 @@
             </div>
         </div>
 
+        <!-- Monthly Budget & Vietnam Hóa đơn VAT Control Bar -->
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:1rem;padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;box-shadow:0 2px 6px rgba(15,23,42,.03);">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.84rem;">
+                <strong style="color:#1e293b;">📊 월 지출 예산:</strong>
+                <input type="number" id="monthlyBudgetInput" value="20000000" min="0" step="1000000" style="width:130px;padding:6px 10px;border:1px solid #cbd5e1;border-radius:8px;font-weight:800;font-size:.84rem;" />
+                <span id="budgetUsageBadge" style="padding:4px 10px;border-radius:999px;background:#dcfce7;color:#15803d;font-weight:800;font-size:.78rem;">집행률 0% (정상)</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.82rem;">
+                <strong style="color:#1e293b;">🧾 베트남 Hóa đơn VAT (8%):</strong>
+                <span id="vatEstimateBadge" style="padding:4px 10px;border-radius:999px;background:#eef2ff;color:#4338ca;font-weight:800;">예상 부가세 0 VND</span>
+                <a href="audit-logs.html" style="padding:5px 10px;border-radius:8px;background:#f1f5f9;color:#334155;font-weight:800;text-decoration:none;border:1px solid #cbd5e1;">🛡️ 감사 로그 →</a>
+            </div>
+        </div>
+        <script>
+            (function initBudgetVatWatcher() {
+                const key = 'besterp_monthly_budget_vnd';
+                const inp = document.getElementById('monthlyBudgetInput');
+                if (!inp) return;
+                const saved = localStorage.getItem(key);
+                if (saved) inp.value = saved;
+                const parseVnd = (id) => Number(String(document.getElementById(id)?.textContent || '0').replace(/[^0-9.-]/g, '')) || 0;
+                const refresh = () => {
+                    const budget = Math.max(Number(inp.value) || 0, 1);
+                    const expense = parseVnd('sumExpense');
+                    const income = parseVnd('sumIncome');
+                    const pct = Math.round((expense / budget) * 100);
+                    const bEl = document.getElementById('budgetUsageBadge');
+                    if (bEl) {
+                        bEl.textContent = `집행률 ${pct}% (${pct >= 90 ? '예산 초과 주의' : '정상'})`;
+                        bEl.style.background = pct >= 90 ? '#fee2e2' : '#dcfce7';
+                        bEl.style.color = pct >= 90 ? '#b91c1c' : '#15803d';
+                    }
+                    const vEl = document.getElementById('vatEstimateBadge');
+                    if (vEl) {
+                        const vat = Math.round(income * 0.08);
+                        vEl.textContent = `예상 부가세(8%) ${vat.toLocaleString()} VND`;
+                    }
+                };
+                inp.addEventListener('input', () => { localStorage.setItem(key, inp.value); refresh(); });
+                const obs = new MutationObserver(refresh);
+                ['sumIncome', 'sumExpense'].forEach((id) => {
+                    const el = document.getElementById(id);
+                    if (el) obs.observe(el, { childList: true, characterData: true, subtree: true });
+                });
+                setTimeout(refresh, 900);
+            })();
+        </script>
+
         <div class="data-card">
             <div class="fin-toolbar">
                 <div class="fin-chips" id="finTypeChips">

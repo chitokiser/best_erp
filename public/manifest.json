@@ -1,0 +1,37 @@
+{
+  "name": "BestERP · CRM M-SaaS",
+  "short_name": "BestERP",
+  "description": "가맹점 통합 ERP · CRM · KDS · SCM · 전자결재 클라우드 플랫폼",
+  "start_url": "/admin/dashboard.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b1120",
+  "theme_color": "#0b1120",
+  "orientation": "any",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "실시간 주방 KDS",
+      "short_name": "KDS",
+      "url": "/admin/kitchen-orders.html"
+    },
+    {
+      "name": "전자결재 · 문서함",
+      "short_name": "전자결재",
+      "url": "/admin/approvals.html"
+    },
+    {
+      "name": "SCM · VOC 관제",
+      "short_name": "SCM·VOC",
+      "url": "/admin/scm-voc.html"
+    }
+  ]
+}
