@@ -1456,7 +1456,10 @@
             }
             body.innerHTML = html;
             const mb = document.getElementById('stakeholderMerchantBt');
-            if (mb) mb.innerHTML = `🎟️ 가맹점 BT 재고 <strong style="color:#b45309;">${n(sh.merchantBt)} BT</strong> · <a href="settlement.html" style="color:#4f46e5;font-weight:800;text-decoration:underline;">BM 정산 관리 →</a>`;
+            const lowBtAlert = Number(sh.merchantBt || 0) < 10
+                ? ` <a href="https://bestclubvn.netlify.app/mall.html" target="_blank" rel="noopener" style="background:#fef3c7;color:#b45309;border:1px solid #f59e0b;padding:2px 8px;border-radius:999px;font-size:0.74rem;font-weight:800;text-decoration:none;margin-left:4px;">⚠️ BT 부족 · 충전하기 →</a>`
+                : '';
+            if (mb) mb.innerHTML = `🎟️ 가맹점 BT 재고 <strong style="color:#b45309;">${n(sh.merchantBt)} BT</strong>${lowBtAlert} · <a href="settlement.html" style="color:#4f46e5;font-weight:800;text-decoration:underline;">BM 정산 관리 →</a>`;
             const note = document.getElementById('stakeholderNote');
             if (note) note.textContent = sh.scope === 'self'
                 ? '직원 계정은 본인 보유분만 표시됩니다.'
