@@ -17,7 +17,7 @@ const app = initializeApp({
 const db = getFirestore(app);
 
 // 2. Telegram Bot Init
-const bot = new Telegraf(process.env.VITE_TELEGRAM_BOT_TOKEN);
+const bot = new Telegraf((process.env.TELEGRAM_BOT_TOKEN || process.env.VITE_TELEGRAM_BOT_TOKEN));
 
 console.log("Starting AI-ERM Telegram Bot Listener...");
 

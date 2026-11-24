@@ -16,8 +16,8 @@ const app = initializeApp({
 const db = getFirestore(app);
 
 const sendTelegramNotification = async (message) => {
-    const token = process.env.VITE_TELEGRAM_BOT_TOKEN;
-    const chatId = process.env.VITE_ADMIN_TELEGRAM_ID;
+    const token = (process.env.TELEGRAM_BOT_TOKEN || process.env.VITE_TELEGRAM_BOT_TOKEN);
+    const chatId = (process.env.ADMIN_TELEGRAM_ID || process.env.VITE_ADMIN_TELEGRAM_ID);
     if (!token || !chatId) return;
     try {
         await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
