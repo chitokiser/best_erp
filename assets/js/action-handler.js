@@ -1,32 +1,22 @@
 import { db } from './firebase-config.js';
 import { collection, addDoc, updateDoc, doc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
+import { getApp } from 'firebase/app';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 /**
- * Send Telegram Notification
+ * 텔레그램 알림은 서버(Cloud Function: erpTelegramNotify)가 보낸다.
+ * 봇 토큰을 브라우저 코드에 두면 빌드된 JS 에 그대로 노출되므로 여기서는 알림 종류와 값만 넘긴다.
+ * 문장은 서버가 종류(kind)에 맞춰 만든다. 알림 실패는 본 작업을 막지 않는다.
  */
-const sendTelegramNotification = async (message) => {
-    const token = import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
-    const chatId = import.meta.env.VITE_ADMIN_TELEGRAM_ID;
-
-    if (!token || !chatId) {
-        console.warn("Telegram Token or Chat ID is missing. Notification not sent.");
-        return;
-    }
-
-    const url = `https://api.telegram.org/bot${token}/sendMessage`;
+let telegramCallable = null;
+const sendTelegramNotification = async (kind, fields) => {
     try {
-        await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: chatId,
-                text: message,
-                parse_mode: 'HTML'
-            })
-        });
-        console.log("Telegram notification sent successfully.");
+        if (!telegramCallable) {
+            telegramCallable = httpsCallable(getFunctions(getApp(), 'us-central1'), 'erpTelegramNotify');
+        }
+        await telegramCallable({ kind, fields });
     } catch (e) {
-        console.error("Failed to send Telegram notification:", e);
+        console.warn("텔레그램 알림 전송 실패(작업은 정상 처리됨):", e?.code || '', e?.message || e);
     }
 };
 
@@ -66,8 +56,7 @@ export const confirmMobileMaterialUpload = async (projectId, materialDetails) =>
         }
 
         // 3. Send Telegram Alert
-        const tgMsg = `📦 <b>AI-ERM 현장 모바일 알림</b>\n\n📌 <b>프로젝트</b>: ${projectId}\n📋 <b>자재 입고</b>: ${materialDetails}\n✅ AI 자동 등록 및 승인이 완료되었습니다.`;
-        await sendTelegramNotification(tgMsg);
+        await sendTelegramNotification('material_upload', { projectId, details: materialDetails });
 
         return true;
     } catch (e) {
@@ -90,8 +79,7 @@ export const executeAiRecommendation = async (recId, actionContext) => {
         });
 
         // 2. Telegram Alert
-        const tgMsg = `🤖 <b>AI-ERM 경영 조치 실행</b>\n\n✅ <b>승인 내역</b>: ${actionContext}\n👨‍💼 경영진 승인 처리가 시스템에 반영되었습니다.`;
-        await sendTelegramNotification(tgMsg);
+        await sendTelegramNotification('ai_action', { action: actionContext });
 
         return true;
     } catch (e) {

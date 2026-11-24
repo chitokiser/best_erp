@@ -2,7 +2,7 @@ import fs from 'fs';
 import https from 'https';
 
 const dotenv = fs.readFileSync('.env', 'utf8');
-const match = dotenv.match(/VITE_TELEGRAM_BOT_TOKEN=([^\n\r]+)/);
+const match = dotenv.match(/^(?:VITE_)?TELEGRAM_BOT_TOKEN=([^\n\r]+)/m);
 if (!match) {
     console.log("No token found");
     process.exit(1);
