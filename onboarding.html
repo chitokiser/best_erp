@@ -4,26 +4,147 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>신규 가맹점 1분 무료 개설 | BestERP · CRM M-SaaS</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <meta name="description" content="BestERP · CRM M-SaaS 신규 가맹점 워크스페이스 1분 셀프 개설 및 Enterprise 도입 문의" />
+  <meta name="theme-color" content="#0b1120" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230b1120'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-family='Arial,sans-serif' font-weight='900' font-size='30' fill='%23fde047'%3EB%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
   <style>
     * { box-sizing:border-box; margin:0; padding:0; }
-    body { font-family:'Inter',-apple-system,sans-serif; background:#0b1120; color:#f8fafc; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
-    .box { width:100%; max-width:520px; background:#111827; border:1px solid rgba(148,163,184,.2); border-radius:22px; padding:28px; box-shadow:0 24px 60px rgba(0,0,0,.45); }
-    .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+    body {
+      font-family:'Pretendard Variable','Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      background:
+        radial-gradient(circle at 20% 15%,rgba(99,102,241,.2),transparent 42%),
+        radial-gradient(circle at 80% 85%,rgba(245,158,11,.14),transparent 42%),
+        #0b1120;
+      color:#f8fafc;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      line-height:1.58;
+      word-break:keep-all;
+      overflow-wrap:break-word;
+    }
+    button, input, select, textarea { font-family:inherit; }
+    .box {
+      width:100%;
+      max-width:540px;
+      background:#111827;
+      border:1px solid rgba(148,163,184,.2);
+      border-radius:22px;
+      padding:28px;
+      box-shadow:0 24px 60px rgba(0,0,0,.48);
+    }
+    .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; gap:10px; flex-wrap:wrap; }
     .top a { color:#94a3b8; font-size:.82rem; text-decoration:none; }
-    h1 { font-size:1.45rem; font-weight:900; margin-bottom:6px; }
-    .sub { color:#94a3b8; font-size:.88rem; margin-bottom:20px; }
-    .step-badge { display:inline-block; padding:4px 10px; border-radius:999px; background:rgba(99,102,241,.2); color:#a5b4fc; font-size:.74rem; font-weight:800; margin-bottom:10px; }
+    .top a:hover { color:#fff; }
+    h1 { font-size:1.48rem; font-weight:900; margin-bottom:6px; line-height:1.3; }
+    .sub { color:#94a3b8; font-size:.88rem; margin-bottom:18px; }
+    .step-badge { display:inline-block; padding:4px 10px; border-radius:999px; background:rgba(99,102,241,.2); color:#a5b4fc; font-size:.73rem; font-weight:800; margin-bottom:10px; }
+
+    /* Step progress */
+    .stepper {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      margin-bottom:18px;
+    }
+    .step-pill {
+      padding:9px 12px;
+      border-radius:12px;
+      background:#0f172a;
+      border:1px solid rgba(148,163,184,.18);
+      font-size:.78rem;
+      font-weight:800;
+      color:#64748b;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .step-pill.active { border-color:#818cf8; color:#e0e7ff; background:rgba(99,102,241,.14); }
+    .step-pill.done { border-color:rgba(16,185,129,.45); color:#6ee7b7; background:rgba(16,185,129,.1); }
+
+    /* Plan summary card */
+    .plan-banner {
+      background:linear-gradient(135deg,rgba(49,46,129,.42),rgba(15,23,42,.9));
+      border:1px solid rgba(129,140,248,.4);
+      border-radius:14px;
+      padding:14px 16px;
+      margin-bottom:18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .plan-banner strong { display:block; font-size:.94rem; color:#fde047; }
+    .plan-banner span { font-size:.78rem; color:#cbd5e1; }
+    .plan-switcher { display:flex; gap:4px; }
+    .plan-chip {
+      border:1px solid rgba(148,163,184,.25);
+      background:rgba(255,255,255,.04);
+      color:#cbd5e1;
+      font-size:.72rem;
+      font-weight:800;
+      padding:5px 9px;
+      border-radius:8px;
+      cursor:pointer;
+    }
+    .plan-chip.active { background:#6366f1; border-color:transparent; color:#fff; }
+
+    .preset-box {
+      background:#0f172a;
+      border:1px solid rgba(148,163,184,.18);
+      border-radius:12px;
+      padding:12px 14px;
+      margin-bottom:14px;
+      font-size:.8rem;
+      color:#cbd5e1;
+    }
+    .preset-box strong { color:#a5b4fc; display:block; margin-bottom:4px; }
+
     .field { margin-bottom:14px; }
     .field label { display:block; font-size:.82rem; font-weight:700; color:#cbd5e1; margin-bottom:6px; }
-    .field input, .field select { width:100%; padding:11px 13px; border-radius:11px; border:1px solid #334155; background:#0f172a; color:#fff; font-size:.92rem; }
-    .field input:focus, .field select:focus { outline:none; border-color:#818cf8; }
-    .btn { width:100%; padding:13px 16px; border-radius:12px; border:none; font-size:.95rem; font-weight:900; cursor:pointer; }
+    .field input, .field select, .field textarea {
+      width:100%;
+      padding:11px 13px;
+      border-radius:11px;
+      border:1px solid #334155;
+      background:#0f172a;
+      color:#fff;
+      font-size:.92rem;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      outline:none;
+      border-color:#818cf8;
+      box-shadow:0 0 0 3px rgba(99,102,241,.2);
+    }
+
+    .btn {
+      width:100%;
+      padding:13px 16px;
+      border-radius:12px;
+      border:none;
+      font-size:.95rem;
+      font-weight:900;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      transition:transform .15s, opacity .15s;
+    }
+    .btn:hover { transform:translateY(-1px); }
     .btn-primary { background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; }
     .btn-gold { background:linear-gradient(135deg,#fde047,#f59e0b); color:#0f172a; }
-    .btn:disabled { opacity:.5; cursor:not-allowed; }
+    .btn-ghost { background:rgba(255,255,255,.06); color:#e2e8f0; border:1px solid rgba(148,163,184,.25); }
+    .btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
     .msg { margin-top:12px; font-size:.84rem; text-align:center; min-height:1.2em; }
     .user-chip { padding:10px 12px; border-radius:12px; background:rgba(16,185,129,.12); border:1px solid rgba(16,185,129,.3); color:#6ee7b7; font-size:.84rem; font-weight:700; margin-bottom:16px; }
+    .alt-link { display:block; text-align:center; margin-top:12px; font-size:.82rem; color:#94a3b8; text-decoration:none; }
+    .alt-link strong { color:#a5b4fc; }
   </style>
 </head>
 <body>
@@ -34,18 +155,65 @@
     </div>
 
     <span class="step-badge">🚀 BESTERP · CRM M-SAAS ONBOARDING</span>
-    <h1>1분 만에 내 매장 워크스페이스 개설</h1>
-    <p class="sub">별도 승인 대기 없이 가맹점 전용 ERP·CRM 공간을 즉시 생성하고 운영을 시작하세요.</p>
+    <h1 id="pageTitle">1분 만에 내 매장 워크스페이스 개설</h1>
+    <p class="sub" id="pageSub">별도 승인 대기 없이 가맹점 전용 ERP·CRM·KDS 공간을 즉시 생성하고 운영을 시작하세요.</p>
+
+    <div class="stepper" id="stepper">
+      <div class="step-pill active" id="pillStep1">1. 대표 계정 연결</div>
+      <div class="step-pill" id="pillStep2">2. 매장 정보 · 업종 설정</div>
+    </div>
+
+    <!-- Selected Plan Summary -->
+    <div class="plan-banner">
+      <div>
+        <strong id="planTitle">Starter (무료 시작)</strong>
+        <span id="planDesc">결제 카드 없이 무료 개설 · KDS · 상품 ERP · 기본 CRM</span>
+      </div>
+      <div class="plan-switcher" aria-label="플랜 변경">
+        <button type="button" class="plan-chip" data-plan="starter">Starter</button>
+        <button type="button" class="plan-chip" data-plan="pro">Pro</button>
+        <button type="button" class="plan-chip" data-plan="enterprise">Enterprise</button>
+      </div>
+    </div>
+
+    <!-- Enterprise Inquiry Mode -->
+    <div id="enterpriseBox" style="display:none;">
+      <div class="preset-box">
+        <strong>🏢 다점포 · 프랜차이즈 맞춤 도입 상담</strong>
+        다점포 CEO 통합 대시보드, BestClub Control MCP 자연어 AI 자동운영, 기존 POS/회계 API 연동을 전담팀이 안내해 드립니다.
+      </div>
+      <form id="enterpriseForm">
+        <div class="field">
+          <label for="entBrand">브랜드 / 가맹점명 *</label>
+          <input type="text" id="entBrand" placeholder="예: 서울갈비 하노이 (3개 지점)" required />
+        </div>
+        <div class="field">
+          <label for="entContact">담당자 연락처 (Zalo / 카카오톡 / 전화번호) *</label>
+          <input type="text" id="entContact" placeholder="예: +84-90-123-4567 / 카톡ID" required />
+        </div>
+        <div class="field">
+          <label for="entNote">도입 희망 내용</label>
+          <textarea id="entNote" rows="3" placeholder="예: 3개 지점 통합 정산, KDS 태블릿 6대 연동 문의"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">📩 상담 내용 복사 및 이메일 문의 열기</button>
+        <button type="button" id="btnEntSelfStart" class="btn btn-ghost" style="margin-top:8px;">⚡ 먼저 Starter/Pro로 1분 셀프 개설해 보기</button>
+        <div class="msg" id="entMsg"></div>
+      </form>
+    </div>
 
     <!-- Step 1: Google 로그인 -->
     <div id="stepLogin">
       <button type="button" id="btnGoogleStart" class="btn btn-gold">🔐 Google 계정으로 10초 시작하기</button>
+      <a href="login.html?mode=register&redirect=onboarding.html" class="alt-link">이메일 계정으로 시작하고 싶으신가요? <strong>이메일 회원가입 →</strong></a>
       <div class="msg" id="loginMsg" style="color:#fca5a5;"></div>
     </div>
 
     <!-- Step 2: 매장 정보 입력 -->
     <form id="stepForm" style="display:none;">
-      <div class="user-chip" id="userChip">로그인 계정 확인 중...</div>
+      <div class="user-chip" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+        <span id="userChip">로그인 계정 확인 중...</span>
+        <button type="button" id="btnOnboardingLogout" style="border:1px solid rgba(248,113,113,.45);background:rgba(239,68,68,.14);color:#fecaca;border-radius:8px;padding:4px 9px;font-size:.74rem;font-weight:800;cursor:pointer;">로그아웃 · 계정 전환</button>
+      </div>
 
       <div class="field">
         <label for="storeName">가맹점(매장) 이름 *</label>
@@ -58,14 +226,19 @@
       </div>
 
       <div class="field">
-        <label for="storeCategory">업종 선택</label>
+        <label for="storeCategory">업종 선택 (맞춤 모듈 자동 세팅)</label>
         <select id="storeCategory">
           <option value="fnb">🍽️ 음식점 · 카페 (F&amp;B)</option>
-          <option value="retail">🛍️ 유통 · 식품 · 쇼핑몰</option>
+          <option value="retail">🛍️ 유통 · 식품 · 김치 쇼핑몰</option>
           <option value="service">💆 뷰티 · 병원 · 생활서비스</option>
           <option value="leisure">🎱 당구 · 골프 · 레저</option>
           <option value="other">🏢 기타 업종</option>
         </select>
+      </div>
+
+      <div class="preset-box" id="categoryPresetPreview">
+        <strong>✨ 자동 활성화 모듈 (음식점 · 카페)</strong>
+        실시간 주방 KDS 알림판 · 테이블 QR 주문 · 메뉴/옵션 ERP · 단골 CRM · BM 정산
       </div>
 
       <div class="field">
@@ -81,8 +254,8 @@
       <div class="field">
         <label for="saasPlan">구독 플랜</label>
         <select id="saasPlan">
-          <option value="starter">Starter (무료 — 기본 ERP · CRM · 통합몰 연동)</option>
-          <option value="pro">Pro (14일 무료체험 — AI 비전 · 마케팅 · HR 전체)</option>
+          <option value="starter">Starter (무료 — 기본 ERP · KDS · CRM · 통합몰 연동)</option>
+          <option value="pro">Pro (14일 무료체험 — 이탈방지 CRM · AI 비전 · 직원 RBAC)</option>
           <option value="enterprise">Enterprise (다점포 · MCP AI 자동화)</option>
         </select>
       </div>
@@ -94,17 +267,93 @@
 
   <script type="module">
     import { auth, db } from './assets/js/firebase-config.js';
-    import { GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from 'firebase/auth';
+    import { GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'firebase/auth';
     import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 
-    const params = new URLSearchParams(location.search);
-    const presetPlan = params.get('plan');
-    if (presetPlan && ['starter', 'pro', 'enterprise'].includes(presetPlan)) {
-      const sel = document.getElementById('saasPlan');
-      if (sel) sel.value = presetPlan;
-    }
+    const planMeta = {
+      starter: {
+        title: 'Starter (무료 시작 · 월 0₫)',
+        desc: '결제 카드 없이 무료 개설 · KDS · 상품 ERP · 기본 CRM'
+      },
+      pro: {
+        title: 'Pro (14일 무료체험 · 이후 월 490,000₫)',
+        desc: '이탈방지 자동 쿠폰 CRM · AI 비전 관제 · 직원 RBAC 전체 포함'
+      },
+      enterprise: {
+        title: 'Enterprise (다점포 / 프랜차이즈 맞춤 협의)',
+        desc: '다점포 CEO 대시보드 · BestClub Control MCP · 전담 온보딩'
+      }
+    };
+
+    const categoryMeta = {
+      fnb: ['음식점 · 카페', '실시간 주방 KDS 알림판 · 테이블 QR 주문 · 메뉴/옵션 ERP · 단골 CRM · BM 정산'],
+      retail: ['유통 · 식품 · 쇼핑몰', '상품/재고 ERP · BestClub 통합몰 실시간 연동 · 택배/픽업 주문 · 단골 재구매 CRM'],
+      service: ['뷰티 · 병원 · 생활서비스', '서비스 메뉴 관리 · VIP/30일 미방문 쿠폰 CRM · AI 비전 방문 감지 · 직원 사진보고'],
+      leisure: ['당구 · 골프 · 레저', '이용권/쿠폰 QR 검증 · 단골 멤버십 CRM · BM 정산 · 직원 권한분리 HR'],
+      other: ['기타 업종', '상품·재고 ERP · 고객 CRM · BM 정산 · 직원 권한분리(RBAC) 기본 세팅']
+    };
 
     let currentUser = null;
+    let activePlan = 'starter';
+
+    function applyPlanUI(plan, forceSelfStart = false) {
+      activePlan = ['starter', 'pro', 'enterprise'].includes(plan) ? plan : 'starter';
+      const meta = planMeta[activePlan];
+      document.getElementById('planTitle').textContent = meta.title;
+      document.getElementById('planDesc').textContent = meta.desc;
+      const sel = document.getElementById('saasPlan');
+      if (sel) sel.value = activePlan;
+      document.querySelectorAll('.plan-chip').forEach((btn) => {
+        btn.classList.toggle('active', btn.getAttribute('data-plan') === activePlan);
+      });
+
+      const isEnterpriseConsult = activePlan === 'enterprise' && !currentUser && !forceSelfStart;
+      document.getElementById('enterpriseBox').style.display = isEnterpriseConsult ? 'block' : 'none';
+      document.getElementById('stepLogin').style.display = (!isEnterpriseConsult && !currentUser) ? 'block' : 'none';
+      document.getElementById('stepper').style.display = isEnterpriseConsult ? 'none' : 'grid';
+      document.getElementById('pageTitle').textContent = isEnterpriseConsult
+        ? 'Enterprise 다점포 도입 상담'
+        : '1분 만에 내 매장 워크스페이스 개설';
+      document.getElementById('pageSub').textContent = isEnterpriseConsult
+        ? '프랜차이즈·다점포 운영 환경에 맞춰 전담팀이 가장 빠른 구축안을 안내해 드립니다.'
+        : '별도 승인 대기 없이 가맹점 전용 ERP·CRM·KDS 공간을 즉시 생성하고 운영을 시작하세요.';
+    }
+
+    const params = new URLSearchParams(location.search);
+    applyPlanUI(params.get('plan') || 'starter');
+
+    document.querySelectorAll('.plan-chip').forEach((btn) => {
+      btn.addEventListener('click', () => applyPlanUI(btn.getAttribute('data-plan')));
+    });
+
+    document.getElementById('btnEntSelfStart')?.addEventListener('click', () => {
+      applyPlanUI('pro', true);
+    });
+
+    document.getElementById('enterpriseForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const brand = document.getElementById('entBrand').value.trim();
+      const contact = document.getElementById('entContact').value.trim();
+      const note = document.getElementById('entNote').value.trim();
+      const summary = `[BestERP Enterprise 도입 문의]\n매장/브랜드: ${brand}\n연락처(Zalo/카톡): ${contact}\n문의 내용: ${note || '다점포 도입 상담 요청'}`;
+      const entMsg = document.getElementById('entMsg');
+      try {
+        await navigator.clipboard.writeText(summary);
+        entMsg.style.color = '#6ee7b7';
+        entMsg.textContent = '✅ 문의 내용이 클립보드에 복사되었습니다. 메일 앱이 열리지 않으면 Zalo/카톡 채널로 붙여넣어 보내주세요.';
+      } catch (_) {
+        entMsg.style.color = '#fde047';
+        entMsg.textContent = '📩 메일 작성 창으로 이동합니다.';
+      }
+      const mailto = `mailto:support@bestclubvn.com?subject=${encodeURIComponent(`[BestERP Enterprise] ${brand} 도입 문의`)}&body=${encodeURIComponent(summary)}`;
+      window.location.href = mailto;
+    });
+
+    const catSel = document.getElementById('storeCategory');
+    catSel?.addEventListener('change', () => {
+      const [label, desc] = categoryMeta[catSel.value] || categoryMeta.other;
+      document.getElementById('categoryPresetPreview').innerHTML = `<strong>✨ 자동 활성화 모듈 (${label})</strong>${desc}`;
+    });
 
     document.getElementById('btnGoogleStart').addEventListener('click', async () => {
       const msg = document.getElementById('loginMsg');
@@ -116,14 +365,33 @@
       }
     });
 
+    document.getElementById('btnOnboardingLogout')?.addEventListener('click', async () => {
+      try {
+        await signOut(auth);
+        currentUser = null;
+        document.getElementById('stepForm').style.display = 'none';
+        document.getElementById('pillStep1').className = 'step-pill active';
+        document.getElementById('pillStep1').textContent = '1. 대표 계정 연결';
+        document.getElementById('pillStep2').className = 'step-pill';
+        document.getElementById('formMsg').textContent = '';
+        applyPlanUI(activePlan);
+      } catch (err) {
+        console.error(err);
+      }
+    });
+
     onAuthStateChanged(auth, async (user) => {
       if (!user) return;
       currentUser = user;
+      document.getElementById('enterpriseBox').style.display = 'none';
       document.getElementById('stepLogin').style.display = 'none';
       document.getElementById('stepForm').style.display = 'block';
+      document.getElementById('stepper').style.display = 'grid';
+      document.getElementById('pillStep1').className = 'step-pill done';
+      document.getElementById('pillStep1').textContent = '✓ 1. 대표 계정 연결됨';
+      document.getElementById('pillStep2').className = 'step-pill active';
       document.getElementById('userChip').textContent = `✅ 대표 계정: ${user.displayName || ''} (${user.email})`;
 
-      // 이미 개설된 가맹점이 있으면 바로 안내
       try {
         const uSnap = await getDoc(doc(db, 'users', user.uid));
         if (uSnap.exists() && (uSnap.data().merchantId || uSnap.data().merchant_id)) {

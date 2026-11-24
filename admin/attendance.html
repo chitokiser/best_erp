@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⏱️ 직원 근태 · 인센티브 정산 | BestERP HR</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+  <style>
+    .hr-wrap { max-width: 1140px; margin: 22px auto; padding: 0 16px 48px; }
+    .hr-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 14px rgba(15,23,42,.04); }
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .kpi { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 16px; }
+    .kpi .lb { font-size: 0.78rem; font-weight: 700; color: #64748b; }
+    .kpi .val { font-size: 1.45rem; font-weight: 900; color: #0f172a; margin-top: 4px; }
+    .tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    .tbl th, .tbl td { padding: 11px 10px; border-bottom: 1px solid #f1f5f9; text-align: left; }
+    .tbl th { font-size: 0.78rem; color: #64748b; background: #f8fafc; }
+    .tag { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 0.74rem; font-weight: 800; }
+    .btn-sm { padding: 8px 14px; border-radius: 10px; border: none; font-weight: 800; font-size: 0.82rem; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+    .sub-nav { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:12px 16px; margin-bottom:16px; }
+    .sub-nav-links { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .nav-pill { padding:7px 12px; border-radius:9px; font-size:.82rem; font-weight:800; border:1px solid #e2e8f0; background:#f8fafc; color:#334155; text-decoration:none; cursor:pointer; }
+    .nav-pill.active { background:#4f46e5; color:#fff; border-color:#4f46e5; }
+    .payroll-bar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; margin-bottom:14px; font-size:.82rem; }
+    .payroll-bar input { width:110px; padding:6px 9px; border:1px solid #cbd5e1; border-radius:8px; font-weight:800; font-size:.84rem; }
+    @media (max-width: 760px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } .payroll-bar input { font-size:16px; } }
+  </style>
+</head>
+<body class="admin-body">
+  <div class="hr-wrap">
+    <div class="sub-nav">
+      <div class="sub-nav-links">
+        <a href="dashboard.html" class="nav-pill">← 대시보드</a>
+        <a href="attendance.html" class="nav-pill active">⏱️ 근태 · 급여정산</a>
+        <a href="approvals.html" class="nav-pill">📝 전자결재 · ECM</a>
+        <a href="scm-voc.html" class="nav-pill">🚚 SCM · VOC</a>
+        <a href="settlement.html" class="nav-pill">💰 BM 정산</a>
+      </div>
+      <button type="button" id="btnLogout" class="nav-pill" style="color:#dc2626;border-color:#fecaca;background:#fef2f2;">로그아웃</button>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+      <div>
+        <h2 style="margin:0;font-size:1.4rem;font-weight:900;">⏱️ 직원 GPS 근태 · 급여 및 인센티브 자동 정산</h2>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <input type="month" id="monthPicker" style="padding:7px 10px;border-radius:10px;border:1px solid #cbd5e1;font-weight:700;" />
+        <a href="../staff-checkin.html" class="btn-sm" style="background:#059669;color:#fff;">📍 내 GPS 출퇴근 체크</a>
+        <button type="button" id="btnExportCsv" class="btn-sm" style="background:#0f172a;color:#fff;">📥 정산표 CSV 다운로드</button>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi"><div class="lb">오늘 출근 직원</div><div class="val" id="kpiToday">0명</div></div>
+      <div class="kpi"><div class="lb">이번 달 총 근무시간</div><div class="val" id="kpiHours">0h</div></div>
+      <div class="kpi"><div class="lb">이번 달 지각 건수</div><div class="val" id="kpiLate" style="color:#dc2626;">0건</div></div>
+      <div class="kpi"><div class="lb">예상 급여 + 인센티브 합계</div><div class="val" id="kpiBonus" style="color:#4f46e5;">0 ₫</div></div>
+    </div>
+
+    <div class="hr-card">
+      <h3 style="margin:0 0 12px;font-size:1.02rem;font-weight:800;">📊 월간 직원별 근태 · 급여명세 자동 정산</h3>
+      <div class="payroll-bar">
+        <label style="font-weight:800;color:#334155;">💵 기본 시급 (VND/시간): <input type="number" id="hourlyWageInput" value="40000" min="0" step="5000" /></label>
+        <label style="font-weight:800;color:#334155;">⚠️ 지각 공제 (VND/회): <input type="number" id="latePenaltyInput" value="0" min="0" step="10000" /></label>
+        <span style="color:#64748b;font-size:.78rem;">근무시간 × 시급 + 멘티 인센티브 − 지각공제 자동 산출</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>직원명 / 이메일</th>
+              <th>출근일수</th>
+              <th>총 근무시간</th>
+              <th>지각</th>
+              <th>기본 급여 (VND)</th>
+              <th>유치 멘티 / 인센티브</th>
+              <th>총 지급 예정액 (VND)</th>
+            </tr>
+          </thead>
+          <tbody id="summaryTbody">
+            <tr><td colspan="7" style="text-align:center;color:#64748b;padding:28px;">근태 데이터를 불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="hr-card">
+      <h3 style="margin:0 0 12px;font-size:1.02rem;font-weight:800;">🕒 최근 출퇴근 상세 로그</h3>
+      <div style="overflow-x:auto;">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>날짜</th>
+              <th>직원</th>
+              <th>출근</th>
+              <th>퇴근</th>
+              <th>근무시간</th>
+              <th>GPS 위치 검증</th>
+            </tr>
+          </thead>
+          <tbody id="logTbody">
+            <tr><td colspan="6" style="text-align:center;color:#64748b;padding:24px;">로딩 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { checkAdminAuth, logoutAdmin } from '../assets/js/auth.js';
+    import { getCurrentStoreInfo, loadDynamicTenants } from '../assets/js/tenant-router.js';
+    import { db } from '../assets/js/firebase-config.js';
+    import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firestore';
+
+    document.getElementById('btnLogout')?.addEventListener('click', () => logoutAdmin());
+
+    let _storeId = '';
+    let _menteeBonusVnd = 20000;
+    let _allLogs = [];
+    let _menteeCountByEmail = {};
+    let _lastSummaryRows = [];
+
+    const now = new Date();
+    const ymDefault = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const todayStr = `${ymDefault}-${String(now.getDate()).padStart(2, '0')}`;
+    const monthPicker = document.getElementById('monthPicker');
+    monthPicker.value = ymDefault;
+
+    function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+    function renderMonth() {
+      const ym = monthPicker.value || ymDefault;
+      const monthLogs = _allLogs.filter((l) => String(l.date || '').startsWith(ym));
+      const todayCount = _allLogs.filter((l) => l.date === todayStr && l.checkInTime).length;
+
+      const byStaff = {};
+      let totalMins = 0;
+      let totalLate = 0;
+
+      monthLogs.forEach((l) => {
+        const key = (l.email || l.uid || 'unknown').toLowerCase();
+        if (!byStaff[key]) {
+          byStaff[key] = { name: l.name || key, email: key, days: 0, mins: 0, late: 0, gpsOk: 0 };
+        }
+        if (l.checkInTime) byStaff[key].days += 1;
+        const m = Number(l.workMinutes || 0);
+        byStaff[key].mins += m;
+        totalMins += m;
+        if (l.isLate) { byStaff[key].late += 1; totalLate += 1; }
+        if (l.gpsVerified !== false) byStaff[key].gpsOk += 1;
+      });
+
+      const hourlyWage = Number(document.getElementById('hourlyWageInput')?.value || 40000);
+      const latePenalty = Number(document.getElementById('latePenaltyInput')?.value || 0);
+
+      const rows = Object.values(byStaff).map((r) => {
+        const mentees = _menteeCountByEmail[r.email] || 0;
+        const bonus = mentees * _menteeBonusVnd;
+        const basePay = Math.round((r.mins / 60) * hourlyWage);
+        const deduction = r.late * latePenalty;
+        const netPay = Math.max(0, basePay + bonus - deduction);
+        return { ...r, mentees, bonus, basePay, deduction, netPay };
+      });
+      _lastSummaryRows = rows;
+
+      const totalPayroll = rows.reduce((s, r) => s + r.netPay, 0);
+      document.getElementById('kpiToday').textContent = `${todayCount}명`;
+      document.getElementById('kpiHours').textContent = `${(totalMins / 60).toFixed(1)}h`;
+      document.getElementById('kpiLate').textContent = `${totalLate}건`;
+      document.getElementById('kpiBonus').textContent = `${totalPayroll.toLocaleString()} ₫`;
+
+      const sumTb = document.getElementById('summaryTbody');
+      if (!rows.length) {
+        sumTb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#64748b;padding:28px;">선택한 월의 출퇴근 기록이 아직 없습니다.</td></tr>';
+      } else {
+        sumTb.innerHTML = rows.map((r) => `
+          <tr>
+            <td><strong>${esc(r.name)}</strong><div style="font-size:0.75rem;color:#64748b;">${esc(r.email)}</div></td>
+            <td><strong>${r.days}일</strong></td>
+            <td>${Math.floor(r.mins / 60)}시간 ${r.mins % 60}분</td>
+            <td>${r.late > 0 ? `<span class="tag" style="background:#fee2e2;color:#b91c1c;">지각 ${r.late}회</span>` : '<span class="tag" style="background:#dcfce7;color:#15803d;">정상</span>'}</td>
+            <td style="font-weight:700;">${r.basePay.toLocaleString()} ₫</td>
+            <td><strong>${r.mentees}명</strong> (${r.bonus.toLocaleString()} ₫)</td>
+            <td style="font-weight:900;color:#4f46e5;">${r.netPay.toLocaleString()} VND</td>
+          </tr>
+        `).join('');
+      }
+
+      const logTb = document.getElementById('logTbody');
+      const sorted = [...monthLogs].sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+      if (!sorted.length) {
+        logTb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#64748b;padding:24px;">상세 로그가 없습니다.</td></tr>';
+      } else {
+        logTb.innerHTML = sorted.slice(0, 60).map((l) => {
+          const hrs = l.workMinutes ? `${Math.floor(l.workMinutes / 60)}h ${l.workMinutes % 60}m` : '-';
+          const gpsTag = l.gpsVerified === false
+            ? `<span class="tag" style="background:#fef3c7;color:#b45309;">⚠️ ${esc(l.gpsNote || '반경 이탈')}</span>`
+            : `<span class="tag" style="background:#dcfce7;color:#15803d;">✅ ${esc(l.gpsNote || '인증됨')}</span>`;
+          return `
+            <tr>
+              <td>${esc(l.date)}</td>
+              <td><strong>${esc(l.name || l.email)}</strong></td>
+              <td>${esc(l.checkInTime || '-')} ${l.isLate ? '<span style="color:#dc2626;font-size:0.74rem;font-weight:800;">(지각)</span>' : ''}</td>
+              <td>${esc(l.checkOutTime || '-')}</td>
+              <td>${hrs}</td>
+              <td>${gpsTag}</td>
+            </tr>`;
+        }).join('');
+      }
+    }
+
+    monthPicker.addEventListener('change', renderMonth);
+    document.getElementById('hourlyWageInput')?.addEventListener('input', renderMonth);
+    document.getElementById('latePenaltyInput')?.addEventListener('input', renderMonth);
+
+    document.getElementById('btnExportCsv').addEventListener('click', () => {
+      const ym = monthPicker.value || ymDefault;
+      const header = ['직원명', '이메일', '출근일수', '총근무분', '지각횟수', '기본급VND', '유치멘티수', '인센티브VND', '총지급예정액VND'];
+      const lines = [header.join(','), ..._lastSummaryRows.map((r) => [r.name, r.email, r.days, r.mins, r.late, r.basePay, r.mentees, r.bonus, r.netPay].join(','))];
+      const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `besterp-payroll-${ym}.csv`;
+      a.click();
+    });
+
+    checkAdminAuth(async () => {
+      await loadDynamicTenants();
+      const info = getCurrentStoreInfo();
+      const sid = window.tenantId || info?.storeId || info?.merchantId;
+      if (!sid) { location.href = '../onboarding.html'; return; }
+      _storeId = String(sid);
+
+      const mSnap = await getDoc(doc(db, 'merchants', _storeId));
+      if (mSnap.exists()) {
+        _menteeBonusVnd = Number(mSnap.data()?.hrConfig?.menteeBonusVnd ?? 20000);
+      }
+
+      const attSnap = await getDocs(collection(db, 'merchants', _storeId, 'attendance'));
+      _allLogs = attSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+      // BestClub 멘티 실적 집계 (가맹점 소속 직원이 멘토로 유치한 고객 수)
+      try {
+        const uSnap = await getDocs(query(collection(db, 'users'), where('referredByMerchant', '==', _storeId)));
+        const counts = {};
+        uSnap.forEach((u) => {
+          const me = String(u.data()?.mentorEmail || '').toLowerCase();
+          if (me) counts[me] = (counts[me] || 0) + 1;
+        });
+        _menteeCountByEmail = counts;
+      } catch (_) {}
+
+      renderMonth();
+    });
+  </script>
+</body>
+</html>

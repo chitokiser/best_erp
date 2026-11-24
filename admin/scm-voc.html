@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🚚 SCM 안전재고(JIT) · VOC 분석 | BestERP</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+  <style>
+    body.admin-body { font-family:'Pretendard Variable','Pretendard',-apple-system,sans-serif; background:#f8fafc; color:#0f172a; }
+    .erp-wrap { max-width:1120px; margin:20px auto; padding:0 16px 64px; }
+    .sub-nav {
+      display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+      background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:12px 16px; margin-bottom:16px;
+      box-shadow:0 2px 8px rgba(15,23,42,.03);
+    }
+    .sub-nav-links { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .nav-pill {
+      padding:7px 12px; border-radius:9px; font-size:.82rem; font-weight:800;
+      border:1px solid #e2e8f0; background:#f8fafc; color:#334155; text-decoration:none; cursor:pointer;
+    }
+    .nav-pill:hover { background:#eef2ff; color:#4f46e5; border-color:#c7d2fe; }
+    .nav-pill.active { background:#059669; color:#fff; border-color:#059669; }
+    .store-badge { padding:5px 11px; border-radius:999px; background:#ede9fe; color:#4f46e5; font-size:.78rem; font-weight:800; }
+    .sync-tag { font-size:.72rem; font-weight:800; color:#059669; background:#ecfdf5; border:1px solid #a7f3d0; padding:3px 9px; border-radius:999px; }
+
+    .kpi-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:16px; }
+    .kpi { background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:14px 16px; }
+    .kpi small { display:block; font-size:.76rem; font-weight:700; color:#64748b; margin-bottom:4px; }
+    .kpi strong { font-size:1.3rem; font-weight:900; color:#0f172a; }
+
+    .tabs { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+    .tab-btn {
+      padding:9px 16px; border-radius:10px; border:1px solid #cbd5e1;
+      background:#fff; color:#334155; font-weight:800; font-size:.85rem; cursor:pointer;
+    }
+    .tab-btn.active { background:#059669; border-color:#059669; color:#fff; }
+
+    .pane { display:none; }
+    .pane.active { display:block; }
+
+    .panel { background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:18px; margin-bottom:16px; box-shadow:0 4px 12px rgba(15,23,42,.03); }
+    .panel h2 { font-size:1rem; font-weight:900; margin:0 0 12px; display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+
+    .form-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:12px; }
+    .field label { display:block; font-size:.78rem; font-weight:700; color:#475569; margin-bottom:5px; }
+    .field input, .field select {
+      width:100%; padding:10px 12px; border-radius:10px; border:1px solid #cbd5e1;
+      background:#fff; color:#0f172a; font-size:.88rem;
+    }
+
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center; gap:6px;
+      padding:9px 14px; border-radius:10px; font-size:.82rem; font-weight:800; border:none; cursor:pointer;
+    }
+    .btn-primary { background:#4f46e5; color:#fff; }
+    .btn-gold { background:#f59e0b; color:#fff; }
+    .btn-green { background:#dcfce7; color:#15803d; border:1px solid #86efac; }
+    .btn-ghost { background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; }
+
+    .item-list { display:flex; flex-direction:column; gap:10px; }
+    .item-card {
+      background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    }
+    .badge { font-size:.72rem; font-weight:800; padding:3px 9px; border-radius:999px; }
+    .badge.warn { background:#fee2e2; color:#b91c1c; }
+    .badge.ordered { background:#fef3c7; color:#b45309; }
+    .badge.ok { background:#dcfce7; color:#15803d; }
+    .badge.info { background:#e0e7ff; color:#4338ca; }
+    .item-meta { font-size:.78rem; color:#64748b; margin-top:4px; }
+    .item-acts { display:flex; gap:6px; flex-wrap:wrap; }
+    .bar-track { width:220px; max-width:100%; height:7px; border-radius:999px; background:#e2e8f0; overflow:hidden; margin-top:6px; }
+    .bar-fill { height:100%; border-radius:999px; }
+
+    @media (max-width:768px) {
+      .kpi-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .form-grid { grid-template-columns:1fr; }
+      .tabs { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+      .tab-btn { width:100%; text-align:center; padding:9px 8px; font-size:.78rem; }
+      .item-card { flex-direction:column; align-items:stretch; }
+      .item-acts { display:grid; grid-template-columns:1fr 1fr; }
+      .item-acts .btn { width:100%; min-height:38px; }
+      .bar-track { width:100%; }
+      input, select { font-size:16px; }
+    }
+  </style>
+</head>
+<body class="admin-body">
+  <main class="erp-wrap">
+    <div class="sub-nav">
+      <div class="sub-nav-links">
+        <a href="dashboard.html" class="nav-pill">← 대시보드</a>
+        <a href="scm-voc.html" class="nav-pill active">🚚 SCM · VOC</a>
+        <a href="approvals.html" class="nav-pill">📝 전자결재 · ECM</a>
+        <a href="attendance.html" class="nav-pill">⏱️ 근태 · 급여</a>
+        <a href="materials.html" class="nav-pill">📦 자재관리</a>
+      </div>
+      <div class="sub-nav-links">
+        <span class="store-badge" id="storeBadge">가맹점 확인 중...</span>
+        <span class="sync-tag" id="syncBadge">☁️ Firestore 연결 중</span>
+        <button type="button" id="btnLogout" class="nav-pill" style="color:#dc2626;border-color:#fecaca;background:#fef2f2;">로그아웃</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <h2 style="margin:0;font-size:1.38rem;font-weight:900;">🚚 SCM 안전재고(JIT) · 📣 VOC(고객의 소리) 분석</h2>
+      <p style="margin:4px 0 0;font-size:.85rem;color:#64748b;">안전재고 임계치 기반 JIT 적시 발주로 채찍효과(과잉재고·품절 손실)를 방지하고, 고객 VOC 감성 분석 및 조치 이력을 Firestore에 실시간 저장합니다.</p>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi"><small>안전재고 미달 (발주 필요)</small><strong id="kpiShortage" style="color:#dc2626;">0건</strong></div>
+      <div class="kpi"><small>공급처 JIT 발주 진행중</small><strong id="kpiOrdered" style="color:#d97706;">0건</strong></div>
+      <div class="kpi"><small>VOC 긍정 비율</small><strong id="kpiVocPos" style="color:#059669;">0%</strong></div>
+      <div class="kpi"><small>VOC 미조치 건수</small><strong id="kpiVocOpen" style="color:#4f46e5;">0건</strong></div>
+    </div>
+
+    <div class="tabs">
+      <button type="button" class="tab-btn active" data-tab="scm">🚚 SCM 안전재고 · JIT</button>
+      <button type="button" class="tab-btn" data-tab="voc">📣 VOC · 4R 대응</button>
+    </div>
+
+    <!-- TAB 1: SCM -->
+    <section class="pane active" id="pane-scm">
+      <div class="panel">
+        <h2>➕ SCM 안전재고 품목 추가</h2>
+        <form id="scmForm">
+          <div class="form-grid">
+            <div class="field">
+              <label for="scmName">품목명 *</label>
+              <input type="text" id="scmName" placeholder="예: 배추 (포기) / 소갈비 (kg)" required />
+            </div>
+            <div class="field">
+              <label for="scmStock">현재 재고 *</label>
+              <input type="number" id="scmStock" placeholder="예: 10" min="0" required />
+            </div>
+            <div class="field">
+              <label for="scmSafety">안전재고 기준 *</label>
+              <input type="number" id="scmSafety" placeholder="예: 30" min="1" required />
+            </div>
+            <div class="field">
+              <label for="scmSupplier">공급처</label>
+              <input type="text" id="scmSupplier" placeholder="예: 하노이 농산유통" />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="btnSubmitScm">💾 품목 등록</button>
+        </form>
+      </div>
+
+      <div class="panel">
+        <h2>📦 실시간 안전재고 현황 &amp; JIT 적시 발주</h2>
+        <div class="item-list" id="scmList">
+          <div style="text-align:center;color:#64748b;padding:24px;font-size:.86rem;">SCM 품목을 불러오는 중...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: VOC -->
+    <section class="pane" id="pane-voc">
+      <div class="panel">
+        <h2>➕ 고객 VOC(문의·칭찬·불만) 등록</h2>
+        <form id="vocForm">
+          <div class="form-grid" style="grid-template-columns:1fr 1fr 2fr;">
+            <div class="field">
+              <label for="vocChannel">유입 채널</label>
+              <select id="vocChannel">
+                <option value="테이블 QR">📱 테이블 QR</option>
+                <option value="Zalo OA">💬 Zalo OA</option>
+                <option value="카카오톡">💛 카카오톡</option>
+                <option value="현장 대면">🏪 현장 대면</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="vocSentiment">감성 분류</label>
+              <select id="vocSentiment">
+                <option value="positive">😊 긍정 / 칭찬</option>
+                <option value="improve">⚠️ 개선 필요</option>
+                <option value="urgent">🚨 긴급 클레임</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="vocText">고객 의견 내용 *</label>
+              <input type="text" id="vocText" placeholder="예: 김치 포장이 깔끔하고 배송이 빠릅니다" required />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="btnSubmitVoc">📣 VOC 기록하기</button>
+        </form>
+      </div>
+
+      <div class="panel">
+        <h2>🗂️ VOC 수집 · 조치 이력 (4R 리텐션 연계)</h2>
+        <div class="item-list" id="vocList">
+          <div style="text-align:center;color:#64748b;padding:24px;font-size:.86rem;">VOC 내역을 불러오는 중...</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { checkAdminAuth, logoutAdmin } from '../assets/js/auth.js';
+    import { getCurrentStoreInfo, loadDynamicTenants } from '../assets/js/tenant-router.js';
+    import { db } from '../assets/js/firebase-config.js';
+    import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+
+    let _storeId = '';
+    let _scmItems = [];
+    let _vocItems = [];
+    const esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    document.getElementById('btnLogout')?.addEventListener('click', () => logoutAdmin());
+
+    document.querySelectorAll('.tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const t = btn.getAttribute('data-tab');
+        document.querySelectorAll('.tab-btn').forEach((b) => b.classList.toggle('active', b === btn));
+        document.querySelectorAll('.pane').forEach((p) => p.classList.toggle('active', p.id === `pane-${t}`));
+      });
+    });
+
+    async function loadFromFirestore() {
+      if (!_storeId) return;
+      try {
+        const [scmSnap, vocSnap] = await Promise.all([
+          getDocs(query(collection(db, 'merchants', _storeId, 'scm_items'), orderBy('createdAt', 'desc'))).catch(() =>
+            getDocs(collection(db, 'merchants', _storeId, 'scm_items'))
+          ),
+          getDocs(query(collection(db, 'merchants', _storeId, 'voc_logs'), orderBy('createdAt', 'desc'))).catch(() =>
+            getDocs(collection(db, 'merchants', _storeId, 'voc_logs'))
+          )
+        ]);
+        _scmItems = scmSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        _vocItems = vocSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        document.getElementById('syncBadge').textContent = '☁️ Firestore 실시간 연동';
+      } catch (err) {
+        console.warn('Firestore load warning:', err);
+        document.getElementById('syncBadge').textContent = '⚠️ 오프라인 모드';
+      }
+      renderAll();
+    }
+
+    function renderAll() {
+      const shortage = _scmItems.filter((x) => Number(x.stock) < Number(x.safety) && x.status !== 'ordered').length;
+      const ordered = _scmItems.filter((x) => x.status === 'ordered').length;
+      const posRate = _vocItems.length ? Math.round((_vocItems.filter((v) => v.sentiment === 'positive').length / _vocItems.length) * 100) : 0;
+      const openVoc = _vocItems.filter((v) => !v.resolved).length;
+
+      document.getElementById('kpiShortage').textContent = `${shortage}건`;
+      document.getElementById('kpiOrdered').textContent = `${ordered}건`;
+      document.getElementById('kpiVocPos').textContent = `${posRate}%`;
+      document.getElementById('kpiVocOpen').textContent = `${openVoc}건`;
+
+      const scmList = document.getElementById('scmList');
+      if (!_scmItems.length) {
+        scmList.innerHTML = '<div style="text-align:center;color:#64748b;padding:28px;font-size:.86rem;">등록된 SCM 안전재고 품목이 없습니다. 위 양식에서 핵심 식자재/상품의 안전재고를 등록해 보세요.</div>';
+      } else {
+        scmList.innerHTML = _scmItems.map((it) => {
+          const stock = Number(it.stock || 0);
+          const safety = Math.max(Number(it.safety || 1), 1);
+          const pct = Math.min(100, Math.round((stock / safety) * 100));
+          const isLow = stock < safety;
+          const badge = it.status === 'ordered'
+            ? '<span class="badge ordered">🚚 JIT 발주 진행중</span>'
+            : isLow
+              ? '<span class="badge warn">⚠️ 안전재고 미달</span>'
+              : '<span class="badge ok">✅ 정상 재고</span>';
+          const recQty = Math.max(safety * 2 - stock, safety);
+          const barColor = it.status === 'ordered' ? '#f59e0b' : isLow ? '#ef4444' : '#10b981';
+          return `
+            <div class="item-card">
+              <div>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                  ${badge}
+                  <strong style="font-size:.94rem;">${esc(it.name)}</strong>
+                </div>
+                <div class="item-meta">
+                  현재 <strong>${stock}</strong> / 안전재고 <strong>${safety}</strong> · 공급처: ${esc(it.supplier || '미지정')}${isLow ? ` · JIT 추천 발주량: <strong style="color:#d97706;">+${recQty}</strong>` : ''}
+                </div>
+                <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${barColor};"></div></div>
+              </div>
+              <div class="item-acts">
+                ${it.status !== 'ordered' ? `<button type="button" class="btn btn-gold" data-order="${esc(it.id)}">🚚 JIT 발주</button>` : `<button type="button" class="btn btn-green" data-receive="${esc(it.id)}" data-qty="${recQty}">📦 입고 완료 (+${recQty})</button>`}
+                <button type="button" class="btn btn-ghost" data-del-scm="${esc(it.id)}">🗑️</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        scmList.querySelectorAll('[data-order]').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            await updateDoc(doc(db, 'merchants', _storeId, 'scm_items', btn.getAttribute('data-order')), { status: 'ordered', updatedAt: serverTimestamp() });
+            await loadFromFirestore();
+          });
+        });
+        scmList.querySelectorAll('[data-receive]').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const id = btn.getAttribute('data-receive');
+            const qty = Number(btn.getAttribute('data-qty') || 0);
+            const cur = _scmItems.find((x) => x.id === id);
+            await updateDoc(doc(db, 'merchants', _storeId, 'scm_items', id), {
+              stock: Number(cur?.stock || 0) + qty,
+              status: 'ok',
+              updatedAt: serverTimestamp()
+            });
+            await loadFromFirestore();
+          });
+        });
+        scmList.querySelectorAll('[data-del-scm]').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            if (!confirm('이 SCM 품목을 삭제하시겠습니까?')) return;
+            await deleteDoc(doc(db, 'merchants', _storeId, 'scm_items', btn.getAttribute('data-del-scm')));
+            await loadFromFirestore();
+          });
+        });
+      }
+
+      const vocList = document.getElementById('vocList');
+      const sBadge = {
+        positive: '<span class="badge ok">😊 긍정</span>',
+        improve: '<span class="badge ordered">⚠️ 개선 필요</span>',
+        urgent: '<span class="badge warn">🚨 긴급 클레임</span>'
+      };
+      if (!_vocItems.length) {
+        vocList.innerHTML = '<div style="text-align:center;color:#64748b;padding:28px;font-size:.86rem;">등록된 VOC가 없습니다. 고객 피드백·문의를 기록해 서비스 품질과 재방문율을 높여보세요.</div>';
+      } else {
+        vocList.innerHTML = _vocItems.map((v) => `
+          <div class="item-card">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                ${sBadge[v.sentiment] || sBadge.positive}
+                <span class="badge info">${esc(v.channel)}</span>
+                <strong style="font-size:.92rem;">${esc(v.text)}</strong>
+              </div>
+              <div class="item-meta">수집일: ${esc(v.date || '')} · 상태: ${v.resolved ? '<strong style="color:#059669;">조치 완료</strong>' : '<strong style="color:#d97706;">응대 대기</strong>'}</div>
+            </div>
+            <div class="item-acts">
+              ${!v.resolved ? `<button type="button" class="btn btn-green" data-resolve="${esc(v.id)}">✅ 응대·조치 완료</button>` : ''}
+              <button type="button" class="btn btn-ghost" data-del-voc="${esc(v.id)}">🗑️</button>
+            </div>
+          </div>
+        `).join('');
+
+        vocList.querySelectorAll('[data-resolve]').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            await updateDoc(doc(db, 'merchants', _storeId, 'voc_logs', btn.getAttribute('data-resolve')), { resolved: true, updatedAt: serverTimestamp() });
+            await loadFromFirestore();
+          });
+        });
+        vocList.querySelectorAll('[data-del-voc]').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            if (!confirm('이 VOC 기록을 삭제하시겠습니까?')) return;
+            await deleteDoc(doc(db, 'merchants', _storeId, 'voc_logs', btn.getAttribute('data-del-voc')));
+            await loadFromFirestore();
+          });
+        });
+      }
+    }
+
+    document.getElementById('scmForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!_storeId) return;
+      const btn = document.getElementById('btnSubmitScm');
+      btn.disabled = true;
+      try {
+        const stock = Number(document.getElementById('scmStock').value);
+        const safety = Number(document.getElementById('scmSafety').value);
+        await addDoc(collection(db, 'merchants', _storeId, 'scm_items'), {
+          name: document.getElementById('scmName').value.trim(),
+          stock,
+          safety,
+          supplier: document.getElementById('scmSupplier').value.trim() || '기본 공급처',
+          status: stock < safety ? 'shortage' : 'ok',
+          createdAt: serverTimestamp()
+        });
+        e.target.reset();
+        await loadFromFirestore();
+      } catch (err) {
+        alert('품목 등록 오류: ' + (err?.message || err));
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById('vocForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!_storeId) return;
+      const btn = document.getElementById('btnSubmitVoc');
+      btn.disabled = true;
+      try {
+        await addDoc(collection(db, 'merchants', _storeId, 'voc_logs'), {
+          channel: document.getElementById('vocChannel').value,
+          sentiment: document.getElementById('vocSentiment').value,
+          text: document.getElementById('vocText').value.trim(),
+          resolved: false,
+          date: new Date().toISOString().slice(0, 10),
+          createdAt: serverTimestamp()
+        });
+        e.target.reset();
+        await loadFromFirestore();
+      } catch (err) {
+        alert('VOC 기록 오류: ' + (err?.message || err));
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    checkAdminAuth(
+      async () => {
+        await loadDynamicTenants();
+        const info = getCurrentStoreInfo();
+        _storeId = String(window.tenantId || info?.merchantId || '1791002036');
+        const storeName = info?.name || _storeId;
+        document.getElementById('storeBadge').textContent = `🏪 ${storeName} (${_storeId})`;
+        await loadFromFirestore();
+      },
+      () => {
+        location.href = '../login.html?redirect=' + encodeURIComponent(location.pathname + location.search);
+      }
+    );
+  </script>
+</body>
+</html>

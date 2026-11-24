@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📝 전자결재 · 매장 문서함(ECM) | BestERP</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+  <style>
+    body.admin-body { font-family:'Pretendard Variable','Pretendard',-apple-system,sans-serif; background:#f8fafc; color:#0f172a; }
+    .erp-wrap { max-width:1120px; margin:20px auto; padding:0 16px 64px; }
+    .sub-nav {
+      display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+      background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:12px 16px; margin-bottom:16px;
+      box-shadow:0 2px 8px rgba(15,23,42,.03);
+    }
+    .sub-nav-links { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .nav-pill {
+      padding:7px 12px; border-radius:9px; font-size:.82rem; font-weight:800;
+      border:1px solid #e2e8f0; background:#f8fafc; color:#334155; text-decoration:none; cursor:pointer;
+    }
+    .nav-pill:hover { background:#eef2ff; color:#4f46e5; border-color:#c7d2fe; }
+    .nav-pill.active { background:#4f46e5; color:#fff; border-color:#4f46e5; }
+    .store-badge { padding:5px 11px; border-radius:999px; background:#ede9fe; color:#4f46e5; font-size:.78rem; font-weight:800; }
+
+    .kpi-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:16px; }
+    .kpi { background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:14px 16px; }
+    .kpi small { display:block; font-size:.76rem; font-weight:700; color:#64748b; margin-bottom:4px; }
+    .kpi strong { font-size:1.3rem; font-weight:900; color:#0f172a; }
+
+    .tabs { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+    .tab-btn {
+      padding:9px 16px; border-radius:10px; border:1px solid #cbd5e1;
+      background:#fff; color:#334155; font-weight:800; font-size:.85rem; cursor:pointer;
+    }
+    .tab-btn.active { background:#4f46e5; border-color:#4f46e5; color:#fff; }
+
+    .pane { display:none; }
+    .pane.active { display:block; }
+
+    .panel { background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:18px; margin-bottom:16px; box-shadow:0 4px 12px rgba(15,23,42,.03); }
+    .panel h2 { font-size:1rem; font-weight:900; margin:0 0 12px; display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+
+    .form-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-bottom:10px; }
+    .field label { display:block; font-size:.78rem; font-weight:700; color:#475569; margin-bottom:5px; }
+    .field input, .field select {
+      width:100%; padding:10px 12px; border-radius:10px; border:1px solid #cbd5e1;
+      background:#fff; color:#0f172a; font-size:.88rem;
+    }
+
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center; gap:6px;
+      padding:9px 14px; border-radius:10px; font-size:.82rem; font-weight:800; border:none; cursor:pointer;
+    }
+    .btn-primary { background:#4f46e5; color:#fff; }
+    .btn-green { background:#dcfce7; color:#15803d; border:1px solid #86efac; }
+    .btn-red { background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; }
+    .btn-ghost { background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; }
+
+    .filter-row { display:flex; gap:6px; flex-wrap:wrap; }
+    .pill {
+      padding:5px 11px; border-radius:999px; border:1px solid #cbd5e1;
+      background:#fff; color:#475569; font-size:.76rem; font-weight:800; cursor:pointer;
+    }
+    .pill.active { background:#4f46e5; border-color:#4f46e5; color:#fff; }
+
+    .item-list { display:flex; flex-direction:column; gap:10px; }
+    .item-card {
+      background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    }
+    .badge { font-size:.72rem; font-weight:800; padding:3px 9px; border-radius:999px; }
+    .badge.pending { background:#fef3c7; color:#b45309; }
+    .badge.approved { background:#dcfce7; color:#15803d; }
+    .badge.rejected { background:#fee2e2; color:#b91c1c; }
+    .item-meta { font-size:.78rem; color:#64748b; margin-top:4px; }
+    .item-acts { display:flex; gap:6px; flex-wrap:wrap; }
+    .sync-tag { font-size:.72rem; font-weight:800; color:#059669; background:#ecfdf5; border:1px solid #a7f3d0; padding:3px 9px; border-radius:999px; }
+
+    @media (max-width:768px) {
+      .kpi-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .form-grid { grid-template-columns:1fr; }
+      .tabs { display:grid; grid-template-columns:1fr 1fr; }
+      .tab-btn { width:100%; text-align:center; padding:9px 8px; font-size:.8rem; }
+      .item-card { flex-direction:column; align-items:stretch; }
+      .item-acts { display:grid; grid-template-columns:1fr 1fr; }
+      .item-acts .btn { width:100%; min-height:38px; }
+      input, select { font-size:16px; }
+    }
+  </style>
+</head>
+<body class="admin-body">
+  <main class="erp-wrap">
+    <div class="sub-nav">
+      <div class="sub-nav-links">
+        <a href="dashboard.html" class="nav-pill">← 대시보드</a>
+        <a href="approvals.html" class="nav-pill active">📝 전자결재 · ECM</a>
+        <a href="scm-voc.html" class="nav-pill">🚚 SCM · VOC</a>
+        <a href="attendance.html" class="nav-pill">⏱️ 근태 · 급여</a>
+        <a href="settlement.html" class="nav-pill">💰 BM 정산</a>
+      </div>
+      <div class="sub-nav-links">
+        <span class="store-badge" id="storeBadge">가맹점 확인 중...</span>
+        <span class="sync-tag" id="syncBadge">☁️ Firestore 연결 중</span>
+        <button type="button" id="btnLogout" class="nav-pill" style="color:#dc2626;border-color:#fecaca;background:#fef2f2;">로그아웃</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <h2 style="margin:0;font-size:1.38rem;font-weight:900;">📝 전자결재 · 매장 문서함 (ECM)</h2>
+      <p style="margin:4px 0 0;font-size:.85rem;color:#64748b;">지출결의·식자재 발주품의·휴가신청을 Firestore 클라우드로 실시간 승인하고, 사업자등록증·계약서·위생허가증을 안전하게 보관합니다.</p>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi"><small>결재 대기</small><strong id="kpiPending" style="color:#d97706;">0건</strong></div>
+      <div class="kpi"><small>승인 완료</small><strong id="kpiApproved" style="color:#059669;">0건</strong></div>
+      <div class="kpi"><small>반려</small><strong id="kpiRejected" style="color:#dc2626;">0건</strong></div>
+      <div class="kpi"><small>승인 결재 총액</small><strong id="kpiTotalAmount" style="color:#4f46e5;">0₫</strong></div>
+    </div>
+
+    <div class="tabs">
+      <button type="button" class="tab-btn active" data-tab="approvals">📝 전자결재함</button>
+      <button type="button" class="tab-btn" data-tab="ecm">🗂️ 매장 문서함 (ECM)</button>
+    </div>
+
+    <!-- TAB 1: 전자결재함 -->
+    <section class="pane active" id="pane-approvals">
+      <div class="panel">
+        <h2>➕ 새 결재 기안 작성</h2>
+        <form id="approvalForm">
+          <div class="form-grid">
+            <div class="field">
+              <label for="aprType">결재 유형</label>
+              <select id="aprType">
+                <option value="지출결의">💳 지출결의서</option>
+                <option value="발주품의">📦 식자재 발주품의</option>
+                <option value="휴가신청">🗓️ 직원 휴가/연차 신청</option>
+                <option value="일반품의">📄 일반 업무 품의</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="aprTitle">결재 제목 *</label>
+              <input type="text" id="aprTitle" placeholder="예: 식자재 긴급 발주 요청" required />
+            </div>
+            <div class="field">
+              <label for="aprAmount">금액 (VND, 선택)</label>
+              <input type="number" id="aprAmount" placeholder="예: 3200000" min="0" />
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:12px;">
+            <label for="aprNote">상세 내용 / 비고</label>
+            <input type="text" id="aprNote" placeholder="예: 주말 예약 증가로 추가 발주 요청" />
+          </div>
+          <button type="submit" class="btn btn-primary" id="btnSubmitApr">🚀 결재 상신하기</button>
+        </form>
+      </div>
+
+      <div class="panel">
+        <h2>
+          <span>📋 결재 목록</span>
+          <div class="filter-row">
+            <button type="button" class="pill active" data-filter="all">전체</button>
+            <button type="button" class="pill" data-filter="pending">결재 대기</button>
+            <button type="button" class="pill" data-filter="approved">승인 완료</button>
+            <button type="button" class="pill" data-filter="rejected">반려</button>
+          </div>
+        </h2>
+        <div class="item-list" id="approvalList">
+          <div style="text-align:center;color:#64748b;padding:24px;font-size:.86rem;">결재 내역을 불러오는 중...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: 매장 문서함 (ECM) -->
+    <section class="pane" id="pane-ecm">
+      <div class="panel">
+        <h2>➕ 매장 문서 등록 (인허가 · 계약서 · 레시피)</h2>
+        <form id="docForm">
+          <div class="form-grid">
+            <div class="field">
+              <label for="docCategory">문서 분류</label>
+              <select id="docCategory">
+                <option value="인허가/세무">🏛️ 사업자등록증 · 세무(MST)</option>
+                <option value="계약서">📑 임대차 · 거래처 계약서</option>
+                <option value="위생/노무">🩺 식품위생허가증 · 직원 보건증</option>
+                <option value="매뉴얼/레시피">🍳 표준 레시피 · 운영 매뉴얼</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="docTitle">문서명 *</label>
+              <input type="text" id="docTitle" placeholder="예: 매장 임대차계약서" required />
+            </div>
+            <div class="field">
+              <label for="docExpiry">만료일 (선택)</label>
+              <input type="date" id="docExpiry" />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="btnSubmitDoc">💾 문서함에 보관하기</button>
+        </form>
+      </div>
+
+      <div class="panel">
+        <h2>🗂️ 보관 중인 매장 문서</h2>
+        <div class="item-list" id="docList">
+          <div style="text-align:center;color:#64748b;padding:24px;font-size:.86rem;">문서 목록을 불러오는 중...</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { checkAdminAuth, logoutAdmin } from '../assets/js/auth.js';
+    import { getCurrentStoreInfo, loadDynamicTenants } from '../assets/js/tenant-router.js';
+    import { db } from '../assets/js/firebase-config.js';
+    import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+
+    let _storeId = '';
+    let _author = '가맹점 관리자';
+    let _activeFilter = 'all';
+    let _approvals = [];
+    let _docs = [];
+
+    const esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const statusLabel = { pending: '결재 대기', approved: '승인 완료', rejected: '반려' };
+
+    document.getElementById('btnLogout')?.addEventListener('click', () => logoutAdmin());
+
+    document.querySelectorAll('.tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const t = btn.getAttribute('data-tab');
+        document.querySelectorAll('.tab-btn').forEach((b) => b.classList.toggle('active', b === btn));
+        document.querySelectorAll('.pane').forEach((p) => p.classList.toggle('active', p.id === `pane-${t}`));
+      });
+    });
+
+    document.querySelectorAll('.pill[data-filter]').forEach((p) => {
+      p.addEventListener('click', () => {
+        _activeFilter = p.getAttribute('data-filter');
+        document.querySelectorAll('.pill[data-filter]').forEach((x) => x.classList.toggle('active', x === p));
+        renderApprovals();
+      });
+    });
+
+    async function loadFromFirestore() {
+      if (!_storeId) return;
+      try {
+        const [aprSnap, docSnap] = await Promise.all([
+          getDocs(query(collection(db, 'merchants', _storeId, 'approvals'), orderBy('createdAt', 'desc'))).catch(() =>
+            getDocs(collection(db, 'merchants', _storeId, 'approvals'))
+          ),
+          getDocs(query(collection(db, 'merchants', _storeId, 'ecm_documents'), orderBy('createdAt', 'desc'))).catch(() =>
+            getDocs(collection(db, 'merchants', _storeId, 'ecm_documents'))
+          )
+        ]);
+        _approvals = aprSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        _docs = docSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        document.getElementById('syncBadge').textContent = '☁️ Firestore 실시간 연동';
+      } catch (err) {
+        console.warn('Firestore load fallback:', err);
+        document.getElementById('syncBadge').textContent = '⚠️ 오프라인 모드';
+      }
+      renderApprovals();
+      renderDocs();
+    }
+
+    function renderApprovals() {
+      const pending = _approvals.filter((a) => a.status === 'pending').length;
+      const approved = _approvals.filter((a) => a.status === 'approved');
+      const rejected = _approvals.filter((a) => a.status === 'rejected').length;
+      const totalAmt = approved.reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+
+      document.getElementById('kpiPending').textContent = `${pending}건`;
+      document.getElementById('kpiApproved').textContent = `${approved.length}건`;
+      document.getElementById('kpiRejected').textContent = `${rejected}건`;
+      document.getElementById('kpiTotalAmount').textContent = `${totalAmt.toLocaleString()}₫`;
+
+      const list = document.getElementById('approvalList');
+      const filtered = _activeFilter === 'all' ? _approvals : _approvals.filter((a) => a.status === _activeFilter);
+      if (!filtered.length) {
+        list.innerHTML = '<div style="text-align:center;color:#64748b;padding:28px;font-size:.86rem;">등록된 결재 문서가 없습니다. 위 양식에서 첫 결재를 상신해 보세요.</div>';
+        return;
+      }
+      list.innerHTML = filtered.map((a) => `
+        <div class="item-card">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span class="badge ${esc(a.status)}">${statusLabel[a.status] || '대기'}</span>
+              <strong style="font-size:.94rem;">[${esc(a.type)}] ${esc(a.title)}</strong>
+            </div>
+            <div class="item-meta">
+              기안자: ${esc(a.author)} · ${esc(a.date || '')}${a.amount ? ` · <strong style="color:#4f46e5;">${Number(a.amount).toLocaleString()}₫</strong>` : ''}${a.note ? ` · ${esc(a.note)}` : ''}
+            </div>
+          </div>
+          <div class="item-acts">
+            ${a.status !== 'approved' ? `<button type="button" class="btn btn-green" data-id="${esc(a.id)}" data-act="approved">✅ 승인</button>` : ''}
+            ${a.status !== 'rejected' ? `<button type="button" class="btn btn-red" data-id="${esc(a.id)}" data-act="rejected">↩ 반려</button>` : ''}
+            <button type="button" class="btn btn-ghost" data-del="${esc(a.id)}">🗑️</button>
+          </div>
+        </div>
+      `).join('');
+
+      list.querySelectorAll('[data-act]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-id');
+          const status = btn.getAttribute('data-act');
+          await updateDoc(doc(db, 'merchants', _storeId, 'approvals', id), { status, updatedAt: serverTimestamp() });
+          await loadFromFirestore();
+        });
+      });
+      list.querySelectorAll('[data-del]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-del');
+          if (!confirm('이 결재 문서를 삭제하시겠습니까?')) return;
+          await deleteDoc(doc(db, 'merchants', _storeId, 'approvals', id));
+          await loadFromFirestore();
+        });
+      });
+    }
+
+    function renderDocs() {
+      const list = document.getElementById('docList');
+      if (!_docs.length) {
+        list.innerHTML = '<div style="text-align:center;color:#64748b;padding:28px;font-size:.86rem;">보관된 매장 문서가 없습니다. 사업자등록증·임대차계약서·위생허가증을 등록해 관리해 보세요.</div>';
+        return;
+      }
+      list.innerHTML = _docs.map((d) => {
+        let badge = '<span class="badge approved">정상 보관</span>';
+        if (d.expiry) {
+          const days = Math.ceil((new Date(d.expiry) - new Date()) / 86400000);
+          badge = days <= 30
+            ? `<span class="badge pending">만료 D-${Math.max(days, 0)}</span>`
+            : `<span class="badge approved">만료 ${esc(d.expiry)}</span>`;
+        }
+        return `
+          <div class="item-card">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                ${badge}
+                <strong style="font-size:.94rem;">[${esc(d.category)}] ${esc(d.title)}</strong>
+              </div>
+              <div class="item-meta">클라우드 가맹점 격리 보관 (${esc(_storeId)})</div>
+            </div>
+            <div class="item-acts">
+              <button type="button" class="btn btn-ghost" data-del-doc="${esc(d.id)}">🗑️ 삭제</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      list.querySelectorAll('[data-del-doc]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-del-doc');
+          if (!confirm('이 문서를 삭제하시겠습니까?')) return;
+          await deleteDoc(doc(db, 'merchants', _storeId, 'ecm_documents', id));
+          await loadFromFirestore();
+        });
+      });
+    }
+
+    document.getElementById('approvalForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!_storeId) return;
+      const btn = document.getElementById('btnSubmitApr');
+      btn.disabled = true;
+      try {
+        await addDoc(collection(db, 'merchants', _storeId, 'approvals'), {
+          type: document.getElementById('aprType').value,
+          title: document.getElementById('aprTitle').value.trim(),
+          amount: Number(document.getElementById('aprAmount').value) || 0,
+          note: document.getElementById('aprNote').value.trim(),
+          author: _author,
+          status: 'pending',
+          date: new Date().toISOString().slice(0, 10),
+          createdAt: serverTimestamp()
+        });
+        e.target.reset();
+        await loadFromFirestore();
+      } catch (err) {
+        alert('결재 상신 오류: ' + (err?.message || err));
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById('docForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!_storeId) return;
+      const btn = document.getElementById('btnSubmitDoc');
+      btn.disabled = true;
+      try {
+        await addDoc(collection(db, 'merchants', _storeId, 'ecm_documents'), {
+          category: document.getElementById('docCategory').value,
+          title: document.getElementById('docTitle').value.trim(),
+          expiry: document.getElementById('docExpiry').value || '',
+          createdAt: serverTimestamp()
+        });
+        e.target.reset();
+        await loadFromFirestore();
+      } catch (err) {
+        alert('문서 등록 오류: ' + (err?.message || err));
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    checkAdminAuth(
+      async (user) => {
+        _author = user.displayName || user.email || '가맹점 관리자';
+        await loadDynamicTenants();
+        const info = getCurrentStoreInfo();
+        _storeId = String(window.tenantId || info?.merchantId || '1791002036');
+        const storeName = info?.name || _storeId;
+        document.getElementById('storeBadge').textContent = `🏪 ${storeName} (${_storeId})`;
+        await loadFromFirestore();
+      },
+      () => {
+        location.href = '../login.html?redirect=' + encodeURIComponent(location.pathname + location.search);
+      }
+    );
+  </script>
+</body>
+</html>

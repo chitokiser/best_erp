@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI CEO MANAGER - BM 정산 관리</title>
     <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/admin.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -733,15 +734,20 @@
 
         <ul id="navMenuList">
             <li><a href="dashboard.html">CEO 대시보드</a></li>
+            <li><a href="coupons.html" style="color:var(--ai-primary); font-weight:700;">🎫 쿠폰/바우처 검증</a></li>
             <li class="dropdown" onclick="toggleDropdown(this, event)">
                 <span class="dropbtn">매장 관리(F&B) ▾</span>
                 <div class="dropdown-content">
+                    <a href="kitchen-orders.html" style="color:#ea580c; font-weight:700;">🍽️ 실시간 주문 알림판 (KDS)</a>
+                    <a href="table-qr-print.html" style="color:#4f46e5; font-weight:700;">🖨️ 테이블 주문 QR 생성기</a>
                     <a href="menus.html">스마트 메뉴 관리</a>
+                    <a href="categories.html">카테고리 관리</a>
                 </div>
             </li>
             <li class="dropdown" onclick="toggleDropdown(this, event)">
                 <span class="dropbtn">영업/프로젝트 ▾</span>
                 <div class="dropdown-content">
+                    <a href="scm-voc.html" style="color:#059669; font-weight:700;">🚚 SCM 안전재고 · VOC</a>
                     <a href="projects.html">프로젝트 보드</a>
                     <a href="materials.html">자재관리</a>
                     <a href="suppliers.html">협력업체</a>
@@ -750,19 +756,31 @@
             <li class="dropdown" onclick="toggleDropdown(this, event)">
                 <span class="dropbtn">내부운영(HR) ▾</span>
                 <div class="dropdown-content">
+                    <a href="approvals.html" style="color:#4f46e5; font-weight:700;">📝 전자결재 · 문서함(ECM)</a>
+                    <a href="attendance.html" style="color:#059669; font-weight:700;">⏱️ 근태 · 급여 자동정산</a>
+                    <a href="field-reports.html">📸 현장/안건 사진보고</a>
                     <a href="tasks.html">업무지시/보고</a>
                     <a href="finance.html">재무/회계</a>
-                    <a href="settlement.html">BM 정산 관리</a>
+                    <a href="settlement.html" style="font-weight:700; color:#4f46e5;">BM 정산 관리</a>
                     <a href="employees.html">직원목록</a>
                 </div>
             </li>
             <li class="dropdown" onclick="toggleDropdown(this, event)">
                 <span class="dropbtn">고객/회원관리 ▾</span>
                 <div class="dropdown-content">
+                    <a href="vision-crm.html" style="color:var(--ai-primary); font-weight:700;">👁️ AI 비전 매장관제 CRM</a>
+                    <a href="crm-retention.html">🎯 단골·이탈방지 쿠폰 CRM</a>
                     <a href="clients.html">멘티(고객) CRM</a>
                     <a href="contacts.html">인맥(명함)</a>
                     <a href="marketing.html">자동 마케팅(트리거)</a>
                     <a href="users.html">SaaS 회원관리</a>
+                </div>
+            </li>
+            <li class="dropdown" onclick="toggleDropdown(this, event)">
+                <span class="dropbtn">시스템 ▾</span>
+                <div class="dropdown-content">
+                    <a href="saas-settings.html">⚙️ SaaS 워크스페이스 · 구독</a>
+                    <a href="api-settings.html">시스템/API 설정</a>
                 </div>
             </li>
         </ul>
@@ -780,9 +798,20 @@
         .stl-card.paid .val { color:#047857; }
         .stl-panel { background:#fff; border:1px solid #e2e8f0; border-radius:0.85rem; padding:1.1rem 1.2rem; margin-bottom:1.5rem; }
         .stl-panel h3 { margin:0 0 0.8rem 0; font-size:1rem; color:#1e293b; }
-        .stl-table-wrap { overflow-x:auto; }
+        .stl-table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
         .stl-table { width:100%; border-collapse:collapse; font-size:0.85rem; min-width:640px; }
         .stl-table th { background:#f8fafc; color:#64748b; font-weight:700; text-align:left; padding:0.55rem 0.75rem; white-space:nowrap; }
+        @media (max-width: 768px) {
+            .main-container { margin: 1rem auto !important; padding: 0 0.85rem 5rem !important; }
+            .header-action { flex-direction: column; align-items: flex-start !important; gap: 0.75rem; margin-bottom: 1.1rem !important; }
+            .header-action h2 { font-size: 1.3rem !important; }
+            .stl-cards { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 0.6rem !important; }
+            .stl-card { padding: 0.85rem !important; }
+            .stl-card .val { font-size: 1.08rem !important; }
+            .stl-panel { padding: 0.9rem !important; }
+            .stl-table { min-width: 520px; font-size: 0.78rem; }
+            .stl-table th, .stl-table td { padding: 0.45rem 0.5rem !important; }
+        }
         .stl-table td { padding:0.6rem 0.75rem; border-top:1px solid #f1f5f9; vertical-align:middle; }
         .stl-table .num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
         .stl-badge { display:inline-block; font-size:0.72rem; font-weight:800; padding:0.18rem 0.55rem; border-radius:999px; white-space:nowrap; }

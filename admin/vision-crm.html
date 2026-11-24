@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Smart Store CRM & 비전 관제 시스템 - BestERP</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
@@ -398,6 +398,318 @@
             color: white !important;
             box-shadow: 0 2px 6px rgba(239, 68, 68, 0.35);
         }
+
+        /* ==============================================================
+           Mobile & Tablet Responsive Optimization (Vision CRM)
+           ============================================================== */
+        html, body {
+            overflow-x: hidden;
+            word-break: keep-all;
+            overflow-wrap: break-word;
+            max-width: 100vw;
+        }
+        #visionMainGrid,
+        #visionMainGrid > .panel,
+        .admin-container,
+        .vision-control-strip,
+        .vision-cam-subbar,
+        #cameraChannelTabs,
+        .vision-tester-bar,
+        .cam-viewport-wrap {
+            min-width: 0 !important;
+            max-width: 100% !important;
+        }
+        #visionMainGrid > .panel {
+            overflow: hidden;
+        }
+        .crm-tab-bar {
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .crm-tab-bar::-webkit-scrollbar {
+            display: none;
+        }
+        .modal-cam-table-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        @media (max-width: 1080px) {
+            #visionMainGrid {
+                grid-template-columns: 1fr !important;
+                gap: 1rem !important;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 0.75rem !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .admin-container {
+                margin: 0.75rem auto !important;
+                padding: 0 0.75rem !important;
+            }
+            .admin-header-title {
+                font-size: 1.2rem !important;
+                line-height: 1.35 !important;
+                align-items: flex-start !important;
+            }
+            .vision-header-actions {
+                width: 100%;
+                display: grid !important;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.45rem !important;
+            }
+            .vision-header-actions > span {
+                grid-column: 1 / -1;
+                justify-content: center;
+                text-align: center;
+                font-size: 0.72rem !important;
+            }
+            .vision-header-actions > button {
+                width: 100%;
+                justify-content: center;
+                min-height: 40px;
+                padding: 0.5rem 0.6rem !important;
+                font-size: 0.78rem !important;
+            }
+
+            /* Hardware & Stream Control Strip */
+            .vision-control-strip {
+                padding: 0.75rem !important;
+                gap: 0.65rem !important;
+            }
+            .vision-pipe {
+                display: none !important;
+            }
+            .vision-control-left,
+            .vision-control-right {
+                width: 100%;
+            }
+            .vision-bt-badge {
+                flex: 1 1 auto;
+                flex-wrap: wrap;
+                justify-content: space-between;
+            }
+            .vision-usb-row {
+                width: 100%;
+                flex-wrap: wrap;
+                gap: 0.4rem !important;
+            }
+            .vision-usb-row select {
+                flex: 1 1 100% !important;
+                max-width: 100% !important;
+                min-height: 38px;
+                font-size: 14px !important;
+            }
+            .vision-usb-row button {
+                flex: 1 1 auto;
+                justify-content: center;
+                min-height: 36px;
+            }
+            .vision-control-right {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.5rem !important;
+            }
+            .vision-control-right button {
+                width: 100%;
+                justify-content: center;
+                min-height: 42px;
+                padding: 0.55rem 0.6rem !important;
+                font-size: 0.78rem !important;
+            }
+            .vision-control-right #autoCollectCounterBadge {
+                grid-column: 1 / -1;
+                text-align: center;
+            }
+
+            /* 4 KPI Cards -> Clean 2x2 */
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 0.6rem !important;
+                margin-bottom: 1rem !important;
+            }
+            .stat-card {
+                padding: 0.85rem !important;
+                border-radius: 0.8rem !important;
+            }
+            .stat-card h3 {
+                font-size: 0.76rem !important;
+                line-height: 1.35;
+                margin-bottom: 0.35rem !important;
+            }
+            .stat-card .value {
+                font-size: 1.05rem !important;
+                margin: 0.15rem 0 !important;
+            }
+            .stat-card .trend {
+                font-size: 0.7rem !important;
+                line-height: 1.35;
+            }
+
+            /* Panels */
+            #visionMainGrid > .panel {
+                padding: 0.9rem !important;
+                border-radius: 0.9rem !important;
+            }
+            #activeCameraTitle {
+                font-size: 0.94rem !important;
+            }
+            .vision-tester-bar {
+                width: 100%;
+                flex-wrap: wrap;
+                justify-content: center;
+                border-radius: 0.75rem !important;
+                padding: 0.4rem 0.5rem !important;
+            }
+            .vision-cam-subbar {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 0.45rem !important;
+            }
+            .vision-view-modes {
+                flex-wrap: wrap;
+                width: 100%;
+            }
+            .vision-view-modes button {
+                flex: 1 1 auto;
+                justify-content: center;
+                min-height: 34px;
+            }
+
+            /* Camera Viewport */
+            .cam-viewport-wrap {
+                height: 245px !important;
+                border-radius: 0.8rem !important;
+            }
+            #aiLiveStatusText {
+                font-size: 0.64rem !important;
+            }
+            #aiSecurityIntruderAlert {
+                width: calc(100% - 16px) !important;
+                padding: 0.5rem 0.7rem !important;
+                gap: 0.45rem !important;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .ai-target-box {
+                transform: scale(0.75);
+                transform-origin: top left;
+            }
+
+            /* 6 Manual Trigger Buttons -> 2-col Touch Grid */
+            .vision-cam-actions {
+                display: grid !important;
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 0.45rem !important;
+                width: 100%;
+            }
+            .vision-cam-actions button {
+                width: 100%;
+                justify-content: center;
+                min-height: 40px;
+                padding: 0.5rem 0.55rem !important;
+                font-size: 0.76rem !important;
+            }
+
+            /* CRM Tabs & Content */
+            .crm-tab-btn {
+                padding: 0.55rem 0.75rem !important;
+                font-size: 0.8rem !important;
+                flex-shrink: 0;
+            }
+            .vision-action-pair {
+                flex-direction: column !important;
+            }
+            .vision-action-pair button {
+                width: 100%;
+                justify-content: center;
+                min-height: 40px;
+            }
+            .vision-emp-kpi {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+            .vision-zalo-row,
+            .vision-privacy-row {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 0.6rem !important;
+            }
+            .vision-zalo-row button,
+            .vision-privacy-row button {
+                width: 100%;
+                min-height: 38px;
+            }
+            .customer-card-item,
+            .employee-card-item {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 0.85rem;
+            }
+            #customerListContainer {
+                max-height: 380px !important;
+            }
+
+            /* Modals -> Mobile Sheet Friendly */
+            .modal-overlay {
+                padding: 0.5rem !important;
+            }
+            .modal-box {
+                padding: 1.1rem !important;
+                border-radius: 1rem !important;
+                max-height: 92dvh !important;
+            }
+            .modal-metric-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 0.55rem !important;
+            }
+            .modal-info-grid,
+            .modal-form-grid,
+            .modal-qr-actions {
+                grid-template-columns: 1fr !important;
+            }
+            .modal-info-grid > div[style*="grid-column"] {
+                grid-column: auto !important;
+            }
+            .modal-bt-box,
+            .modal-footer-bar {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 0.65rem !important;
+            }
+            .modal-footer-bar > div {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr;
+                width: 100%;
+            }
+            .modal-footer-bar button {
+                width: 100%;
+                justify-content: center;
+                min-height: 40px;
+            }
+            .modal-cam-table-wrap table {
+                min-width: 560px;
+            }
+            input[type="text"],
+            input[type="number"],
+            select {
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .cam-viewport-wrap {
+                height: 210px !important;
+            }
+            .vision-header-actions {
+                grid-template-columns: 1fr;
+            }
+            .vision-control-right {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 
@@ -431,6 +743,7 @@
             <li class="dropdown" onclick="toggleDropdown(this, event)">
                 <span class="dropbtn">영업/프로젝트 ▾</span>
                 <div class="dropdown-content">
+                    <a href="scm-voc.html" style="color:#059669; font-weight:700;">🚚 SCM 안전재고 · VOC</a>
                     <a href="projects.html">프로젝트 보드</a>
                     <a href="materials.html">자재관리</a>
                     <a href="price-history.html">시세/단가 이력</a>
@@ -440,6 +753,7 @@
             <li class="dropdown" onclick="toggleDropdown(this, event)">
                 <span class="dropbtn">내부운영(HR) ▾</span>
                 <div class="dropdown-content">
+                    <a href="approvals.html" style="color:#4f46e5; font-weight:700;">📝 전자결재 · 문서함(ECM)</a>
                     <a href="field-reports.html">📸 현장/안건 사진보고</a>
                     <a href="tasks.html">업무지시/보고</a>
                     <a href="finance.html">재무/회계</a>
@@ -478,11 +792,11 @@
                         <span>👁️</span> AI Smart Store CRM & CCTV 매장 통합 관제 시스템
                     </h2>
                     <p style="margin:0.25rem 0 0 0; font-size:0.875rem; color:#64748b;">
-                        CCTV 비식별 매장 관제 · 테이블 QR 자발적 등록 · Zalo OA 소통 · POS 소비이력 통합 플랫폼 (2026 사업기획안)
+                        CCTV 비식별 매장 관제 · 테이블 QR 자발적 등록 · Zalo OA 소통 · POS 소비이력 통합 플랫폼
                     </p>
                 </div>
 
-                <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                <div class="vision-header-actions" style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
                     <span style="background:#ecfdf5; border:1px solid #a7f3d0; color:#065f46; font-size:0.75rem; font-weight:800; padding:0.4rem 0.75rem; border-radius:999px; display:inline-flex; align-items:center; gap:0.35rem;">
                         <span>🛡️</span> 베트남 개인정보보호법 (Law No. 91/2025/QH15) 준수
                     </span>
@@ -500,21 +814,21 @@
             </div>
 
             <!-- Hardware & Stream Control Strip -->
-            <div style="display:flex; align-items:center; justify-content:space-between; width:100%; background:white; padding:0.75rem 1rem; border-radius:0.75rem; border:1px solid #e2e8f0; flex-wrap:wrap; gap:0.75rem; margin-top:0.5rem;">
-                <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+            <div class="vision-control-strip" style="display:flex; align-items:center; justify-content:space-between; width:100%; background:white; padding:0.75rem 1rem; border-radius:0.75rem; border:1px solid #e2e8f0; flex-wrap:wrap; gap:0.75rem; margin-top:0.5rem;">
+                <div class="vision-control-left" style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
                     <div style="display:flex; align-items:center; gap:0.35rem;">
                         <span style="font-size:0.8rem; font-weight:700; color:#475569;">가맹점 ID:</span>
                         <input type="text" id="merchantIdInput" value="" readonly placeholder="확인 중" title="로그인 계정의 가맹점으로 고정됩니다" style="width:110px; padding:0.35rem 0.5rem; border:1px solid #cbd5e1; border-radius:0.35rem; font-size:0.8rem; font-weight:700; text-align:center;">
                     </div>
-                    <span style="color:#cbd5e1;">|</span>
+                    <span class="vision-pipe" style="color:#cbd5e1;">|</span>
                     <!-- 점주 보유 BT 실시간 표시기 -->
-                    <div style="display:flex; align-items:center; gap:0.4rem; background:linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border:1.5px solid #F59E0B; padding:0.3rem 0.65rem; border-radius:0.45rem;">
+                    <div class="vision-bt-badge" style="display:flex; align-items:center; gap:0.4rem; background:linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border:1.5px solid #F59E0B; padding:0.3rem 0.65rem; border-radius:0.45rem;">
                         <span style="font-size:0.75rem; font-weight:800; color:#92400E;">🎫 점주 보유 BT:</span>
-                        <strong id="merchantBtBalanceDisplay" style="color:#B45309; font-size:0.875rem;">98 BT</strong>
+                        <strong id="merchantBtBalanceDisplay" style="color:#B45309; font-size:0.875rem;">조회 중...</strong>
                         <span style="font-size:0.65rem; color:#78350F; background:#FDE68A; padding:0.1rem 0.35rem; border-radius:0.25rem; font-weight:700;">Zalo 등록 시 1 BT 자동지급</span>
                     </div>
-                    <span style="color:#cbd5e1;">|</span>
-                    <div style="display:flex; align-items:center; gap:0.4rem;">
+                    <span class="vision-pipe" style="color:#cbd5e1;">|</span>
+                    <div class="vision-usb-row" style="display:flex; align-items:center; gap:0.4rem;">
                         <span style="font-size:0.8rem; font-weight:700; color:#475569;">🔌 CCTV/USB 비디오:</span>
                         <select id="usbCamSelect" onchange="onUsbCameraSelected(this.value)" style="padding:0.35rem 0.6rem; border:1px solid #cbd5e1; border-radius:0.35rem; font-size:0.8rem; font-weight:600; max-width:220px;">
                             <option value="">카메라 검색 중...</option>
@@ -531,7 +845,7 @@
                     </div>
                 </div>
 
-                <div style="display:flex; align-items:center; gap:0.5rem;">
+                <div class="vision-control-right" style="display:flex; align-items:center; gap:0.5rem;">
                     <button id="btnAutoCollect" onclick="toggleAutoCollection()" style="background:#10b981; color:white; border:none; padding:0.5rem 1rem; border-radius:0.4rem; font-size:0.8rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 3px 8px rgba(16,185,129,0.3);">
                         <span id="autoCollectIcon">▶</span> <span id="autoCollectText">24시간 무인 관제 가동</span>
                     </button>
@@ -579,11 +893,11 @@
                         <h3 style="margin:0; font-size:1.05rem; color:#1e293b; display:flex; align-items:center; gap:0.4rem;" id="activeCameraTitle">
                             <span>📹</span> CCTV #01 (메인 카운터 & 입장 모니터링)
                         </h3>
-                        <span class="cam-live-indicator">● LIVE</span>
+                        <span class="cam-live-indicator" id="camLiveBadge" style="background:#475569;">● 대기 (데모)</span>
                     </div>
 
                     <!-- 🎭 1인 통합 테스터 역할 전환기 (내 얼굴로 1인 3역 테스트) -->
-                    <div style="display:flex; align-items:center; gap:0.35rem; background:#EEF2FF; border:1.5px solid #818CF8; border-radius:2rem; padding:0.25rem 0.6rem; box-shadow:0 2px 8px rgba(99,102,241,0.15);">
+                    <div class="vision-tester-bar" style="display:flex; align-items:center; gap:0.35rem; background:#EEF2FF; border:1.5px solid #818CF8; border-radius:2rem; padding:0.25rem 0.6rem; box-shadow:0 2px 8px rgba(99,102,241,0.15);">
                         <span style="font-size:0.72rem; font-weight:800; color:#3730A3; margin-right:0.2rem; display:inline-flex; align-items:center; gap:0.2rem;">
                             <span>🎭</span> 1인 테스트 모드:
                         </span>
@@ -592,16 +906,16 @@
                         <button type="button" id="roleBtnIntruder" onclick="setTesterPersona('INTRUDER')" class="tester-role-pill" title="내 얼굴을 무단 침입자로 인식시켜 방범 경보/사이렌 테스트">🚨 침입자</button>
                     </div>
 
-                    <span style="font-size:0.75rem; color:#64748b; font-family:monospace;" id="liveTimestamp">2026-11-08 18:20:00</span>
+                    <span style="font-size:0.75rem; color:#64748b; font-family:monospace;" id="liveTimestamp">동기화 중...</span>
                 </div>
 
                 <!-- Camera Multi-Channel Tabs & View Mode Bar -->
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:0.5rem; padding:0.4rem 0.6rem;">
+                <div class="vision-cam-subbar" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:0.5rem; padding:0.4rem 0.6rem;">
                     <!-- Dynamic Channel Tabs -->
                     <div style="display:flex; gap:0.35rem; align-items:center; flex-wrap:wrap;" id="cameraChannelTabs">
                     </div>
                     <!-- Multi-View Modes -->
-                    <div style="display:flex; gap:0.25rem; align-items:center;">
+                    <div class="vision-view-modes" style="display:flex; gap:0.25rem; align-items:center;">
                         <span style="font-size:0.72rem; color:#64748b; font-weight:700; margin-right:0.2rem;">분할뷰:</span>
                         <button type="button" onclick="setCameraViewMode('single')" id="viewModeSingleBtn" class="cam-view-btn active" title="단일 채널 확대">🔲 단일</button>
                         <button type="button" onclick="setCameraViewMode('dual')" id="viewModeDualBtn" class="cam-view-btn" title="2분할 뷰">◫ 2분할</button>
@@ -651,8 +965,8 @@
                             </button>
                         </div>
 
-                        <!-- AI Non-Identifying Overlays -->
-                        <div id="aiTargetLayer" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:5;">
+                        <!-- AI Non-Identifying Overlays (shown when live stream/demo is active) -->
+                        <div id="aiTargetLayer" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:5;">
                             <div class="ai-target-box" style="top:25%; left:28%; width:110px; height:140px; border-color:#10b981;">
                                 <div class="ai-target-tag" style="background:#10b981;">Table #04 착석 (체류 38분)</div>
                             </div>
@@ -662,8 +976,8 @@
                         </div>
 
                         <!-- Status Overlay -->
-                        <div style="position:absolute; bottom:12px; left:12px; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); color:white; padding:0.35rem 0.65rem; border-radius:0.4rem; font-size:0.725rem; font-family:monospace; z-index:20;">
-                            <span id="aiLiveStatusText">EDGE-AI: 1:N 실시간 안면 인식 & 감정 분석 가동중 | FPS: 30</span>
+                        <div style="position:absolute; bottom:12px; left:12px; right:12px; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); color:white; padding:0.35rem 0.65rem; border-radius:0.4rem; font-size:0.725rem; font-family:monospace; z-index:20; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                            <span id="aiLiveStatusText">EDGE-AI 대기 중 · 웹캠 또는 NVR 연결 시 실시간 분석 시작</span>
                         </div>
                     </div>
 
@@ -674,7 +988,7 @@
 
                 <!-- Manual Trigger & Stream Toggle -->
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
-                    <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+                    <div class="vision-cam-actions" style="display:flex; gap:0.4rem; flex-wrap:wrap;">
                         <button onclick="searchCustomerByCameraFace()" style="background:#0F172A; color:white; border:none; padding:0.45rem 0.85rem; border-radius:0.4rem; font-size:0.78rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 4px 10px rgba(15,23,42,0.3);">
                             <span>🔍</span> 고객 회원 검색
                         </button>
@@ -755,7 +1069,7 @@
                         <p style="margin:0 0 0.5rem 0; font-size:0.75rem; color:#475569; line-height:1.4;">
                             카메라에 비친 인물이 고객 원장에 등록된 회원인지 128차원 AI 안면 벡터로 즉시 대조 검색합니다.
                         </p>
-                        <div style="display:flex; gap:0.4rem;">
+                        <div class="vision-action-pair" style="display:flex; gap:0.4rem;">
                             <button type="button" onclick="searchCustomerByCameraFace()" style="flex:1; background:#10B981; color:white; border:none; padding:0.5rem 0.8rem; border-radius:0.4rem; font-size:0.8rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:0.35rem; box-shadow:0 3px 8px rgba(16,185,129,0.25);">
                                 <span>🔎</span> 지금 카메라 앞 고객 회원 검색
                             </button>
@@ -794,7 +1108,7 @@
                 <!-- TAB 2: ⏰ 직원 근태 관리 (실시간 AI 안면 출퇴근 및 근무시간) -->
                 <div id="tab-employees" class="crm-tab-pane" style="display:none;">
                     <!-- Attendance KPI Strip -->
-                    <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:0.5rem; margin-bottom:0.85rem;">
+                    <div class="vision-emp-kpi" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:0.5rem; margin-bottom:0.85rem;">
                         <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:0.5rem; padding:0.6rem; text-align:center;">
                             <span style="font-size:0.7rem; color:#64748B; display:block;">총 직원</span>
                             <strong id="empStatTotal" style="font-size:1.15rem; color:#1E293B;">5명</strong>
@@ -826,7 +1140,7 @@
                         <p style="margin:0 0 0.5rem 0; font-size:0.75rem; color:#4338CA; line-height:1.4;">
                             직원이 관제 카메라를 응시하면 128차원 안면 벡터를 대조하여 1초 만에 [출근/퇴근]을 자동 타각합니다.
                         </p>
-                        <div style="display:flex; gap:0.4rem;">
+                        <div class="vision-action-pair" style="display:flex; gap:0.4rem;">
                             <button type="button" onclick="checkEmployeeCommuteByCamera()" style="flex:1; background:#4F46E5; color:white; border:none; padding:0.5rem 0.8rem; border-radius:0.4rem; font-size:0.8rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:0.35rem; box-shadow:0 3px 8px rgba(79,70,229,0.25);">
                                 <span>⏰</span> 지금 카메라 앞 직원 출퇴근 체크 (AI 자동)
                             </button>
@@ -945,7 +1259,7 @@
                     <div style="display:flex; flex-direction:column; gap:0.75rem;">
                         <!-- Trigger 1 -->
                         <div style="background:white; border:1px solid #E2E8F0; border-radius:0.65rem; padding:0.85rem;">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div class="vision-zalo-row" style="display:flex; justify-content:space-between; align-items:center;">
                                 <div>
                                     <strong style="font-size:0.85rem; color:#1e293b;">🎁 1. 신규 고객 가입 감사 메시지</strong>
                                     <p style="margin:0.2rem 0 0 0; font-size:0.75rem; color:#64748b;">테이블 QR 가입 즉시 50,000 VND 웰컴 쿠폰 발송</p>
@@ -958,7 +1272,7 @@
 
                         <!-- Trigger 2 -->
                         <div style="background:white; border:1px solid #E2E8F0; border-radius:0.65rem; padding:0.85rem;">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div class="vision-zalo-row" style="display:flex; justify-content:space-between; align-items:center;">
                                 <div>
                                     <strong style="font-size:0.85rem; color:#1e293b;">🎂 2. 생일 고객 축하 및 와인 바우처</strong>
                                     <p style="margin:0.2rem 0 0 0; font-size:0.75rem; color:#64748b;">생일 3일 전 축하 메시지 및 시그니처 디저트 쿠폰 발송</p>
@@ -971,7 +1285,7 @@
 
                         <!-- Trigger 3 -->
                         <div style="background:white; border:1px solid #E2E8F0; border-radius:0.65rem; padding:0.85rem;">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div class="vision-zalo-row" style="display:flex; justify-content:space-between; align-items:center;">
                                 <div>
                                     <strong style="font-size:0.85rem; color:#1e293b;">🔄 3. 30일 미방문 단골 재방문 유도</strong>
                                     <p style="margin:0.2rem 0 0 0; font-size:0.75rem; color:#64748b;">마지막 방문 30일 경과 단골에게 '보고싶었습니다' 10% 쿠폰</p>
@@ -984,7 +1298,7 @@
 
                         <!-- Trigger 4 -->
                         <div style="background:white; border:1px solid #E2E8F0; border-radius:0.65rem; padding:0.85rem;">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div class="vision-zalo-row" style="display:flex; justify-content:space-between; align-items:center;">
                                 <div>
                                     <strong style="font-size:0.85rem; color:#1e293b;">⭐ 4. VIP / VVIP 전용 시크릿 혜택</strong>
                                     <p style="margin:0.2rem 0 0 0; font-size:0.75rem; color:#64748b;">신메뉴 사전 시식회 초대장 및 전담 매니저 예약 우선권</p>
@@ -997,7 +1311,7 @@
 
                         <!-- Trigger 5: 방식 B 3자 VIP 전담 단톡방 자동 초대 -->
                         <div style="background:#EFF6FF; border:1.5px dashed #0068FF; border-radius:0.65rem; padding:0.85rem;">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div class="vision-zalo-row" style="display:flex; justify-content:space-between; align-items:center;">
                                 <div>
                                     <div style="display:flex; align-items:center; gap:0.4rem;">
                                         <strong style="font-size:0.85rem; color:#0068FF;">💬 5. [방식 B] 3자 VIP 전담 단톡방 자동 생성 & 점주 연결</strong>
@@ -1028,7 +1342,7 @@
 
                         <div style="border-top:1px solid #CBD5E1; padding-top:0.75rem;">
                             <strong style="color:#1E293B; display:block; margin-bottom:0.5rem;">고객 데이터 삭제 및 동의 철회 처리:</strong>
-                            <div style="display:flex; gap:0.5rem;">
+                            <div class="vision-privacy-row" style="display:flex; gap:0.5rem;">
                                 <input type="text" id="deleteCustomerCrmId" placeholder="고객 고유번호 입력 (예: CRM-000125)" style="flex:1; padding:0.45rem 0.75rem; border:1px solid #CBD5E1; border-radius:0.35rem; font-size:0.8rem;">
                                 <button onclick="executeCustomerDataErasure()" style="background:#EF4444; color:white; border:none; padding:0.45rem 0.85rem; border-radius:0.35rem; font-size:0.8rem; font-weight:700; cursor:pointer;">
                                     영구 파기 및 철회
@@ -1061,7 +1375,7 @@
             <div id="nvrCustomerPanel" style="display:none; margin-bottom:1.25rem;"></div>
 
             <!-- 4 Core Metric Tiles -->
-            <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:0.75rem; margin-bottom:1.25rem;">
+            <div class="modal-metric-grid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:0.75rem; margin-bottom:1.25rem;">
                 <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:0.75rem; padding:0.85rem; text-align:center;">
                     <span style="font-size:0.725rem; color:#64748B; display:block;">총 방문 횟수</span>
                     <strong id="modalVisitCount" style="font-size:1.35rem; color:#1E293B;">12회</strong>
@@ -1102,7 +1416,7 @@
             <!-- 1. 👤 회원 자진 입력 정보 (Google 이메일, 생년월일, 직업 등) -->
             <div style="background:#F1F5F9; border-radius:0.75rem; padding:0.9rem; margin-bottom:1rem; font-size:0.825rem; color:#334155; line-height:1.6;">
                 <strong style="display:block; color:#1E293B; font-size:0.85rem; margin-bottom:0.35rem;">👤 회원 자진 입력 정보</strong>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+                <div class="modal-info-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
                     <div>• <strong>Google 계정</strong>: <span id="modalCustomerEmail">minsu.kim@gmail.com</span></div>
                     <div>• <strong>생년월일</strong>: <span id="modalCustomerBirth">1992-11-24 (생일 알림 대상)</span></div>
                     <div>• <strong>직업군</strong>: <span id="modalCustomerJob">전문직 / IT 비즈니스</span></div>
@@ -1113,7 +1427,7 @@
             <!-- 2. 🤖 관제 카메라 & POS 자동 업그레이드 내역 -->
             <div style="background:#EFF6FF; border:1px solid #BFDBFE; border-radius:0.75rem; padding:0.9rem; margin-bottom:1.1rem; font-size:0.825rem; color:#1E40AF; line-height:1.6;">
                 <strong style="display:block; color:#1E40AF; font-size:0.85rem; margin-bottom:0.35rem;">🤖 관제 카메라 & POS 자동 업그레이드 정보</strong>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+                <div class="modal-info-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
                     <div>• <strong>① 언제 방문했는지</strong>: <span id="modalAutoVisitTime" style="font-weight:700;">오늘 18:40 (체류 38분 측정)</span></div>
                     <div>• <strong>② 만족도는 어땠는지</strong>: <span id="modalAutoSatisfaction" style="font-weight:800; color:#047857;">★ 4.9 / 5.0 (AI 미소 96% 감지)</span></div>
                     <div style="grid-column:span 2;">• <strong>③ 뭘 시켜서 먹었는지</strong>: <span id="modalAutoOrderedMenu" style="font-weight:700;">안심 스테이크 2인 세트 + 칠레산 와인 (Table 04 POS 자동 연동)</span></div>
@@ -1121,7 +1435,7 @@
             </div>
 
             <!-- 3. 🎫 가맹점주 보유 1 BT 보너스 티켓 지급 정보 -->
-            <div id="modalBtRewardBox" style="background:linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border:1.5px solid #F59E0B; border-radius:0.75rem; padding:0.85rem 1rem; margin-bottom:1.1rem; display:flex; justify-content:space-between; align-items:center;">
+            <div id="modalBtRewardBox" class="modal-bt-box" style="background:linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border:1.5px solid #F59E0B; border-radius:0.75rem; padding:0.85rem 1rem; margin-bottom:1.1rem; display:flex; justify-content:space-between; align-items:center;">
                 <div>
                     <div style="display:flex; align-items:center; gap:0.4rem;">
                         <span style="background:#F59E0B; color:white; font-size:0.65rem; font-weight:800; padding:0.15rem 0.45rem; border-radius:0.25rem;">1 BT 차감 지급됨</span>
@@ -1190,7 +1504,7 @@
             </div>
 
             <!-- Staff Action & Zalo Outreach Bar -->
-            <div style="border-top:1px solid #E2E8F0; padding-top:1rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:gap; gap:0.5rem;">
+            <div class="modal-footer-bar" style="border-top:1px solid #E2E8F0; padding-top:1rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
                 <div style="display:flex; gap:0.4rem;">
                     <button onclick="triggerProfileZalo('VIP 디저트 감사 쿠폰')" style="background:#10B981; color:white; border:none; padding:0.5rem 0.85rem; border-radius:0.4rem; font-size:0.8rem; font-weight:700; cursor:pointer;">
                         🎁 VIP 디저트 쿠폰
@@ -1252,7 +1566,7 @@
             </div>
 
             <!-- Action Buttons -->
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.6rem; margin-bottom:1rem;">
+            <div class="modal-qr-actions" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.6rem; margin-bottom:1rem;">
                 <button type="button" onclick="printStoreQrPoster()" style="background:#0F172A; color:white; border:none; padding:0.75rem 0.5rem; border-radius:0.5rem; font-size:0.825rem; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.35rem;">
                     <span>🖨️</span> A4 포스터 인쇄
                 </button>
@@ -1298,7 +1612,7 @@
                     <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.35rem;">연락처 또는 Google 이메일</label>
                     <input type="text" id="manualContact" required placeholder="090-123-4567 또는 email@gmail.com" style="width:100%; padding:0.6rem; border:1px solid #CBD5E1; border-radius:0.4rem; font-size:0.85rem;">
                 </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
+                <div class="modal-form-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
                     <div>
                         <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.35rem;">초기 등급</label>
                         <select id="manualTier" style="width:100%; padding:0.6rem; border:1px solid #CBD5E1; border-radius:0.4rem; font-size:0.85rem;">
@@ -1350,7 +1664,7 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
                     <strong style="font-size:0.875rem; color:#1E293B;">📋 현재 등록된 카메라 목록 (<span id="storeCamCount">4</span>대)</strong>
                 </div>
-                <div style="border:1px solid #E2E8F0; border-radius:0.5rem; overflow:hidden;">
+                <div class="modal-cam-table-wrap" style="border:1px solid #E2E8F0; border-radius:0.5rem;">
                     <table style="width:100%; border-collapse:collapse; font-size:0.775rem; text-align:left;">
                         <thead style="background:#F8FAFC; border-bottom:1px solid #E2E8F0;">
                             <tr>
@@ -1372,7 +1686,7 @@
             <div style="background:#F8FAFC; border:1.5px dashed #CBD5E1; border-radius:0.75rem; padding:1rem; margin-bottom:1rem;">
                 <strong style="display:block; font-size:0.9rem; color:#0F172A; margin-bottom:0.75rem;">➕ 신규 카메라 추가 등록</strong>
                 <form onsubmit="handleAddNewCamera(event)">
-                    <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
+                    <div class="modal-form-grid" style="display:grid; grid-template-columns:1.2fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
                         <div>
                             <label style="display:block; font-size:0.775rem; font-weight:700; margin-bottom:0.25rem;">카메라 명칭 *</label>
                             <input type="text" id="newCamName" required placeholder="예: CCTV #05 (주방 입구 & 퇴식구)" style="width:100%; padding:0.55rem; border:1px solid #CBD5E1; border-radius:0.4rem; font-size:0.8rem; box-sizing:border-box;">

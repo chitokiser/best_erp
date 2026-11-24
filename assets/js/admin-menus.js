@@ -183,16 +183,32 @@ onAuthStateChanged(auth, async (user) => {
         activeMerchantId = 'ALL';
     }
 
+    if (!isSuperAdmin && activeMerchantId !== 'ALL') {
+        const brandName = getMerchantName(activeMerchantId);
+        document.querySelectorAll('.dynamic-brand-text, #dynamicStoreName').forEach((el) => {
+            el.textContent = brandName;
+        });
+    } else if (isSuperAdmin) {
+        document.querySelectorAll('.dynamic-brand-text, #dynamicStoreName').forEach((el) => {
+            if (el.textContent.includes('로딩중')) el.textContent = 'BestERP 본사';
+        });
+    }
+
     if (filterEl) {
-        filterEl.style.display = 'inline-block';
-        if (Array.from(filterEl.options).some(o => o.value === activeMerchantId)) {
+        if (!isSuperAdmin && activeMerchantId !== 'ALL') {
+            filterEl.style.display = 'none';
             filterEl.value = activeMerchantId;
         } else {
-            filterEl.value = 'ALL';
+            filterEl.style.display = 'inline-block';
+            if (Array.from(filterEl.options).some(o => o.value === activeMerchantId)) {
+                filterEl.value = activeMerchantId;
+            } else {
+                filterEl.value = 'ALL';
+            }
         }
     }
     if (modalMerchantRow) {
-        modalMerchantRow.style.display = 'block';
+        modalMerchantRow.style.display = (!isSuperAdmin && activeMerchantId !== 'ALL') ? 'none' : 'block';
     }
     if (modalMerchantSelect && activeMerchantId !== 'ALL') {
         modalMerchantSelect.value = activeMerchantId;

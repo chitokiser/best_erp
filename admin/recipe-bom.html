@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🧾 원가율(Food Cost) · 레시피(BOM) &amp; 발주서 | BestERP</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+  <style>
+    .bom-wrap { max-width: 1180px; margin: 22px auto; padding: 0 16px 56px; }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 14px rgba(15,23,42,.04); }
+    .form-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; align-items: end; }
+    .fld { display: flex; flex-direction: column; gap: 4px; }
+    .fld label { font-size: 0.76rem; font-weight: 700; color: #475569; }
+    .fld input, .fld select { padding: 8px 10px; border-radius: 9px; border: 1px solid #cbd5e1; font-size: 0.85rem; }
+    .btn { padding: 9px 14px; border-radius: 10px; border: none; font-weight: 800; font-size: 0.82rem; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+    .tbl { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .tbl th, .tbl td { padding: 10px 8px; border-bottom: 1px solid #f1f5f9; text-align: left; }
+    .tbl th { font-size: 0.76rem; color: #64748b; background: #f8fafc; }
+    .pill { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 0.74rem; font-weight: 800; }
+    .alert-box { display: none; background: #fef2f2; border: 1px solid #fecaca; border-radius: 14px; padding: 14px 16px; margin-bottom: 16px; }
+    .alert-box.show { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .modal-bg { position: fixed; inset: 0; background: rgba(15,23,42,.6); display: none; align-items: center; justify-content: center; z-index: 100; padding: 14px; }
+    .modal-bg.open { display: flex; }
+    .modal-box { background: #fff; border-radius: 18px; width: 100%; max-width: 620px; max-height: 88vh; overflow-y: auto; padding: 20px; }
+    @media (max-width: 860px) { .form-grid { grid-template-columns: repeat(2, 1fr); } }
+  </style>
+</head>
+<body class="admin-body">
+  <div class="bom-wrap">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+      <div>
+        <a href="dashboard.html" style="font-size:0.84rem;color:#4f46e5;font-weight:700;text-decoration:none;">← 대시보드로 돌아가기</a>
+        <h2 style="margin:6px 0 0;font-size:1.4rem;font-weight:900;">🧾 원가율(Food Cost) · 레시피(BOM) &amp; 자동 재고 차감</h2>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <a href="kitchen-orders.html" class="btn" style="background:#f59e0b;color:#fff;">🍽️ 주방 KDS 보기</a>
+        <a href="menus.html" class="btn" style="background:#4f46e5;color:#fff;">📦 메뉴 관리</a>
+      </div>
+    </div>
+
+    <!-- 안전재고 부족 자동 발주 경고 -->
+    <div class="alert-box" id="lowStockAlert">
+      <div>
+        <strong style="color:#b91c1c;">🚨 안전 재고 미만 식자재 감지!</strong>
+        <div id="lowStockNames" style="font-size:0.84rem;color:#7f1d1d;margin-top:2px;"></div>
+      </div>
+      <button type="button" id="btnCopyPo" class="btn" style="background:#dc2626;color:#fff;">📋 Zalo/카톡 발주서 1클릭 복사</button>
+    </div>
+
+    <!-- 1. 원재료(식자재) 등록 & 재고 현황 -->
+    <div class="card">
+      <h3 style="margin:0 0 12px;font-size:1.02rem;font-weight:800;">🥬 1단계: 식자재(원재료) 마스터 &amp; 현재 재고</h3>
+      <div class="form-grid" style="margin-bottom:14px;">
+        <div class="fld"><label>식자재명</label><input id="ingName" placeholder="예: 삼겹살" /></div>
+        <div class="fld">
+          <label>단위</label>
+          <select id="ingUnit"><option value="g">g</option><option value="ml">ml</option><option value="개">개</option><option value="kg">kg</option><option value="팩">팩</option></select>
+        </div>
+        <div class="fld"><label>단위당 매입가 (VND)</label><input type="number" id="ingCost" placeholder="예: 180" /></div>
+        <div class="fld"><label>현재 재고</label><input type="number" id="ingStock" placeholder="예: 10000" /></div>
+        <div class="fld"><label>안전 재고 (알림 기준)</label><input type="number" id="ingMin" placeholder="예: 2000" /></div>
+        <div class="fld"><button type="button" id="btnAddIng" class="btn" style="background:#059669;color:#fff;justify-content:center;">+ 식자재 등록</button></div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>식자재</th>
+              <th>단위 매입가</th>
+              <th>현재 재고</th>
+              <th>안전 재고</th>
+              <th>상태</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody id="ingTbody">
+            <tr><td colspan="6" style="text-align:center;color:#64748b;padding:20px;">식자재를 불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 2. 메뉴별 레시피(BOM) 및 원가율 분석 -->
+    <div class="card">
+      <h3 style="margin:0 0 6px;font-size:1.02rem;font-weight:800;">🍲 2단계: 메뉴별 레시피(BOM) &amp; 실시간 원가율 분석</h3>
+      <p style="font-size:0.8rem;color:#64748b;margin:0 0 12px;">레시피를 연결해 두면 <strong>주방 KDS에서 [서빙/완료]를 누르는 순간</strong> 주문 수량만큼 원재료 재고가 자동 차감됩니다.</p>
+      <div style="overflow-x:auto;">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>메뉴명</th>
+              <th>판매가</th>
+              <th>레시피 원가 (Food Cost)</th>
+              <th>원가율 / 마진</th>
+              <th>연결된 원재료</th>
+              <th>레시피 설정</th>
+            </tr>
+          </thead>
+          <tbody id="menuBomTbody">
+            <tr><td colspan="6" style="text-align:center;color:#64748b;padding:24px;">메뉴를 불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 레시피 편집 모달 -->
+  <div class="modal-bg" id="bomModal">
+    <div class="modal-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h3 id="bomModalTitle" style="margin:0;font-size:1.05rem;font-weight:900;">🧩 레시피 편집</h3>
+        <button type="button" id="btnCloseBom" style="border:none;background:none;font-size:1.2rem;cursor:pointer;">✕</button>
+      </div>
+      <div id="bomRows" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+      <button type="button" id="btnAddBomRow" class="btn" style="background:#f1f5f9;color:#0f172a;margin-bottom:14px;">+ 원재료 항목 추가</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #e2e8f0;padding-top:12px;">
+        <div id="bomPreviewCost" style="font-size:0.88rem;font-weight:800;color:#4f46e5;">예상 원가: 0 VND</div>
+        <button type="button" id="btnSaveBom" class="btn" style="background:#4f46e5;color:#fff;">💾 레시피 저장</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { checkAdminAuth } from '../assets/js/auth.js';
+    import { getCurrentStoreInfo, loadDynamicTenants } from '../assets/js/tenant-router.js';
+    import { db } from '../assets/js/firebase-config.js';
+    import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+
+    let _storeId = '';
+    let _storeName = '';
+    let _ingredients = [];
+    let _menus = [];
+    let _editingMenu = null;
+
+    function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+    function renderIngredients() {
+      const tb = document.getElementById('ingTbody');
+      const lowList = _ingredients.filter((i) => Number(i.stock || 0) <= Number(i.minStock || 0));
+      const alertBox = document.getElementById('lowStockAlert');
+      if (lowList.length) {
+        alertBox.classList.add('show');
+        document.getElementById('lowStockNames').textContent = lowList.map((i) => `${i.name}(현재 ${i.stock}${i.unit} / 기준 ${i.minStock}${i.unit})`).join(', ');
+      } else {
+        alertBox.classList.remove('show');
+      }
+
+      if (!_ingredients.length) {
+        tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#64748b;padding:20px;">등록된 식자재가 없습니다. 위에서 식자재를 먼저 추가해 주세요.</td></tr>';
+        return;
+      }
+
+      tb.innerHTML = _ingredients.map((i) => {
+        const isLow = Number(i.stock || 0) <= Number(i.minStock || 0);
+        return `
+          <tr>
+            <td><strong>${esc(i.name)}</strong></td>
+            <td>${Number(i.unitCost || 0).toLocaleString()} ₫ / ${esc(i.unit)}</td>
+            <td style="font-weight:900;color:${isLow ? '#dc2626' : '#0f172a'};">${Number(i.stock || 0).toLocaleString()} ${esc(i.unit)}</td>
+            <td>${Number(i.minStock || 0).toLocaleString()} ${esc(i.unit)}</td>
+            <td>${isLow ? '<span class="pill" style="background:#fee2e2;color:#b91c1c;">🔴 발주 필요</span>' : '<span class="pill" style="background:#dcfce7;color:#15803d;">🟢 양호</span>'}</td>
+            <td>
+              <button type="button" class="btn" data-restock="${esc(i.id)}" style="background:#eff6ff;color:#1d4ed8;padding:5px 9px;font-size:0.76rem;">+입고</button>
+              <button type="button" class="btn" data-del="${esc(i.id)}" style="background:#fef2f2;color:#dc2626;padding:5px 9px;font-size:0.76rem;">삭제</button>
+            </td>
+          </tr>`;
+      }).join('');
+
+      tb.querySelectorAll('[data-restock]').forEach((b) => {
+        b.onclick = async () => {
+          const item = _ingredients.find((x) => x.id === b.dataset.restock);
+          if (!item) return;
+          const add = Number(prompt(`${item.name} 입고 수량 (${item.unit}):`, '1000'));
+          if (!Number.isFinite(add) || add <= 0) return;
+          const next = Number(item.stock || 0) + add;
+          await updateDoc(doc(db, 'merchants', _storeId, 'ingredients', item.id), { stock: next, updatedAt: serverTimestamp() });
+          item.stock = next;
+          renderIngredients();
+        };
+      });
+
+      tb.querySelectorAll('[data-del]').forEach((b) => {
+        b.onclick = async () => {
+          if (!confirm('이 식자재를 삭제할까요?')) return;
+          await deleteDoc(doc(db, 'merchants', _storeId, 'ingredients', b.dataset.del));
+          _ingredients = _ingredients.filter((x) => x.id !== b.dataset.del);
+          renderIngredients();
+        };
+      });
+    }
+
+    function calcMenuCost(bom) {
+      if (!Array.isArray(bom)) return 0;
+      return bom.reduce((sum, r) => {
+        const ing = _ingredients.find((x) => x.id === r.ingredientId);
+        const unitCost = ing ? Number(ing.unitCost || 0) : Number(r.unitCost || 0);
+        return sum + unitCost * Number(r.qty || 0);
+      }, 0);
+    }
+
+    function renderMenuBom() {
+      const tb = document.getElementById('menuBomTbody');
+      if (!_menus.length) {
+        tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#64748b;padding:24px;">등록된 판매 메뉴가 없습니다. [메뉴 관리]에서 메뉴를 먼저 등록해 주세요.</td></tr>';
+        return;
+      }
+
+      tb.innerHTML = _menus.map((m) => {
+        const price = Number(m.price || 0);
+        const bom = Array.isArray(m.bom) ? m.bom : [];
+        const cost = Math.round(calcMenuCost(bom));
+        const ratio = price > 0 ? ((cost / price) * 100) : 0;
+        const margin = price - cost;
+        let badge = '<span class="pill" style="background:#f1f5f9;color:#64748b;">미등록</span>';
+        if (bom.length) {
+          if (ratio >= 40) badge = `<span class="pill" style="background:#fee2e2;color:#b91c1c;">🔴 원가율 ${ratio.toFixed(1)}% 경고</span>`;
+          else if (ratio >= 30) badge = `<span class="pill" style="background:#fef3c7;color:#b45309;">🟡 ${ratio.toFixed(1)}% 주의</span>`;
+          else badge = `<span class="pill" style="background:#dcfce7;color:#15803d;">🟢 ${ratio.toFixed(1)}% 양호</span>`;
+        }
+        const ingText = bom.length ? bom.map((r) => `${r.name} ${r.qty}${r.unit}`).join(', ') : '-';
+        return `
+          <tr>
+            <td><strong>${esc(m.product_name || '메뉴')}</strong></td>
+            <td>${price.toLocaleString()} ₫</td>
+            <td style="font-weight:800;">${cost.toLocaleString()} ₫</td>
+            <td>${badge}${bom.length ? `<div style="font-size:0.74rem;color:#64748b;margin-top:2px;">마진 ${margin.toLocaleString()} ₫</div>` : ''}</td>
+            <td style="font-size:0.8rem;color:#475569;">${esc(ingText)}</td>
+            <td><button type="button" class="btn" data-edit-bom="${esc(m.id)}" style="background:#ede9fe;color:#4f46e5;padding:6px 10px;font-size:0.78rem;">🧩 레시피 편집</button></td>
+          </tr>`;
+      }).join('');
+
+      tb.querySelectorAll('[data-edit-bom]').forEach((b) => {
+        b.onclick = () => openBomModal(b.dataset.editBom);
+      });
+    }
+
+    function addBomRowUi(selectedId = '', qty = 100) {
+      const wrap = document.getElementById('bomRows');
+      const row = document.createElement('div');
+      row.style.cssText = 'display:grid;grid-template-columns:1fr 110px 36px;gap:8px;align-items:center;';
+      const opts = _ingredients.map((i) => `<option value="${esc(i.id)}" ${i.id === selectedId ? 'selected' : ''}>${esc(i.name)} (${Number(i.unitCost || 0).toLocaleString()}₫/${esc(i.unit)})</option>`).join('');
+      row.innerHTML = `
+        <select class="bom-sel" style="padding:8px;border-radius:8px;border:1px solid #cbd5e1;">${opts}</select>
+        <input type="number" class="bom-qty" value="${qty}" min="0.1" step="any" style="padding:8px;border-radius:8px;border:1px solid #cbd5e1;" placeholder="소모량" />
+        <button type="button" class="bom-rm" style="height:34px;border-radius:8px;border:none;background:#fee2e2;color:#dc2626;cursor:pointer;">✕</button>
+      `;
+      row.querySelector('.bom-rm').onclick = () => { row.remove(); updateBomPreview(); };
+      row.querySelector('.bom-sel').onchange = updateBomPreview;
+      row.querySelector('.bom-qty').oninput = updateBomPreview;
+      wrap.appendChild(row);
+      updateBomPreview();
+    }
+
+    function readBomRows() {
+      const list = [];
+      document.querySelectorAll('#bomRows > div').forEach((row) => {
+        const id = row.querySelector('.bom-sel')?.value;
+        const qty = Number(row.querySelector('.bom-qty')?.value || 0);
+        const ing = _ingredients.find((x) => x.id === id);
+        if (ing && qty > 0) {
+          list.push({ ingredientId: ing.id, name: ing.name, unit: ing.unit, unitCost: Number(ing.unitCost || 0), qty });
+        }
+      });
+      return list;
+    }
+
+    function updateBomPreview() {
+      const bom = readBomRows();
+      const cost = Math.round(calcMenuCost(bom));
+      const price = Number(_editingMenu?.price || 0);
+      const ratio = price > 0 ? ((cost / price) * 100).toFixed(1) : '0.0';
+      document.getElementById('bomPreviewCost').textContent = `예상 원가: ${cost.toLocaleString()} VND (원가율 ${ratio}%)`;
+    }
+
+    function openBomModal(menuId) {
+      if (!_ingredients.length) {
+        alert('먼저 1단계에서 식자재(원재료)를 1개 이상 등록해 주세요.');
+        return;
+      }
+      _editingMenu = _menus.find((m) => m.id === menuId);
+      if (!_editingMenu) return;
+      document.getElementById('bomModalTitle').textContent = `🧩 ${_editingMenu.product_name} 레시피(BOM) 편집`;
+      const wrap = document.getElementById('bomRows');
+      wrap.innerHTML = '';
+      const existing = Array.isArray(_editingMenu.bom) ? _editingMenu.bom : [];
+      if (existing.length) existing.forEach((r) => addBomRowUi(r.ingredientId, r.qty));
+      else addBomRowUi(_ingredients[0].id, 100);
+      document.getElementById('bomModal').classList.add('open');
+    }
+
+    document.getElementById('btnCloseBom').onclick = () => document.getElementById('bomModal').classList.remove('open');
+    document.getElementById('btnAddBomRow').onclick = () => addBomRowUi(_ingredients[0]?.id || '', 50);
+
+    document.getElementById('btnSaveBom').onclick = async () => {
+      if (!_editingMenu) return;
+      const bom = readBomRows();
+      const foodCost = Math.round(calcMenuCost(bom));
+      await updateDoc(doc(db, 'merchant_products', _editingMenu.id), { bom, foodCost, updated_at: serverTimestamp() });
+      _editingMenu.bom = bom;
+      _editingMenu.foodCost = foodCost;
+      document.getElementById('bomModal').classList.remove('open');
+      renderMenuBom();
+    };
+
+    document.getElementById('btnAddIng').onclick = async () => {
+      const name = document.getElementById('ingName').value.trim();
+      const unit = document.getElementById('ingUnit').value;
+      const unitCost = Number(document.getElementById('ingCost').value || 0);
+      const stock = Number(document.getElementById('ingStock').value || 0);
+      const minStock = Number(document.getElementById('ingMin').value || 0);
+      if (!name) { alert('식자재명을 입력해 주세요.'); return; }
+      const ref = await addDoc(collection(db, 'merchants', _storeId, 'ingredients'), {
+        name, unit, unitCost, stock, minStock, createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+      });
+      _ingredients.push({ id: ref.id, name, unit, unitCost, stock, minStock });
+      document.getElementById('ingName').value = '';
+      document.getElementById('ingCost').value = '';
+      document.getElementById('ingStock').value = '';
+      document.getElementById('ingMin').value = '';
+      renderIngredients();
+    };
+
+    document.getElementById('btnCopyPo').onclick = async () => {
+      const low = _ingredients.filter((i) => Number(i.stock || 0) <= Number(i.minStock || 0));
+      if (!low.length) return;
+      const today = new Date().toLocaleDateString('ko-KR');
+      const lines = [
+        `[발주 요청서] ${_storeName} (${today})`,
+        '--------------------------------',
+        ...low.map((i, idx) => `${idx + 1}. ${i.name}: 권장 발주 ${Math.max(Number(i.minStock || 0) * 2, 1000).toLocaleString()}${i.unit} (현재 잔여 ${i.stock}${i.unit})`),
+        '--------------------------------',
+        '확인 후 배송 가능 일정 회신 부탁드립니다. 감사합니다!'
+      ];
+      try {
+        await navigator.clipboard.writeText(lines.join('\n'));
+        alert('✅ Zalo/카톡 전송용 발주서가 클립보드에 복사되었습니다!');
+      } catch (_) {
+        prompt('아래 발주서를 복사하세요:', lines.join('\n'));
+      }
+    };
+
+    checkAdminAuth(async () => {
+      await loadDynamicTenants();
+      const info = getCurrentStoreInfo();
+      if (!info.storeId) { location.href = '../onboarding.html'; return; }
+      _storeId = String(info.storeId);
+      _storeName = info.name || _storeId;
+
+      const [ingSnap, menuSnap] = await Promise.all([
+        getDocs(collection(db, 'merchants', _storeId, 'ingredients')),
+        getDocs(query(collection(db, 'merchant_products'), where('merchant_id', 'in', Number.isFinite(Number(_storeId)) ? [_storeId, Number(_storeId)] : [_storeId]))),
+      ]);
+      _ingredients = ingSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      _menus = menuSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      renderIngredients();
+      renderMenuBom();
+    });
+  </script>
+</body>
+</html>

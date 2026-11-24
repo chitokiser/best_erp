@@ -65,6 +65,7 @@
             <li class="dropdown" onclick="toggleDropdown(this, event)">
                 <span class="dropbtn">영업/프로젝트 ▾</span>
                 <div class="dropdown-content">
+                    <a href="scm-voc.html" style="color:#059669; font-weight:700;">🚚 SCM 안전재고 · VOC</a>
                     <a href="projects.html">프로젝트 보드</a>
                     <a href="materials.html">자재관리</a>
                     <a href="price-history.html">시세/단가 이력</a>
@@ -74,6 +75,8 @@
             <li class="dropdown" onclick="toggleDropdown(this, event)">
                 <span class="dropbtn">내부운영(HR) ▾</span>
                 <div class="dropdown-content">
+                    <a href="approvals.html" style="color:#4f46e5; font-weight:700;">📝 전자결재 · 문서함(ECM)</a>
+                    <a href="attendance.html" style="color:#059669; font-weight:700;">⏱️ 근태 · 급여 자동정산</a>
                     <a href="field-reports.html" style="color:var(--ai-primary); font-weight:700;">📸 현장/안건 사진보고</a>
                     <a href="tasks.html">업무지시/보고</a>
                     <a href="finance.html">재무/회계</a>
@@ -151,7 +154,7 @@
         <!-- 4 KPI Metrics -->
         <div class="stats-grid">
             <div class="stat-card">
-                <h3>오늘 매출 (Real-time)</h3>
+                <h3>누적 매출 (Real-time)</h3>
                 <p class="value" id="kpiSales">₫ 0</p>
                 <div class="trend trend-neutral">데이터 수집 대기중</div>
             </div>
@@ -1449,7 +1452,7 @@
             }
             body.innerHTML = html;
             const mb = document.getElementById('stakeholderMerchantBt');
-            if (mb) mb.innerHTML = `🎟️ 가맹점 BT 재고 <strong style="color:#b45309;">${n(sh.merchantBt)} BT</strong> · 정산 대기 <strong>₫${n(sh.merchantPendingSettlementVnd)}</strong>`;
+            if (mb) mb.innerHTML = `🎟️ 가맹점 BT 재고 <strong style="color:#b45309;">${n(sh.merchantBt)} BT</strong> · <a href="settlement.html" style="color:#4f46e5;font-weight:800;text-decoration:underline;">BM 정산 관리 →</a>`;
             const note = document.getElementById('stakeholderNote');
             if (note) note.textContent = sh.scope === 'self'
                 ? '직원 계정은 본인 보유분만 표시됩니다.'

@@ -309,6 +309,7 @@
                         <th style="padding: 1rem; width: 40px;"><input type="checkbox" id="selectAllMaterials"
                                 onclick="window.toggleAllMaterials(this.checked)"></th>
                         <th style="padding: 1rem; width: 60px;">사진</th>
+                        <th style="padding: 1rem;">소속 가맹점</th>
                         <th style="padding: 1rem;">자재코드</th>
                         <th style="padding: 1rem;">자재명</th>
                         <th style="padding: 1rem;">규격</th>
@@ -316,6 +317,7 @@
                         <th style="padding: 1rem;">단가 (VND)</th>
                         <th style="padding: 1rem;">재고/확보량</th>
                         <th style="padding: 1rem;">총 자산가치</th>
+                        <th style="padding: 1rem; text-align:center;">관리</th>
                     </tr>
                 </thead>
                 <tbody id="materialsTableBody">
@@ -623,7 +625,9 @@
                 tr.style.cursor = 'pointer';
                 tr.onclick = () => location.href = `material-form.html?id=${m.id}`; // Edit page logic placeholder
 
-                const imgUrl = (m.images && m.images.length > 0) ? m.images[0] : 'https://placehold.co//e2e8f0/475569?text=No+Image';
+                const fallbackImg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 50 50'%3E%3Crect width='50' height='50' rx='6' fill='%23e2e8f0'/%3E%3Ctext x='50%25' y='54%25' text-anchor='middle' dominant-baseline='middle' font-family='sans-serif' font-size='10' fill='%2364748b'%3ENo Img%3C/text%3E%3C/svg%3E";
+                const rawImg = (m.images && m.images.length > 0 && m.images[0] && !String(m.images[0]).includes('placehold.co//')) ? m.images[0] : fallbackImg;
+                const imgUrl = rawImg;
 
                 // Actual inventory value from DB
                 const stock = m.stock || 0;

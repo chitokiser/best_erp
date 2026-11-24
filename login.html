@@ -1,159 +1,461 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>로그인 - BEST M-SaaS (AI 경영관리 ERP)</title>
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>가맹점 로그인 | BestERP · CRM M-SaaS</title>
+  <meta name="description" content="BestERP · CRM M-SaaS 가맹점 관리자 및 직원 로그인" />
+  <meta name="theme-color" content="#0b1120" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230b1120'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-family='Arial,sans-serif' font-weight='900' font-size='30' fill='%23fde047'%3EB%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+  <style>
+    :root {
+      --bg:#0b1120;
+      --surface:#111827;
+      --input:#0f172a;
+      --line:rgba(148,163,184,.2);
+      --ink:#f8fafc;
+      --muted:#94a3b8;
+      --primary:#6366f1;
+    }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body {
+      font-family:'Pretendard Variable','Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      background:
+        radial-gradient(circle at 15% 15%,rgba(99,102,241,.2),transparent 42%),
+        radial-gradient(circle at 85% 80%,rgba(245,158,11,.12),transparent 42%),
+        var(--bg);
+      color:var(--ink);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      line-height:1.55;
+      word-break:keep-all;
+      overflow-wrap:break-word;
+    }
+    a { color:inherit; text-decoration:none; }
+    button, input { font-family:inherit; }
+    button[aria-label="메뉴 열기"], .mobile-menu-btn, #mobileMenuToggle { display:none !important; }
+
+    .auth-card {
+      width:100%;
+      max-width:440px;
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:28px;
+      box-shadow:0 24px 60px rgba(0,0,0,.48);
+    }
+    .top-nav {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:22px;
+      font-size:.82rem;
+      color:var(--muted);
+    }
+    .top-nav a:hover { color:#fff; }
+    .top-cta { color:#fde047; font-weight:800; }
+
+    .brand-head { text-align:center; margin-bottom:22px; }
+    .brand-badge {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-weight:900;
+      font-size:1.35rem;
+      margin-bottom:6px;
+    }
+    .brand-mark {
+      width:34px;
+      height:34px;
+      border-radius:10px;
+      background:linear-gradient(135deg,#6366f1,#f59e0b);
+      color:#0b1120;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:900;
+      font-size:1rem;
+    }
+    .brand-sub { font-size:.84rem; color:var(--muted); }
+
+    .btn-google {
+      width:100%;
+      padding:12px 14px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.16);
+      background:#ffffff;
+      color:#0f172a;
+      font-size:.94rem;
+      font-weight:800;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      cursor:pointer;
+      transition:transform .15s, box-shadow .15s;
+    }
+    .btn-google:hover { transform:translateY(-1px); box-shadow:0 10px 24px rgba(0,0,0,.28); }
+
+    .divider {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin:18px 0;
+      color:var(--muted);
+      font-size:.78rem;
+    }
+    .divider::before, .divider::after {
+      content:'';
+      flex:1;
+      height:1px;
+      background:var(--line);
+    }
+
+    .tabs {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      background:var(--input);
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:4px;
+      margin-bottom:18px;
+    }
+    .tab-btn {
+      border:none;
+      background:transparent;
+      color:var(--muted);
+      padding:9px 10px;
+      border-radius:9px;
+      font-size:.86rem;
+      font-weight:800;
+      cursor:pointer;
+      transition:all .15s;
+    }
+    .tab-btn.active {
+      background:linear-gradient(135deg,#6366f1,#8b5cf6);
+      color:#fff;
+    }
+
+    .field { margin-bottom:14px; text-align:left; }
+    .field-head {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:6px;
+    }
+    .field label { font-size:.8rem; font-weight:700; color:#cbd5e1; }
+    .link-muted { font-size:.76rem; color:#a5b4fc; background:none; border:none; cursor:pointer; font-weight:700; }
+    .link-muted:hover { text-decoration:underline; }
+    .input-wrap { position:relative; }
+    .input {
+      width:100%;
+      padding:11px 13px;
+      border-radius:11px;
+      border:1px solid #334155;
+      background:var(--input);
+      color:#fff;
+      font-size:.92rem;
+    }
+    .input:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(99,102,241,.2); }
+    .pw-toggle {
+      position:absolute;
+      right:10px;
+      top:50%;
+      transform:translateY(-50%);
+      border:none;
+      background:transparent;
+      color:var(--muted);
+      font-size:.78rem;
+      font-weight:700;
+      cursor:pointer;
+      padding:4px 6px;
+    }
+    .pw-toggle:hover { color:#fff; }
+
+    .consent-row {
+      display:flex;
+      align-items:flex-start;
+      gap:8px;
+      font-size:.78rem;
+      color:#cbd5e1;
+      margin-bottom:16px;
+      text-align:left;
+    }
+    .consent-row input { margin-top:3px; accent-color:#6366f1; }
+    .consent-row a { color:#a5b4fc; text-decoration:underline; }
+
+    .btn-submit {
+      width:100%;
+      padding:12px 16px;
+      border-radius:12px;
+      border:none;
+      background:linear-gradient(135deg,#6366f1,#8b5cf6);
+      color:#fff;
+      font-size:.95rem;
+      font-weight:800;
+      cursor:pointer;
+      box-shadow:0 8px 22px rgba(99,102,241,.35);
+      transition:transform .15s, opacity .15s;
+    }
+    .btn-submit:hover { transform:translateY(-1px); }
+    .btn-submit:disabled { opacity:.55; cursor:not-allowed; transform:none; }
+
+    .msg {
+      margin-top:12px;
+      font-size:.83rem;
+      text-align:center;
+      min-height:1.25em;
+    }
+    .msg.err { color:#fca5a5; }
+    .msg.ok { color:#6ee7b7; }
+
+    .foot-note {
+      margin-top:18px;
+      padding-top:14px;
+      border-top:1px solid var(--line);
+      text-align:center;
+      font-size:.8rem;
+      color:var(--muted);
+    }
+    .foot-note a { color:#fde047; font-weight:800; }
+  </style>
 </head>
-
-<body
-    style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: var(--background-color, #f8fafc); padding: 1rem;">
-
-    <div class="card" style="width: 100%; max-width: 420px; padding: 2.5rem; text-align: center; background: white; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.06);">
-        <h1 class="logo" style="font-size: 1.8rem; justify-content: center; margin-bottom: 0.5rem; color: #4F46E5; font-weight: 800;">BEST M-SaaS</h1>
-        <p style="font-size: 0.85rem; color: #64748b; margin-top: 0; margin-bottom: 1.75rem;">가맹점 AI 경영관리 · 통합 CRM 대시보드</p>
-
-        <button type="button" id="btnGoogle" class="btn-primary"
-            style="width: 100%; padding: 0.85rem; font-size: 0.98rem; font-weight: 700; background: #ffffff; color: #1e293b; border: 2px solid #cbd5e1; border-radius: 0.6rem; display: flex; align-items: center; justify-content: center; gap: 0.6rem; cursor: pointer; margin-bottom: 1.25rem; box-shadow: 0 2px 4px rgba(0,0,0,0.04);">
-            <svg width="20" height="20" viewBox="0 0 24 24">
-                <path
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    fill="#4285F4" />
-                <path
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    fill="#34A853" />
-                <path
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                    fill="#EA4335" />
-                <path
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                    fill="#FBBC05" />
-            </svg>
-            Google 계정으로 빠른 로그인 (권장)
-        </button>
-
-        <div style="display: flex; align-items: center; margin: 1.25rem 0;">
-            <hr style="flex: 1; border: none; border-top: 1px solid #e2e8f0;">
-            <span style="padding: 0 1rem; color: var(--text-secondary, #64748b); font-size: 0.8rem;">또는 이메일 로그인</span>
-            <hr style="flex: 1; border: none; border-top: 1px solid #e2e8f0;">
-        </div>
-
-        <!-- Toggle Tabs for Login / Register -->
-        <div
-            style="display: flex; gap: 1rem; margin-bottom: 1.25rem; font-weight: bold; border-bottom: 2px solid #e2e8f0;">
-            <div id="tabLogin" onclick="setMode('login')"
-                style="flex:1; padding-bottom:0.5rem; color:var(--primary-color, #4F46E5); border-bottom:2px solid var(--primary-color, #4F46E5); cursor:pointer;">
-                이메일 로그인</div>
-            <div id="tabReg" onclick="setMode('register')"
-                style="flex:1; padding-bottom:0.5rem; color:var(--text-secondary, #64748b); cursor:pointer;">회원가입</div>
-        </div>
-
-        <form id="authForm">
-            <div id="nameBlock" style="display: none; text-align: left; margin-bottom: 1rem;">
-                <label style="font-size: 0.875rem; font-weight: 500; color: var(--text-secondary, #64748b);">이름 (Name)</label>
-                <input type="text" id="txtName" class="search-input" style="width: 100%; margin-top:0.5rem; box-sizing: border-box;">
-            </div>
-
-            <div style="text-align: left; margin-bottom: 1rem;">
-                <label style="font-size: 0.875rem; font-weight: 500; color: var(--text-secondary, #64748b);">이메일 계정
-                    (Email)</label>
-                <input type="email" id="txtEmail" class="search-input" style="width: 100%; margin-top:0.5rem; box-sizing: border-box;" required>
-            </div>
-
-            <div style="text-align: left; margin-bottom: 1.5rem;">
-                <label style="font-size: 0.875rem; font-weight: 500; color: var(--text-secondary, #64748b);">비밀번호
-                    (Password)</label>
-                <input type="password" id="txtPassword" class="search-input" style="width: 100%; margin-top:0.5rem; box-sizing: border-box;"
-                    required>
-            </div>
-
-            <button type="submit" id="btnSubmit" class="btn-primary"
-                style="width: 100%; padding: 0.75rem; font-size: 1rem; margin-bottom: 0.5rem; background: #4F46E5; color: white; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer;">
-                로그인
-            </button>
-        </form>
-        <p id="loginError" style="color: #ef4444; font-size: 0.875rem; text-align:center; margin-top: 1rem; min-height: 1.25rem;"></p>
+<body>
+  <main class="auth-card">
+    <div class="top-nav">
+      <a href="index.html">← BestERP 홈으로</a>
+      <a href="onboarding.html" class="top-cta">🚀 1분 무료 개설 →</a>
     </div>
 
-    <script type="module" src="assets/js/firebase-config.js"></script>
-    <script type="module">
-        import { loginAdmin, registerUser, loginWithGoogle, checkAdminAuth } from './assets/js/auth.js';
+    <div class="brand-head">
+      <div class="brand-badge">
+        <span class="brand-mark">B</span>
+        <span>BestERP</span>
+      </div>
+      <p class="brand-sub">ERP · CRM M-SaaS 가맹점 통합 대시보드</p>
+    </div>
 
-        let mode = 'login';
+    <div id="signedInBanner" style="display:none;margin-bottom:16px;padding:10px 12px;border-radius:12px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.35);align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:.8rem;color:#6ee7b7;">
+      <span id="signedInEmail">로그인됨</span>
+      <button type="button" id="btnLoginPageLogout" style="border:1px solid rgba(248,113,113,.45);background:rgba(239,68,68,.16);color:#fecaca;border-radius:8px;padding:5px 10px;font-size:.76rem;font-weight:800;cursor:pointer;">로그아웃</button>
+    </div>
 
-        window.setMode = (m) => {
-            mode = m;
-            document.getElementById('nameBlock').style.display = m === 'register' ? 'block' : 'none';
-            document.getElementById('btnSubmit').textContent = m === 'register' ? '회원가입' : '로그인';
+    <button type="button" id="btnGoogle" class="btn-google">
+      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#EA4335" />
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#FBBC05" />
+      </svg>
+      <span>Google 계정으로 빠른 로그인 (권장)</span>
+    </button>
 
-            const btnL = document.getElementById('tabLogin');
-            const btnR = document.getElementById('tabReg');
+    <div class="divider">또는 이메일 계정</div>
 
-            if (m === 'login') {
-                btnL.style.color = 'var(--primary-color, #4F46E5)'; btnL.style.borderBottom = '2px solid var(--primary-color, #4F46E5)';
-                btnR.style.color = 'var(--text-secondary, #64748b)'; btnR.style.borderBottom = 'none';
-            } else {
-                btnR.style.color = 'var(--primary-color, #4F46E5)'; btnR.style.borderBottom = '2px solid var(--primary-color, #4F46E5)';
-                btnL.style.color = 'var(--text-secondary, #64748b)'; btnL.style.borderBottom = 'none';
-            }
-        };
+    <div class="tabs" role="tablist">
+      <button type="button" id="tabLogin" class="tab-btn active" onclick="setMode('login')">이메일 로그인</button>
+      <button type="button" id="tabReg" class="tab-btn" onclick="setMode('register')">직원·신규 회원가입</button>
+    </div>
 
-        checkAdminAuth(
-            (user) => {
-                const params = new URLSearchParams(window.location.search);
-                const redirect = params.get('redirect');
-                if (redirect && !redirect.includes('login.html')) {
-                    window.location.href = decodeURIComponent(redirect);
-                } else {
-                    window.location.href = 'admin/dashboard.html';
-                }
-            },
-            (errMsg) => { 
-                if (errMsg && errMsg !== '로그인이 필요한 화면입니다.') {
-                    document.getElementById('loginError').textContent = errMsg;
-                }
-            }
-        );
+    <form id="authForm">
+      <div id="nameBlock" class="field" style="display:none;">
+        <div class="field-head"><label for="txtName">이름 (Name)</label></div>
+        <input type="text" id="txtName" class="input" placeholder="예: 홍길동" autocomplete="name" />
+      </div>
 
-        document.getElementById('authForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const errEl = document.getElementById('loginError');
-            errEl.textContent = '';
-            const email = document.getElementById('txtEmail').value.trim();
-            const password = document.getElementById('txtPassword').value;
-            const name = document.getElementById('txtName').value.trim();
-            const btn = document.getElementById('btnSubmit');
+      <div class="field">
+        <div class="field-head"><label for="txtEmail">이메일 계정 (Email)</label></div>
+        <input type="email" id="txtEmail" class="input" placeholder="name@example.com" autocomplete="email" required />
+      </div>
 
-            btn.disabled = true;
-            try {
-                if (mode === 'register') {
-                    await registerUser(email, password, name);
-                    alert(`🎉 회원가입이 완료되었습니다!\n\n가맹점 대표님(점주)께서 [직원 관리] 메뉴에서 회원님의 이메일(${email})을 직원으로 등록/승인해주시면 해당 보고서를 바로 확인하실 수 있습니다.`);
-                } else {
-                    await loginAdmin(email, password);
-                }
-            } catch (err) {
-                console.error(err);
-                errEl.textContent = err.message || '로그인/가입 처리 중 오류가 발생했습니다.';
-            } finally {
-                btn.disabled = false;
-            }
-        });
+      <div class="field">
+        <div class="field-head">
+          <label for="txtPassword">비밀번호 (Password)</label>
+          <button type="button" id="btnResetPw" class="link-muted">비밀번호 찾기</button>
+        </div>
+        <div class="input-wrap">
+          <input type="password" id="txtPassword" class="input" style="padding-right:56px;" placeholder="6자 이상 입력" autocomplete="current-password" required />
+          <button type="button" id="btnTogglePw" class="pw-toggle" aria-label="비밀번호 표시 전환">보기</button>
+        </div>
+      </div>
 
-        document.getElementById('btnGoogle').addEventListener('click', async () => {
-            document.getElementById('loginError').textContent = '';
-            try {
-                await loginWithGoogle();
-                // CheckAdminAuth observer will auto redirect to dashboard
-            } catch (err) {
-                console.error(err);
-                document.getElementById('loginError').textContent = 'Google 로그인 중 오류가 발생했습니다: ' + (err.message || '');
-            }
-        });
-    </script>
+      <div id="confirmBlock" class="field" style="display:none;">
+        <div class="field-head"><label for="txtPasswordConfirm">비밀번호 확인</label></div>
+        <input type="password" id="txtPasswordConfirm" class="input" placeholder="비밀번호를 한 번 더 입력하세요" autocomplete="new-password" />
+      </div>
+
+      <label id="consentBlock" class="consent-row" style="display:none;">
+        <input type="checkbox" id="chkConsent" />
+        <span><a href="terms.html" target="_blank">이용약관</a> 및 <a href="privacy.html" target="_blank">개인정보처리방침</a>에 동의합니다.</span>
+      </label>
+
+      <button type="submit" id="btnSubmit" class="btn-submit">로그인</button>
+    </form>
+
+    <p id="loginError" class="msg err" role="alert"></p>
+
+    <div class="foot-note">
+      아직 가맹점 워크스페이스가 없으신가요? <a href="onboarding.html">1분 만에 무료 개설</a>
+    </div>
+  </main>
+
+  <script type="module" src="assets/js/firebase-config.js"></script>
+  <script type="module">
+    import { auth } from './assets/js/firebase-config.js';
+    import { sendPasswordResetEmail, onAuthStateChanged, signOut } from 'firebase/auth';
+    import { loginAdmin, registerUser, loginWithGoogle, checkAdminAuth } from './assets/js/auth.js';
+
+    let mode = 'login';
+    const params = new URLSearchParams(window.location.search);
+
+    window.setMode = (m) => {
+      mode = m;
+      const isReg = m === 'register';
+      document.getElementById('nameBlock').style.display = isReg ? 'block' : 'none';
+      document.getElementById('confirmBlock').style.display = isReg ? 'block' : 'none';
+      document.getElementById('consentBlock').style.display = isReg ? 'flex' : 'none';
+      document.getElementById('btnResetPw').style.display = isReg ? 'none' : 'inline-block';
+      document.getElementById('btnSubmit').textContent = isReg ? '회원가입 완료' : '로그인';
+      document.getElementById('txtPassword').autocomplete = isReg ? 'new-password' : 'current-password';
+      document.getElementById('tabLogin').classList.toggle('active', !isReg);
+      document.getElementById('tabReg').classList.toggle('active', isReg);
+      const errEl = document.getElementById('loginError');
+      errEl.textContent = '';
+      errEl.className = 'msg err';
+    };
+
+    if (params.get('mode') === 'register') {
+      window.setMode('register');
+    }
+
+    document.getElementById('btnTogglePw').addEventListener('click', () => {
+      const pw = document.getElementById('txtPassword');
+      const btn = document.getElementById('btnTogglePw');
+      const show = pw.type === 'password';
+      pw.type = show ? 'text' : 'password';
+      btn.textContent = show ? '숨김' : '보기';
+    });
+
+    document.getElementById('btnResetPw').addEventListener('click', async () => {
+      const email = document.getElementById('txtEmail').value.trim();
+      const errEl = document.getElementById('loginError');
+      if (!email) {
+        errEl.className = 'msg err';
+        errEl.textContent = '비밀번호를 재설정할 이메일 주소를 먼저 입력해 주세요.';
+        document.getElementById('txtEmail').focus();
+        return;
+      }
+      try {
+        await sendPasswordResetEmail(auth, email);
+        errEl.className = 'msg ok';
+        errEl.textContent = `✅ ${email} 로 비밀번호 재설정 링크를 발송했습니다. 메일함을 확인해 주세요.`;
+      } catch (err) {
+        errEl.className = 'msg err';
+        errEl.textContent = '재설정 메일 발송 실패: ' + (err?.message || '이메일 주소를 확인해 주세요.');
+      }
+    });
+
+    onAuthStateChanged(auth, (user) => {
+      const banner = document.getElementById('signedInBanner');
+      const emailEl = document.getElementById('signedInEmail');
+      if (user) {
+        if (emailEl) emailEl.textContent = `✅ ${user.email || '로그인 계정'}`;
+        if (banner) banner.style.display = 'flex';
+      } else {
+        if (banner) banner.style.display = 'none';
+      }
+    });
+
+    document.getElementById('btnLoginPageLogout')?.addEventListener('click', async () => {
+      try {
+        await signOut(auth);
+        const errEl = document.getElementById('loginError');
+        errEl.className = 'msg ok';
+        errEl.textContent = '✅ 로그아웃되었습니다. 다른 계정으로 로그인할 수 있습니다.';
+      } catch (err) {
+        console.error(err);
+      }
+    });
+
+    checkAdminAuth(
+      (user) => {
+        const redirect = params.get('redirect');
+        if (redirect && !redirect.includes('login.html')) {
+          window.location.href = decodeURIComponent(redirect);
+        } else {
+          window.location.href = 'admin/dashboard.html';
+        }
+      },
+      (errMsg) => {
+        if (errMsg && errMsg !== '로그인이 필요한 화면입니다.') {
+          const errEl = document.getElementById('loginError');
+          errEl.className = 'msg err';
+          errEl.textContent = errMsg;
+        }
+      }
+    );
+
+    document.getElementById('authForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errEl = document.getElementById('loginError');
+      errEl.textContent = '';
+      errEl.className = 'msg err';
+
+      const email = document.getElementById('txtEmail').value.trim();
+      const password = document.getElementById('txtPassword').value;
+      const passwordConfirm = document.getElementById('txtPasswordConfirm').value;
+      const name = document.getElementById('txtName').value.trim();
+      const consent = document.getElementById('chkConsent').checked;
+      const btn = document.getElementById('btnSubmit');
+
+      if (mode === 'register') {
+        if (password.length < 6) {
+          errEl.textContent = '비밀번호는 6자 이상으로 입력해 주세요.';
+          return;
+        }
+        if (password !== passwordConfirm) {
+          errEl.textContent = '비밀번호와 비밀번호 확인이 일치하지 않습니다.';
+          return;
+        }
+        if (!consent) {
+          errEl.textContent = '이용약관 및 개인정보처리방침에 동의해 주세요.';
+          return;
+        }
+      }
+
+      btn.disabled = true;
+      try {
+        if (mode === 'register') {
+          await registerUser(email, password, name);
+          alert(`🎉 회원가입이 완료되었습니다!\n\n가맹점 대표님(점주)께서 [직원 관리] 메뉴에서 회원님의 이메일(${email})을 직원으로 등록/승인해주시면 해당 대시보드를 바로 확인하실 수 있습니다.`);
+        } else {
+          await loginAdmin(email, password);
+        }
+      } catch (err) {
+        console.error(err);
+        errEl.textContent = err.message || '로그인/가입 처리 중 오류가 발생했습니다.';
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById('btnGoogle').addEventListener('click', async () => {
+      const errEl = document.getElementById('loginError');
+      errEl.textContent = '';
+      errEl.className = 'msg err';
+      try {
+        await loginWithGoogle();
+      } catch (err) {
+        console.error(err);
+        errEl.textContent = 'Google 로그인 중 오류가 발생했습니다: ' + (err.message || '');
+      }
+    });
+  </script>
 </body>
-
 </html>
