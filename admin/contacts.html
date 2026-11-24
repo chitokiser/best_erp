@@ -111,19 +111,26 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(3px);
             display: none;
             justify-content: center;
             align-items: center;
-            z-index: 100;
+            padding: 12px;
+            overflow-y: auto;
+            z-index: 9999;
         }
 
         .modal-content {
             background: white;
             border-radius: 1rem;
-            padding: 2rem;
-            width: 500px;
-            max-width: 90%;
+            padding: 1.5rem;
+            width: 520px;
+            max-width: 100%;
+            max-height: 90dvh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            box-shadow: 0 24px 48px rgba(15, 23, 42, 0.28);
         }
 
         .modal-header {
@@ -181,19 +188,40 @@
         }
 
         .submit-btn {
-            background: var(--text-dark);
+            position: sticky;
+            bottom: 0;
+            background: linear-gradient(135deg, #4F46E5, #7C3AED);
             color: white;
             width: 100%;
-            padding: 0.75rem;
+            padding: 0.9rem;
             border: none;
-            border-radius: 0.5rem;
-            font-weight: 600;
+            border-radius: 0.65rem;
+            font-size: 1rem;
+            font-weight: 800;
             margin-top: 1rem;
             cursor: pointer;
+            box-shadow: 0 -8px 18px rgba(255, 255, 255, 0.92), 0 8px 20px rgba(79, 70, 229, 0.35);
+            z-index: 10;
         }
 
         .submit-btn:hover {
-            background: var(--ai-primary);
+            filter: brightness(1.06);
+        }
+
+        @media (max-width: 600px) {
+            .modal-content {
+                padding: 1.15rem;
+                max-height: 92dvh;
+            }
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            .form-group input,
+            .form-group select,
+            .form-group textarea {
+                font-size: 16px;
+            }
         }
 
         .top-nav {
@@ -469,7 +497,7 @@
                     <label>등록자 (본인)</label>
                     <input type="text" id="addRegistrar" readonly style="background:#f8fafc; color:#64748B;">
                 </div>
-                <button type="submit" class="submit-btn" id="btnAddSubmit">인맥 DB 추가</button>
+                <button type="submit" class="submit-btn" id="btnAddSubmit">✅ 명함(인맥) 등록하기</button>
             </form>
         </div>
     </div>

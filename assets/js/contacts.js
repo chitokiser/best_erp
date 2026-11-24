@@ -636,7 +636,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 if (result.position) document.getElementById('addPosition').value = result.position;
                                 if (result.phone) document.getElementById('addPhone').value = result.phone;
 
-                                alert('명함 인식이 완료되었습니다.');
+                                alert('명함 인식이 완료되었습니다.\n하단의 [✅ 명함(인맥) 등록하기] 버튼을 눌러 저장해 주세요.');
+                                document.getElementById('btnAddSubmit')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                             } catch (err) {
                                 alert(err.message);
                             } finally {
