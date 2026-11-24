@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🔌 API 통합 허브 (AI 번역 · 텔레그램 · VietQR · Open API) | BestERP</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+  <style>
+    body.admin-body { font-family:'Pretendard Variable','Pretendard',-apple-system,sans-serif; background:#f8fafc; color:#0f172a; }
+    .wrap { max-width:1120px; margin:20px auto; padding:0 16px 64px; }
+    .sub-nav { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:12px 16px; margin-bottom:16px; }
+    .sub-nav-links { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .nav-pill { padding:7px 12px; border-radius:9px; font-size:.82rem; font-weight:800; border:1px solid #e2e8f0; background:#f8fafc; color:#334155; text-decoration:none; cursor:pointer; }
+    .nav-pill.active { background:#4f46e5; color:#fff; border-color:#4f46e5; }
+    .store-badge { padding:5px 11px; border-radius:999px; background:#ede9fe; color:#4f46e5; font-size:.78rem; font-weight:800; }
+
+    .tabs { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+    .tab-btn { padding:9px 14px; border-radius:10px; border:1px solid #cbd5e1; background:#fff; color:#334155; font-weight:800; font-size:.84rem; cursor:pointer; }
+    .tab-btn.active { background:#0f172a; border-color:#0f172a; color:#fde047; }
+    .pane { display:none; }
+    .pane.active { display:block; }
+
+    .panel { background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:18px; margin-bottom:16px; box-shadow:0 4px 12px rgba(15,23,42,.03); }
+    .panel h3 { margin:0 0 10px; font-size:1.02rem; font-weight:900; }
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .field { margin-bottom:10px; }
+    .field label { display:block; font-size:.78rem; font-weight:700; color:#475569; margin-bottom:5px; }
+    .field input, .field select, .field textarea {
+      width:100%; padding:10px 12px; border-radius:10px; border:1px solid #cbd5e1;
+      background:#fff; color:#0f172a; font-size:.88rem; font-family:inherit;
+    }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:9px 14px; border-radius:10px; font-size:.84rem; font-weight:800; border:none; cursor:pointer; }
+    .btn-primary { background:#4f46e5; color:#fff; }
+    .btn-green { background:#059669; color:#fff; }
+    .btn-gold { background:#f59e0b; color:#0f172a; }
+    .btn-ghost { background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; }
+    .code-box { background:#0f172a; color:#e2e8f0; padding:14px; border-radius:12px; font-family:monospace; font-size:.78rem; overflow-x:auto; white-space:pre; line-height:1.55; }
+    .status-msg { margin-top:8px; font-size:.82rem; font-weight:700; }
+
+    @media (max-width:768px) {
+      .grid-2 { grid-template-columns:1fr; }
+      .tabs { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+      .tab-btn { width:100%; font-size:.78rem; padding:9px 6px; }
+      input, select, textarea { font-size:16px; }
+    }
+  </style>
+</head>
+<body class="admin-body">
+  <main class="wrap">
+    <div class="sub-nav">
+      <div class="sub-nav-links">
+        <a href="dashboard.html" class="nav-pill">← 대시보드</a>
+        <a href="api-hub.html" class="nav-pill active">🔌 API 통합 허브</a>
+        <a href="scm-voc.html" class="nav-pill">🚚 SCM · VOC</a>
+        <a href="approvals.html" class="nav-pill">📝 전자결재</a>
+        <a href="audit-logs.html" class="nav-pill">🛡️ 감사 로그</a>
+      </div>
+      <div class="sub-nav-links">
+        <span class="store-badge" id="storeBadge">가맹점 확인 중...</span>
+        <button type="button" id="btnLogout" class="nav-pill" style="color:#dc2626;border-color:#fecaca;background:#fef2f2;">로그아웃</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <h2 style="margin:0;font-size:1.38rem;font-weight:900;">🔌 BestERP API 통합 허브</h2>
+      <p style="margin:4px 0 0;font-size:.85rem;color:#64748b;">Gemini 한↔베 AI 번역, 텔레그램 마감 리포트 봇, 베트남 VietQR 실시간 생성, 외부 POS 연동용 Open API 키를 한곳에서 제어합니다.</p>
+    </div>
+
+    <div class="tabs">
+      <button type="button" class="tab-btn active" data-tab="translate">🇻🇳 한↔베 AI 번역</button>
+      <button type="button" class="tab-btn" data-tab="telegram">🤖 텔레그램 마감 봇</button>
+      <button type="button" class="tab-btn" data-tab="vietqr">🏦 VietQR · 웹훅</button>
+      <button type="button" class="tab-btn" data-tab="openapi">🔑 외부 POS Open API</button>
+    </div>
+
+    <!-- TAB 1: Gemini KR-VN Translator -->
+    <section class="pane active" id="pane-translate">
+      <div class="panel">
+        <h3>🇻🇳 메뉴 · 업무지시 · Zalo 고객 안내문 한↔베 실시간 AI 번역 (Gemini 2.5 Flash)</h3>
+        <div class="grid-2">
+          <div>
+            <div class="field">
+              <label for="trDir">번역 방향</label>
+              <select id="trDir">
+                <option value="ko_to_vi">🇰🇷 한국어 → 🇻🇳 베트남어 (직원 지시 · 현지 메뉴판 · Zalo)</option>
+                <option value="vi_to_ko">🇻🇳 베트남어 → 🇰🇷 한국어 (직원 사진보고 · 현지 고객 문의)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="trInput">원문 입력</label>
+              <textarea id="trInput" rows="5" placeholder="예: 오늘 저녁 6시 단체 예약 12명 있습니다. 2층 창가 테이블 3개 붙이고 소갈비 10인분 미리 준비해 주세요."></textarea>
+            </div>
+            <button type="button" id="btnTranslate" class="btn btn-primary">✨ Gemini AI 번역 실행</button>
+          </div>
+          <div>
+            <div class="field">
+              <label for="trOutput">번역 결과 (원클릭 복사)</label>
+              <textarea id="trOutput" rows="7" readonly placeholder="번역 결과가 여기에 표시됩니다."></textarea>
+            </div>
+            <button type="button" id="btnCopyTr" class="btn btn-ghost">📋 번역문 복사하기</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: Telegram Closing Briefing Bot -->
+    <section class="pane" id="pane-telegram">
+      <div class="panel">
+        <h3>🤖 사장님 텔레그램 마감 리포트 · 결재/재고 알림 봇</h3>
+        <div class="grid-2">
+          <div>
+            <div class="field">
+              <label for="tgToken">Telegram Bot Token (@BotFather 발급)</label>
+              <input type="password" id="tgToken" placeholder="123456789:AAH..." />
+            </div>
+            <div class="field">
+              <label for="tgChatId">수신 Chat ID (사장님 또는 매장 단톡방)</label>
+              <input type="text" id="tgChatId" placeholder="예: -1001234567890 또는 본인 숫자 ID" />
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button type="button" id="btnSaveTg" class="btn btn-ghost">💾 설정 저장</button>
+              <button type="button" id="btnSendTg" class="btn btn-green">📨 지금 마감 브리핑 전송</button>
+            </div>
+            <div id="tgStatus" class="status-msg"></div>
+          </div>
+          <div>
+            <div class="field">
+              <label for="tgPreview">전송될 실시간 매장 브리핑 미리보기</label>
+              <textarea id="tgPreview" rows="8"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: VietQR Generator & Webhook -->
+    <section class="pane" id="pane-vietqr">
+      <div class="panel">
+        <h3>🏦 베트남 VietQR 결제 코드 실시간 생성 &amp; 입금 자동확인(Sepay/PayOS) 연동</h3>
+        <div class="grid-2">
+          <div>
+            <div class="field">
+              <label for="vqBank">은행 선택 (NAPAS 표준)</label>
+              <select id="vqBank">
+                <option value="VCB">Vietcombank (VCB)</option>
+                <option value="TCB">Techcombank (TCB)</option>
+                <option value="MB">MB Bank (MB)</option>
+                <option value="BIDV">BIDV</option>
+                <option value="ACB">ACB</option>
+                <option value="VPB">VPBank (VPB)</option>
+                <option value="SHBVN">Shinhan Bank VN (SHBVN)</option>
+                <option value="WRB">Woori Bank VN (WRB)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="vqAccount">계좌번호 *</label>
+              <input type="text" id="vqAccount" placeholder="예: 1023456789" />
+            </div>
+            <div class="field">
+              <label for="vqHolder">예금주명 (영문 대문자)</label>
+              <input type="text" id="vqHolder" placeholder="예: KIM MIN SU" />
+            </div>
+            <div class="field">
+              <label for="vqAmount">테스트 결제 금액 (VND)</label>
+              <input type="number" id="vqAmount" value="150000" step="10000" />
+            </div>
+            <button type="button" id="btnGenVietQr" class="btn btn-gold">🏦 VietQR 즉시 생성 &amp; 저장</button>
+          </div>
+          <div style="text-align:center;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:14px;padding:16px;">
+            <img id="vietQrImg" alt="VietQR 미리보기" style="max-width:230px;width:100%;border-radius:10px;display:none;margin:0 auto 8px;" />
+            <div id="vietQrEmpty" style="padding:48px 12px;color:#64748b;font-size:.84rem;">은행과 계좌번호를 입력하고 생성 버튼을 누르면 NAPAS 표준 VietQR이 즉시 표시됩니다.</div>
+            <div style="font-size:.76rem;color:#475569;margin-top:8px;">Sepay / PayOS 웹훅 연동 시 송금 후 3초 내 BestClub BM 충전 및 BestERP KDS 주문이 자동 확정됩니다.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: External POS Open API -->
+    <section class="pane" id="pane-openapi">
+      <div class="panel">
+        <h3>🔑 외부 POS(KiotViet · Sapo · 자체웹) 연동용 BestERP Open API Key</h3>
+        <p style="font-size:.84rem;color:#64748b;margin-bottom:12px;">기존 포스기를 바꾸지 않고도 아래 API Key로 주문(KDS) 수신 및 BestClub BT 리워드 자동 지급을 연결할 수 있습니다.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+          <input type="text" id="openApiKeyInput" readonly style="flex:1;min-width:220px;padding:10px 12px;border-radius:10px;border:1px solid #cbd5e1;font-family:monospace;font-weight:800;background:#f8fafc;" placeholder="API Key를 발급해 주세요" />
+          <button type="button" id="btnGenApiKey" class="btn btn-primary">🔄 API Key 발급/재발급</button>
+          <button type="button" id="btnCopyApiKey" class="btn btn-ghost">📋 복사</button>
+        </div>
+        <div class="code-box" id="openApiCurlBox"></div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { checkAdminAuth, logoutAdmin } from '../assets/js/auth.js';
+    import { getCurrentStoreInfo, loadDynamicTenants } from '../assets/js/tenant-router.js';
+    import { translateMenuAndNoticeAI, sendTelegramMessage } from '../assets/js/aiApi.js';
+    import { db } from '../assets/js/firebase-config.js';
+    import { doc, getDoc, setDoc, getDocs, collection, serverTimestamp } from 'firebase/firestore';
+
+    let _storeId = '';
+    let _storeName = '가맹점';
+
+    document.getElementById('btnLogout')?.addEventListener('click', () => logoutAdmin());
+
+    document.querySelectorAll('.tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const t = btn.getAttribute('data-tab');
+        document.querySelectorAll('.tab-btn').forEach((b) => b.classList.toggle('active', b === btn));
+        document.querySelectorAll('.pane').forEach((p) => p.classList.toggle('active', p.id === `pane-${t}`));
+      });
+    });
+
+    // 1. Gemini KR-VN Translator
+    document.getElementById('btnTranslate').addEventListener('click', async () => {
+      const text = document.getElementById('trInput').value.trim();
+      const dir = document.getElementById('trDir').value;
+      const out = document.getElementById('trOutput');
+      const btn = document.getElementById('btnTranslate');
+      if (!text) return alert('번역할 원문을 입력해 주세요.');
+      btn.disabled = true;
+      btn.textContent = '⏳ Gemini 번역 중...';
+      out.value = '번역 중...';
+      try {
+        out.value = await translateMenuAndNoticeAI(text, dir);
+      } catch (err) {
+        out.value = '⚠️ 번역 오류: ' + (err?.message || err);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '✨ Gemini AI 번역 실행';
+      }
+    });
+
+    document.getElementById('btnCopyTr').addEventListener('click', () => {
+      const val = document.getElementById('trOutput').value;
+      if (val) navigator.clipboard?.writeText(val).then(() => alert('번역문이 복사되었습니다!'));
+    });
+
+    // 2. Telegram Briefing
+    async function buildClosingBriefing() {
+      const [aprSnap, scmSnap, vocSnap] = await Promise.all([
+        getDocs(collection(db, 'merchants', _storeId, 'approvals')).catch(() => ({ docs: [] })),
+        getDocs(collection(db, 'merchants', _storeId, 'scm_items')).catch(() => ({ docs: [] })),
+        getDocs(collection(db, 'merchants', _storeId, 'voc_logs')).catch(() => ({ docs: [] }))
+      ]);
+      const pendingApr = aprSnap.docs.filter((d) => d.data().status === 'pending').length;
+      const lowScm = scmSnap.docs.filter((d) => Number(d.data().stock) < Number(d.data().safety)).length;
+      const openVoc = vocSnap.docs.filter((d) => !d.data().resolved).length;
+      const today = new Date().toISOString().slice(0, 10);
+      document.getElementById('tgPreview').value =
+        `📊 <b>[BestERP 일일 마감 브리핑]</b>\n` +
+        `🏪 매장: ${_storeName} (${_storeId})\n` +
+        `📅 일자: ${today}\n\n` +
+        `• 📝 미승인 전자결재: <b>${pendingApr}건</b>\n` +
+        `• ⚠️ 안전재고 미달(JIT 발주 필요): <b>${lowScm}건</b>\n` +
+        `• 📣 미조치 고객 VOC: <b>${openVoc}건</b>\n\n` +
+        `👉 대시보드: https://besterp.netlify.app/admin/dashboard.html`;
+    }
+
+    document.getElementById('btnSaveTg').addEventListener('click', async () => {
+      const botToken = document.getElementById('tgToken').value.trim();
+      const chatId = document.getElementById('tgChatId').value.trim();
+      await setDoc(doc(db, 'merchants', _storeId, 'api_integrations', 'telegram'), { botToken, chatId, updatedAt: serverTimestamp() }, { merge: true });
+      const st = document.getElementById('tgStatus');
+      st.style.color = '#059669';
+      st.textContent = '✅ 텔레그램 설정이 Firestore에 저장되었습니다.';
+    });
+
+    document.getElementById('btnSendTg').addEventListener('click', async () => {
+      const st = document.getElementById('tgStatus');
+      st.style.color = '#475569';
+      st.textContent = '⏳ 텔레그램으로 발송 중...';
+      try {
+        await sendTelegramMessage(
+          document.getElementById('tgToken').value,
+          document.getElementById('tgChatId').value,
+          document.getElementById('tgPreview').value
+        );
+        st.style.color = '#059669';
+        st.textContent = '✅ 텔레그램 마감 브리핑이 성공적으로 발송되었습니다!';
+      } catch (err) {
+        st.style.color = '#dc2626';
+        st.textContent = '❌ 발송 실패: ' + (err?.message || err);
+      }
+    });
+
+    // 3. VietQR
+    function renderVietQr() {
+      const bank = document.getElementById('vqBank').value;
+      const acct = document.getElementById('vqAccount').value.trim();
+      const holder = document.getElementById('vqHolder').value.trim();
+      const amount = Number(document.getElementById('vqAmount').value) || 0;
+      const img = document.getElementById('vietQrImg');
+      const empty = document.getElementById('vietQrEmpty');
+      if (!acct) return;
+      const addInfo = encodeURIComponent(`BESTERP ${_storeId}`);
+      const url = `https://img.vietqr.io/image/${bank}-${encodeURIComponent(acct)}-compact2.png?amount=${amount}&addInfo=${addInfo}&accountName=${encodeURIComponent(holder)}`;
+      img.src = url;
+      img.style.display = 'block';
+      empty.style.display = 'none';
+    }
+
+    document.getElementById('btnGenVietQr').addEventListener('click', async () => {
+      const bank = document.getElementById('vqBank').value;
+      const account = document.getElementById('vqAccount').value.trim();
+      const holder = document.getElementById('vqHolder').value.trim();
+      if (!account) return alert('계좌번호를 입력해 주세요.');
+      renderVietQr();
+      await setDoc(doc(db, 'merchants', _storeId, 'api_integrations', 'vietqr'), { bank, account, holder, updatedAt: serverTimestamp() }, { merge: true });
+    });
+
+    // 4. Open API Key
+    function updateCurlExample(key) {
+      document.getElementById('openApiCurlBox').textContent =
+`# 1) 외부 POS(KiotViet/Sapo) 결제 완료 → BestClub BT 자동 적립
+curl -X POST https://besterp.netlify.app/api/v1/rewards/bt \\
+  -H "Authorization: Bearer ${key || 'besterp_live_YOUR_KEY'}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"merchantId":"${_storeId}","customerEmail":"user@example.com","amountVnd":250000}'
+
+# 2) 외부 웹/배달앱 주문 → BestERP 실시간 KDS 알림판 전송
+curl -X POST https://besterp.netlify.app/api/v1/orders/kds \\
+  -H "Authorization: Bearer ${key || 'besterp_live_YOUR_KEY'}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"merchantId":"${_storeId}","tableNo":"배달 #12","items":[{"name":"배추김치 2kg","qty":1}]}'`;
+    }
+
+    document.getElementById('btnGenApiKey').addEventListener('click', async () => {
+      const rand = Array.from(crypto.getRandomValues(new Uint8Array(16))).map((b) => b.toString(16).padStart(2, '0')).join('');
+      const key = `besterp_live_${_storeId.slice(-4)}_${rand}`;
+      document.getElementById('openApiKeyInput').value = key;
+      updateCurlExample(key);
+      await setDoc(doc(db, 'merchants', _storeId, 'api_integrations', 'open_api'), { apiKey: key, updatedAt: serverTimestamp() }, { merge: true });
+      alert('✅ 새 Open API Key가 발급되어 Firestore에 저장되었습니다.');
+    });
+
+    document.getElementById('btnCopyApiKey').addEventListener('click', () => {
+      const v = document.getElementById('openApiKeyInput').value;
+      if (v) navigator.clipboard?.writeText(v).then(() => alert('API Key가 복사되었습니다!'));
+    });
+
+    checkAdminAuth(
+      async () => {
+        await loadDynamicTenants();
+        const info = getCurrentStoreInfo();
+        _storeId = String(window.tenantId || info?.storeId || info?.merchantId || '1791002036');
+        _storeName = info?.name || _storeId;
+        document.getElementById('storeBadge').textContent = `🏪 ${_storeName} (${_storeId})`;
+
+        const [tgSnap, vqSnap, apiSnap] = await Promise.all([
+          getDoc(doc(db, 'merchants', _storeId, 'api_integrations', 'telegram')).catch(() => null),
+          getDoc(doc(db, 'merchants', _storeId, 'api_integrations', 'vietqr')).catch(() => null),
+          getDoc(doc(db, 'merchants', _storeId, 'api_integrations', 'open_api')).catch(() => null)
+        ]);
+        if (tgSnap?.exists()) {
+          document.getElementById('tgToken').value = tgSnap.data().botToken || '';
+          document.getElementById('tgChatId').value = tgSnap.data().chatId || '';
+        }
+        if (vqSnap?.exists()) {
+          document.getElementById('vqBank').value = vqSnap.data().bank || 'VCB';
+          document.getElementById('vqAccount').value = vqSnap.data().account || '';
+          document.getElementById('vqHolder').value = vqSnap.data().holder || '';
+          renderVietQr();
+        }
+        const savedKey = apiSnap?.exists() ? apiSnap.data().apiKey : '';
+        if (savedKey) document.getElementById('openApiKeyInput').value = savedKey;
+        updateCurlExample(savedKey);
+        await buildClosingBriefing();
+      },
+      () => { location.href = '../login.html?redirect=' + encodeURIComponent(location.pathname); }
+    );
+  </script>
+</body>
+</html>

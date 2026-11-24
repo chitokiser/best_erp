@@ -38,6 +38,7 @@ module.exports = defineConfig({
         "admin_tasks": resolve(__dirname, 'admin/tasks.html'),
         "admin_users": resolve(__dirname, 'admin/users.html'),
         "admin_api-settings": resolve(__dirname, 'admin/api-settings.html'),
+        "admin_api-hub": resolve(__dirname, 'admin/api-hub.html'),
         "admin_approvals": resolve(__dirname, 'admin/approvals.html'),
         "admin_attendance": resolve(__dirname, 'admin/attendance.html'),
         "admin_audit-logs": resolve(__dirname, 'admin/audit-logs.html'),

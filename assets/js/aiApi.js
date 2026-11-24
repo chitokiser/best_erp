@@ -202,3 +202,72 @@ export const scanReceiptAI = async (base64Image, mimeType = 'image/jpeg') => {
     return parsed;
 };
 
+/**
+ * 한↔베 실시간 자동 번역 (메뉴명 · 직원 업무지시 · Zalo 고객 안내문)
+ */
+export const translateMenuAndNoticeAI = async (text, direction = 'ko_to_vi') => {
+    const apiKey = getGeminiApiKey();
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    const dirInstruction = direction === 'vi_to_ko'
+        ? '다음 베트남어 매장 문구(메뉴/업무보고/고객문의)를 자연스러운 한국어로 번역하세요. 번역문만 깔끔하게 출력하세요.'
+        : '다음 한국어 매장 문구(메뉴/업무지시/Zalo 고객안내)를 베트남 현지인이 자연스럽게 이해하는 베트남어로 번역하세요. 번역문만 깔끔하게 출력하세요.';
+
+    const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{ parts: [{ text: `${dirInstruction}\n\n[원문]\n${text}` }] }],
+            generationConfig: { temperature: 0.3, maxOutputTokens: 800 }
+        })
+    });
+    if (!response.ok) throw new Error(`AI 번역 API 오류 (${response.status})`);
+    const data = await response.json();
+    return (data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+};
+
+/**
+ * VOC(고객의 소리) AI 감성·키워드 요약 & 즉시 실행 액션 리포트
+ */
+export const analyzeVocBatchAI = async (vocItems = []) => {
+    const apiKey = getGeminiApiKey();
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    const sample = vocItems.slice(0, 30).map((v) => `[${v.sentiment}/${v.channel}] ${v.text}`).join('\n');
+    const prompt = `당신은 베트남 한인 매장 전문 CRM 컨설턴트입니다. 아래 고객 VOC 목록을 분석해:
+1) 핵심 칭찬 포인트 1줄
+2) 시급한 개선 포인트 1~2줄
+3) 점주가 오늘 바로 실행할 4R 리텐션 액션(Zalo/쿠폰/직원교육) 1줄
+을 간결한 한국어 불릿으로 정리해 주세요.\n\n[VOC 목록]\n${sample}`;
+
+    const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.4, maxOutputTokens: 600 }
+        })
+    });
+    if (!response.ok) throw new Error(`AI VOC 분석 오류 (${response.status})`);
+    const data = await response.json();
+    return (data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+};
+
+/**
+ * Telegram Bot API 직접 메시지 발송 (마감 리포트 · 결재/재고 알림)
+ */
+export const sendTelegramMessage = async (botToken, chatId, text) => {
+    const cleanToken = String(botToken || '').trim();
+    const cleanChat = String(chatId || '').trim();
+    if (!cleanToken || !cleanChat) throw new Error('Telegram Bot Token과 Chat ID를 모두 입력해 주세요.');
+    const res = await fetch(`https://api.telegram.org/bot${encodeURIComponent(cleanToken)}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: cleanChat, text, parse_mode: 'HTML' })
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || !json.ok) {
+        throw new Error(json.description || `Telegram 전송 실패 (${res.status})`);
+    }
+    return json;
+};
+
+
