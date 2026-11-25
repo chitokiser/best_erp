@@ -934,7 +934,15 @@
         import '../assets/js/firebase-config.js';
 
         const fns = () => getFunctions(getApp(), 'us-central1');
-        const call = (name, data) => httpsCallable(fns(), name)(data).then(r => r.data);
+        // 전체 가맹점 조회는 서버에서 오래 걸릴 수 있어 SDK 기본 70초 대신 서버 제한(120초)보다 길게 기다린다
+        const call = (name, data) => httpsCallable(fns(), name, { timeout: 130000 })(data).then(r => r.data);
+        const errText = (e) => {
+            const code = String(e?.code || '').replace(/^functions\//, '');
+            const hint = code === 'deadline-exceeded' ? ' (서버 응답 시간 초과: 특정 가맹점을 골라 다시 조회해 보세요)'
+                : code === 'unauthenticated' ? ' (로그인이 만료되었습니다. 다시 로그인해 주세요)'
+                : code === 'internal' ? ' (서버 함수가 배포되지 않았거나 응답 중 오류가 났습니다)' : '';
+            return `${e?.message || e}${code ? ` [${code}]` : ''}${hint}`;
+        };
         const $ = (id) => document.getElementById(id);
         const vnd = (n) => `₫${Number(n || 0).toLocaleString()}`;
         const dateText = (ms) => ms ? new Date(ms).toLocaleDateString('ko-KR') : '-';
@@ -1055,7 +1063,7 @@
                 $('stlStatus').textContent = `${new Date().toLocaleTimeString('ko-KR')} 기준 · 서버 매출 원장 집계 (대시보드와 같은 기준)`;
             } catch (e) {
                 console.warn('정산 조회 실패:', e);
-                $('stlStatus').textContent = `정산 데이터를 불러오지 못했습니다: ${e?.message || e}`;
+                $('stlStatus').textContent = `정산 데이터를 불러오지 못했습니다: ${errText(e)}`;
             } finally {
                 loading = false;
             }
