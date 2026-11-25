@@ -14,6 +14,10 @@
     .kds-card.st-pending { border-color: #ef4444; background: #fffbfb; }
     .kds-card.st-preparing { border-color: #f59e0b; background: #fffdf5; }
     .kds-card.st-completed { border-color: #10b981; opacity: .78; }
+    .kds-card.st-await { border-color: #2563eb; background: #f8fbff; }
+    .kds-card.st-ship { border-color: #7c3aed; background: #fbf9ff; }
+    .kds-card.st-cancelled { border-color: #cbd5e1; opacity: .6; }
+    .kds-ship { font-size: 0.8rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 9px; line-height: 1.5; color: #334155; }
     .kds-head { display: flex; justify-content: space-between; align-items: center; }
     .kds-table { font-size: 1.15rem; font-weight: 900; color: #0f172a; }
     .kds-pill { padding: 3px 9px; border-radius: 999px; font-size: 0.74rem; font-weight: 800; }
@@ -113,7 +117,7 @@
       if (soundOn) playDingDong();
     });
 
-    function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
     // KDS 완료 시 메뉴별 레시피(BOM) 원재료 자동 차감
     async function deductBomForOrder(order) {
@@ -150,22 +154,23 @@
       return entries.length;
     }
 
-    function renderOrders(orders) {
-      const grid = document.getElementById('kdsGrid');
-      _ordersCache = {};
-      orders.forEach((o) => { _ordersCache[o.id] = o; });
+    // 온라인 배송 주문: BestClubVN 쇼핑몰에서 배송지와 함께 들어온 주문 (테이블 QR 매장 주문이 아님)
+    function isDeliveryOrder(o) {
+      return !o.tableNumber && !!(o.shipping_address || o.shipping_phone);
+    }
 
-      if (!orders.length) {
-        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:48px;color:#64748b;background:#fff;border-radius:16px;border:1px dashed #cbd5e1;">현재 들어온 실시간 주문이 없습니다. 새 주문이 접수되면 딩동! 알림음과 함께 즉시 표시됩니다.</div>';
-        return;
-      }
+    function isCancelled(o) {
+      const st = String(o.status || '').toLowerCase();
+      return st === 'cancelled' || st === 'canceled' || st === '취소';
+    }
 
-      grid.innerHTML = orders.map((o) => {
+    function renderStoreCard(o) {
         const st = String(o.status || 'pending').toLowerCase();
-        const cls = st === 'completed' || st === 'paid' ? 'st-completed' : (st === 'preparing' ? 'st-preparing' : 'st-pending');
-        const pillBg = cls === 'st-pending' ? '#fee2e2' : (cls === 'st-preparing' ? '#fef3c7' : '#dcfce7');
-        const pillCol = cls === 'st-pending' ? '#b91c1c' : (cls === 'st-preparing' ? '#b45309' : '#15803d');
-        const pillTxt = cls === 'st-pending' ? '🔴 신규 접수' : (cls === 'st-preparing' ? '🟠 조리 중' : '🟢 완료');
+        const cancelled = isCancelled(o);
+        const cls = cancelled ? 'st-cancelled' : (st === 'completed' || st === 'paid' ? 'st-completed' : (st === 'preparing' ? 'st-preparing' : 'st-pending'));
+        const pillBg = cls === 'st-pending' ? '#fee2e2' : (cls === 'st-preparing' ? '#fef3c7' : (cls === 'st-cancelled' ? '#f1f5f9' : '#dcfce7'));
+        const pillCol = cls === 'st-pending' ? '#b91c1c' : (cls === 'st-preparing' ? '#b45309' : (cls === 'st-cancelled' ? '#64748b' : '#15803d'));
+        const pillTxt = cls === 'st-pending' ? '🔴 신규 접수' : (cls === 'st-preparing' ? '🟠 조리 중' : (cls === 'st-cancelled' ? '⚪ 취소됨' : '🟢 완료'));
         const tableLabel = o.tableNumber ? `테이블 ${o.tableNumber}` : (o.buyer_name || '온라인/QR 주문');
         const itemsHtml = (Array.isArray(o.items) ? o.items : []).map((it) =>
           `<li>• <strong>${esc(it.product_name || it.name || '메뉴')}</strong> × ${Number(it.qty || it.quantity || 1)}</li>`
@@ -193,12 +198,139 @@
             </div>
             <div class="kds-btns">
               ${cls === 'st-pending' ? `<button type="button" class="kds-btn" data-id="${esc(o.id)}" data-next="preparing" style="background:#f59e0b;color:#fff;">👨‍🍳 조리 시작</button>` : ''}
-              ${cls !== 'st-completed' ? `<button type="button" class="kds-btn" data-id="${esc(o.id)}" data-next="completed" style="background:#10b981;color:#fff;">✅ 서빙/완료</button>` : ''}
+              ${cls !== 'st-completed' && cls !== 'st-cancelled' ? `<button type="button" class="kds-btn" data-id="${esc(o.id)}" data-next="completed" style="background:#10b981;color:#fff;">✅ 서빙/완료</button>` : ''}
             </div>
           </article>`;
-      }).join('');
+    }
 
-      grid.querySelectorAll('.kds-btn').forEach((btn) => {
+    // 온라인 배송 주문 흐름: 결제 대기 → (고객 송금 확인 요청) → 입금 확인 → 배송 시작 → 배송 완료
+    // 상태 값은 BestClubVN 가맹점 주문관리(admin_merchant_orders)와 같은 값을 쓴다.
+    function renderDeliveryCard(o) {
+      const st = String(o.status || 'pending').toLowerCase();
+      const pay = String(o.payment_status || '');
+      const paid = pay === 'paid' || ['payment_confirmed', 'shipped', 'completed'].includes(st);
+      const cancelled = isCancelled(o);
+      let cls, pillBg, pillCol, pillTxt;
+      if (cancelled) { cls = 'st-cancelled'; pillBg = '#f1f5f9'; pillCol = '#64748b'; pillTxt = '⚪ 취소됨'; }
+      else if (st === 'completed') { cls = 'st-completed'; pillBg = '#dcfce7'; pillCol = '#15803d'; pillTxt = '🟢 배송 완료'; }
+      else if (st === 'shipped') { cls = 'st-ship'; pillBg = '#ede9fe'; pillCol = '#6d28d9'; pillTxt = '🚚 배송 중'; }
+      else if (paid) { cls = 'st-preparing'; pillBg = '#fef3c7'; pillCol = '#b45309'; pillTxt = '📦 결제 확인 · 발송 준비'; }
+      else if (pay === 'deposit_requested') { cls = 'st-pending'; pillBg = '#fee2e2'; pillCol = '#b91c1c'; pillTxt = '🔴 입금확인 요청'; }
+      else { cls = 'st-await'; pillBg = '#dbeafe'; pillCol = '#1d4ed8'; pillTxt = '⏳ 결제 대기'; }
+
+      const buyer = o.buyer_name || (o.buyer_email ? String(o.buyer_email).split('@')[0] : '') || '고객';
+      const itemsHtml = (Array.isArray(o.items) ? o.items : []).map((it) =>
+        `<li>• <strong>${esc(it.product_name || it.name || '상품')}</strong> × ${Number(it.qty || it.quantity || 1)}</li>`
+      ).join('') || '<li>상세 상품 없음</li>';
+      const shipHtml = `
+        <div class="kds-ship">
+          ${o.shipping_phone ? `<div>📞 <strong>연락처/Zalo:</strong> ${esc(o.shipping_phone)}</div>` : ''}
+          ${o.shipping_address ? `<div>📍 <strong>배송지:</strong> ${esc(o.shipping_address)}</div>` : ''}
+          ${o.delivery_memo ? `<div>📝 <strong>메모:</strong> ${esc(o.delivery_memo)}</div>` : ''}
+        </div>`;
+
+      let payHtml = '';
+      if (cancelled) {
+        payHtml = '';
+      } else if (paid) {
+        const how = o.payment_method === 'bm_wallet' ? 'BM 지갑 결제' : (o.payment_method === 'bank_transfer' ? '계좌이체' : '결제');
+        payHtml = `<div style="font-size:0.78rem;background:#dcfce7;color:#15803d;padding:5px 9px;border-radius:8px;font-weight:800;">💚 ${how} 확인 완료${o.depositor_name ? ` · 송금자 ${esc(o.depositor_name)}` : ''}</div>`;
+      } else if (pay === 'deposit_requested') {
+        payHtml = `<div style="font-size:0.8rem;background:#fff7ed;border:1px solid #fdba74;color:#9a3412;padding:7px 9px;border-radius:8px;font-weight:700;line-height:1.45;">🏦 고객이 계좌이체 후 <strong>입금 확인</strong>을 요청했습니다.<br/>송금자: <strong>${esc(o.depositor_name || '미입력')}</strong> · 입금 메모: <strong>${esc(o.id.slice(0, 8))}</strong><br/>통장에서 입금을 확인한 뒤 아래 버튼을 눌러 주세요.</div>`;
+      } else {
+        payHtml = `<div style="font-size:0.78rem;background:#eff6ff;color:#1d4ed8;padding:6px 9px;border-radius:8px;font-weight:700;">⏳ 고객 결제(송금) 전입니다. 입금 메모: <strong>${esc(o.id.slice(0, 8))}</strong></div>`;
+      }
+
+      const total = Number(o.total_amount || o.totalAmount || 0);
+      let btns = '';
+      if (!cancelled) {
+        if (!paid) {
+          btns = `<button type="button" class="kds-deliv-btn kds-btn" data-id="${esc(o.id)}" data-action="confirm-deposit" data-depositor="${esc(o.depositor_name || '')}" style="background:#2563eb;color:#fff;">💰 입금 확인</button>
+                  <button type="button" class="kds-deliv-btn kds-btn" data-id="${esc(o.id)}" data-action="cancel" style="background:#f1f5f9;color:#b91c1c;flex:0 0 auto;">취소</button>`;
+        } else if (st !== 'shipped' && st !== 'completed') {
+          btns = `<button type="button" class="kds-deliv-btn kds-btn" data-id="${esc(o.id)}" data-action="ship" style="background:#7c3aed;color:#fff;">🚚 배송 시작</button>`;
+        } else if (st === 'shipped') {
+          btns = `<button type="button" class="kds-deliv-btn kds-btn" data-id="${esc(o.id)}" data-action="delivered" style="background:#10b981;color:#fff;">✅ 배송 완료</button>`;
+        }
+      }
+
+      return `
+        <article class="kds-card ${cls}">
+          <div class="kds-head">
+            <div class="kds-table">📦 배송 주문 · ${esc(buyer)}</div>
+            <span class="kds-pill" style="background:${pillBg};color:${pillCol};">${pillTxt}</span>
+          </div>
+          <ul class="kds-items">${itemsHtml}</ul>
+          ${shipHtml}
+          ${payHtml}
+          <div style="display:flex;justify-content:space-between;font-size:0.86rem;font-weight:800;">
+            <span>합계 금액</span>
+            <span style="color:#4f46e5;">${total.toLocaleString()} VND</span>
+          </div>
+          <div class="kds-btns">${btns}</div>
+        </article>`;
+    }
+
+    async function handleDeliveryAction(btn) {
+      const id = btn.dataset.id;
+      const action = btn.dataset.action;
+      const ref = doc(db, 'merchant_orders', id);
+      try {
+        if (action === 'confirm-deposit') {
+          const dep = btn.dataset.depositor;
+          const msg = dep
+            ? `입금자 [${dep}] 님의 통장 입금 내역을 확인하셨습니까?\n주문을 [입금 확인] 상태로 바꿉니다.`
+            : '실제 통장 입금 내역을 확인하셨습니까?\n주문을 [입금 확인] 상태로 바꿉니다.';
+          if (!confirm(msg)) return;
+          btn.disabled = true;
+          await updateDoc(ref, {
+            status: 'payment_confirmed',
+            payment_status: 'paid',
+            payment_method: 'bank_transfer',
+            confirmed_at: serverTimestamp(),
+            updated_at: serverTimestamp()
+          });
+          showToast('💰 입금 확인 완료. 상품을 준비해 배송을 시작해 주세요.');
+        } else if (action === 'ship') {
+          if (!confirm('이 주문을 [배송 중] 상태로 바꿀까요?')) return;
+          btn.disabled = true;
+          await updateDoc(ref, { status: 'shipped', shipped_at: serverTimestamp(), updated_at: serverTimestamp() });
+          showToast('🚚 배송 중으로 바뀌었습니다.');
+        } else if (action === 'delivered') {
+          if (!confirm('배송 완료로 처리할까요?')) return;
+          btn.disabled = true;
+          await updateDoc(ref, { status: 'completed', delivered_at: serverTimestamp(), updated_at: serverTimestamp() });
+          const count = await deductBomForOrder(_ordersCache[id]);
+          showToast(count > 0 ? `✅ 배송 완료 · 레시피(BOM) 원재료 ${count}건 재고 자동 차감` : '✅ 배송 완료 처리되었습니다.');
+        } else if (action === 'cancel') {
+          if (!confirm('이 주문을 취소할까요?')) return;
+          btn.disabled = true;
+          await updateDoc(ref, { status: 'cancelled', updated_at: serverTimestamp() });
+          showToast('주문이 취소되었습니다.');
+        }
+      } catch (e) {
+        btn.disabled = false;
+        alert('처리 실패: ' + (e?.message || e));
+      }
+    }
+
+    function renderOrders(orders) {
+      const grid = document.getElementById('kdsGrid');
+      _ordersCache = {};
+      orders.forEach((o) => { _ordersCache[o.id] = o; });
+
+      if (!orders.length) {
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:48px;color:#64748b;background:#fff;border-radius:16px;border:1px dashed #cbd5e1;">현재 들어온 실시간 주문이 없습니다. 새 주문이 접수되면 딩동! 알림음과 함께 즉시 표시됩니다.</div>';
+        return;
+      }
+
+      grid.innerHTML = orders.map((o) => (isDeliveryOrder(o) ? renderDeliveryCard(o) : renderStoreCard(o))).join('');
+
+      grid.querySelectorAll('.kds-deliv-btn').forEach((btn) => {
+        btn.addEventListener('click', () => handleDeliveryAction(btn));
+      });
+
+      grid.querySelectorAll('.kds-btn:not(.kds-deliv-btn)').forEach((btn) => {
         btn.addEventListener('click', async () => {
           const id = btn.dataset.id;
           const next = btn.dataset.next;
@@ -232,7 +364,9 @@
       const q = query(collection(db, 'merchant_orders'), where('merchant_id', 'in', candidates), limit(40));
       onSnapshot(q, (snap) => {
         if (initialLoaded) {
-          const hasNew = snap.docChanges().some((ch) => ch.type === 'added');
+          const hasNew = snap.docChanges().some((ch) => ch.type === 'added'
+            || (ch.type === 'modified' && ch.doc.data()?.payment_status === 'deposit_requested'
+                && _ordersCache[ch.doc.id]?.payment_status !== 'deposit_requested'));
           if (hasNew) playDingDong();
         }
         initialLoaded = true;
