@@ -5,42 +5,18 @@
  * ==========================================================================
  */
 
-const STORAGE_KEY = 'besterp_notifications_v1';
-const BEST_ZALO_PHONE = '0981234567'; // 가맹점 대표 Zalo 연락처
+import { db, auth } from './firebase-config.js';
+import { collection, query, where, onSnapshot, limit } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
+import { loadDynamicTenants, getCurrentStoreInfo } from './tenant-router.js';
 
-// 초기 프리셋 알림 (첫 실행 시 바로 확인할 수 있도록 탑재)
-const DEFAULT_ALERTS = [
-    {
-        id: 'alert_1',
-        type: 'report',
-        title: '📸 [현장 사진보고] 미딩 송다타워 누수 점검',
-        content: '응우옌 반 린 직원이 에어컨 실외기 냉매 충전 및 누수 수리 사진 2장을 등록했습니다.',
-        time: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-        read: false,
-        url: 'field-reports.html',
-        zaloMsg: '⚡ [BestERP 현장보고]\n• 제목: 미딩 송다타워 누수 수리 완료\n• 담당: 응우옌 반 린\n• 사진 2장 첨부됨\n👉 확인: https://besterp.netlify.app/admin/field-reports.html'
-    },
-    {
-        id: 'alert_2',
-        type: 'coupon',
-        title: '🎫 [쿠폰 현장 승인] 50,000 VND 식사 할인권',
-        content: '손님(김민수 님)의 바우처 [BC-TEST-2026-BEST]가 매장에서 1초 소진 승인되었습니다.',
-        time: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-        read: false,
-        url: 'coupons.html',
-        zaloMsg: '🎟️ [BestERP 쿠폰승인]\n• 코드: BC-TEST-2026-BEST\n• 혜택: 50,000 VND 할인\n• 상태: 사용 완료\n👉 확인: https://besterp.netlify.app/admin/coupons.html'
-    },
-    {
-        id: 'alert_3',
-        type: 'stock',
-        title: '⚠️ [재고 경보] 동관(15A) 재고 2개 잔여',
-        content: '현재 시공 속도 유지 시 48시간 내 품절이 예상됩니다. 사전 발주를 권장합니다.',
-        time: new Date(Date.now() - 120 * 60 * 1000).toISOString(),
-        read: true,
-        url: 'materials.html',
-        zaloMsg: '⚠️ [BestERP 재고경보]\n• 품목: 동관 15A 배관재\n• 잔여: 2개 (품절 임박)\n👉 확인: https://besterp.netlify.app/admin/materials.html'
-    }
-];
+const STORAGE_KEY = 'besterp_notifications_v1';
+const LIVE_READ_KEY = 'besterp_order_alerts_read_v1';
+// 예전 버전이 첫 실행 때 넣어 둔 예시 알림. 실제 데이터가 아니므로 화면에서 뺀다.
+const DEMO_ALERT_IDS = new Set(['alert_1', 'alert_2', 'alert_3']);
+// 결제 대기(송금 전) 온라인 주문은 최근 것만 알린다
+const NEW_ORDER_ALERT_WINDOW_MS = 3 * 24 * 60 * 60 * 1000;
+const BEST_ZALO_PHONE = '0981234567'; // 가맹점 대표 Zalo 연락처
 
 // Web Audio API 무손실 D5-A5-D6 알림 차임벨
 export function playNotificationSound() {
@@ -73,25 +49,218 @@ export function playNotificationSound() {
     }
 }
 
-// 로컬 저장소 로드
-export function getNotifications() {
+// 로컬 저장소 로드 (예시 알림 제외)
+function getLocalNotifications() {
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_ALERTS));
-            return DEFAULT_ALERTS;
+        if (!raw) return [];
+        const list = JSON.parse(raw);
+        if (!Array.isArray(list)) return [];
+        const real = list.filter(x => x && !DEMO_ALERT_IDS.has(x.id));
+        if (real.length !== list.length) {
+            // 예전에 저장된 예시 알림을 브라우저 저장소에서도 지운다
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(real));
         }
-        return JSON.parse(raw);
+        return real;
     } catch (e) {
-        return DEFAULT_ALERTS;
+        return [];
     }
 }
 
-// 저장
+// 실시간 주문 알림(입금확인 요청 · 신규 온라인 주문) + 로컬 알림을 최신순으로 합친다
+export function getNotifications() {
+    const readKeys = getLiveReadKeys();
+    const live = Array.from(liveOrderAlerts.values()).map(a => ({ ...a, read: readKeys.has(a.id) }));
+    return [...live, ...getLocalNotifications()]
+        .sort((a, b) => new Date(b.time || 0).getTime() - new Date(a.time || 0).getTime());
+}
+
+// 저장 (실시간 주문 알림은 읽음 여부만 따로 보관)
 export function saveNotifications(list) {
     try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+        const readKeys = getLiveReadKeys();
+        const local = [];
+        list.forEach(item => {
+            if (item.live) {
+                if (item.read) readKeys.add(item.id);
+            } else {
+                local.push(item);
+            }
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(local));
+        localStorage.setItem(LIVE_READ_KEY, JSON.stringify(Array.from(readKeys).slice(-500)));
     } catch (e) {}
+}
+
+function getLiveReadKeys() {
+    try {
+        const arr = JSON.parse(localStorage.getItem(LIVE_READ_KEY) || '[]');
+        return new Set(Array.isArray(arr) ? arr : []);
+    } catch (e) {
+        return new Set();
+    }
+}
+
+// ==========================================================================
+// 실시간 주문 알림: merchant_orders 에서 이 가맹점의 결제 대기 / 입금확인 요청 주문을 구독
+// (BestClubVN 쇼핑몰 주문 → payment_status 'awaiting_payment' → 고객 '송금 확인 요청' 시 'deposit_requested')
+// ==========================================================================
+const liveOrderAlerts = new Map(); // alertId -> alert
+const liveOrderDocs = new Map();   // `${listenerKey}` -> Map(orderId -> order)
+let liveUnsubs = [];
+let liveStarted = false;
+let liveInitialDone = false;
+
+function tsToIso(v) {
+    if (!v) return null;
+    if (typeof v.toDate === 'function') return v.toDate().toISOString();
+    if (typeof v.seconds === 'number') return new Date(v.seconds * 1000).toISOString();
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+function escHtml(str) {
+    return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function orderToAlert(id, o) {
+    const status = String(o.status || '').toLowerCase();
+    if (['cancelled', 'canceled', '취소', 'completed', 'shipped', 'payment_confirmed'].includes(status)) return null;
+    const pay = String(o.payment_status || '');
+    const amount = Number(o.total_amount || o.totalAmount || o.amount || 0);
+    const buyer = o.buyer_name || (o.buyer_email ? String(o.buyer_email).split('@')[0] : '') || '고객';
+    const items = (Array.isArray(o.items) ? o.items : [])
+        .map(it => `${it.product_name || it.name || '상품'} × ${Number(it.qty || it.quantity || 1)}`)
+        .join(', ');
+    const isDelivery = !o.tableNumber && !!(o.shipping_address || o.shipping_phone);
+    const shipTxt = isDelivery ? ` · 배송지: ${o.shipping_address || '-'}` : '';
+    const url = `kitchen-orders.html${window.location.search || ''}`;
+    const shortId = id.slice(0, 8);
+
+    if (pay === 'deposit_requested') {
+        return {
+            id: `order:${id}:deposit`,
+            live: true,
+            type: 'payment',
+            title: `💰 [입금확인 요청] ${escHtml(buyer)} · ${amount.toLocaleString()} VND`,
+            content: `송금자 <strong>${escHtml(o.depositor_name || '미입력')}</strong> 님이 계좌이체 확인을 요청했습니다. 통장 확인 후 주문 알림판에서 <strong>입금 확인</strong>을 눌러 주세요.<br/>주문 ${escHtml(shortId)} · ${escHtml(items || '상품 정보 없음')}${escHtml(shipTxt)}`,
+            time: tsToIso(o.deposit_requested_at) || tsToIso(o.updated_at) || tsToIso(o.created_at) || new Date().toISOString(),
+            url,
+            zaloMsg: `💰 [BestERP 입금확인 요청]\n• 주문: ${shortId}\n• 고객: ${buyer}\n• 송금자: ${o.depositor_name || '미입력'}\n• 금액: ${amount.toLocaleString()} VND\n• 상품: ${items}${isDelivery ? `\n• 배송지: ${o.shipping_address || '-'}` : ''}`
+        };
+    }
+    if (pay === 'awaiting_payment' && isDelivery) {
+        const created = tsToIso(o.created_at);
+        if (created && Date.now() - new Date(created).getTime() > NEW_ORDER_ALERT_WINDOW_MS) return null;
+        return {
+            id: `order:${id}:new`,
+            live: true,
+            type: 'order',
+            title: `🛒 [신규 온라인 주문] ${escHtml(buyer)} · ${amount.toLocaleString()} VND`,
+            content: `배송 주문이 접수되었습니다. 고객 결제(송금) 전입니다.<br/>주문 ${escHtml(shortId)} · ${escHtml(items || '상품 정보 없음')}${escHtml(shipTxt)}`,
+            time: created || new Date().toISOString(),
+            url,
+            zaloMsg: `🛒 [BestERP 신규 온라인 주문]\n• 주문: ${shortId}\n• 고객: ${buyer}\n• 금액: ${amount.toLocaleString()} VND\n• 상품: ${items}\n• 배송지: ${o.shipping_address || '-'}`
+        };
+    }
+    return null;
+}
+
+function rebuildLiveAlerts() {
+    const before = new Set(liveOrderAlerts.keys());
+    liveOrderAlerts.clear();
+    liveOrderDocs.forEach(orders => {
+        orders.forEach((o, id) => {
+            const alert = orderToAlert(id, o);
+            if (alert) liveOrderAlerts.set(alert.id, alert);
+        });
+    });
+    const readKeys = getLiveReadKeys();
+    const hasNewUnread = Array.from(liveOrderAlerts.keys()).some(k => !before.has(k) && !readKeys.has(k));
+    if (liveInitialDone && hasNewUnread) {
+        playNotificationSound();
+    }
+    updateBadge();
+    const modal = document.getElementById('notifModalBackdrop');
+    if (modal && modal.style.display !== 'none') renderNotificationItems();
+}
+
+function waitForTenant(timeoutMs = 15000) {
+    return new Promise(resolve => {
+        const started = Date.now();
+        const tick = () => {
+            const t = window.tenantId;
+            if ((t && t !== 'undefined' && t !== 'null') || window.currentUserRole || Date.now() - started > timeoutMs) {
+                resolve();
+                return;
+            }
+            setTimeout(tick, 300);
+        };
+        tick();
+    });
+}
+
+function stopLiveOrderAlerts() {
+    liveUnsubs.forEach(fn => { try { fn(); } catch (_) {} });
+    liveUnsubs = [];
+    liveOrderDocs.clear();
+    liveOrderAlerts.clear();
+    liveStarted = false;
+    liveInitialDone = false;
+    updateBadge();
+}
+
+async function startLiveOrderAlerts() {
+    if (liveStarted) return;
+    liveStarted = true;
+    await waitForTenant();
+    await loadDynamicTenants();
+    const info = getCurrentStoreInfo();
+    const sid = String(info.storeId || '').trim();
+    if (!sid || sid === 'ALL') return; // 전체 보기/미소속 계정은 구독하지 않음
+
+    // 주문의 merchant_id 는 문자열·숫자·슬러그가 섞여 있다
+    const candidates = [sid];
+    const num = Number(sid);
+    if (Number.isFinite(num) && String(num) === sid) candidates.push(num);
+    if (info.slug && info.slug !== sid) candidates.push(info.slug);
+
+    let pending = candidates.length;
+    candidates.forEach((mid, idx) => {
+        const key = `m${idx}`;
+        liveOrderDocs.set(key, new Map());
+        const q = query(
+            collection(db, 'merchant_orders'),
+            where('merchant_id', '==', mid),
+            where('payment_status', 'in', ['deposit_requested', 'awaiting_payment']),
+            limit(50)
+        );
+        let first = true;
+        const unsub = onSnapshot(q, snap => {
+            const map = new Map();
+            snap.docs.forEach(d => map.set(d.id, d.data()));
+            liveOrderDocs.set(key, map);
+            if (first) {
+                first = false;
+                pending -= 1;
+                if (pending <= 0) liveInitialDone = true;
+            }
+            rebuildLiveAlerts();
+        }, err => {
+            console.warn('실시간 주문 알림 구독 실패:', err?.message || err);
+            if (first) {
+                first = false;
+                pending -= 1;
+                if (pending <= 0) liveInitialDone = true;
+            }
+        });
+        liveUnsubs.push(unsub);
+    });
 }
 
 // 잘로(Zalo) 공유 핸들러
@@ -220,6 +389,15 @@ export function initNotificationHub() {
     };
 
     updateBadge();
+
+    // 4. 실시간 주문(입금확인 요청) 알림 구독 — 로그인 후 시작, 로그아웃 시 해제
+    onAuthStateChanged(auth, user => {
+        if (user) {
+            startLiveOrderAlerts().catch(e => console.warn('실시간 주문 알림 시작 실패:', e?.message || e));
+        } else {
+            stopLiveOrderAlerts();
+        }
+    });
 }
 
 function updateBadge() {
